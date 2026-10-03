@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging, circles and experts. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging, circles, experts and notifications. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -177,6 +177,17 @@ All of these need an approved account.
 | PATCH | `/office-hours/:id` | `{ status: accepted / declined / done }`. The expert only |
 
 An expert sets `services` and `office_hours_per_month` in `PUT /me/expert-profile`. Accepting a session creates an accepted connection between the two. `POST /compliance/ask` returns `experts` when `suggest_expert` is true; someone not yet approved gets `experts_available` (a number) and an empty list.
+
+### Notifications
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/notifications` | any user | `?unread=true`. `{ unread_count, notifications }`, newest first |
+| POST | `/notifications/:id/read` | its owner | |
+| POST | `/notifications/read-all` | any user | |
+| POST | `/admin/jobs/deadline-reminders` | admin | Runs the reminder job now. It also runs hourly |
+
+Each notification has `type`, `title`, `body`, a `link` into the app, and `delivery_status`. New ones are also pushed over the WebSocket as `{"type": "notification", "notification": {...}}`.
 
 ### Vetting
 

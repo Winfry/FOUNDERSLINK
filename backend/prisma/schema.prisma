@@ -93,6 +93,7 @@ model User {
   phone_code           PhoneCode?
   reports_made         UserReport[]         @relation("reporter")
   office_hours_given   OfficeHour[]         @relation("expert")
+  notifications        Notification[]
   office_hours_asked   OfficeHour[]         @relation("requester")
   reports_received     UserReport[]         @relation("reported")
 
@@ -792,4 +793,26 @@ model OfficeHour {
   requester User @relation("requester", fields: [requester_id], references: [id], onDelete: Cascade)
 
   @@map("office_hours")
+}
+
+// Something a member should know about. It is always stored here, and
+// also sent by SMS when she chose that, has a verified number and has
+// agreed to be contacted.
+model Notification {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  user_id         String    @db.Uuid
+  type            String
+  title           String
+  body            String
+  // Where in the app it leads, e.g. "/deals/<id>".
+  link            String?
+  // in_app | sms_sent | sms_failed | sms_not_configured
+  delivery_status String    @default("in_app")
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, read_at])
+  @@map("notifications")
 }

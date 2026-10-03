@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
+import { notify } from "../notifications/notifications.service.js";
 
 export const requestSchema = z.object({
   user_id: z.uuid(),
@@ -74,6 +75,14 @@ export async function requestConnection(userId: string, input: z.infer<typeof re
     data: { requester_id: userId, addressee_id: input.user_id, message: input.message ?? null },
     include: { addressee: person },
   });
+  const me = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { full_name: true } });
+  await notify(input.user_id, {
+    type: "connection_request",
+    title: "New connection request",
+    body: `${me.full_name} would like to connect with you.`,
+    link: "/connections",
+  });
+
   return { id: created.id, status: created.status, message: created.message, with: publicPerson(created.addressee) };
 }
 
@@ -105,5 +114,15 @@ export async function respond(userId: string, connectionId: string, status: stri
     data: { status, responded_at: new Date() },
   });
   if (count === 0) throw notFound("No pending connection request with this id");
+
+  if (status === "accepted") {
+    const connection = await prisma.connection.findUniqueOrThrow({ where: { id: connectionId }, include: { addressee: { select: { full_name: true } } } });
+    await notify(connection.requester_id, {
+      type: "connection_accepted",
+      title: "Connection accepted",
+      body: `${connection.addressee.full_name} accepted your connection request.`,
+      link: "/connections",
+    });
+  }
   return { id: connectionId, status };
 }

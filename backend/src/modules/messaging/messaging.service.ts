@@ -13,6 +13,7 @@ import { pushTo } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { areConnected } from "../network/connections.js";
+import { notifyMany } from "../notifications/notifications.service.js";
 import { listUserReports, suspendIfReported } from "../safety/reports.js";
 
 export const openSchema = z.object({ user_id: z.uuid() });
@@ -132,6 +133,11 @@ export async function announceDealEvents(
     if (body) {
       const message = await prisma.message.create({ data: { conversation_id: room.id, kind: "system", body } });
       deliver({ ...message, sender: null }, memberIds);
+      // The other parties are told, not the person who did it.
+      await notifyMany(
+        memberIds.filter((id) => id !== e.actor_id),
+        { type: `deal_${e.event}`, title: "Deal update", body, link: `/deals/${dealId}` },
+      );
     }
   }
   await prisma.dealEvent.updateMany({ where: { id: { in: events.map((e) => e.id) } }, data: { announced: true } });

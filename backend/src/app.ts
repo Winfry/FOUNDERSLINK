@@ -11,6 +11,7 @@ import { expertsRouter } from "./modules/experts/experts.routes.js";
 import { fundingRouter } from "./modules/funding/funding.routes.js";
 import { messagingRouter } from "./modules/messaging/messaging.routes.js";
 import { networkRouter } from "./modules/network/network.routes.js";
+import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
 import { profileRouter } from "./modules/profile/profile.routes.js";
 import { vettingRouter } from "./modules/vetting/vetting.routes.js";
 import * as options from "./shared/constants.js";
@@ -54,6 +55,7 @@ app.use(dealsRouter);
 app.use(messagingRouter);
 app.use(circlesRouter);
 app.use(expertsRouter);
+app.use(notificationsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "No such endpoint" } });

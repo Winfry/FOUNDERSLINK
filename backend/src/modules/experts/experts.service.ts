@@ -7,6 +7,7 @@ import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { consented } from "../account/consents.js";
+import { notify } from "../notifications/notifications.service.js";
 
 export const filterSchema = z.object({
   profession: z.enum(PROFESSIONS).optional(),
@@ -97,7 +98,9 @@ export async function requestOfficeHour(userId: string, expertId: string, topic:
   });
   if (open) throw conflict("ALREADY_REQUESTED", "You already have a session open with this expert");
 
-  return prisma.officeHour.create({ data: { expert_id: expertId, requester_id: userId, topic } });
+  const session = await prisma.officeHour.create({ data: { expert_id: expertId, requester_id: userId, topic } });
+  await notify(expertId, { type: "office_hour_requested", title: "New office-hours request", body: topic, link: "/office-hours" });
+  return session;
 }
 
 const person = { select: { id: true, full_name: true } } as const;
@@ -153,6 +156,15 @@ export async function respondToOfficeHour(userId: string, id: string, status: st
     } else if (existing.status !== "accepted") {
       await prisma.connection.update({ where: { id: existing.id }, data: { status: "accepted", responded_at: new Date() } });
     }
+  }
+
+  if (status !== "done") {
+    await notify(session.requester_id, {
+      type: `office_hour_${status}`,
+      title: status === "accepted" ? "Your session was accepted" : "Your session request was declined",
+      body: session.topic,
+      link: "/office-hours",
+    });
   }
 
   return { id: updated.id, status: updated.status };

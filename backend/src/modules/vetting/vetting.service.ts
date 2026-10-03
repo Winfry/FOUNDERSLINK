@@ -7,6 +7,7 @@ import { vettingRiskSignals } from "../../ai/client.js";
 import type { RiskLevel } from "../../ai/types.js";
 import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
 import { disconnect } from "../../realtime.js";
+import { notify } from "../notifications/notifications.service.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
@@ -218,6 +219,14 @@ export async function decide(adminId: string, applicationId: string, input: z.in
       });
     }
   });
+
+  const OUTCOME = {
+    approve: ["You are approved", "You can now see and connect with other members."],
+    reject: ["Your application was not approved", input.reason],
+    needs_info: ["We need a little more from you", input.reason],
+  } as const;
+  const [title, body] = OUTCOME[input.decision];
+  await notify(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
 
   return { application_id: applicationId, approval_status: status };
 }
