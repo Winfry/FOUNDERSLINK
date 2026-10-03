@@ -218,3 +218,24 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- FounderLink additions ---
+# Node / frontend
+node_modules/
+.expo/
+.next/
+dist-web/
+*.log
+.DS_Store
+
+# Local env files (keep .env.example committed)
+.env.*
+!.env.example
+
+# AI artefacts (large model files and vector indexes stay out of git)
+ai/**/*.faiss
+ai/**/*.index
+models_cache/
+
+# Uploaded M-Pesa statements must never be committed
+uploads/
