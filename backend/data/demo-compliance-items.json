@@ -26,7 +26,12 @@
     "id": "etims",
     "title": "eTIMS invoicing",
     "institution": "Kenya Revenue Authority",
-    "applies_when": { "business_statuses": ["registered_business_name", "limited_company"] },
+    "applies_when": {
+      "business_statuses": [
+        "registered_business_name",
+        "limited_company"
+      ]
+    },
     "is_demo": true
   },
   {
@@ -35,7 +40,14 @@
     "why": "Counties require a permit to trade from a premises, and it is renewed regularly.",
     "institution": "County government",
     "jurisdiction_level": "county",
-    "applies_when": { "counties": ["Nairobi", "Mombasa", "Kisumu", "Machakos"] },
+    "applies_when": {
+      "counties": [
+        "Nairobi",
+        "Mombasa",
+        "Kisumu",
+        "Machakos"
+      ]
+    },
     "recurrence": "annual",
     "is_demo": true
   },
@@ -43,7 +55,9 @@
     "id": "employer_registrations",
     "title": "Employer registrations (NSSF, SHIF, Housing Levy)",
     "why": "A business with employees has to register as an employer and make deductions for them.",
-    "applies_when": { "has_employees": true },
+    "applies_when": {
+      "has_employees": true
+    },
     "recurrence": "monthly",
     "when_to_get_help": "An accountant can set up payroll deductions correctly.",
     "is_demo": true
@@ -53,13 +67,112 @@
     "title": "Data protection registration with the ODPC",
     "why": "A business that collects or stores personal data may need to register as a data controller or processor.",
     "institution": "Office of the Data Protection Commissioner",
-    "applies_when": { "handles_personal_data": true },
+    "applies_when": {
+      "handles_personal_data": true
+    },
     "is_demo": true
   },
   {
     "id": "business_bank_account",
     "title": "Bank account in the business name",
     "why": "Keeps business money separate from personal money, and lenders ask for it.",
+    "is_demo": true
+  },
+  {
+    "id": "deal_cofounder_agreement",
+    "title": "Founders' or shareholders' agreement",
+    "scope": "deal",
+    "deal_type": "cofounder_partnership",
+    "is_demo": true,
+    "why": "Sets out who owns what and what happens if someone leaves.",
+    "when_to_get_help": "A lawyer should draft or review this before anyone signs."
+  },
+  {
+    "id": "deal_cofounder_equity_vesting",
+    "title": "Equity split and vesting recorded",
+    "scope": "deal",
+    "deal_type": "cofounder_partnership",
+    "is_demo": true
+  },
+  {
+    "id": "deal_cofounder_company_registration",
+    "title": "Company registered with BRS, if not yet a company",
+    "scope": "deal",
+    "deal_type": "cofounder_partnership",
+    "is_demo": true
+  },
+  {
+    "id": "deal_cofounder_directors_update",
+    "title": "Directors and shareholders updated with BRS",
+    "scope": "deal",
+    "deal_type": "cofounder_partnership",
+    "is_demo": true
+  },
+  {
+    "id": "deal_cofounder_beneficial_ownership",
+    "title": "Beneficial ownership information filed",
+    "scope": "deal",
+    "deal_type": "cofounder_partnership",
+    "is_demo": true
+  },
+  {
+    "id": "deal_investment_term_sheet",
+    "title": "Term sheet",
+    "scope": "deal",
+    "deal_type": "investment",
+    "is_demo": true,
+    "why": "Records the main terms both sides have agreed before the full agreement is drafted.",
+    "when_to_get_help": "A lawyer should draft or review this before anyone signs."
+  },
+  {
+    "id": "deal_investment_agreement",
+    "title": "Investment agreement or shareholders' agreement",
+    "scope": "deal",
+    "deal_type": "investment",
+    "is_demo": true,
+    "when_to_get_help": "A lawyer should draft or review this before anyone signs."
+  },
+  {
+    "id": "deal_investment_share_allotment",
+    "title": "Share allotment and register updates with BRS",
+    "scope": "deal",
+    "deal_type": "investment",
+    "is_demo": true
+  },
+  {
+    "id": "deal_investment_beneficial_ownership",
+    "title": "Beneficial ownership update",
+    "scope": "deal",
+    "deal_type": "investment",
+    "is_demo": true
+  },
+  {
+    "id": "deal_investment_tax_stamp_duty",
+    "title": "Tax and stamp duty questions referred to an accountant",
+    "scope": "deal",
+    "deal_type": "investment",
+    "is_demo": true,
+    "when_to_get_help": "An accountant should advise on tax and stamp duty for this deal."
+  },
+  {
+    "id": "deal_investment_investor_checks",
+    "title": "Investor's own checks (KYC)",
+    "scope": "deal",
+    "deal_type": "investment",
+    "is_demo": true
+  },
+  {
+    "id": "deal_expert_engagement_letter",
+    "title": "Engagement letter with scope and fees",
+    "scope": "deal",
+    "deal_type": "expert_engagement",
+    "is_demo": true
+  },
+  {
+    "id": "deal_expert_confidentiality",
+    "title": "Confidentiality agreement, where needed",
+    "scope": "deal",
+    "deal_type": "expert_engagement",
     "is_demo": true
   }
 ]

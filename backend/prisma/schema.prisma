@@ -64,6 +64,10 @@ model User {
   compliance_updates   ComplianceStatus[]
   compliance_deadlines ComplianceDeadline[]
   compliance_questions ComplianceQuestion[]
+  connections_sent     Connection[]         @relation("requester")
+  connections_received Connection[]         @relation("addressee")
+  deal_parties         DealParty[]
+  deal_events          DealEvent[]
 
   @@map("users")
 }
@@ -339,7 +343,12 @@ model PortfolioEntry {
   company_consented Boolean  @default(false)
   created_at        DateTime @default(now())
 
+  // Set when the entry was created by a deal closed on FounderLink.
+  deal_id String? @db.Uuid
+
   investor User @relation(fields: [investor_id], references: [id], onDelete: Cascade)
+
+  @@unique([investor_id, deal_id])
 
   @@map("investor_portfolio")
 }
@@ -361,4 +370,95 @@ model Venture {
   founder User @relation(fields: [founder_id], references: [id], onDelete: Cascade)
 
   @@map("founder_ventures")
+}
+
+// Two approved members agreeing to be in touch. A deal can only be
+// opened between people with an accepted connection.
+model Connection {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  requester_id String    @db.Uuid
+  addressee_id String    @db.Uuid
+  status       String    @default("pending") // pending | accepted | declined
+  message      String?
+  created_at   DateTime  @default(now())
+  responded_at DateTime?
+
+  requester User @relation("requester", fields: [requester_id], references: [id], onDelete: Cascade)
+  addressee User @relation("addressee", fields: [addressee_id], references: [id], onDelete: Cascade)
+
+  @@unique([requester_id, addressee_id])
+  @@map("connections")
+}
+
+// The record of a working relationship, from the first serious
+// conversation to the result (TEAM_DECISIONS D4). It records what the
+// parties tell it. No money moves through FounderLink.
+model Deal {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  type             String // cofounder_partnership | investment | expert_engagement | joint_venture
+  title            String
+  stage            String    @default("exploring")
+  status           String    @default("open") // open | paused | declined
+  // A move to this stage is waiting for every party to confirm.
+  pending_stage    String?
+  // Recorded by the parties. Self-reported, not a legal document.
+  terms            Json      @default("{}")
+  // The funder record the deal grew out of, if any.
+  source_funder_id String?   @db.Uuid
+  created_by       String    @db.Uuid
+  created_at       DateTime  @default(now())
+  closed_at        DateTime?
+
+  parties    DealParty[]
+  events     DealEvent[]
+  milestones DealMilestone[]
+
+  @@map("deals")
+}
+
+model DealParty {
+  id                  String   @id @default(uuid(7)) @db.Uuid
+  deal_id             String   @db.Uuid
+  user_id             String   @db.Uuid
+  role                String // founder | investor | expert
+  // The pending stage this party has agreed to, if any.
+  confirmed_stage     String?
+  // Whether this party allows the closed deal to show on track records.
+  shares_track_record Boolean  @default(false)
+  joined_at           DateTime @default(now())
+
+  deal Deal @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([deal_id, user_id])
+  @@map("deal_parties")
+}
+
+// The timeline: every change to a deal, visible to every party.
+model DealEvent {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  deal_id    String   @db.Uuid
+  actor_id   String   @db.Uuid
+  event      String
+  from_stage String?
+  to_stage   String?
+  note       String?
+  created_at DateTime @default(now())
+
+  deal  Deal @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+  actor User @relation(fields: [actor_id], references: [id], onDelete: Cascade)
+
+  @@map("deal_events")
+}
+
+model DealMilestone {
+  id       String    @id @default(uuid(7)) @db.Uuid
+  deal_id  String    @db.Uuid
+  title    String
+  due_date DateTime?
+  status   String    @default("pending") // pending | done
+
+  deal Deal @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+
+  @@map("deal_milestones")
 }

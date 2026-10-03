@@ -8,6 +8,7 @@ import { completedItemIds } from "../compliance/status.js";
 import { conflict, notFound } from "../../shared/errors.js";
 import { listComplianceItems, toMatchFunder, toMatchProfile } from "../funding/funding.service.js";
 import { assessReadiness } from "../funding/readiness.js";
+import { connectionBetween } from "./connections.js";
 import { publicPortfolio, publicVentures } from "./track-record.js";
 
 // The record an investor's matches are run on: the one she maintains,
@@ -109,11 +110,14 @@ export async function getProfile(viewerId: string, targetId: string) {
     throw notFound("No such member");
   }
 
+  const connection = await connectionBetween(viewerId, targetId);
   const base = {
     id: target.id,
     full_name: target.full_name,
     role: target.role,
     badges: ["Checked by FounderLink"],
+    // none | pending | accepted | declined: drives the Connect button.
+    connection: connection ? { id: connection.id, status: connection.status } : { id: null, status: "none" },
   };
 
   if (target.role === "investor") {

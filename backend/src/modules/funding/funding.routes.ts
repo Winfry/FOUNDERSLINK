@@ -6,7 +6,7 @@ export const fundingRouter = Router();
 
 // Public: the onboarding form needs it for the "what you already have" list.
 fundingRouter.get("/compliance/items", async (_req, res) => {
-  res.json(await listComplianceItems());
+  res.json((await listComplianceItems()).filter((item) => item.scope === "business"));
 });
 
 fundingRouter.get("/funders", requireAuth, async (_req, res) => {

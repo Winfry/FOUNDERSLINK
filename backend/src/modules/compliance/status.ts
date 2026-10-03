@@ -18,11 +18,24 @@ export async function completedFor(userId: string): Promise<string[]> {
   return (await completedItemIds([userId])).get(userId)!;
 }
 
-export async function setStatus(userId: string, itemId: string, status: string, note?: string | null) {
-  const key = { entity_type: "business", entity_id: userId, item_id: itemId };
+// Progress on an item, for a business (entity_id = the founder's user
+// id) or a deal (entity_id = the deal id).
+export async function setEntityStatus(
+  entityType: "business" | "deal",
+  entityId: string,
+  itemId: string,
+  status: string,
+  updatedBy: string,
+  note?: string | null,
+) {
+  const key = { entity_type: entityType, entity_id: entityId, item_id: itemId };
   return prisma.complianceStatus.upsert({
     where: { entity_type_entity_id_item_id: key },
-    create: { ...key, status, note: note ?? null, updated_by: userId },
-    update: { status, updated_by: userId, ...(note !== undefined ? { note } : {}) },
+    create: { ...key, status, note: note ?? null, updated_by: updatedBy },
+    update: { status, updated_by: updatedBy, ...(note !== undefined ? { note } : {}) },
   });
+}
+
+export function setStatus(userId: string, itemId: string, status: string, note?: string | null) {
+  return setEntityStatus("business", userId, itemId, status, userId, note);
 }
