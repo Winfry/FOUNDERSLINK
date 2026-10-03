@@ -4,7 +4,18 @@
 // the `engine` field.
 
 import { COUNTIES } from "../shared/constants.js";
-import type { Band, Extraction, MatchFunder, MatchProfile, MatchResult, Reason } from "./types.js";
+import type {
+  Band,
+  Extraction,
+  FitExplanation,
+  MatchFunder,
+  MatchProfile,
+  MatchResult,
+  Reason,
+  RiskAssessment,
+  RiskInput,
+  TrackRecordItem,
+} from "./types.js";
 
 export const kes = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
 
@@ -87,6 +98,64 @@ function assess(p: MatchProfile, f: MatchFunder): MatchResult {
 
 export function matchFunders(profile: MatchProfile, funders: MatchFunder[]): MatchResult[] {
   return funders.map((f) => assess(profile, f));
+}
+
+const times = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// The fit behind one profile page, plus what in the funder's track
+// record is relevant to this founder.
+export function explainFit(profile: MatchProfile, funder: MatchFunder, track: TrackRecordItem[]): FitExplanation {
+  const match = assess(profile, funder);
+
+  const highlights: string[] = [];
+  const sameSector = track.filter((t) => t.sector === profile.sector).length;
+  if (sameSector > 0) {
+    highlights.push(`Has backed ${times(sameSector, `${profile.sector} business`, `${profile.sector} businesses`)} before`);
+  }
+  const sameStage = track.filter((t) => profile.stage !== null && t.stage === profile.stage).length;
+  if (sameStage > 0) {
+    highlights.push(`Has invested at the ${list([profile.stage!])} stage ${times(sameStage, "time", "times")}`);
+  }
+
+  return {
+    band: match.band,
+    components: match.reasons,
+    reasons: [match.explanation],
+    track_record_highlights: highlights,
+  };
+}
+
+const SCAM_PHRASES: [RegExp, string][] = [
+  [/(processing|registration|facilitation|upfront|application) fees?/i, "Mentions a fee that people must pay"],
+  [/guaranteed? (returns?|funding|approval|profits?)/i, "Promises guaranteed returns or funding"],
+  [/send (the |your )?money|pay (via|through|by) m-?pesa/i, "Asks for money to be sent"],
+];
+
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "mailinator.com",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "tempmail.com",
+  "yopmail.com",
+  "trashmail.com",
+]);
+
+// Sorts the review queue and tells the admin what to look at. It never
+// approves or rejects anyone.
+export function riskSignals(input: RiskInput): RiskAssessment {
+  const signals: string[] = [];
+  const text = `${input.statement ?? ""} ${input.bio ?? ""}`;
+
+  const scamPhrases = SCAM_PHRASES.filter(([pattern]) => pattern.test(text)).map(([, label]) => label);
+  signals.push(...scamPhrases);
+
+  if (DISPOSABLE_EMAIL_DOMAINS.has(input.email_domain)) signals.push("Uses a disposable email address");
+  if (input.role === "investor" && !input.organisation_website) {
+    signals.push("Investor gave no organisation website to check");
+  }
+
+  const risk_level = scamPhrases.length > 0 || signals.length >= 2 ? "high" : signals.length === 1 ? "medium" : "low";
+  return { risk_level, signals };
 }
 
 const SECTOR_WORDS: Record<string, RegExp> = {

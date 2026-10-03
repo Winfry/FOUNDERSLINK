@@ -56,3 +56,36 @@ export interface Extraction {
 }
 
 export type Engine = "ai_service" | "stand_in";
+
+// What the AI is told about a past investment. No company names.
+export interface TrackRecordItem {
+  sector: string;
+  stage: string | null;
+  source: string;
+}
+
+export interface FitExplanation {
+  band: Band;
+  components: Reason[];
+  reasons: string[];
+  track_record_highlights: string[];
+}
+
+// The parts of a vetting application the AI may read. The phone number
+// and the full email address stay in the backend.
+export interface RiskInput {
+  role: string;
+  statement: string | null;
+  bio: string | null;
+  organisation_name: string | null;
+  organisation_website: string | null;
+  email_domain: string;
+}
+
+export const RISK_LEVELS = ["low", "medium", "high"] as const;
+export type RiskLevel = (typeof RISK_LEVELS)[number];
+
+export interface RiskAssessment {
+  risk_level: RiskLevel;
+  signals: string[];
+}

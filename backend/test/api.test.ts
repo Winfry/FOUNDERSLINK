@@ -57,16 +57,15 @@ test("register returns a token and never the password hash", async () => {
   token = res.json.token;
 });
 
-test("register ignores a role sent by the client", async () => {
-  const other = `role-${email}`;
+test("nobody can register as an admin", async () => {
   const res = await call("POST", "/auth/register", {
-    email: other,
+    email: `role-${email}`,
     password,
     full_name: "Sneaky",
-    role: "investor",
+    role: "admin",
   });
-  assert.equal(res.json.user.role, "founder");
-  await prisma.user.deleteMany({ where: { email: other } });
+  assert.equal(res.status, 400);
+  assert.equal(res.json.error.code, "VALIDATION_ERROR");
 });
 
 test("register rejects a duplicate email and a short password", async () => {
