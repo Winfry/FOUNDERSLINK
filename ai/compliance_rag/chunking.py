@@ -12,6 +12,8 @@ An answer has to say "Data Protection Act, 2019, section 18", so the split
 follows sections, never a fixed number of characters across them:
 
   - Each section becomes one chunk, labelled "Section 18 (Registration of...)".
+  - Regulations and rules number their parts the same way but call them
+    regulations and rules, so a citation says "Regulation 5", not "Section 5".
   - A section too long for the embedding model is split at its subsections
     "(1)", "(2)", then at paragraphs, then at sentences. Every piece keeps
     the section label.
@@ -26,24 +28,47 @@ follows sections, never a fixed number of characters across them:
 
 Pages are separated by form feeds ("\\f") in the text passed in, so each
 chunk can also say which page it starts on.
+
+Size is counted in the embedding model's own tokens when ingest passes its
+tokenizer (count_tokens), and estimated cautiously from characters when not.
 """
 
 from __future__ import annotations
 
 import re
+import math
 from dataclasses import dataclass
+from typing import Callable
 
-# multilingual-e5-small reads at most 512 tokens. Legal English runs at about
-# 4 characters a token, and the ingest step adds a title line, so stay well
-# under: 1,400 characters is roughly 350 tokens.
-MAX_CHARS = 1400
-# Pieces shorter than this are joined to the next piece of the same section.
-MIN_CHARS = 200
+# multilingual-e5-small reads at most 512 tokens and silently drops the rest.
+# Out of those 512, ingest needs room for "passage: ", the two special tokens
+# and a title line such as "Data Protection Act, 2019, Section 18 (...)".
+MODEL_MAX_TOKENS = 512
+HEADER_RESERVE = 72
+MAX_TOKENS = MODEL_MAX_TOKENS - HEADER_RESERVE
+# A piece smaller than this at the end of a section is joined to the one before.
+MIN_TOKENS = 50
+
+# Without the real tokenizer, assume 3 characters a token. Legal English is
+# usually nearer 4 with the XLM-R tokenizer e5 uses, and Swahili nearer 3, so
+# this errs towards pieces that are a little small rather than cut off.
+CHARS_PER_TOKEN_ESTIMATE = 3
+
+
+def estimate_tokens(text: str) -> int:
+    return math.ceil(len(text) / CHARS_PER_TOKEN_ESTIMATE)
 
 PAGE_BREAK = "\f"
 
 # "PART III—REGISTRATION ..." (Kenya Law uses an em dash; PDFs vary)
 _PART = re.compile(r"^PART\s+([IVXLC]+)\b\s*[—–\-:.]?\s*(.*)$")
+# Acts number sections, regulations number regulations, rules number rules.
+UNITS = ("Section", "Regulation", "Rule", "Paragraph")
+_NUMBERED_LABEL = re.compile(rf"^({'|'.join(UNITS)}) \d")
+_ARRANGEMENT = re.compile(r"^ARRANGEMENT OF (SECTIONS|REGULATIONS|RULES|PARAGRAPHS)\b", re.I)
+# Where the instrument itself starts, after its contents list.
+_INSTRUMENT_START = re.compile(r"^(AN ACT|IN EXERCISE)\b", re.I)
+
 # "18. Registration of ..." or "23A. Exemptions". Number, dot, then a capital,
 # an opening bracket or a quote.
 _SECTION = re.compile(r"^(\d{1,3}[A-Z]{0,2})\.\s+(?=[A-Z(“\"'])(.*)$")
@@ -166,7 +191,28 @@ def _take_margin_note(current: list[tuple[int, str]]) -> str:
     return ""
 
 
-def _blocks(lines: list[tuple[int, str]]) -> list[tuple[str | None, list[tuple[int, str]]]]:
+def detect_unit(lines: list[tuple[int, str]]) -> str:
+    """What the numbered parts are called: Section, Regulation or Rule.
+
+    Read from the contents heading ("ARRANGEMENT OF REGULATIONS"), the
+    enacting words ("...makes the following Regulations—") or the title
+    ("...REGULATIONS, 2021"), all near the top of the document.
+    """
+    head = [l for _, l in lines[:80] if l]
+    for l in head:
+        m = _ARRANGEMENT.match(l)
+        if m:
+            return {"SECTIONS": "Section", "REGULATIONS": "Regulation",
+                    "RULES": "Rule", "PARAGRAPHS": "Paragraph"}[m.group(1).upper()]
+    joined = "\n".join(head)
+    if re.search(r"\bmakes? the following Regulations\b|^THE .*REGULATIONS,? \d{4}\s*$", joined, re.M | re.I):
+        return "Regulation"
+    if re.search(r"\bmakes? the following Rules\b|^THE .*RULES,? \d{4}\s*$", joined, re.M | re.I):
+        return "Rule"
+    return "Section"
+
+
+def _blocks(lines: list[tuple[int, str]], unit: str = "Section") -> list[tuple[str | None, list[tuple[int, str]]]]:
     """Group lines under the section, schedule or heading they belong to."""
     blocks: list[tuple[str | None, list[tuple[int, str]]]] = []
     label: str | None = None
@@ -203,7 +249,7 @@ def _blocks(lines: list[tuple[int, str]]) -> list[tuple[str | None, list[tuple[i
                 flush()
                 last_number = number
                 found_sections = True
-                label = f"Section {m_sec.group(1)}" + (f" ({title})" if title else "")
+                label = f"{unit} {m_sec.group(1)}" + (f" ({title})" if title else "")
                 if part:
                     label += f", {part}"
         elif m_head and not found_sections:
@@ -253,9 +299,19 @@ def _split_definitions(body: str) -> list[tuple[str | None, str]] | None:
 # Splitting to size
 # ---------------------------------------------------------------------------
 
-def _split_long(text: str) -> list[str]:
-    """Split one section's text to MAX_CHARS, at the biggest boundary that works."""
-    if len(text) <= MAX_CHARS:
+@dataclass
+class _Budget:
+    count: Callable[[str], int]
+    max_tokens: int
+    min_tokens: int
+
+    def fits(self, text: str) -> bool:
+        return self.count(text) <= self.max_tokens
+
+
+def _split_long(text: str, budget: _Budget) -> list[str]:
+    """Split one section's text to the token budget, at the biggest boundary that works."""
+    if budget.fits(text):
         return [text]
     for splitter in (
         lambda t: _SUBSECTION.split(t),               # (1), (2) ...
@@ -264,32 +320,34 @@ def _split_long(text: str) -> list[str]:
     ):
         parts = [p.strip() for p in splitter(text) if p.strip()]
         if len(parts) > 1:
-            return _pack(parts)
+            return _pack(parts, budget)
     # One enormous sentence: cut on words.
     words, out, buf = text.split(), [], ""
     for w in words:
-        if len(buf) + len(w) + 1 > MAX_CHARS and buf:
+        candidate = f"{buf} {w}".strip()
+        if buf and not budget.fits(candidate):
             out.append(buf)
             buf = w
         else:
-            buf = f"{buf} {w}".strip()
+            buf = candidate
     return out + ([buf] if buf else [])
 
 
-def _pack(parts: list[str]) -> list[str]:
-    """Join neighbouring parts up to MAX_CHARS; split any part that is too big."""
+def _pack(parts: list[str], budget: _Budget) -> list[str]:
+    """Join neighbouring parts up to the budget; split any part that is too big."""
     out: list[str] = []
     buf = ""
     for part in parts:
-        for piece in _split_long(part) if len(part) > MAX_CHARS else [part]:
-            if buf and len(buf) + len(piece) + 1 > MAX_CHARS:
+        for piece in [part] if budget.fits(part) else _split_long(part, budget):
+            joined = f"{buf}\n{piece}" if buf else piece
+            if buf and not budget.fits(joined):
                 out.append(buf)
                 buf = piece
             else:
-                buf = f"{buf}\n{piece}" if buf else piece
+                buf = joined
     if buf:
-        # Don't leave a scrap at the end of a section.
-        if out and len(buf) < MIN_CHARS and len(out[-1]) + len(buf) + 1 <= MAX_CHARS * 1.2:
+        # Don't leave a scrap at the end of a section, if the one before has room.
+        if out and budget.count(buf) < budget.min_tokens and budget.fits(f"{out[-1]}\n{buf}"):
             out[-1] = f"{out[-1]}\n{buf}"
         else:
             out.append(buf)
@@ -301,35 +359,54 @@ def _pack(parts: list[str]) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def _skip_arrangement(lines: list[tuple[int, str]]) -> list[tuple[int, str]]:
-    """Drop the "Arrangement of Sections" contents list at the start of an Act.
+    """Drop the contents list at the start of an Act or regulations.
 
-    It lists every section ("1. Short title", "2. Interpretation" ...) and
-    would otherwise be read as the sections themselves. The Act proper
-    starts at its long title, "AN ACT of Parliament to ...".
+    "ARRANGEMENT OF SECTIONS" (or REGULATIONS, RULES) lists every numbered
+    part ("1. Short title", "2. Interpretation" ...) and would otherwise be
+    read as the parts themselves. The instrument proper starts at "AN ACT of
+    Parliament to ..." or, for regulations, "IN EXERCISE of the powers ...".
     """
-    start = next((i for i, (_, l) in enumerate(lines) if re.match(r"^ARRANGEMENT OF SECTIONS", l, re.I)), None)
+    start = next((i for i, (_, l) in enumerate(lines) if _ARRANGEMENT.match(l)), None)
     if start is None:
         return lines
-    end = next((i for i, (_, l) in enumerate(lines[start:], start) if re.match(r"^AN ACT\b", l, re.I)), None)
+    end = next((i for i, (_, l) in enumerate(lines[start:], start) if _INSTRUMENT_START.match(l)), None)
     if end is None:
         return lines
     return lines[:start] + lines[end:]
 
 
-def chunk_legal_text(text: str) -> list[LegalChunk]:
-    """Split a whole document (pages separated by "\\f") into cited chunks."""
+def chunk_legal_text(
+    text: str,
+    unit: str | None = None,
+    count_tokens: Callable[[str], int] | None = None,
+    max_tokens: int = MAX_TOKENS,
+) -> list[LegalChunk]:
+    """Split a whole document (pages separated by "\\f") into cited chunks.
+
+    unit: "Section", "Regulation" or "Rule". Detected from the text if not given.
+    count_tokens: the embedding model's tokenizer. Estimated from characters if not given.
+    max_tokens: the most a piece may hold, leaving room for the title line ingest adds.
+    """
+    if unit is not None and unit not in UNITS:
+        raise ValueError(f"unit must be one of {UNITS}, got {unit!r}")
+    budget = _Budget(count_tokens or estimate_tokens, max_tokens, MIN_TOKENS)
     has_pages = PAGE_BREAK in text
     lines: list[tuple[int, str]] = []
     for page_no, page in enumerate(text.split(PAGE_BREAK), start=1):
         for line in clean(page).split("\n"):
             lines.append((page_no, line))
+    unit = unit or detect_unit(lines)
     lines = _skip_arrangement(lines)
 
-    blocks = _blocks(lines)
-    # The text before section 1 of an Act is its long title, which says what
-    # the Act is for. Worth keeping, and worth a label a citation can use.
-    if blocks and blocks[0][0] is None and any(re.match(r"^AN ACT\b", l, re.I) for _, l in blocks[0][1]):
-        blocks[0] = ("Long title", blocks[0][1])
+    blocks = _blocks(lines, unit)
+    # The text before section 1 says what the instrument is for (an Act's
+    # long title) or which power it is made under (regulations). Worth keeping.
+    if blocks and blocks[0][0] is None:
+        first = [l for _, l in blocks[0][1]]
+        if any(re.match(r"^AN ACT\b", l, re.I) for l in first):
+            blocks[0] = ("Long title", blocks[0][1])
+        elif any(re.match(r"^IN EXERCISE\b", l, re.I) for l in first):
+            blocks[0] = ("Enabling power", blocks[0][1])
 
     chunks: list[LegalChunk] = []
     for label, block in blocks:
@@ -340,7 +417,7 @@ def chunk_legal_text(text: str) -> list[LegalChunk]:
             offsets.append((pos, page))
             pos += len(t) + 1
 
-        definitions = _split_definitions(body) if label and label.startswith("Section") else None
+        definitions = _split_definitions(body) if label and _NUMBERED_LABEL.match(label) else None
         if definitions:
             # Each term keeps the opening words ("In this Act, unless the
             # context otherwise requires—") so it reads as a definition.
@@ -352,7 +429,7 @@ def chunk_legal_text(text: str) -> list[LegalChunk]:
 
         search_from = 0
         for part_label, part_text in parts:
-            for piece in _split_long(part_text):
+            for piece in _split_long(part_text, budget):
                 probe = piece[len(intro) + 1:] if definitions and intro and piece.startswith(intro) else piece
                 probe = probe[:40]
                 start = body.find(probe, search_from)
