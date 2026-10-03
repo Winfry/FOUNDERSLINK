@@ -26,7 +26,9 @@ The AI decides **fit** (sector, stage, amount, mandate). The backend decides **r
 |---|---|
 | **Apply now** | She fits and meets every requirement. |
 | **Apply after you fix this** | She fits, but a requirement is missing, e.g. a KRA PIN or business registration. Each gap links to its compliance item and official source. |
-| **Not for you** | Wrong business type, amount or county, or a "grant" that charges a fee. The reason is shown. |
+| **Not for you** | Wrong business type, amount or county, or she does not meet an eligibility rule. The reason is shown. |
+
+Each funder can also carry **risk factors**, such as an application fee or details that have not been verified. A risk factor is shown on the card and tells the founder what to check. It does not label the funder a scam and does not move it between groups.
 
 Both paths use the same engine. The difference is data and wording, not separate features.
 
@@ -36,7 +38,7 @@ Both paths use the same engine. The difference is data and wording, not separate
 | Funders | Angels, VC funds, accelerators, grants | Government funds, SACCOs, bank SME loans, grants |
 | Wording | Pitch / Pitch after / Don't pitch | Apply now / Apply after / Not for you |
 
-**SME example (illustrative, not real requirements):** a salon owner in Mombasa, trading informally, wants KSh 150,000 for stock. She sees one fund she can apply to today, a bank SME loan she qualifies for once she registers and gets a KRA PIN, and a venture fund and a fee-charging "grant" under "not for you".
+**SME example (illustrative, not real requirements):** a salon owner in Mombasa, trading informally, wants KSh 150,000 for stock. She sees one fund she can apply to today, a bank SME loan she qualifies for once she registers and gets a KRA PIN, and and a venture fund under "not for you". A "grant" that charges an application fee stays in its group with a risk factor on the card.
 
 Compliance stops being a separate product here: a readiness gap is the compliance item standing between the founder and a specific funder.
 
@@ -108,11 +110,12 @@ The backend then adds readiness: for each funder that fits, it compares the fund
 For whoever curates the data. Each record needs the funder fields in 4.2, plus:
 
 - `requirements`: a list of compliance item ids the funder requires
+- `eligibility`: any of `women_owned`, `youth_owned`, `pwd_owned`; empty means open to all
 - `application_fee_kes` and `deadline`
 - `how_to_apply_url`
 - `source_url`, `last_verified_at`, `verified_by`
 
-Every requirement must be taken from the funder's own published source. We need about 20 records covering both paths, including one fee-charging "grant" for the scam warning.
+Every requirement must be taken from the funder's own published source. We need about 20 records covering both paths, including one fee-charging "grant" to show the application-fee risk factor.
 
 ---
 
