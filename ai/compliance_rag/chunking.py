@@ -111,11 +111,12 @@ _LIGATURES = str.maketrans({"\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\uf
 
 
 def _is_garbage(line: str) -> bool:
-    """OCR debris from Gazette crests and stamps: mostly not letters."""
+    """OCR debris from Gazette crests and stamps: mostly neither letters nor
+    digits. Digits count as content: "4,000 2,000" is a row of a fees table."""
     if len(line) < 8:
         return False
-    letters = sum(ch.isalpha() for ch in line)
-    return letters / len(line) < 0.4
+    content = sum(ch.isalnum() for ch in line)
+    return content / len(line) < 0.4
 
 
 @dataclass
