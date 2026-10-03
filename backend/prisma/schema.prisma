@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Field names are snake_case on purpose: the API returns rows as they are
+// stored, so the names here are the names the frontend sees.
+
+enum Role {
+  founder
+  investor
+  expert
+}
+
+enum JourneyType {
+  startup
+  sme
+}
+
+enum BusinessStatus {
+  idea
+  informal
+  registered_business_name
+  limited_company
+}
+
+model User {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  email         String   @unique
+  password_hash String
+  full_name     String
+  role          Role     @default(founder)
+  created_at    DateTime @default(now())
+
+  founder_profile FounderProfile?
+
+  @@map("users")
+}
+
+// Fields follow docs/FUNDING_FLOW.md section 3.
+model FounderProfile {
+  id                 String         @id @default(uuid(7)) @db.Uuid
+  user_id            String         @unique @db.Uuid
+  journey_type       JourneyType
+  business_status    BusinessStatus
+  business_name      String?
+  description        String
+  sector             String
+  county             String
+  funding_amount_kes Int?
+  use_of_funds       String?
+
+  // Startup path
+  stage       String?
+  instruments String[]
+
+  // SME path
+  months_trading       Int?
+  monthly_revenue_band String?
+  has_employees        Boolean?
+
+  // Ids of compliance items the founder says she already has.
+  already_have String[]
+
+  // Opt-in and self-declared. Null means "not stated". Used only to check
+  // eligibility for funders that require them, never to rank.
+  women_owned Boolean?
+  youth_owned Boolean?
+  pwd_owned   Boolean?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("founder_profiles")
+}
