@@ -13,7 +13,7 @@ We build one flow first: a founder describes her business, and we show which fun
 |---|---|---|
 | F1 | The backend is **Node**. It owns the database and the API the frontend calls. | Agreed: D8 in `TEAM_DECISIONS.md`. |
 | F2 | The AI code is **exposed over HTTP** as an internal service. The backend sends a shared key on every call. | Same as D8 in `TEAM_DECISIONS.md`. |
-| F3 | Funders are **records built from published information**, not users. | D1 makes investors first-class users in the MVP. Investor sign-up moves to the roadmap. This removes the cold-start problem. |
+| F3 | A **funder record** and an **investor user** are two different things, and the platform has both (section 6). | D1 only describes investors as users. Records are added so founders get matches before any investor has joined. |
 | F4 | Onboarding takes a **typed description** tonight. | Deck upload is a nice-to-have. |
 | F5 | The AI service **never reads the database**. The backend sends everything it needs in each request. | D8 lets the AI service read profile tables and own vector tables. Under F5 it does neither, so `user_id` in `/recommend` is replaced by the profile and the candidates. |
 
@@ -115,6 +115,40 @@ The backend then adds readiness: for each funder that fits, it compares the fund
 
 ---
 
+### 4.3 Explain a fit (profile page)
+
+Called when a founder opens an investor's profile. The track record is sent without company names.
+
+```
+POST /explain-fit
+{ "profile": { ...onboarding fields... },
+  "candidate": { ...funder fields as in 4.2... },
+  "track_record": [ { "sector": "health", "stage": "mvp", "source": "public" } ],
+  "language": "en" }
+
+→ { "band": "strong",
+    "components": [ { "signal": "sector", "fits": true, "text": "Funds health businesses" } ],
+    "reasons": [ "Funds health businesses at your stage." ],
+    "track_record_highlights": [ "Has backed 2 health businesses before" ] }
+```
+
+### 4.4 Vetting risk signals
+
+Called when someone submits a vetting application. It sorts the admin queue and tells the admin what to look at. It never approves or rejects anyone.
+
+```
+POST /vetting/risk-signals
+{ "application": { "role": "investor", "statement": "...", "bio": "...",
+                   "organisation_name": "...", "organisation_website": "...",
+                   "email_domain": "example.com" } }
+
+→ { "risk_level": "low" | "medium" | "high", "signals": [ "..." ] }
+```
+
+The AI gets the email domain, not the address, and never the phone number. The one check that needs the database, whether the same phone number is on another account, is done by the backend and added to the signals.
+
+---
+
 ## 5. Funder record format
 
 For whoever curates the data. Each record needs the funder fields in 4.2, plus:
@@ -129,7 +163,79 @@ Every requirement must be taken from the funder's own published source. We need 
 
 ---
 
-## 6. Open questions
+## 6. Funder records and investor users
+
+### 6.1 The distinction
+
+| | Funder record | Investor user |
+|---|---|---|
+| What it is | A description of a source of money: a fund, a grant, a loan product, an angel group | A person who has signed up to act for a funder |
+| Where it comes from | Curated by us from what the funder publishes, with a source link and a last-verified date | The investor registers and is vetted and approved (D7) |
+| Exists on day one | Yes | No. Only after investors join |
+| How it is trusted | Checked against the funder's own source | Checked by an admin: identity, organisation, track record |
+| What a founder can do | See the fit, the gaps and how to apply. She applies through the funder's own channel | The same, plus connect in the app, message and open a deal |
+| Label on the card | "From public information, last verified <date>" | "Maintained by the funder" |
+
+**How they connect.** An approved investor can claim the record for their organisation. From then on they keep its mandate, ticket size and requirements up to date, and founders can reach them in the app. An investor whose organisation has no record yet creates one. Matching always runs on records, so a founder sees one list, whether or not anyone has claimed each record.
+
+Many records will never have a user behind them, and that is fine. A government fund or a bank loan product is unlikely to sign up, but a founder still needs to know whether she qualifies.
+
+### 6.2 Why an investor would sign up
+
+An investor's problem is not finding somewhere to put money. It is the time spent filtering what reaches them. So the offer to investors is about better inbound, not more of it:
+
+- **Fewer pitches outside their mandate.** Founders are told not to pitch funders they don't fit, and why.
+- **Founders who arrive ready.** Readiness gaps are closed before the founder reaches them: registered, tax-compliant, documents in place.
+- **Reach beyond their own network.** Founders outside Nairobi and outside the usual circles, which matters to funders whose mandate covers particular counties or women-led businesses.
+- **Control of their own listing.** A claimed record says what the funder actually wants, in place of our reading of their website.
+- **Vetted counterparties.** Founders are checked before joining too (D7), so trust runs both ways.
+- **A track record that is verified.** Deals closed on the platform appear on their profile as verified (D6).
+
+These are our assumptions. We have not tested them with investors, and the pitch should say so. The first two only become real once there are enough founders on the platform, which is why records come first and investor users second.
+
+### 6.3 What a member sees before and after approval
+
+D7 says nobody is matched until an admin approves them. We keep that for everything that shows one member to another, and show public information and counts before approval, so a new member sees the value before the wait.
+
+| | Before approval | After approval |
+|---|---|---|
+| Founder | Her funding matches against records built from public information. For a record an investor maintains: the record, and a count ("2 of your matches have investors on FounderLink"), not the person. | The investor behind a record, and profile pages. |
+| Investor | The number of businesses that match her fund, not who they are. Her own record is hidden from founders. | The matching founders, with name, business details and whether each meets her requirements. Her record appears in founders' matches. |
+| Anyone | Cannot open a profile page. Does not appear in anyone's matches. | Can open approved members' profiles. Contact details are never shown. |
+
+---
+
+## 7. Build status against `TEAM_DECISIONS.md`
+
+**Updated:** 3 October, 20:30. What the Node backend does today, decision by decision. "Built" means it runs and has tests.
+
+| Decision | Status | Built | Not built |
+|---|---|---|---|
+| **D1** Participants | Mostly | Sign-up as founder, investor or expert. Founder onboarding on the startup and SME paths. Investor and expert profiles. An investor describes what she funds as a funder record she maintains, or asks to take over an existing record and gets it on approval (section 6). | Founder ↔ founder and founder ↔ expert matching. `investor_profiles` holds the person and organisation only: the mandate lives on the funder record, so it is not stored twice. |
+| **D2** Messaging | Not started | | Conversations, messages, the real-time layer, the scam check on messages, report and block. |
+| **D3** Compliance | Small part | A compliance item list. Founders tick what they already have. Funding matches show the items a funder still requires as gaps. | The personal checklist and its status, Ask Compliance, deal compliance, deadlines, source management. |
+| **D4** Deals | Not started | | Everything. |
+| **D5** AI contract | 4 of 9 endpoints | `/extract-profile`, `/recommend`, `/explain-fit` and `/vetting/risk-signals`, with the API key, in the shapes in section 4. A rule-based stand-in answers each one until the AI service is reachable. | Calls to `/compliance/applicable`, `/compliance/answer`, `/moderation/check-message`, `/embeddings/refresh`. They back features that are not built yet. |
+| **D6** Recommended profiles | Partly | A profile page for founders, investors and experts, open to approved members only. A founder sees her fit with an investor: band, per-signal breakdown and track-record highlights. Investors add portfolio entries and founders add past ventures, each labelled "Public source" or "Self-reported". A portfolio company is named only if it agreed or the deal is public. | "Verified on FounderLink" entries, which come from closed deals (D4). Activity signals, which come from messaging (D2). Connect / Save / Not relevant. |
+| **D7** Vetted network | Mostly | An approval status on every user. An application the person fills in and submits. Risk signals on submission. An admin queue sorted by risk, with approve, reject and needs-more-info, each with a written reason and recorded checks. Suspend and reinstate. An audit log. A guard that blocks unapproved members, read from the database on every request. Admins are created by a script, never by sign-up. | Real identity, OTP and register checks: the identity step is a manual admin review and no ID number or document is stored. The two-admin rule for investors. Automatic pause after several reports. Yearly re-checks. |
+| **D8** Node backend | Mostly | Node, TypeScript, Express, Prisma, PostgreSQL. The backend owns the schema and migrations. Shared key on AI calls. The backend keeps working when the AI service is down. | `pgvector` is not enabled. `docker-compose.yml` is still empty. No deployment. |
+
+**Where the build differs from `TEAM_DECISIONS.md` on purpose**
+
+- `/recommend` receives the profile and the candidates, not a `user_id`, and returns every candidate (F5, section 4.2).
+- When the AI service is down, the backend answers with its stand-in and labels the answer, where D8 says to show "temporarily unavailable".
+- A fee is a risk factor on a funder, not a scam label (section 2).
+- Before approval a member sees public information and counts, not nothing (section 6.3).
+
+**Built but not in `TEAM_DECISIONS.md`**
+
+- Funder records with a loader, ten demo funders and five demo compliance items, all made up and marked as demo data.
+- Readiness gaps and the three groups: apply now, apply after, not for you.
+- Risk factors on funders: application fee, passed deadline, not verified, demo data.
+
+---
+
+## 8. Open questions
 
 1. **Data:** who curates the funder records and their requirements?
 
