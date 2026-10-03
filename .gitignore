@@ -235,6 +235,7 @@ dist-web/
 # AI artefacts (large model files and vector indexes stay out of git)
 ai/**/*.faiss
 ai/**/*.index
+ai/compliance_rag/index/
 models_cache/
 
 # Uploaded M-Pesa statements must never be committed
