@@ -18,6 +18,7 @@ import {
   type MatchFunder,
   type MatchProfile,
   type MatchResult,
+  type ModerationResult,
   type RiskAssessment,
   type RiskInput,
   type TrackRecordItem,
@@ -186,4 +187,15 @@ export async function answerCompliance(
     suggest_expert: answer.suggest_expert || !cited,
     engine: "ai_service",
   };
+}
+
+const moderationSchema = z.object({ flagged: z.boolean(), reasons: z.array(z.string()).default([]) });
+
+// The AI service gets the message with contact details replaced by
+// placeholders. The stand-in runs inside the backend, so it reads the
+// original text.
+export async function checkMessage(text: string): Promise<ModerationResult & { engine: Engine }> {
+  const answer = await post("/moderation/check-message", { text: redact(text) }, moderationSchema);
+  if (answer) return { ...answer, engine: "ai_service" };
+  return { ...standin.checkMessage(text), engine: "stand_in" };
 }

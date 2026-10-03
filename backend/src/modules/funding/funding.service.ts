@@ -31,7 +31,11 @@ const funderFields = {
 // A record an investor maintains is shown to founders only once that
 // investor has been approved. Records built from public information are
 // always shown.
+//
+// Funders that fund groups are left out here: an individual founder
+// cannot meet a group's requirements. A circle sees them on its own page.
 const visibleToFounders = {
+  serves_groups: false,
   OR: [{ claimed_by_user_id: null }, { claimed_by: { approval_status: "approved" as const } }],
 };
 

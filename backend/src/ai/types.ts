@@ -124,3 +124,8 @@ export interface AnswerSource {
   last_verified_at: Date | null;
   needs_review: boolean;
 }
+
+export interface ModerationResult {
+  flagged: boolean;
+  reasons: string[];
+}

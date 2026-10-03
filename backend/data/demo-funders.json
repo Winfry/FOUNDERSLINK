@@ -3,36 +3,76 @@
     "name": "Savanna Angels Network (demo)",
     "kind": "angel",
     "mandate_text": "A group of angel investors backing early Kenyan startups in health, fintech and agriculture that already have a working product.",
-    "journey_types": ["startup"],
-    "sectors": ["health", "fintech", "agri"],
-    "stages": ["mvp", "early_revenue"],
-    "instruments": ["equity", "convertible_note"],
+    "journey_types": [
+      "startup"
+    ],
+    "sectors": [
+      "health",
+      "fintech",
+      "agri"
+    ],
+    "stages": [
+      "mvp",
+      "early_revenue"
+    ],
+    "instruments": [
+      "equity",
+      "convertible_note"
+    ],
     "ticket_min_kes": 500000,
     "ticket_max_kes": 5000000,
-    "requirements": ["brs_registration", "kra_pin"],
+    "requirements": [
+      "brs_registration",
+      "kra_pin"
+    ],
     "is_demo": true
   },
   {
     "name": "Rift Growth Fund (demo)",
     "kind": "vc",
     "mandate_text": "A venture fund for startups with revenue in fintech, climate and logistics that are ready to scale across East Africa.",
-    "journey_types": ["startup"],
-    "sectors": ["fintech", "climate", "logistics"],
-    "stages": ["early_revenue", "growth"],
-    "instruments": ["equity"],
+    "journey_types": [
+      "startup"
+    ],
+    "sectors": [
+      "fintech",
+      "climate",
+      "logistics"
+    ],
+    "stages": [
+      "early_revenue",
+      "growth"
+    ],
+    "instruments": [
+      "equity"
+    ],
     "ticket_min_kes": 10000000,
     "ticket_max_kes": 60000000,
-    "requirements": ["brs_registration", "kra_pin", "tax_compliance_certificate"],
+    "requirements": [
+      "brs_registration",
+      "kra_pin",
+      "tax_compliance_certificate"
+    ],
     "is_demo": true
   },
   {
     "name": "HealthBridge Accelerator (demo)",
     "kind": "accelerator",
     "mandate_text": "A six-month programme for health startups at idea or prototype stage, with a small grant and mentoring.",
-    "journey_types": ["startup"],
-    "sectors": ["health"],
-    "stages": ["idea", "mvp"],
-    "instruments": ["grant", "equity"],
+    "journey_types": [
+      "startup"
+    ],
+    "sectors": [
+      "health"
+    ],
+    "stages": [
+      "idea",
+      "mvp"
+    ],
+    "instruments": [
+      "grant",
+      "equity"
+    ],
     "ticket_min_kes": 500000,
     "ticket_max_kes": 3000000,
     "is_demo": true
@@ -41,10 +81,19 @@
     "name": "Climate Tech Seed Programme (demo)",
     "kind": "accelerator",
     "mandate_text": "Grants for very early climate and clean-energy startups anywhere in Kenya.",
-    "journey_types": ["startup"],
-    "sectors": ["climate"],
-    "stages": ["idea", "mvp"],
-    "instruments": ["grant"],
+    "journey_types": [
+      "startup"
+    ],
+    "sectors": [
+      "climate"
+    ],
+    "stages": [
+      "idea",
+      "mvp"
+    ],
+    "instruments": [
+      "grant"
+    ],
     "ticket_min_kes": 1000000,
     "ticket_max_kes": 4000000,
     "is_demo": true
@@ -53,57 +102,104 @@
     "name": "Pwani Women in Business Grant (demo)",
     "kind": "grant",
     "mandate_text": "Small grants for women-owned businesses of any kind at the coast.",
-    "journey_types": ["startup", "sme"],
-    "counties": ["Mombasa", "Kilifi", "Kwale"],
-    "instruments": ["grant"],
+    "journey_types": [
+      "startup",
+      "sme"
+    ],
+    "counties": [
+      "Mombasa",
+      "Kilifi",
+      "Kwale"
+    ],
+    "instruments": [
+      "grant"
+    ],
     "ticket_min_kes": 50000,
     "ticket_max_kes": 500000,
-    "eligibility": ["women_owned"],
+    "eligibility": [
+      "women_owned"
+    ],
     "is_demo": true
   },
   {
     "name": "County Youth Enterprise Loan (demo)",
     "kind": "government_fund",
     "mandate_text": "Low-interest loans for youth-owned small businesses in Nairobi and Machakos.",
-    "journey_types": ["sme"],
-    "counties": ["Nairobi", "Machakos"],
-    "instruments": ["loan"],
+    "journey_types": [
+      "sme"
+    ],
+    "counties": [
+      "Nairobi",
+      "Machakos"
+    ],
+    "instruments": [
+      "loan"
+    ],
     "ticket_min_kes": 20000,
     "ticket_max_kes": 300000,
-    "requirements": ["kra_pin"],
-    "eligibility": ["youth_owned"],
+    "requirements": [
+      "kra_pin"
+    ],
+    "eligibility": [
+      "youth_owned"
+    ],
     "is_demo": true
   },
   {
     "name": "Lake Basin Agri Catalyst (demo)",
     "kind": "grant",
     "mandate_text": "Grants for farming and agri-processing businesses around Lake Victoria.",
-    "journey_types": ["startup", "sme"],
-    "sectors": ["agri"],
-    "counties": ["Kisumu", "Siaya", "Homa Bay"],
-    "instruments": ["grant"],
+    "journey_types": [
+      "startup",
+      "sme"
+    ],
+    "sectors": [
+      "agri"
+    ],
+    "counties": [
+      "Kisumu",
+      "Siaya",
+      "Homa Bay"
+    ],
+    "instruments": [
+      "grant"
+    ],
     "ticket_min_kes": 200000,
     "ticket_max_kes": 2000000,
-    "requirements": ["brs_registration"],
+    "requirements": [
+      "brs_registration"
+    ],
     "is_demo": true
   },
   {
     "name": "SME Working Capital Loan (demo bank product)",
     "kind": "bank",
     "mandate_text": "A bank loan for registered small businesses that need money for stock or day-to-day costs.",
-    "journey_types": ["sme"],
-    "instruments": ["loan"],
+    "journey_types": [
+      "sme"
+    ],
+    "instruments": [
+      "loan"
+    ],
     "ticket_min_kes": 100000,
     "ticket_max_kes": 5000000,
-    "requirements": ["brs_registration", "kra_pin", "business_bank_account"],
+    "requirements": [
+      "brs_registration",
+      "kra_pin",
+      "business_bank_account"
+    ],
     "is_demo": true
   },
   {
     "name": "Mtaani Starter Fund (demo)",
     "kind": "government_fund",
     "mandate_text": "Small starter loans for informal and newly started small businesses, with no registration needed.",
-    "journey_types": ["sme"],
-    "instruments": ["loan"],
+    "journey_types": [
+      "sme"
+    ],
+    "instruments": [
+      "loan"
+    ],
     "ticket_min_kes": 5000,
     "ticket_max_kes": 200000,
     "is_demo": true
@@ -112,11 +208,51 @@
     "name": "Global Founders Grant Award (demo)",
     "kind": "grant",
     "mandate_text": "A grant award open to any founder in any sector. Applicants pay a fee to apply.",
-    "journey_types": ["startup", "sme"],
-    "instruments": ["grant"],
+    "journey_types": [
+      "startup",
+      "sme"
+    ],
+    "instruments": [
+      "grant"
+    ],
     "ticket_min_kes": 100000,
     "ticket_max_kes": 10000000,
     "application_fee_kes": 2500,
+    "is_demo": true
+  },
+  {
+    "name": "Vikundi Group Loan (demo)",
+    "kind": "government_fund",
+    "mandate_text": "Loans to registered groups of small business owners, repaid by the group together.",
+    "journey_types": [
+      "sme",
+      "startup"
+    ],
+    "instruments": [
+      "loan"
+    ],
+    "ticket_min_kes": 50000,
+    "ticket_max_kes": 500000,
+    "requirements": [
+      "group_registration"
+    ],
+    "serves_groups": true,
+    "is_demo": true
+  },
+  {
+    "name": "Chama Starter Grant (demo)",
+    "kind": "grant",
+    "mandate_text": "Small grants to savings groups, registered or not, to start a shared business.",
+    "journey_types": [
+      "sme",
+      "startup"
+    ],
+    "instruments": [
+      "grant"
+    ],
+    "ticket_min_kes": 20000,
+    "ticket_max_kes": 150000,
+    "serves_groups": true,
     "is_demo": true
   }
 ]

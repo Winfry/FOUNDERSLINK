@@ -183,3 +183,18 @@ test("compliance/answer: an answer with nothing to cite is never treated as conf
   assert.equal(cited.confident, true);
   assert.deepEqual(cited.citations, [citation]);
 });
+
+test("moderation: the AI sees the message with contact details replaced, and the stand-in takes over on failure", async () => {
+  const text = "Send the processing fee by M-Pesa to 0712345678";
+
+  reply = () => ({ json: { flagged: true, reasons: ["Reads like an advance-fee request"] } });
+  const fromAi = await client.checkMessage(text);
+  assert.equal(seen.path, "/moderation/check-message");
+  assert.deepEqual(seen.body, { text: "Send the processing fee by M-Pesa to [phone removed]" });
+  assert.deepEqual(fromAi, { flagged: true, reasons: ["Reads like an advance-fee request"], engine: "ai_service" });
+
+  reply = () => ({ status: 500, json: {} });
+  const fallback = await client.checkMessage(text);
+  assert.equal(fallback.engine, "stand_in");
+  assert.equal(fallback.flagged, true);
+});

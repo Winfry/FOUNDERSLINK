@@ -14,6 +14,7 @@ import type {
   MatchFunder,
   MatchProfile,
   MatchResult,
+  ModerationResult,
   Reason,
   RiskAssessment,
   RiskInput,
@@ -292,4 +293,26 @@ export function answerCompliance(question: string, sources: AnswerSource[]): Com
     confident: true,
     suggest_expert: false,
   };
+}
+
+const HAS_NUMBER = /(\+?254|0)[17]\d{8}|\b\d{5,7}\b/;
+
+// The scam guard on messages: does this look like a request for money?
+// A flag adds a warning for the people receiving the message. It never
+// blocks the message, because a real investor may also discuss payments.
+export function checkMessage(text: string): ModerationResult {
+  const reasons: string[] = [];
+
+  if (/(processing|registration|facilitation|upfront|application|commitment) fees?/i.test(text)) {
+    reasons.push("Mentions a fee to be paid");
+  }
+  if (/send (me |us )?(the |some |your )?money|tuma (pesa|hela)/i.test(text)) {
+    reasons.push("Asks for money to be sent");
+  }
+  // Naming M-Pesa is ordinary. Naming it next to a number to pay is not.
+  if (/m-?pesa|paybill|till (number|no)|pochi/i.test(text) && HAS_NUMBER.test(text)) {
+    reasons.push("Gives payment details to pay into");
+  }
+
+  return { flagged: reasons.length > 0, reasons };
 }
