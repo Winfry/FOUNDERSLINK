@@ -14,6 +14,20 @@ enum Role {
   founder
   investor
   expert
+  admin
+}
+
+// Where a person is in vetting (TEAM_DECISIONS D7). Only `approved`
+// users appear to others or can see other people's profiles.
+enum ApprovalStatus {
+  draft
+  submitted
+  in_review
+  needs_info
+  approved
+  rejected
+  suspended
+  banned
 }
 
 enum JourneyType {
@@ -33,10 +47,20 @@ model User {
   email         String   @unique
   password_hash String
   full_name     String
-  role          Role     @default(founder)
-  created_at    DateTime @default(now())
+  role            Role           @default(founder)
+  approval_status ApprovalStatus @default(draft)
+  created_at      DateTime       @default(now())
 
-  founder_profile FounderProfile?
+  founder_profile     FounderProfile?
+  investor_profile    InvestorProfile?
+  expert_profile      ExpertProfile?
+  vetting_application VettingApplication?
+  // The funder record this investor maintains, if any.
+  funder              Funder?
+  portfolio           PortfolioEntry[]
+  ventures            Venture[]
+  actions_taken       AdminAction[]       @relation("admin")
+  actions_received    AdminAction[]       @relation("target")
 
   @@map("users")
 }
@@ -122,5 +146,144 @@ model Funder {
   is_demo             Boolean       @default(true)
   created_at          DateTime      @default(now())
 
+  // Set when an approved investor maintains this record. Null means it
+  // was built by us from public information.
+  claimed_by_user_id String? @unique @db.Uuid
+  claimed_by         User?   @relation(fields: [claimed_by_user_id], references: [id], onDelete: SetNull)
+
   @@map("funders")
+}
+
+// The person behind a funder. What they fund lives on their Funder
+// record, so matching always runs on records.
+model InvestorProfile {
+  id                   String   @id @default(uuid(7)) @db.Uuid
+  user_id              String   @unique @db.Uuid
+  organisation_name    String
+  job_title            String?
+  organisation_website String?
+  bio                  String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("investor_profiles")
+}
+
+model ExpertProfile {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  user_id           String   @unique @db.Uuid
+  profession        String // lawyer | accountant | mentor | other
+  organisation_name String?
+  // The professional register the expert says they are on, e.g. LSK.
+  register_body     String?
+  register_number   String?
+  bio               String
+  sectors           String[]
+  counties          String[]
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("expert_profiles")
+}
+
+// What a person submits to be checked. No ID numbers or documents are
+// stored: for the hackathon the identity step is a manual admin review.
+model VettingApplication {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  user_id              String    @unique @db.Uuid
+  phone                String?
+  organisation_name    String?
+  organisation_website String?
+  statement            String?
+  references           String?
+  // An investor may ask to take over an existing funder record. It is
+  // granted only when an admin approves the application.
+  claims_funder_id     String?   @db.Uuid
+  risk_level           String? // low | medium | high
+  risk_signals         String[]
+  submitted_at         DateTime?
+  decided_at           DateTime?
+  decided_by           String?   @db.Uuid
+  decision_reason      String?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  user   User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  checks VettingCheck[]
+
+  @@map("vetting_applications")
+}
+
+model VettingCheck {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  application_id String   @db.Uuid
+  check_type     String // identity | phone | organisation | track_record | professional_register | reference
+  result         String // pass | fail
+  method         String // manual | otp | provider | brs | lsk | icpak | cma | domain | reference
+  checked_by     String   @db.Uuid
+  checked_at     DateTime @default(now())
+
+  application VettingApplication @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@map("vetting_checks")
+}
+
+// Audit log: every admin decision, with its reason.
+model AdminAction {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  admin_id       String   @db.Uuid
+  action         String
+  target_user_id String   @db.Uuid
+  reason         String
+  created_at     DateTime @default(now())
+
+  admin  User @relation("admin", fields: [admin_id], references: [id], onDelete: Cascade)
+  target User @relation("target", fields: [target_user_id], references: [id], onDelete: Cascade)
+
+  @@map("admin_actions")
+}
+
+// An investor's past investment (TEAM_DECISIONS D6).
+model PortfolioEntry {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  investor_id       String   @db.Uuid
+  company_name      String
+  sector            String
+  stage             String?
+  year              Int?
+  instrument        String?
+  amount_range      String?
+  source            String // public | self_reported | platform_deal
+  source_url        String?
+  visibility        String   @default("public") // public | hidden
+  // The company is named to others only if it agreed, or the deal is public.
+  company_consented Boolean  @default(false)
+  created_at        DateTime @default(now())
+
+  investor User @relation(fields: [investor_id], references: [id], onDelete: Cascade)
+
+  @@map("investor_portfolio")
+}
+
+// A founder's previous venture (TEAM_DECISIONS D6).
+model Venture {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  founder_id   String   @db.Uuid
+  venture_name String
+  sector       String
+  role         String
+  years        String?
+  outcome      String?
+  source       String // public | self_reported
+  source_url   String?
+  visibility   String   @default("public")
+  created_at   DateTime @default(now())
+
+  founder User @relation(fields: [founder_id], references: [id], onDelete: Cascade)
+
+  @@map("founder_ventures")
 }

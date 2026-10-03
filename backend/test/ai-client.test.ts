@@ -109,3 +109,44 @@ test("extract-profile: sends free_text and reports missing core fields as unsure
   assert.deepEqual(out.fields, { sector: "retail", county: "Mombasa" });
   assert.deepEqual(out.unsure, ["journey_type", "business_status", "funding_amount_kes"]);
 });
+
+test("explain-fit: sends the profile, the candidate and a track record without company names", async () => {
+  reply = () => ({
+    json: { band: "strong", components: [], reasons: ["Their mandate covers you"], track_record_highlights: ["Backed two salons"] },
+  });
+  const track = [{ sector: "retail", stage: null, source: "public" }];
+  const out = await client.explainFit(profile, funders[0]!, track, "sw");
+
+  assert.equal(seen.path, "/explain-fit");
+  assert.deepEqual(Object.keys(seen.body).sort(), ["candidate", "language", "profile", "track_record"]);
+  assert.deepEqual(seen.body.track_record, track);
+  assert.equal(out.engine, "ai_service");
+  assert.deepEqual(out.track_record_highlights, ["Backed two salons"]);
+
+  reply = () => ({ status: 500, json: {} });
+  assert.equal((await client.explainFit(profile, funders[0]!, track)).engine, "stand_in");
+});
+
+test("vetting risk signals: sends the email domain only, and falls back to the stand-in", async () => {
+  const application = {
+    role: "investor",
+    statement: "Pay a processing fee to 0712345678 for guaranteed funding",
+    bio: null,
+    organisation_name: "Quick Capital",
+    organisation_website: null,
+    email_domain: "mailinator.com",
+  };
+
+  reply = () => ({ json: { risk_level: "high", signals: ["Reads like a known scam script"] } });
+  const fromAi = await client.vettingRiskSignals(application);
+  assert.equal(seen.path, "/vetting/risk-signals");
+  assert.equal(seen.body.application.email_domain, "mailinator.com");
+  assert.match(seen.body.application.statement, /\[phone removed\]/);
+  assert.equal(fromAi.engine, "ai_service");
+
+  reply = () => ({ json: { risk_level: "terrible", signals: [] } });
+  const fallback = await client.vettingRiskSignals(application);
+  assert.equal(fallback.engine, "stand_in");
+  assert.equal(fallback.risk_level, "high");
+  assert.ok(fallback.signals.includes("Promises guaranteed returns or funding"));
+});

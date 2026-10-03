@@ -6,7 +6,19 @@
 import { z } from "zod";
 import { env } from "../config/env.js";
 import * as standin from "./standin.js";
-import { BANDS, type Engine, type Extraction, type MatchFunder, type MatchProfile, type MatchResult } from "./types.js";
+import {
+  BANDS,
+  RISK_LEVELS,
+  type Engine,
+  type Extraction,
+  type FitExplanation,
+  type MatchFunder,
+  type MatchProfile,
+  type MatchResult,
+  type RiskAssessment,
+  type RiskInput,
+  type TrackRecordItem,
+} from "./types.js";
 
 const TIMEOUT_MS = 8000;
 
@@ -21,15 +33,29 @@ export function redact(text: string): string {
 // The service answers with the fields it found, as a flat object.
 const extractionSchema = z.record(z.string(), z.unknown());
 
+const signalSchema = z.object({ signal: z.string(), fits: z.boolean(), text: z.string() });
+
 const recommendSchema = z.array(
   z.object({
     candidate_id: z.string(),
     score: z.number().min(0).max(1),
     band: z.enum(BANDS),
-    signals: z.array(z.object({ signal: z.string(), fits: z.boolean(), text: z.string() })),
+    signals: z.array(signalSchema),
     explanation: z.string(),
   }),
 );
+
+const explainSchema = z.object({
+  band: z.enum(BANDS),
+  components: z.array(signalSchema),
+  reasons: z.array(z.string()),
+  track_record_highlights: z.array(z.string()).default([]),
+});
+
+const riskSchema = z.object({
+  risk_level: z.enum(RISK_LEVELS),
+  signals: z.array(z.string()),
+});
 
 async function post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promise<T | null> {
   if (!env.AI_SERVICE_URL) return null;
@@ -83,4 +109,28 @@ export async function matchFunders(
     return { results, engine: "ai_service" };
   }
   return { results: standin.matchFunders(safeProfile, funders), engine: "stand_in" };
+}
+
+export async function explainFit(
+  profile: MatchProfile,
+  funder: MatchFunder,
+  track: TrackRecordItem[],
+  language = "en",
+): Promise<FitExplanation & { engine: Engine }> {
+  const safeProfile = { ...profile, description: redact(profile.description) };
+  const body = { profile: safeProfile, candidate: funder, track_record: track, language };
+  const answer = await post("/explain-fit", body, explainSchema);
+  if (answer) return { ...answer, engine: "ai_service" };
+  return { ...standin.explainFit(safeProfile, funder, track), engine: "stand_in" };
+}
+
+export async function vettingRiskSignals(input: RiskInput): Promise<RiskAssessment & { engine: Engine }> {
+  const application = {
+    ...input,
+    statement: input.statement && redact(input.statement),
+    bio: input.bio && redact(input.bio),
+  };
+  const answer = await post("/vetting/risk-signals", { application }, riskSchema);
+  if (answer) return { ...answer, engine: "ai_service" };
+  return { ...standin.riskSignals(application), engine: "stand_in" };
 }

@@ -48,3 +48,29 @@ export const COUNTIES = [
   "Narok", "Nyamira", "Nyandarua", "Nyeri", "Samburu", "Siaya", "Taita Taveta", "Tana River",
   "Tharaka Nithi", "Trans Nzoia", "Turkana", "Uasin Gishu", "Vihiga", "Wajir", "West Pokot",
 ] as const;
+
+// Roles a person can sign up as. `admin` is never available at sign-up.
+export const SIGNUP_ROLES = ["founder", "investor", "expert"] as const;
+
+export const PROFESSIONS = ["lawyer", "accountant", "mentor", "other"] as const;
+
+export const CHECK_TYPES = [
+  "identity",
+  "phone",
+  "organisation",
+  "track_record",
+  "professional_register",
+  "reference",
+] as const;
+
+export const CHECK_METHODS = [
+  "manual",
+  "otp",
+  "provider",
+  "brs",
+  "lsk",
+  "icpak",
+  "cma",
+  "domain",
+  "reference",
+] as const;

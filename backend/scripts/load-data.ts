@@ -9,52 +9,33 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import {
-  COUNTIES,
-  ELIGIBILITY_FLAGS,
-  FUNDER_KINDS,
-  INSTRUMENTS,
-  JOURNEY_TYPES,
-  SECTORS,
-  STAGES,
-} from "../src/shared/constants.js";
+  mandateFields,
+  optionalDate,
+  optionalUrl,
+  TICKET_RANGE_MESSAGE,
+  ticketRangeIsValid,
+} from "../src/modules/funding/funder.schema.js";
 import { prisma } from "../src/shared/db.js";
-
-const date = z.coerce.date().nullish().transform((d) => d ?? null);
-const url = z.url().nullish().transform((u) => u ?? null);
 
 const itemSchema = z.object({
   id: z.string().regex(/^[a-z0-9_]+$/, "use lowercase letters, digits and underscores"),
   title: z.string().min(3),
   why: z.string().nullish().transform((v) => v ?? null),
   institution: z.string().nullish().transform((v) => v ?? null),
-  source_url: url,
-  last_verified_at: date,
+  source_url: optionalUrl,
+  last_verified_at: optionalDate,
   is_demo: z.boolean().default(false),
 });
 
-const funderSchema = z
-  .object({
-    name: z.string().min(3),
-    kind: z.enum(FUNDER_KINDS),
-    mandate_text: z.string().min(10),
-    journey_types: z.array(z.enum(JOURNEY_TYPES)).min(1),
-    sectors: z.array(z.enum(SECTORS)).default([]),
-    stages: z.array(z.enum(STAGES)).default([]),
-    counties: z.array(z.enum(COUNTIES)).default([]),
-    instruments: z.array(z.enum(INSTRUMENTS)).min(1),
-    ticket_min_kes: z.number().int().nonnegative(),
-    ticket_max_kes: z.number().int().positive(),
-    requirements: z.array(z.string()).default([]),
-    eligibility: z.array(z.enum(ELIGIBILITY_FLAGS)).default([]),
-    application_fee_kes: z.number().int().nonnegative().default(0),
-    deadline: date,
-    how_to_apply_url: url,
-    source_url: url,
-    last_verified_at: date,
+// A curated record: the mandate, plus where it came from.
+const funderSchema = mandateFields
+  .extend({
+    source_url: optionalUrl,
+    last_verified_at: optionalDate,
     verified_by: z.string().nullish().transform((v) => v ?? null),
     is_demo: z.boolean().default(false),
   })
-  .refine((f) => f.ticket_min_kes <= f.ticket_max_kes, "ticket_min_kes is above ticket_max_kes");
+  .refine(ticketRangeIsValid, TICKET_RANGE_MESSAGE);
 
 function read<T>(path: string, schema: z.ZodType<T>): T[] {
   const raw: unknown = JSON.parse(readFileSync(path, "utf8"));
