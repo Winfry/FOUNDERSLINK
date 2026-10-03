@@ -9,7 +9,10 @@ import {
   getApplicationForReview,
   getQueue,
   listAdminActions,
+  listRechecks,
   reasonSchema,
+  recheck,
+  recheckSchema,
   saveApplication,
   setSuspended,
   submitApplication,
@@ -39,6 +42,15 @@ const isAdmin = requireRole("admin");
 
 vettingRouter.get("/admin/vetting/queue", requireAuth, isAdmin, async (_req, res) => {
   res.json(await getQueue());
+});
+
+// Before "/admin/vetting/:id", which would read "rechecks" as an id.
+vettingRouter.get("/admin/vetting/rechecks", requireAuth, isAdmin, async (_req, res) => {
+  res.json(await listRechecks());
+});
+
+vettingRouter.post("/admin/vetting/:id/recheck", requireAuth, isAdmin, async (req, res) => {
+  res.json(await recheck(req.user!.id, id(req.params.id), recheckSchema.parse(req.body)));
 });
 
 vettingRouter.get("/admin/vetting/:id", requireAuth, isAdmin, async (req, res) => {

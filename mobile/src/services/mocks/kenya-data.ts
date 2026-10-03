@@ -31,7 +31,7 @@ export const PROJECT_TYPES = [
   'youth-led',
 ];
 
-import type { DiscoverFounderCard } from '../../types';
+import type { DiscoverFounderCard, PlatformFounderPeer, PlatformInvestorCard } from '../../types';
 
 export const MOCK_FOUNDERS: DiscoverFounderCard[] = [
   {
@@ -69,6 +69,96 @@ export const MOCK_FOUNDERS: DiscoverFounderCard[] = [
     verifiedDocumentsBadge: true,
     matchReasons: ['Export-focused project', 'Strong traction in Mombasa'],
     projectTypes: ['export', 'commercial'],
+  },
+  {
+    id: 'f4',
+    businessName: 'SolarGrid Kenya',
+    sector: 'Clean Energy',
+    stage: 'early_revenue',
+    county: 'Nakuru',
+    fundingAskKes: 12_000_000,
+    percentRaised: 28,
+    verifiedDocumentsBadge: true,
+    matchReasons: ['Clean energy focus', 'Strong county partnerships'],
+    projectTypes: ['climate', 'impact'],
+  },
+  {
+    id: 'f5',
+    businessName: 'Nairobi Health Connect',
+    sector: 'Health & Wellness',
+    stage: 'mvp',
+    county: 'Nairobi',
+    fundingAskKes: 6_500_000,
+    percentRaised: 18,
+    verifiedDocumentsBadge: false,
+    matchReasons: ['Healthtech growth in Nairobi'],
+    projectTypes: ['impact', 'commercial'],
+  },
+  {
+    id: 'f6',
+    businessName: 'Kilifi Aqua Farms',
+    sector: 'Agritech & Agriculture',
+    stage: 'early_revenue',
+    county: 'Kilifi',
+    fundingAskKes: 9_000_000,
+    percentRaised: 42,
+    verifiedDocumentsBadge: true,
+    matchReasons: ['Coastal aquaculture', 'Women-led team'],
+    projectTypes: ['agriculture', 'women-led'],
+  },
+];
+
+/** Other approved founders visible to founders on the platform (excludes your own business). */
+export const MOCK_PLATFORM_FOUNDER_PEERS: PlatformFounderPeer[] = MOCK_FOUNDERS.filter(
+  (f) => f.id !== 'f1',
+).map((f) => ({
+  id: f.id,
+  businessName: f.businessName,
+  sector: f.sector,
+  county: f.county,
+  stage: f.stage.replace('_', ' '),
+}));
+
+export const MOCK_PLATFORM_INVESTORS: PlatformInvestorCard[] = [
+  {
+    id: 'inv-james',
+    name: 'James Kariuki',
+    focusAreas: ['Agritech', 'Impact'],
+    ticketRangeLabel: 'KES 500K – 5M',
+    county: 'Nairobi',
+    relationship: 'in_your_group',
+  },
+  {
+    id: 'inv-amina',
+    name: 'Amina Hassan',
+    focusAreas: ['Fintech', 'Women-led'],
+    ticketRangeLabel: 'KES 1M – 8M',
+    county: 'Mombasa',
+    relationship: 'in_your_group',
+  },
+  {
+    id: 'inv-david',
+    name: 'David Otieno',
+    focusAreas: ['Logistics', 'Commercial'],
+    ticketRangeLabel: 'KES 750K – 3M',
+    county: 'Kisumu',
+    relationship: 'in_your_group',
+  },
+  {
+    id: 'inv-michael',
+    name: 'Michael Njenga',
+    focusAreas: ['Growth equity', 'Fintech'],
+    ticketRangeLabel: 'KES 2M – 10M',
+    county: 'Nairobi',
+    relationship: 'on_platform',
+  },
+  {
+    id: 'inv-grace',
+    name: 'Grace Wambui',
+    focusAreas: ['Health', 'Edtech'],
+    ticketRangeLabel: 'KES 500K – 2M',
+    county: 'Kiambu',
+    relationship: 'pending_request',
   },
 ];
 

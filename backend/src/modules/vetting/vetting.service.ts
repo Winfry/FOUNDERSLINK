@@ -5,8 +5,10 @@
 import { z } from "zod";
 import { vettingRiskSignals } from "../../ai/client.js";
 import type { RiskLevel } from "../../ai/types.js";
+import { env } from "../../config/env.js";
 import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
 import { disconnect } from "../../realtime.js";
+import { notify } from "../notifications/notifications.service.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
@@ -184,14 +186,41 @@ export async function getApplicationForReview(applicationId: string) {
 
 const STATUS_AFTER = { approve: "approved", reject: "rejected", needs_info: "needs_info" } as const;
 
+// How many different admins must approve an investor. Investors get the
+// strictest check because fake investors are the most common scam. An
+// object, so tests can turn the rule on without restarting.
+export const vettingRules = { investorApprovals: env.INVESTOR_APPROVALS_REQUIRED };
+
+const YEAR = 365 * 24 * 60 * 60 * 1000;
+
 export async function decide(adminId: string, applicationId: string, input: z.infer<typeof decisionSchema>) {
   const application = await prisma.vettingApplication.findUnique({
     where: { id: applicationId },
-    include: { user: { select: { approval_status: true, funder: { select: { id: true } } } } },
+    include: { user: { select: { approval_status: true, role: true, funder: { select: { id: true } } } } },
   });
   if (!application) throw notFound("No such application");
   if (!AWAITING_DECISION.includes(application.user.approval_status)) {
     throw conflict("NOT_AWAITING_DECISION", "This application is not waiting for a decision");
+  }
+
+  // The four-eyes rule: with two approvals required, the first admin's
+  // yes is recorded and the application waits for a second, different admin.
+  const needsTwo = input.decision === "approve" && application.user.role === "investor" && vettingRules.investorApprovals >= 2;
+  if (needsTwo && application.first_approved_by === adminId) {
+    throw conflict("SAME_ADMIN", "A second, different admin must give the final approval for an investor");
+  }
+  if (needsTwo && !application.first_approved_by) {
+    await prisma.$transaction([
+      prisma.vettingApplication.update({ where: { id: applicationId }, data: { first_approved_by: adminId } }),
+      prisma.user.update({ where: { id: application.user_id }, data: { approval_status: "in_review" } }),
+      prisma.vettingCheck.createMany({
+        data: input.checks.map((c) => ({ ...c, application_id: applicationId, checked_by: adminId })),
+      }),
+      prisma.adminAction.create({
+        data: { admin_id: adminId, action: "approve_first", target_user_id: application.user_id, reason: input.reason },
+      }),
+    ]);
+    return { application_id: applicationId, approval_status: "in_review", approvals: { given: 1, needed: 2 } };
   }
 
   const status = STATUS_AFTER[input.decision];
@@ -199,7 +228,16 @@ export async function decide(adminId: string, applicationId: string, input: z.in
   await prisma.$transaction(async (tx) => {
     await tx.vettingApplication.update({
       where: { id: applicationId },
-      data: { decided_at: new Date(), decided_by: adminId, decision_reason: input.reason },
+      data: {
+        decided_at: new Date(),
+        decided_by: adminId,
+        decision_reason: input.reason,
+        // A first approval does not carry over to a later application.
+        ...(input.decision === "approve" ? {} : { first_approved_by: null }),
+        // An approved member is looked at again in a year.
+        recheck_due_at: input.decision === "approve" ? new Date(Date.now() + YEAR) : null,
+        recheck_reason: null,
+      },
     });
     await tx.user.update({ where: { id: application.user_id }, data: { approval_status: status } });
     await tx.vettingCheck.createMany({
@@ -218,6 +256,14 @@ export async function decide(adminId: string, applicationId: string, input: z.in
       });
     }
   });
+
+  const OUTCOME = {
+    approve: ["You are approved", "You can now see and connect with other members."],
+    reject: ["Your application was not approved", input.reason],
+    needs_info: ["We need a little more from you", input.reason],
+  } as const;
+  const [title, body] = OUTCOME[input.decision];
+  await notify(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
 
   return { application_id: applicationId, approval_status: status };
 }
@@ -254,4 +300,64 @@ export function listAdminActions() {
       target: { select: { id: true, full_name: true, role: true } },
     },
   });
+}
+
+// --- Re-checks ---
+
+export const recheckSchema = z.object({
+  outcome: z.enum(["confirm", "suspend"]),
+  reason: z.string().trim().min(5, "Give a reason"),
+});
+
+// Called when an approved member changes something her approval rested
+// on, such as the organisation she invests for. She stays approved, and
+// goes on the admins' list to be looked at again.
+export async function flagForRecheck(userId: string, reason: string) {
+  await prisma.vettingApplication.updateMany({
+    where: { user_id: userId, user: { approval_status: "approved" } },
+    data: { recheck_due_at: new Date(), recheck_reason: reason },
+  });
+}
+
+// Approved members who are due to be looked at again: a year has
+// passed, or a key detail changed.
+export async function listRechecks(now = new Date()) {
+  const due = await prisma.vettingApplication.findMany({
+    where: { recheck_due_at: { lte: now }, user: { approval_status: "approved" } },
+    include: { user: applicant },
+    orderBy: { recheck_due_at: "asc" },
+  });
+  return due.map((a) => ({
+    application_id: a.id,
+    user: a.user,
+    due_at: a.recheck_due_at,
+    reason: a.recheck_reason ?? "Yearly re-check",
+    approved_at: a.decided_at,
+  }));
+}
+
+export async function recheck(adminId: string, applicationId: string, input: z.infer<typeof recheckSchema>) {
+  const application = await prisma.vettingApplication.findUnique({
+    where: { id: applicationId },
+    include: { user: { select: { approval_status: true } } },
+  });
+  if (!application || application.user.approval_status !== "approved" || !application.recheck_due_at) {
+    throw notFound("No re-check is due for this application");
+  }
+
+  if (input.outcome === "suspend") {
+    await setSuspended(adminId, application.user_id, true, input.reason);
+    return { application_id: applicationId, approval_status: "suspended" };
+  }
+
+  await prisma.$transaction([
+    prisma.vettingApplication.update({
+      where: { id: applicationId },
+      data: { recheck_due_at: new Date(Date.now() + YEAR), recheck_reason: null },
+    }),
+    prisma.adminAction.create({
+      data: { admin_id: adminId, action: "recheck_confirmed", target_user_id: application.user_id, reason: input.reason },
+    }),
+  ]);
+  return { application_id: applicationId, approval_status: "approved" };
 }

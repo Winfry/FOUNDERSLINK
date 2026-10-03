@@ -67,6 +67,8 @@ before(async () => {
     });
     ids[who] = user.id;
     tokens[who] = (await call("POST", "/auth/login", undefined, { email: email(who), password })).json.token;
+    // Consent has its own tests, so these members have agreed to be seen.
+    await prisma.consent.create({ data: { user_id: user.id, purpose: "profile_visibility", granted: true, granted_at: new Date() } });
   }
 
   await call("PUT", "/me/profile", "founder", {

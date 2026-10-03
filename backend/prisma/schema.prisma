@@ -51,6 +51,18 @@ model User {
   approval_status ApprovalStatus @default(draft)
   created_at      DateTime       @default(now())
 
+  // A Kenyan mobile number. It counts as hers only once she has typed
+  // in the code sent to it.
+  phone                String?   @unique
+  phone_verified_at    DateTime?
+  preferred_language   String    @default("en") // en | sw
+  notification_channel String    @default("in_app") // in_app | sms
+  // Who may ask to connect with her: anyone | verified | none.
+  // "verified" means members whose phone number is verified.
+  message_permission   String    @default("anyone")
+  // Whether an accepted connection sees her email and phone.
+  share_contact        Boolean   @default(true)
+
   founder_profile      FounderProfile?
   investor_profile     InvestorProfile?
   expert_profile       ExpertProfile?
@@ -77,6 +89,13 @@ model User {
   circle_payments      PaymentRecord[]
   circle_notes         CircleNote[]
   circle_votes         CircleVote[]
+  consents             Consent[]
+  phone_code           PhoneCode?
+  reports_made         UserReport[]         @relation("reporter")
+  office_hours_given   OfficeHour[]         @relation("expert")
+  notifications        Notification[]
+  office_hours_asked   OfficeHour[]         @relation("requester")
+  reports_received     UserReport[]         @relation("reported")
 
   @@map("users")
 }
@@ -262,18 +281,22 @@ model InvestorProfile {
 }
 
 model ExpertProfile {
-  id                String   @id @default(uuid(7)) @db.Uuid
-  user_id           String   @unique @db.Uuid
-  profession        String // lawyer | accountant | mentor | other
-  organisation_name String?
+  id                     String   @id @default(uuid(7)) @db.Uuid
+  user_id                String   @unique @db.Uuid
+  profession             String // lawyer | accountant | mentor | other
+  organisation_name      String?
   // The professional register the expert says they are on, e.g. LSK.
-  register_body     String?
-  register_number   String?
-  bio               String
-  sectors           String[]
-  counties          String[]
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  register_body          String?
+  register_number        String?
+  bio                    String
+  sectors                String[]
+  counties               String[]
+  // What she offers, e.g. "Business registration", "eTIMS setup".
+  services               String[]
+  // How many office-hours sessions she will take on in a month. 0 = none.
+  office_hours_per_month Int      @default(0)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -299,6 +322,11 @@ model VettingApplication {
   decided_at           DateTime?
   decided_by           String?   @db.Uuid
   decision_reason      String?
+  // For an investor, when two admins must approve: the first to do so.
+  first_approved_by    String?   @db.Uuid
+  // When an approved member is next due to be looked at again, and why.
+  recheck_due_at       DateTime?
+  recheck_reason       String?
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
 
@@ -578,6 +606,8 @@ model Circle {
   contribution_frequency  String? // weekly | monthly
   registration_status     String   @default("unregistered") // unregistered | in_progress | registered
   registration_number     String?
+  // The circle's own Paybill or Till number, where members pay in.
+  paybill_number          String?  @unique
   created_by              String   @db.Uuid
   created_at              DateTime @default(now())
 
@@ -644,19 +674,23 @@ model CircleGoal {
 model PaymentRecord {
   id             String   @id @default(uuid(7)) @db.Uuid
   circle_id      String   @db.Uuid
-  member_id      String   @db.Uuid
+  // Null while a payment read from a statement has not been matched to a member.
+  member_id      String?  @db.Uuid
   goal_id        String?  @db.Uuid
   amount_kes     Int
   paid_at        DateTime
   mpesa_receipt  String?
   source         String   @default("manual") // manual | statement | paybill_callback
-  matched_status String   @default("matched") // matched | unmatched
+  matched_status String   @default("matched") // matched | unmatched | ignored
+  // For an unmatched payment: who the statement says paid, with any
+  // phone number masked, so the treasurer can tell whose it is.
+  payer_label    String?
   note           String?
   recorded_by    String   @db.Uuid
   recorded_at    DateTime @default(now())
 
   circle Circle      @relation(fields: [circle_id], references: [id], onDelete: Cascade)
-  member User        @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  member User?       @relation(fields: [member_id], references: [id], onDelete: Cascade)
   goal   CircleGoal? @relation(fields: [goal_id], references: [id], onDelete: SetNull)
 
   // The same M-Pesa receipt can never be counted twice in a circle.
@@ -707,4 +741,89 @@ model CircleVote {
 
   @@unique([decision_id, user_id])
   @@map("circle_votes")
+}
+
+// What a person has agreed to, purpose by purpose (Data Protection Act
+// 2019, KENYA_AMENDMENTS 9). Nothing is assumed: no row means no consent.
+model Consent {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  user_id      String    @db.Uuid
+  purpose      String
+  granted      Boolean
+  granted_at   DateTime?
+  withdrawn_at DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, purpose])
+  @@map("consents")
+}
+
+// A code sent to a phone number to prove it is hers. Only a hash of the
+// code is kept, and it expires.
+model PhoneCode {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  phone      String
+  code_hash  String
+  expires_at DateTime
+  attempts   Int      @default(0)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("phone_codes")
+}
+
+// A member reporting another member, as opposed to one message.
+model UserReport {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  reporter_id      String   @db.Uuid
+  reported_user_id String   @db.Uuid
+  reason           String
+  created_at       DateTime @default(now())
+
+  reporter User @relation("reporter", fields: [reporter_id], references: [id], onDelete: Cascade)
+  reported User @relation("reported", fields: [reported_user_id], references: [id], onDelete: Cascade)
+
+  @@unique([reporter_id, reported_user_id])
+  @@map("reports")
+}
+
+// A short session a member asks an expert for. Experts cap how many
+// they take on each month, so helping stays a small commitment.
+model OfficeHour {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  expert_id    String    @db.Uuid
+  requester_id String    @db.Uuid
+  topic        String
+  status       String    @default("requested") // requested | accepted | declined | done
+  created_at   DateTime  @default(now())
+  responded_at DateTime?
+
+  expert    User @relation("expert", fields: [expert_id], references: [id], onDelete: Cascade)
+  requester User @relation("requester", fields: [requester_id], references: [id], onDelete: Cascade)
+
+  @@map("office_hours")
+}
+
+// Something a member should know about. It is always stored here, and
+// also sent by SMS when she chose that, has a verified number and has
+// agreed to be contacted.
+model Notification {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  user_id         String    @db.Uuid
+  type            String
+  title           String
+  body            String
+  // Where in the app it leads, e.g. "/deals/<id>".
+  link            String?
+  // in_app | sms_sent | sms_failed | sms_not_configured
+  delivery_status String    @default("in_app")
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, read_at])
+  @@map("notifications")
 }

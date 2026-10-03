@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging and circles. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging, circles, experts and notifications. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -30,6 +30,37 @@ npm test                         # API tests, against the same database
 | GET | `/compliance/items` | no | The items for the "what you already have" tick list |
 | GET | `/funders` | yes | All funder records |
 | GET | `/funding/matches` | yes | The founder's funders in three groups: `apply_now`, `apply_after`, `not_for_you` |
+
+### Consent and her own data
+
+None of these need approval.
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/me/consents` | Every purpose, with whether and when she agreed |
+| POST | `/me/consents` | `{ purpose, granted }`. Purposes: `profile_visibility`, `ai_matching`, `eligibility_attributes`, `contact` |
+| GET | `/me/export` | Everything held about her, as a JSON file |
+| DELETE | `/me` | `{ password }`. Deletes the account. Refused while she organises a circle with other members or has a deal in progress |
+
+Nothing is agreed by default, so the onboarding screens need to ask. What each consent switches on:
+
+- `profile_visibility`: she appears in other members' matches and her profile page can be opened. Without it both return as if she were not there.
+- `ai_matching`: her business details may be sent to the AI service. Without it the backend's own rules answer, and responses say `engine: "stand_in"`.
+- `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Without it, sending one returns `409` with code `CONSENT_REQUIRED`. Withdrawing it clears them.
+- `contact`: recorded for SMS and WhatsApp, which are not built yet.
+
+### Settings and phone number
+
+| Method | Path | What it does |
+|---|---|---|
+| PATCH | `/me` | Any of `full_name`, `phone`, `preferred_language` (`en` / `sw`), `notification_channel` (`in_app` / `sms`), `message_permission` (`anyone` / `verified` / `none`), `share_contact` |
+| POST | `/me/phone/code` | Sends a six-digit code to her phone |
+| POST | `/me/phone/verify` | `{ code }` |
+| POST | `/reports` | `{ user_id, reason }`. Reports a member. Approved members only |
+
+With no SMS provider set (`SMS_PROVIDER_USERNAME` and `SMS_PROVIDER_API_KEY`), the code cannot be texted. Outside production the response then includes `dev_code` so the flow can still be shown. The sender targets Africa's Talking and has not been run against the real sandbox.
+
+An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GET /connections` and on the profile page, unless that member turned `share_contact` off. The phone appears only if verified.
 
 ### Investors, experts and profiles
 
@@ -97,7 +128,7 @@ All of these need an approved account, and the caller must be in the conversatio
 | POST | `/conversations/:id/read` | Marks everything read |
 | POST | `/messages/:id/report` | `{ reason }` |
 | PUT, DELETE | `/users/:id/block` | Blocks or unblocks a member for direct messages |
-| GET | `/admin/reports` | Admin only. Reported messages |
+| GET | `/admin/reports` | Admin only. `{ messages, members }`: reported messages and reported members |
 
 A deal's room is created with the deal and listed with `type: "deal"`. Deal changes appear in it as messages with `kind: "system"` and no sender.
 
@@ -132,7 +163,42 @@ All of these need an approved account, and, past joining, membership of the circ
 | POST | `/circles/:id/decisions/:decisionId/close` | organiser | |
 | GET | `/circles/:id/funding` | circle member | Funders that fund groups, and what the circle still needs for each |
 
+**M-Pesa.** None of this has been run against a real statement or the Daraja sandbox; see the notes at the top of `src/modules/circles/mpesa.ts`.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| POST | `/circles/:id/statements` | organiser or treasurer | `{ csv }` or `{ rows }`. Reads payments in, matches them to members, and returns a summary. The upload is not stored |
+| GET | `/circles/:id/reconciliation` | circle member | Who has paid, who still owes this period, and unmatched payments (details for the organiser and treasurer only) |
+| PATCH | `/circles/:id/payments/:paymentId` | organiser or treasurer | `{ member_id }` assigns an unmatched payment, `{ ignore: true }` sets it aside |
+| POST | `/payments/mpesa/callback/:secret` | Safaricom | The Paybill confirmation. Off unless `MPESA_CALLBACK_SECRET` is set |
+
+A statement needs columns for the receipt number, completion time, details and amount paid in. A row is `{ receipt, completed_at, details, paid_in_kes }`. The circle's own number is set with `paybill_number` in `PATCH /circles/:id`.
+
 A circle's group chat is in `/conversations` with `type: "circle"`. Members of the same circle can open a deal with each other without a separate connection.
+
+### Experts and office hours
+
+All of these need an approved account.
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/experts` | `?profession=&sector=&county=`. Approved experts, those with a free session first |
+| POST | `/experts/:id/office-hours` | `{ topic }`. Asks for a session. Refused when she has none left this month |
+| GET | `/me/office-hours` | Sessions I asked for, or was asked for |
+| PATCH | `/office-hours/:id` | `{ status: accepted / declined / done }`. The expert only |
+
+An expert sets `services` and `office_hours_per_month` in `PUT /me/expert-profile`. Accepting a session creates an accepted connection between the two. `POST /compliance/ask` returns `experts` when `suggest_expert` is true; someone not yet approved gets `experts_available` (a number) and an empty list.
+
+### Notifications
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/notifications` | any user | `?unread=true`. `{ unread_count, notifications }`, newest first |
+| POST | `/notifications/:id/read` | its owner | |
+| POST | `/notifications/read-all` | any user | |
+| POST | `/admin/jobs/deadline-reminders` | admin | Runs the reminder job now. It also runs hourly |
+
+Each notification has `type`, `title`, `body`, a `link` into the app, and `delivery_status`. New ones are also pushed over the WebSocket as `{"type": "notification", "notification": {...}}`.
 
 ### Vetting
 
@@ -144,9 +210,13 @@ A circle's group chat is in `/conversations` with `type: "circle"`. Members of t
 | GET | `/admin/vetting/queue` | admin | Waiting applications, riskiest first |
 | GET | `/admin/vetting/:id` | admin | One application with the person's profiles |
 | POST | `/admin/vetting/:id/decision` | admin | `{ decision: approve / reject / needs_info, reason, checks? }` |
+| GET | `/admin/vetting/rechecks` | admin | Approved members due to be looked at again, with why |
+| POST | `/admin/vetting/:id/recheck` | admin | `{ outcome: confirm / suspend, reason }` |
 | POST | `/admin/users/:id/suspend` | admin | `{ reason }` |
 | POST | `/admin/users/:id/reinstate` | admin | `{ reason }` |
 | GET | `/admin/actions` | admin | The audit log |
+
+Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
 
 A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
 

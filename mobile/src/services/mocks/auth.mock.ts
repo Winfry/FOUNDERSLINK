@@ -17,7 +17,7 @@ const DEMO_INVESTOR = {
   role: 'investor' as const,
   email: 'james.kariuki@example.com',
   fullName: 'James Kariuki',
-  userId: 'FL-INV-20481',
+  userId: 'FL-INV-20482',
   mustChangePassword: false,
   investorOnboardingComplete: true,
 };
@@ -40,6 +40,7 @@ export const mockAuthService: AuthService = {
 
     const fromStore = resolveLogin(identifier, password);
     if (fromStore) {
+      const onboardingDone = !fromStore.mustChangePassword;
       return {
         user: {
           id: `u-${fromStore.role}-${fromStore.userId}`,
@@ -48,14 +49,14 @@ export const mockAuthService: AuthService = {
           fullName: fromStore.fullName,
           userId: fromStore.userId,
           mustChangePassword: fromStore.mustChangePassword,
-          founderOnboardingComplete: fromStore.role === 'founder' ? false : undefined,
-          investorOnboardingComplete: fromStore.role === 'investor' ? false : undefined,
+          founderOnboardingComplete: fromStore.role === 'founder' ? onboardingDone : undefined,
+          investorOnboardingComplete: fromStore.role === 'investor' ? onboardingDone : undefined,
         },
         tokens: tokensFor(fromStore.userId),
       };
     }
 
-    if (id === 'fl-inv-20481' || (id.includes('investor') && !id.includes('@'))) {
+    if (id === 'fl-inv-20482' || id === 'fl-inv-20481' || (id.includes('investor') && !id.includes('@'))) {
       const mustChange = password === 'TempPass2026!';
       return {
         user: { ...DEMO_INVESTOR, mustChangePassword: mustChange },

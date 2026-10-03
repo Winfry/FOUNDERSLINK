@@ -125,6 +125,11 @@ test("each role fills in its own profile, and only its own", async () => {
   });
   assert.equal(investor.status, 200);
 
+  // Both agree to be seen by other members. Consent has its own tests.
+  for (const who of ["founder", "investor"]) {
+    await call("POST", "/me/consents", who, { purpose: "profile_visibility", granted: true });
+  }
+
   assert.equal((await call("PUT", "/me/investor-profile", "founder", { organisation_name: "Nope" })).status, 403);
   assert.equal((await call("PUT", "/me/profile", "investor", {})).status, 403);
 });

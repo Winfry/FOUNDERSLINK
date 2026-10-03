@@ -8,6 +8,8 @@ import type {
   InvestorApplicationStatus,
   InvestorProfile,
   InvestorRequest,
+  PlatformFounderPeer,
+  PlatformInvestorCard,
   JoinRequest,
   Paginated,
   ProjectGroup,
@@ -50,8 +52,11 @@ export interface FounderService {
     profile: FounderProfile;
     pendingInvestorRequests: number;
     documents: DocumentRecord[];
+    platformInvestors: PlatformInvestorCard[];
+    platformFounders: PlatformFounderPeer[];
   }>;
   getInvestorRequests(): Promise<InvestorRequest[]>;
+  getPlatformInvestors(): Promise<PlatformInvestorCard[]>;
   respondToInvestorRequest(id: string, approve: boolean, reason?: string): Promise<void>;
 }
 

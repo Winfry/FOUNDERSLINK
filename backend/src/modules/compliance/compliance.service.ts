@@ -10,6 +10,8 @@ import { answerCompliance, applicableItems } from "../../ai/client.js";
 import type { ComplianceItem } from "../../generated/prisma/client.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, notFound } from "../../shared/errors.js";
+import { hasConsent } from "../account/consents.js";
+import { suggestExperts } from "../experts/experts.service.js";
 import { toMatchProfile } from "../funding/funding.service.js";
 import { setStatus } from "./status.js";
 
@@ -27,7 +29,8 @@ export const deadlineSchema = z.object({
 
 export const askSchema = z.object({
   question: z.string().trim().min(5, "Ask a full question").max(500),
-  language: z.enum(["en", "sw"]).default("en"),
+  // Left out, the answer is in her preferred language.
+  language: z.enum(["en", "sw"]).optional(),
 });
 
 export const feedbackSchema = z.object({ feedback: z.enum(["helpful", "not_helpful"]) });
@@ -70,7 +73,8 @@ export async function getChecklist(userId: string) {
     prisma.complianceStatus.findMany({ where: { entity_type: "business", entity_id: userId } }),
   ]);
 
-  const { item_ids, engine } = await applicableItems(toMatchProfile(profile), items);
+  const useAi = await hasConsent(userId, "ai_matching");
+  const { item_ids, engine } = await applicableItems(toMatchProfile(profile), items, "business", null, useAi);
   const applies = new Set(item_ids);
   const statusOf = new Map(statuses.map((s) => [s.item_id, s]));
 
@@ -166,15 +170,19 @@ export async function listDeadlines(userId: string, now = new Date()) {
 // Ask Compliance. Every question and answer is kept, with its citations,
 // so the answers can be checked and improved.
 export async function ask(userId: string, input: z.infer<typeof askSchema>) {
-  const [profile, items] = await Promise.all([
+  const [profile, items, user] = await Promise.all([
     prisma.founderProfile.findUnique({ where: { user_id: userId } }),
     prisma.complianceItem.findMany(),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferred_language: true, approval_status: true } }),
   ]);
+  const language = input.language ?? user.preferred_language;
 
   const result = await answerCompliance(
     input.question,
-    input.language,
-    profile && toMatchProfile(profile),
+    language,
+    // Without her consent the question is still answered, but her
+    // business details are not sent along with it.
+    profile && (await hasConsent(userId, "ai_matching")) ? toMatchProfile(profile) : null,
     items.map((i) => ({ ...i, needs_review: needsReview(i) })),
   );
 
@@ -182,7 +190,7 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
     data: {
       user_id: userId,
       question: input.question,
-      language: input.language,
+      language,
       answer: result.answer,
       citations: result.citations as object[],
       confident: result.confident,
@@ -190,7 +198,19 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
     },
   });
 
-  return { id: logged.id, ...result, disclaimer: DISCLAIMER };
+  // "Get an expert" is only useful with someone to go to. Experts are
+  // members, so they are named only to an approved member. Anyone else
+  // is told how many there are.
+  const found = result.suggest_expert ? await suggestExperts(profile) : [];
+  const approved = user.approval_status === "approved";
+
+  return {
+    id: logged.id,
+    ...result,
+    experts: approved ? found : [],
+    experts_available: found.length,
+    disclaimer: DISCLAIMER,
+  };
 }
 
 export async function giveFeedback(userId: string, questionId: string, feedback: string) {

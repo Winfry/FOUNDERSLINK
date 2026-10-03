@@ -64,6 +64,12 @@ export async function getMe(userId: string) {
     where: { id: userId },
     select: {
       ...publicUser,
+      phone: true,
+      phone_verified_at: true,
+      preferred_language: true,
+      notification_channel: true,
+      message_permission: true,
+      share_contact: true,
       founder_profile: true,
       investor_profile: true,
       expert_profile: true,

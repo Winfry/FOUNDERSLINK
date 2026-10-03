@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
+import { reportUser, userReportSchema } from "../safety/reports.js";
 import {
   listConversations,
   listMessages,
@@ -48,6 +49,10 @@ messagingRouter.post("/conversations/:id/read", ...member, async (req, res) => {
 messagingRouter.post("/messages/:id/report", ...member, async (req, res) => {
   const { reason } = reportSchema.parse(req.body);
   res.status(201).json(await reportMessage(req.user!.id, id(req.params.id), reason));
+});
+
+messagingRouter.post("/reports", ...member, async (req, res) => {
+  res.status(201).json(await reportUser(req.user!.id, userReportSchema.parse(req.body)));
 });
 
 messagingRouter.put("/users/:id/block", ...member, async (req, res) => {

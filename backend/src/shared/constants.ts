@@ -74,3 +74,10 @@ export const CHECK_METHODS = [
   "domain",
   "reference",
 ] as const;
+
+// What a person can agree to, each on its own.
+//   profile_visibility      other approved members may see her profile and match with her
+//   ai_matching             her business details may be sent to the AI service
+//   eligibility_attributes  she may record women-, youth- or PWD-owned, to check funder eligibility
+//   contact                 she may be contacted by SMS or WhatsApp
+export const CONSENT_PURPOSES = ["profile_visibility", "ai_matching", "eligibility_attributes", "contact"] as const;

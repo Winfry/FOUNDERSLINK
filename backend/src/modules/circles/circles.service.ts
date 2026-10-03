@@ -44,6 +44,8 @@ export const updateSchema = z.object({
   contribution_frequency: z.enum(["weekly", "monthly"]).nullable().optional(),
   registration_status: z.enum(["unregistered", "in_progress", "registered"]).optional(),
   registration_number: z.string().trim().max(60).nullable().optional(),
+  // The circle's own Paybill or Till number.
+  paybill_number: z.string().trim().regex(/^\d{5,7}$/, "A Paybill or Till number is 5 to 7 digits").nullable().optional(),
 });
 
 export const joinSchema = z.object({ token: z.string().min(10) });
@@ -188,7 +190,8 @@ export async function getCircle(userId: string, circleId: string) {
     include: {
       members: { include: { user: person }, orderBy: { joined_at: "asc" } },
       goals: { orderBy: { created_at: "asc" } },
-      payments: { select: { member_id: true, goal_id: true, amount_kes: true, paid_at: true } },
+      // Only payments matched to a member count towards totals and goals.
+      payments: { where: { matched_status: "matched" }, select: { member_id: true, goal_id: true, amount_kes: true, paid_at: true } },
     },
   });
 
@@ -208,6 +211,7 @@ export async function getCircle(userId: string, circleId: string) {
     my_role: mine.role,
     registration_status: circle.registration_status,
     registration_number: circle.registration_number,
+    paybill_number: circle.paybill_number,
     contribution: amount && frequency ? { amount_kes: amount, frequency } : null,
     total_contributed_kes: sum(circle.payments),
     members: circle.members.map((m) => {
@@ -243,6 +247,11 @@ export async function updateCircle(userId: string, circleId: string, input: z.in
   const { circle } = await organiser(userId, circleId);
   if (circle.type !== "money" && (input.contribution_amount_kes || input.contribution_frequency)) {
     throw conflict("NOT_A_MONEY_CIRCLE", "A learning circle has no contributions");
+  }
+  if (input.paybill_number) {
+    if (circle.type !== "money") throw conflict("NOT_A_MONEY_CIRCLE", "A learning circle has no contributions");
+    const taken = await prisma.circle.findFirst({ where: { paybill_number: input.paybill_number, id: { not: circleId } } });
+    if (taken) throw conflict("PAYBILL_TAKEN", "Another circle already uses this Paybill or Till number");
   }
   await prisma.circle.update({ where: { id: circleId }, data: input });
   return getCircle(userId, circleId);
@@ -406,7 +415,8 @@ export async function recordContribution(userId: string, circleId: string, input
 export async function listContributions(userId: string, circleId: string) {
   await member(userId, circleId);
   const rows = await prisma.paymentRecord.findMany({
-    where: { circle_id: circleId },
+    // Unmatched payments are in the reconciliation, for the treasurer.
+    where: { circle_id: circleId, matched_status: "matched" },
     include: { member: person, goal: { select: { id: true, title: true } } },
     orderBy: { paid_at: "desc" },
   });

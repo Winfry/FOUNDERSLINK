@@ -1,6 +1,7 @@
 /**
  * Typed API service layer — swap mock implementations for HTTP clients later.
  */
+import './mocks/demo-seed';
 import type {
   AuthService,
   ChatService,

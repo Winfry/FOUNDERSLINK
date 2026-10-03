@@ -3,6 +3,7 @@ import type { MatchFunder, MatchProfile } from "../../ai/types.js";
 import type { FounderProfile } from "../../generated/prisma/client.js";
 import { prisma } from "../../shared/db.js";
 import { conflict } from "../../shared/errors.js";
+import { consented, hasConsent } from "../account/consents.js";
 import { completedFor } from "../compliance/status.js";
 import { assessReadiness, type Group } from "./readiness.js";
 
@@ -111,7 +112,13 @@ export async function getMatches(userId: string) {
   ]);
   const items = new Map(itemRows.map((i) => [i.id, i]));
 
-  const { results, engine } = await matchFunders(toMatchProfile(profile), funders.map(toMatchFunder));
+  // Her details go to the AI service only if she has agreed to that.
+  const useAi = await hasConsent(userId, "ai_matching");
+  const { results, engine } = await matchFunders(toMatchProfile(profile), funders.map(toMatchFunder), useAi);
+
+  // An investor is named on her record only if she agreed to be visible.
+  const owners = funders.flatMap((f) => (f.claimed_by ? [f.claimed_by.id] : []));
+  const visibleOwners = await consented(owners, "profile_visibility");
   const byFunder = new Map(results.map((r) => [r.funder_id, r]));
 
   const cards = funders.map(({ claimed_by, ...funder }) => {
@@ -124,7 +131,7 @@ export async function getMatches(userId: string) {
       // The person behind a record is another member, so she is shown
       // only to an approved founder. Until then the card says someone is there.
       investor:
-        claimed_by && approved
+        claimed_by && approved && visibleOwners.has(claimed_by.id)
           ? {
               user_id: claimed_by.id,
               full_name: claimed_by.full_name,
@@ -132,7 +139,7 @@ export async function getMatches(userId: string) {
               job_title: claimed_by.investor_profile?.job_title ?? null,
             }
           : null,
-      investor_locked: Boolean(claimed_by) && !approved,
+      investor_locked: claimed_by !== null && visibleOwners.has(claimed_by.id) && !approved,
       score: match.score,
       // A band says how well a funder fits, so a funder that is ruled out has none.
       band: ruledOut ? null : match.band,

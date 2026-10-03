@@ -6,6 +6,7 @@ import { AuthScreen } from '../../src/components/layout/AuthScreen';
 import { Button, Input, PasswordInput } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';
 import { loginSchema } from '../../src/lib/auth-schemas';
+import { MOBILE_TEST_CREDENTIALS } from '../../src/services/mocks/demo-seed';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing } from '../../src/theme/tokens';
 import type { z } from 'zod';
@@ -67,6 +68,10 @@ export default function LoginScreen() {
       <Button title="Log in" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
       <Text style={styles.hint}>
         First login after approval: use your User ID and temporary password, then set a new password.
+      </Text>
+      <Text style={styles.hint}>
+        QA — Founder: {MOBILE_TEST_CREDENTIALS.founder.identifier} / {MOBILE_TEST_CREDENTIALS.founder.password}. Investor:{' '}
+        {MOBILE_TEST_CREDENTIALS.investor.identifier} / {MOBILE_TEST_CREDENTIALS.investor.password}.
       </Text>
       <Link href="/founder-application" asChild>
         <Pressable style={styles.link}>

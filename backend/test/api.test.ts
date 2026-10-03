@@ -147,6 +147,12 @@ test("switching to the SME path requires SME fields and clears startup fields", 
   const missing = await call("PUT", "/me/profile", sme, token);
   assert.equal(missing.status, 400);
 
+  // women_owned is an eligibility attribute, so she has to agree first.
+  const smeFields = { months_trading: 18, monthly_revenue_band: "50k_to_200k", has_employees: false };
+  const noConsent = await call("PUT", "/me/profile", { ...sme, ...smeFields }, token);
+  assert.equal(noConsent.json.error.code, "CONSENT_REQUIRED");
+  await call("POST", "/me/consents", { purpose: "eligibility_attributes", granted: true }, token);
+
   const saved = await call(
     "PUT",
     "/me/profile",

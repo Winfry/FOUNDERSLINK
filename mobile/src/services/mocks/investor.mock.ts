@@ -51,8 +51,16 @@ export const mockInvestorService: InvestorService = {
         id: 'jr-1',
         founderId: 'f1',
         founderBusinessName: 'Maziwa Fresh Co.',
-        status: 'pending',
+        status: 'approved',
         proposedAmountKes: 1_500_000,
+        submittedAt: new Date(Date.now() - 45 * 86400000).toISOString(),
+      },
+      {
+        id: 'jr-2',
+        founderId: 'f2',
+        founderBusinessName: 'PesaLink Solutions',
+        status: 'pending',
+        proposedAmountKes: 2_000_000,
         submittedAt: new Date().toISOString(),
       },
     ];

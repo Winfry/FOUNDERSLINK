@@ -5,6 +5,7 @@ import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { mandateSchema } from "../funding/funder.schema.js";
+import { flagForRecheck } from "../vetting/vetting.service.js";
 import { getInvestorMatches, getProfile } from "./network.service.js";
 import { portfolioPatchSchema, portfolioSchema, sourceOf, ventureSchema } from "./track-record.js";
 
@@ -31,11 +32,17 @@ networkRouter.put("/me/investor-profile", requireAuth, isInvestor, async (req, r
     organisation_website: input.organisation_website ?? null,
     bio: input.bio ?? null,
   };
+  const before = await prisma.investorProfile.findUnique({ where: { user_id: req.user!.id } });
   const profile = await prisma.investorProfile.upsert({
     where: { user_id: req.user!.id },
     create: { ...row, user_id: req.user!.id },
     update: row,
   });
+  // She was approved as acting for one organisation. A different one
+  // has to be looked at again.
+  if (before && before.organisation_name !== profile.organisation_name) {
+    await flagForRecheck(req.user!.id, "Changed the organisation she invests for");
+  }
   res.json(profile);
 });
 
@@ -118,6 +125,8 @@ const expertProfileSchema = z.object({
   bio: z.string().trim().min(10).max(1000),
   sectors: z.array(z.enum(SECTORS)).default([]),
   counties: z.array(z.enum(COUNTIES)).default([]),
+  services: z.array(z.string().trim().min(2).max(80)).max(10).default([]),
+  office_hours_per_month: z.number().int().min(0).max(40).default(0),
 });
 
 networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) => {
@@ -128,11 +137,16 @@ networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) 
     register_body: input.register_body ?? null,
     register_number: input.register_number ?? null,
   };
+  const before = await prisma.expertProfile.findUnique({ where: { user_id: req.user!.id } });
   const profile = await prisma.expertProfile.upsert({
     where: { user_id: req.user!.id },
     create: { ...row, user_id: req.user!.id },
     update: row,
   });
+  const claim = (p: typeof profile) => [p.profession, p.register_body, p.register_number].join("|");
+  if (before && claim(before) !== claim(profile)) {
+    await flagForRecheck(req.user!.id, "Changed her profession or professional registration");
+  }
   res.json(profile);
 });
 

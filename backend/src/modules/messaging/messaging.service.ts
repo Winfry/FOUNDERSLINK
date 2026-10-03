@@ -9,10 +9,12 @@
 import { z } from "zod";
 import { checkMessage } from "../../ai/client.js";
 import type { Message } from "../../generated/prisma/client.js";
-import { disconnect, pushTo } from "../../realtime.js";
+import { pushTo } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { areConnected } from "../network/connections.js";
+import { notifyMany } from "../notifications/notifications.service.js";
+import { listUserReports, suspendIfReported } from "../safety/reports.js";
 
 export const openSchema = z.object({ user_id: z.uuid() });
 export const sendSchema = z.object({ body: z.string().trim().min(1).max(4000) });
@@ -21,10 +23,6 @@ export const pageSchema = z.object({
   before: z.uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
-
-// Reports from this many different members suspend the sender until an
-// admin has looked (TEAM_DECISIONS D7).
-const REPORTS_TO_SUSPEND = 3;
 
 const WARNING = "This message may be asking for money. Never pay anyone to receive funding, and report it if it looks wrong.";
 
@@ -135,6 +133,11 @@ export async function announceDealEvents(
     if (body) {
       const message = await prisma.message.create({ data: { conversation_id: room.id, kind: "system", body } });
       deliver({ ...message, sender: null }, memberIds);
+      // The other parties are told, not the person who did it.
+      await notifyMany(
+        memberIds.filter((id) => id !== e.actor_id),
+        { type: `deal_${e.event}`, title: "Deal update", body, link: `/deals/${dealId}` },
+      );
     }
   }
   await prisma.dealEvent.updateMany({ where: { id: { in: events.map((e) => e.id) } }, data: { announced: true } });
@@ -259,21 +262,7 @@ export async function reportMessage(userId: string, messageId: string, reason: s
   if (already) throw conflict("ALREADY_REPORTED", "You have already reported this message");
   await prisma.messageReport.create({ data: { message_id: messageId, reporter_id: userId, reason } });
 
-  // Counted by different reporters, so one person cannot suspend another alone.
-  const reporters = await prisma.messageReport.findMany({
-    where: { message: { sender_id: message.sender_id } },
-    distinct: ["reporter_id"],
-    select: { reporter_id: true },
-  });
-  let suspended = false;
-  if (reporters.length >= REPORTS_TO_SUSPEND) {
-    const { count } = await prisma.user.updateMany({
-      where: { id: message.sender_id, approval_status: "approved" },
-      data: { approval_status: "suspended" },
-    });
-    suspended = count > 0;
-    if (suspended) disconnect(message.sender_id);
-  }
+  const suspended = await suspendIfReported(message.sender_id);
 
   return { message_id: messageId, reported: true, sender_suspended: suspended };
 }
@@ -288,14 +277,17 @@ export async function listReports() {
       message: { include: { sender: { select: { id: true, full_name: true, role: true, approval_status: true } } } },
     },
   });
-  return reports.map((r) => ({
-    id: r.id,
-    reason: r.reason,
-    reporter: r.reporter,
-    message: { id: r.message.id, body: r.message.body, flagged: r.message.flagged, sent_at: r.message.created_at },
-    sender: r.message.sender,
-    created_at: r.created_at,
-  }));
+  return {
+    messages: reports.map((r) => ({
+      id: r.id,
+      reason: r.reason,
+      reporter: r.reporter,
+      message: { id: r.message.id, body: r.message.body, flagged: r.message.flagged, sent_at: r.message.created_at },
+      sender: r.message.sender,
+      created_at: r.created_at,
+    })),
+    members: await listUserReports(),
+  };
 }
 
 export async function setBlocked(userId: string, otherId: string, block: boolean) {
