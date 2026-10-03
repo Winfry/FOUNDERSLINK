@@ -9,6 +9,7 @@ import { z } from "zod";
 import { INSTRUMENTS } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
+import { shareCircle } from "../circles/circles.service.js";
 import { setEntityStatus } from "../compliance/status.js";
 import { announceDealEvents } from "../messaging/messaging.service.js";
 import { areConnected } from "../network/connections.js";
@@ -143,8 +144,11 @@ async function approvedMember(userId: string) {
 export async function createDeal(userId: string, input: z.infer<typeof createSchema>) {
   if (input.with_user_id === userId) throw new AppError(400, "INVALID_TARGET", "A deal needs another party");
   const [me, other] = await Promise.all([approvedMember(userId), approvedMember(input.with_user_id)]);
-  if (!(await areConnected(userId, input.with_user_id))) {
-    throw conflict("NOT_CONNECTED", "You can only open a deal with someone who has accepted your connection");
+  // A deal is between people who already have a relationship here: an
+  // accepted connection, or a circle they are both in.
+  const circleId = await shareCircle(userId, input.with_user_id);
+  if (!circleId && !(await areConnected(userId, input.with_user_id))) {
+    throw conflict("NOT_CONNECTED", "You can only open a deal with a connection or a member of one of your circles");
   }
 
   const opened = new Date();
@@ -153,6 +157,7 @@ export async function createDeal(userId: string, input: z.infer<typeof createSch
       type: input.type,
       title: input.title,
       source_funder_id: input.source_funder_id ?? null,
+      circle_id: circleId,
       created_by: userId,
       parties: {
         // A millisecond apart, so the person who opened the deal is
@@ -190,8 +195,8 @@ export async function addParty(userId: string, dealId: string, input: z.infer<ty
   if (deal.parties.some((p) => p.user_id === input.user_id)) throw conflict("ALREADY_A_PARTY", "Already in this deal");
 
   const joiner = await approvedMember(input.user_id);
-  if (!(await areConnected(userId, input.user_id))) {
-    throw conflict("NOT_CONNECTED", "You can only add someone who has accepted your connection");
+  if (!(await shareCircle(userId, input.user_id)) && !(await areConnected(userId, input.user_id))) {
+    throw conflict("NOT_CONNECTED", "You can only add a connection or a member of one of your circles");
   }
 
   await prisma.$transaction([

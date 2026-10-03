@@ -28,6 +28,8 @@ export const mandateFields = z.object({
   requirements: z.array(z.string()).default([]),
   eligibility: z.array(z.enum(ELIGIBILITY_FLAGS)).default([]),
   application_fee_kes: z.number().int().nonnegative().default(0),
+  // True for a funder that lends to or funds groups, e.g. registered self-help groups.
+  serves_groups: z.boolean().default(false),
   deadline: optionalDate,
   how_to_apply_url: optionalUrl,
 });

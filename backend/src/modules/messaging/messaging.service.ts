@@ -1,5 +1,6 @@
 // In-app messaging (TEAM_DECISIONS D2): direct chats between two
-// connected members, and one room per deal for its parties.
+// connected members, one room per deal for its parties, and one group
+// chat per circle for its members.
 //
 // Who may read or write a conversation is decided here, from the
 // database, on every call. The client is never trusted to say.
@@ -97,6 +98,24 @@ async function ensureDealRoom(dealId: string) {
   return { room, memberIds: parties.map((p) => p.user_id) };
 }
 
+// A circle's group chat. Its members are exactly the circle's members:
+// someone who joins is added, and someone who leaves is removed.
+export async function syncCircleRoom(circleId: string) {
+  const room = await prisma.conversation.upsert({
+    where: { circle_id: circleId },
+    create: { type: "circle", circle_id: circleId },
+    update: {},
+  });
+  const members = await prisma.circleMember.findMany({ where: { circle_id: circleId }, select: { user_id: true } });
+  const memberIds = members.map((m) => m.user_id);
+  await prisma.conversationMember.createMany({
+    data: memberIds.map((user_id) => ({ conversation_id: room.id, user_id })),
+    skipDuplicates: true,
+  });
+  await prisma.conversationMember.deleteMany({ where: { conversation_id: room.id, user_id: { notIn: memberIds } } });
+  return room;
+}
+
 // Posts a deal's new timeline events to its room as system messages,
 // e.g. "Amina moved the deal to Terms agreed". `textOf` turns an event
 // into its sentence, or returns null for events not worth announcing.
@@ -137,6 +156,7 @@ export async function listConversations(userId: string) {
       conversation: {
         include: {
           deal: { select: { id: true, title: true } },
+          circle: { select: { id: true, name: true } },
           members: { include: { user: { select: { id: true, full_name: true, role: true } } } },
           messages: { orderBy: { id: "desc" }, take: 1, include: { sender } },
         },
@@ -160,8 +180,9 @@ export async function listConversations(userId: string) {
       return {
         id: c.id,
         type: c.type,
-        title: c.type === "deal" ? c.deal!.title : (others[0]?.full_name ?? "Conversation"),
+        title: c.deal?.title ?? c.circle?.name ?? others[0]?.full_name ?? "Conversation",
         deal_id: c.deal_id,
+        circle_id: c.circle_id,
         members: others,
         unread_count: unread,
         last_message: last ? view(last, userId) : null,

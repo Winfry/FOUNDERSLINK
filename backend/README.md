@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals and messaging. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging and circles. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -104,6 +104,35 @@ A deal's room is created with the deal and listed with `type: "deal"`. Deal chan
 A message that looks like a request for money has `warning: { text, reasons }` for everyone except its sender. It is still delivered.
 
 **Live delivery.** Open a WebSocket to `/ws` and send `{"type": "auth", "token": "<jwt>"}` as the first message, within 5 seconds. The server answers `{"type": "ready"}` and then pushes `{"type": "message", "message": {...}}` for every new message in the member's conversations. Sending is always done over the REST endpoint; the socket only receives. A bad token closes the socket with code `4401`.
+
+### Circles
+
+All of these need an approved account, and, past joining, membership of the circle; to anyone else a circle returns `404`. Paths are under `/circles` (the older docs say `/chamas`).
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| POST | `/circles` | any member | `{ name, type: money / learning, ... }`. The creator becomes organiser |
+| GET | `/circles` | any member | Mine |
+| GET | `/circles/suggested` | any member | Learning circles she could join, with reasons. Never money circles |
+| GET | `/circles/:id` | circle member | Members, roles, who has paid this period, goals with progress |
+| PATCH | `/circles/:id` | organiser | Name, contribution, registration status and number |
+| POST | `/circles/:id/invites` | organiser | Returns `{ token, path, expires_at, single_use }`. Single-use for a money circle |
+| GET | `/circles/invites/:token` | any member | What the link is for, before joining |
+| POST | `/circles/join` | any member | `{ token }` |
+| POST | `/circles/:id/join` | any member | Joins a learning circle that chose to be found |
+| PATCH | `/circles/:id/members/:userId` | organiser | `{ role: treasurer / member }` |
+| DELETE | `/circles/:id/members/:userId` | organiser, or herself | Removes a member, or leaves |
+| POST | `/circles/:id/goals` | organiser | `{ title, target_amount_kes?, target_date? }` |
+| PATCH | `/circles/:id/goals/:goalId` | organiser | |
+| POST | `/circles/:id/contributions` | organiser or treasurer | `{ member_id, amount_kes, paid_at, goal_id?, mpesa_receipt?, note? }` |
+| GET | `/circles/:id/contributions` | circle member | The full history |
+| POST, GET | `/circles/:id/notes` | circle member | `{ body, held_at? }`. With `held_at` it is the minutes of a meeting |
+| POST, GET | `/circles/:id/decisions` | circle member | `{ question }` |
+| POST | `/circles/:id/decisions/:decisionId/vote` | circle member | `{ choice: yes / no / abstain }`. Can be changed while open |
+| POST | `/circles/:id/decisions/:decisionId/close` | organiser | |
+| GET | `/circles/:id/funding` | circle member | Funders that fund groups, and what the circle still needs for each |
+
+A circle's group chat is in `/conversations` with `type: "circle"`. Members of the same circle can open a deal with each other without a separate connection.
 
 ### Vetting
 

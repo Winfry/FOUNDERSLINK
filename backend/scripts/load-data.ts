@@ -27,7 +27,8 @@ const itemSchema = z.object({
   institution: optionalText,
   documents_needed: optionalText,
   when_to_get_help: optionalText,
-  scope: z.enum(["business", "deal"]).default("business"),
+  // business: a founder's business. deal: a deal of `deal_type`. group: a circle.
+  scope: z.enum(["business", "deal", "group"]).default("business"),
   deal_type: optionalText,
   jurisdiction_level: z.enum(["national", "county"]).default("national"),
   // Who the item applies to. Every condition given must hold. Empty = everyone.

@@ -73,6 +73,10 @@ model User {
   reports              MessageReport[]
   blocks_made          Block[]              @relation("blocker")
   blocks_received      Block[]              @relation("blocked")
+  circles              CircleMember[]
+  circle_payments      PaymentRecord[]
+  circle_notes         CircleNote[]
+  circle_votes         CircleVote[]
 
   @@map("users")
 }
@@ -222,6 +226,8 @@ model Funder {
   // Any of women_owned, youth_owned, pwd_owned. Empty = open to all.
   eligibility         String[]
   application_fee_kes Int           @default(0)
+  // Lends to or funds groups, such as a registered self-help group.
+  serves_groups       Boolean       @default(false)
   deadline            DateTime?
   how_to_apply_url    String?
   source_url          String?
@@ -354,7 +360,6 @@ model PortfolioEntry {
   investor User @relation(fields: [investor_id], references: [id], onDelete: Cascade)
 
   @@unique([investor_id, deal_id])
-
   @@map("investor_portfolio")
 }
 
@@ -410,6 +415,8 @@ model Deal {
   terms            Json      @default("{}")
   // The funder record the deal grew out of, if any.
   source_funder_id String?   @db.Uuid
+  // The circle whose members opened the deal, if any.
+  circle_id        String?   @db.Uuid
   created_by       String    @db.Uuid
   created_at       DateTime  @default(now())
   closed_at        DateTime?
@@ -475,14 +482,16 @@ model DealMilestone {
 // between two connected members, or the room of a deal.
 model Conversation {
   id         String   @id @default(uuid(7)) @db.Uuid
-  type       String // direct | deal
+  type       String // direct | deal | circle
   deal_id    String?  @unique @db.Uuid
+  circle_id  String?  @unique @db.Uuid
   // For a direct chat: the two user ids, sorted and joined, so the same
   // two people can never have two chats.
   direct_key String?  @unique
   created_at DateTime @default(now())
 
   deal     Deal?                @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+  circle   Circle?              @relation(fields: [circle_id], references: [id], onDelete: Cascade)
   members  ConversationMember[]
   messages Message[]
 
@@ -548,4 +557,154 @@ model Block {
 
   @@unique([blocker_id, blocked_id])
   @@map("blocks")
+}
+
+// Founder Circles (KENYA_AMENDMENTS 7). A money circle is a group of
+// people who already know each other, saving towards shared goals. A
+// learning circle is for advice and accountability, with no money.
+//
+// FounderLink keeps the circle's records. It never receives, holds or
+// forwards money.
+model Circle {
+  id                      String   @id @default(uuid(7)) @db.Uuid
+  name                    String
+  description             String?
+  type                    String // money | learning
+  sector                  String?
+  county                  String?
+  // Only a learning circle can be found and joined without an invite.
+  discoverable            Boolean  @default(false)
+  contribution_amount_kes Int?
+  contribution_frequency  String? // weekly | monthly
+  registration_status     String   @default("unregistered") // unregistered | in_progress | registered
+  registration_number     String?
+  created_by              String   @db.Uuid
+  created_at              DateTime @default(now())
+
+  members      CircleMember[]
+  invites      CircleInvite[]
+  goals        CircleGoal[]
+  payments     PaymentRecord[]
+  notes        CircleNote[]
+  decisions    CircleDecision[]
+  conversation Conversation?
+
+  @@map("circles")
+}
+
+model CircleMember {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  circle_id String   @db.Uuid
+  user_id   String   @db.Uuid
+  role      String   @default("member") // organiser | treasurer | member
+  joined_at DateTime @default(now())
+
+  circle Circle @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([circle_id, user_id])
+  @@map("circle_members")
+}
+
+model CircleInvite {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  circle_id  String   @db.Uuid
+  token      String   @unique
+  created_by String   @db.Uuid
+  expires_at DateTime
+  // Null = any number of people may use the link until it expires.
+  max_uses   Int?
+  uses       Int      @default(0)
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  circle Circle @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+
+  @@map("circle_invites")
+}
+
+model CircleGoal {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  circle_id         String    @db.Uuid
+  title             String
+  target_amount_kes Int?
+  target_date       DateTime?
+  status            String    @default("open") // open | reached | dropped
+  created_at        DateTime  @default(now())
+
+  circle   Circle          @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+  payments PaymentRecord[]
+
+  @@map("circle_goals")
+}
+
+// A contribution a member made to the circle's own account. `source`
+// says how we know: typed in by the treasurer today, and later read
+// from an M-Pesa statement or a Paybill confirmation.
+model PaymentRecord {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  circle_id      String   @db.Uuid
+  member_id      String   @db.Uuid
+  goal_id        String?  @db.Uuid
+  amount_kes     Int
+  paid_at        DateTime
+  mpesa_receipt  String?
+  source         String   @default("manual") // manual | statement | paybill_callback
+  matched_status String   @default("matched") // matched | unmatched
+  note           String?
+  recorded_by    String   @db.Uuid
+  recorded_at    DateTime @default(now())
+
+  circle Circle      @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+  member User        @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  goal   CircleGoal? @relation(fields: [goal_id], references: [id], onDelete: SetNull)
+
+  // The same M-Pesa receipt can never be counted twice in a circle.
+  @@unique([circle_id, mpesa_receipt])
+  @@map("payment_records")
+}
+
+// A group note, or the minutes of a meeting when `held_at` is set.
+model CircleNote {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  circle_id  String    @db.Uuid
+  author_id  String    @db.Uuid
+  kind       String    @default("note") // note | meeting
+  held_at    DateTime?
+  body       String
+  created_at DateTime  @default(now())
+
+  circle Circle @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [author_id], references: [id], onDelete: Cascade)
+
+  @@map("circle_notes")
+}
+
+model CircleDecision {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  circle_id  String    @db.Uuid
+  question   String
+  status     String    @default("open") // open | closed
+  created_by String    @db.Uuid
+  created_at DateTime  @default(now())
+  closed_at  DateTime?
+
+  circle Circle       @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+  votes  CircleVote[]
+
+  @@map("circle_decisions")
+}
+
+model CircleVote {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  decision_id String   @db.Uuid
+  user_id     String   @db.Uuid
+  choice      String // yes | no | abstain
+  voted_at    DateTime @default(now())
+
+  decision CircleDecision @relation(fields: [decision_id], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([decision_id, user_id])
+  @@map("circle_votes")
 }
