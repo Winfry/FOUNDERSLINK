@@ -111,6 +111,23 @@ export interface InvestorRequest {
   createdAt: string;
 }
 
+export interface PlatformInvestorCard {
+  id: string;
+  name: string;
+  focusAreas: string[];
+  ticketRangeLabel: string;
+  county: string;
+  relationship: 'in_your_group' | 'on_platform' | 'pending_request';
+}
+
+export interface PlatformFounderPeer {
+  id: string;
+  businessName: string;
+  sector: string;
+  county: string;
+  stage: string;
+}
+
 export interface DiscoverFounderCard {
   id: string;
   businessName: string;

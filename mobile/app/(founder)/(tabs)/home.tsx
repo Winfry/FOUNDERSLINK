@@ -5,7 +5,20 @@ import { ScreenError, ScreenLoading, ScreenOffline } from '../../../src/componen
 import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
 import { founderService } from '../../../src/services';
 import { formatKes } from '../../../src/services/mocks/kenya-data';
+import type { PlatformInvestorCard } from '../../../src/types';
 import { colors, spacing } from '../../../src/theme/tokens';
+
+function investorRelationshipLabel(rel: PlatformInvestorCard['relationship']) {
+  if (rel === 'in_your_group') return 'In your group';
+  if (rel === 'pending_request') return 'Pending request';
+  return 'On platform';
+}
+
+function investorRelationshipVariant(rel: PlatformInvestorCard['relationship']) {
+  if (rel === 'in_your_group') return 'success' as const;
+  if (rel === 'pending_request') return 'warning' as const;
+  return 'default' as const;
+}
 
 export default function FounderHomeScreen() {
   const { isOffline } = useNetworkStatus();
@@ -15,8 +28,9 @@ export default function FounderHomeScreen() {
   if (q.isLoading) return <ScreenLoading />;
   if (q.isError) return <ScreenError message="Could not load dashboard." onRetry={() => q.refetch()} />;
 
-  const { profile, pendingInvestorRequests, documents } = q.data!;
+  const { profile, pendingInvestorRequests, documents, platformInvestors, platformFounders } = q.data!;
   const raisedPct = Math.min(100, Math.round((profile.fundsRaisedKes / profile.fundingTargetKes) * 100));
+  const inGroupCount = platformInvestors.filter((i) => i.relationship === 'in_your_group').length;
 
   return (
     <ScrollView style={styles.wrap} contentContainerStyle={styles.content}>
@@ -46,6 +60,32 @@ export default function FounderHomeScreen() {
         <Text style={styles.stat}>{pendingInvestorRequests}</Text>
       </Card>
       <Card>
+        <Text style={styles.section}>Investors on FounderLink</Text>
+        <Text style={styles.hint}>{inGroupCount} in your Round A group · {platformInvestors.length} on platform</Text>
+        {platformInvestors.slice(0, 4).map((inv) => (
+          <View key={inv.id} style={styles.peerRow}>
+            <View style={styles.peerMain}>
+              <Text style={styles.peerName}>{inv.name}</Text>
+              <Text style={styles.peerMeta}>{inv.focusAreas.join(' · ')} · {inv.ticketRangeLabel}</Text>
+            </View>
+            <Badge label={investorRelationshipLabel(inv.relationship)} variant={investorRelationshipVariant(inv.relationship)} />
+          </View>
+        ))}
+      </Card>
+      <Card>
+        <Text style={styles.section}>Other approved founders</Text>
+        <Text style={styles.hint}>Peers raising on the platform (for networking)</Text>
+        {platformFounders.slice(0, 4).map((f) => (
+          <View key={f.id} style={styles.peerRow}>
+            <View style={styles.peerMain}>
+              <Text style={styles.peerName}>{f.businessName}</Text>
+              <Text style={styles.peerMeta}>{f.sector} · {f.county} · {f.stage}</Text>
+            </View>
+            <Badge label="Approved" variant="success" />
+          </View>
+        ))}
+      </Card>
+      <Card>
         <Text style={styles.section}>Documents</Text>
         {documents.slice(0, 3).map((d) => (
           <View key={d.id} style={styles.docRow}>
@@ -72,6 +112,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label: { color: colors.textMuted },
   section: { fontWeight: '600', color: colors.text, marginBottom: spacing[1] },
+  hint: { color: colors.textMuted, fontSize: 13, marginBottom: spacing[1] },
   amount: { fontSize: 16, color: colors.text, marginBottom: spacing[1] },
   stat: { fontSize: 28, fontWeight: '700', color: colors.primary },
   progressTrack: {
@@ -82,6 +123,18 @@ const styles = StyleSheet.create({
     marginTop: spacing[1],
   },
   progressFill: { height: '100%', backgroundColor: colors.primary },
+  peerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing[1],
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  peerMain: { flex: 1 },
+  peerName: { fontWeight: '600', color: colors.text, fontSize: 15 },
+  peerMeta: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
   docRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
