@@ -5,6 +5,7 @@ import { prisma } from "../../shared/db.js";
 import { conflict, unauthorized } from "../../shared/errors.js";
 import { sessionExpiry, signPendingToken, signToken } from "../../shared/token.js";
 import { completedFor } from "../compliance/status.js";
+import { profileCompleteness } from "../profile/profile.schema.js";
 import { sendVerificationCode } from "./email-codes.js";
 
 // A person picks founder, investor or expert at sign-up. `admin` is not
@@ -91,5 +92,12 @@ export async function getMe(userId: string) {
   });
   if (!user) throw unauthorized();
   if (!user.founder_profile) return user;
-  return { ...user, founder_profile: { ...user.founder_profile, already_have: await completedFor(userId) } };
+  return {
+    ...user,
+    founder_profile: {
+      ...user.founder_profile,
+      already_have: await completedFor(userId),
+      profile_completeness: profileCompleteness(user.founder_profile),
+    },
+  };
 }

@@ -148,8 +148,8 @@ Founder profile fields:
 | `county` | `county` | The county name |
 | `description` | `description` | |
 | `fundingTargetKes` | `funding_amount_kes` | |
-| `yearStarted`, `website`, `socialLinks` | `year_started`, `website`, `social_links` | Coming |
-| `profileCompleteness` | `profile_completeness` | Coming |
+| `yearStarted`, `website`, `socialLinks` | `year_started`, `website`, `social_links` | Ready. Links must be full URLs |
+| `profileCompleteness` | `profile_completeness` | Ready. A whole percentage, on `GET /me` and the `PUT /me/profile` response |
 | `fundsRaisedKes` | *(none)* | Blocked: depends on how money is recorded, section 9 |
 | `onboardingStep`, `onboardingComplete` | *(none)* | Keep in the app |
 

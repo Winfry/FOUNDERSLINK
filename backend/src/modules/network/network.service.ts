@@ -190,6 +190,9 @@ export async function getProfile(viewerId: string, targetId: string) {
         description: p.description,
         funding_amount_kes: p.funding_amount_kes,
         use_of_funds: p.use_of_funds,
+        year_started: p.year_started,
+        website: p.website,
+        social_links: p.social_links,
       },
       track_record: publicVentures(target.ventures),
     };

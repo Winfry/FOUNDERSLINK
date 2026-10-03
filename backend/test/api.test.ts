@@ -130,6 +130,14 @@ test("startup profile saves and shows on /me", async () => {
   assert.equal(saved.status, 200);
   assert.equal(saved.json.stage, "mvp");
   assert.equal(saved.json.women_owned, null);
+  // 4 of the 10 fields that count are filled in: description, amount, stage and instruments.
+  assert.equal(saved.json.profile_completeness, 40);
+
+  const fuller = await call("PUT", "/me/profile", { ...startupProfile, business_name: "Afya Booking", use_of_funds: "Hire two engineers", year_started: 2024, website: "https://afya.example.com", social_links: ["https://x.com/afya"], has_employees: true, handles_personal_data: true }, token);
+  assert.equal(fuller.json.profile_completeness, 100);
+  assert.equal(fuller.json.year_started, 2024);
+  assert.equal((await call("PUT", "/me/profile", { ...startupProfile, website: "not a link" }, token)).status, 400);
+  await call("PUT", "/me/profile", startupProfile, token);
 
   const me = await call("GET", "/me", undefined, token);
   assert.equal(me.json.founder_profile.sector, "health");

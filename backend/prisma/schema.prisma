@@ -119,6 +119,9 @@ model FounderProfile {
   county             String
   funding_amount_kes Int?
   use_of_funds       String?
+  year_started       Int?
+  website            String?
+  social_links       String[]
 
   // Startup path
   stage       String?
