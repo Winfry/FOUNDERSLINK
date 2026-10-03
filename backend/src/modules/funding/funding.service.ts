@@ -3,6 +3,7 @@ import type { MatchFunder, MatchProfile } from "../../ai/types.js";
 import type { FounderProfile } from "../../generated/prisma/client.js";
 import { prisma } from "../../shared/db.js";
 import { conflict } from "../../shared/errors.js";
+import { completedFor } from "../compliance/status.js";
 import { assessReadiness, type Group } from "./readiness.js";
 
 const funderFields = {
@@ -58,6 +59,7 @@ export function toMatchProfile(profile: FounderProfile): MatchProfile {
     months_trading: profile.months_trading,
     monthly_revenue_band: profile.monthly_revenue_band,
     has_employees: profile.has_employees,
+    handles_personal_data: profile.handles_personal_data,
   };
 }
 
@@ -85,7 +87,8 @@ export async function getMatches(userId: string) {
   if (!profile) throw conflict("PROFILE_REQUIRED", "Finish onboarding to see your funding matches");
   const approved = user.approval_status === "approved";
 
-  const [funders, itemRows] = await Promise.all([
+  const [already_have, funders, itemRows] = await Promise.all([
+    completedFor(userId),
     prisma.funder.findMany({
       where: visibleToFounders,
       select: {
@@ -109,7 +112,7 @@ export async function getMatches(userId: string) {
 
   const cards = funders.map(({ claimed_by, ...funder }) => {
     const match = byFunder.get(funder.id)!;
-    const readiness = assessReadiness(profile, funder, items, match);
+    const readiness = assessReadiness({ ...profile, already_have }, funder, items, match);
     const ruledOut = readiness.group === "not_for_you";
     return {
       funder,

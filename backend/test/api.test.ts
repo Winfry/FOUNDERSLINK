@@ -203,7 +203,8 @@ test("SME founder: sees what she can apply for now, after fixing gaps, and not a
   assert.ok(names(res.json.apply_now).includes("Mtaani Starter Fund (demo)"));
 
   const bank = res.json.apply_after.find((c: any) => c.funder.name.startsWith("SME Working Capital Loan"));
-  assert.deepEqual(bank.gaps.map((g: any) => g.ref), ["brs_registration", "kra_pin", "business_bank_account"]);
+  // She ticked business registration earlier, and switching path does not undo that.
+  assert.deepEqual(bank.gaps.map((g: any) => g.ref), ["kra_pin", "business_bank_account"]);
 
   // She has not said whether the business is women-owned, so she is asked.
   const pwani = res.json.apply_after.find((c: any) => c.funder.name === "Pwani Women in Business Grant (demo)");

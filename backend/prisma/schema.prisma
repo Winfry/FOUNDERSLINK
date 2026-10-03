@@ -43,24 +43,27 @@ enum BusinessStatus {
 }
 
 model User {
-  id            String   @id @default(uuid(7)) @db.Uuid
-  email         String   @unique
-  password_hash String
-  full_name     String
+  id              String         @id @default(uuid(7)) @db.Uuid
+  email           String         @unique
+  password_hash   String
+  full_name       String
   role            Role           @default(founder)
   approval_status ApprovalStatus @default(draft)
   created_at      DateTime       @default(now())
 
-  founder_profile     FounderProfile?
-  investor_profile    InvestorProfile?
-  expert_profile      ExpertProfile?
-  vetting_application VettingApplication?
+  founder_profile      FounderProfile?
+  investor_profile     InvestorProfile?
+  expert_profile       ExpertProfile?
+  vetting_application  VettingApplication?
   // The funder record this investor maintains, if any.
-  funder              Funder?
-  portfolio           PortfolioEntry[]
-  ventures            Venture[]
-  actions_taken       AdminAction[]       @relation("admin")
-  actions_received    AdminAction[]       @relation("target")
+  funder               Funder?
+  portfolio            PortfolioEntry[]
+  ventures             Venture[]
+  actions_taken        AdminAction[]        @relation("admin")
+  actions_received     AdminAction[]        @relation("target")
+  compliance_updates   ComplianceStatus[]
+  compliance_deadlines ComplianceDeadline[]
+  compliance_questions ComplianceQuestion[]
 
   @@map("users")
 }
@@ -85,10 +88,10 @@ model FounderProfile {
   // SME path
   months_trading       Int?
   monthly_revenue_band String?
-  has_employees        Boolean?
 
-  // Ids of compliance items the founder says she already has.
-  already_have String[]
+  // Asked on both paths. They decide which compliance items apply.
+  has_employees         Boolean?
+  handles_personal_data Boolean?
 
   // Opt-in and self-declared. Null means "not stated". Used only to check
   // eligibility for funders that require them, never to rank.
@@ -108,15 +111,87 @@ model FounderProfile {
 // KRA PIN. The id is a readable slug so funders and profiles can refer
 // to it directly.
 model ComplianceItem {
-  id               String    @id
-  title            String
-  why              String?
-  institution      String?
-  source_url       String?
-  last_verified_at DateTime?
-  is_demo          Boolean   @default(true)
+  id                 String    @id
+  title              String
+  why                String?
+  institution        String?
+  documents_needed   String?
+  when_to_get_help   String?
+  // business: applies to a founder's business. deal: applies to a deal of `deal_type`.
+  scope              String    @default("business")
+  deal_type          String?
+  jurisdiction_level String    @default("national") // national | county
+  // Who the item applies to, e.g. {"has_employees": true}. Empty = everyone.
+  applies_when       Json      @default("{}")
+  recurrence         String? // annual | monthly | quarterly
+  finance_act_year   Int?
+  source_url         String?
+  last_verified_at   DateTime?
+  next_review_at     DateTime?
+  // The team member responsible for keeping this item correct.
+  owner              String?
+  is_demo            Boolean   @default(true)
+
+  statuses  ComplianceStatus[]
+  deadlines ComplianceDeadline[]
 
   @@map("compliance_items")
+}
+
+// Progress on one item, for a business (entity_id = the founder's user
+// id) or, later, for a deal. An item marked complete is something the
+// founder already has, which is what funder readiness is checked against.
+model ComplianceStatus {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  entity_type String // business | deal
+  entity_id   String   @db.Uuid
+  item_id     String
+  status      String // not_started | in_progress | complete
+  note        String?
+  updated_by  String   @db.Uuid
+  updated_at  DateTime @updatedAt
+
+  item    ComplianceItem @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  updater User           @relation(fields: [updated_by], references: [id], onDelete: Cascade)
+
+  @@unique([entity_type, entity_id, item_id])
+  @@map("compliance_status")
+}
+
+model ComplianceDeadline {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  entity_type      String
+  entity_id        String    @db.Uuid
+  item_id          String
+  due_date         DateTime
+  recurrence       String?
+  reminder_sent_at DateTime?
+  created_by       String    @db.Uuid
+
+  item    ComplianceItem @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  creator User           @relation(fields: [created_by], references: [id], onDelete: Cascade)
+
+  @@unique([entity_type, entity_id, item_id])
+  @@map("compliance_deadlines")
+}
+
+// Every question asked, with the answer given and what the founder
+// thought of it, so answers can be evaluated later.
+model ComplianceQuestion {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  user_id    String   @db.Uuid
+  question   String
+  language   String
+  answer     String
+  citations  Json
+  confident  Boolean
+  engine     String
+  feedback   String? // helpful | not_helpful
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("compliance_questions")
 }
 
 // A funder is a record built from published information, not a user.

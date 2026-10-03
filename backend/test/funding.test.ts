@@ -20,6 +20,7 @@ const salon: MatchProfile = {
   months_trading: 18,
   monthly_revenue_band: "50k_to_200k",
   has_employees: false,
+  handles_personal_data: null,
 };
 
 const bankLoan: MatchFunder = {

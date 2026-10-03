@@ -9,6 +9,9 @@ import * as standin from "./standin.js";
 import {
   BANDS,
   RISK_LEVELS,
+  type AnswerSource,
+  type ApplicableItem,
+  type ComplianceAnswer,
   type Engine,
   type Extraction,
   type FitExplanation,
@@ -50,6 +53,15 @@ const explainSchema = z.object({
   components: z.array(signalSchema),
   reasons: z.array(z.string()),
   track_record_highlights: z.array(z.string()).default([]),
+});
+
+const applicableSchema = z.object({ item_ids: z.array(z.string()) });
+
+const answerSchema = z.object({
+  answer: z.string().min(1),
+  citations: z.array(z.object({ source: z.string(), url: z.url(), last_verified: z.string().nullable() })).default([]),
+  confident: z.boolean(),
+  suggest_expert: z.boolean(),
 });
 
 const riskSchema = z.object({
@@ -133,4 +145,45 @@ export async function vettingRiskSignals(input: RiskInput): Promise<RiskAssessme
   const answer = await post("/vetting/risk-signals", { application }, riskSchema);
   if (answer) return { ...answer, engine: "ai_service" };
   return { ...standin.riskSignals(application), engine: "stand_in" };
+}
+
+export async function applicableItems(
+  profile: MatchProfile,
+  items: ApplicableItem[],
+  scope: "business" | "deal" = "business",
+  dealType: string | null = null,
+): Promise<{ item_ids: string[]; engine: Engine }> {
+  const safeProfile = { ...profile, description: redact(profile.description) };
+  const body = { profile: safeProfile, scope, deal_type: dealType, items };
+  const answer = await post("/compliance/applicable", body, applicableSchema);
+
+  // Only ids we sent can come back: the AI cannot add an item of its own.
+  const sent = new Set(items.map((i) => i.id));
+  if (answer) return { item_ids: answer.item_ids.filter((id) => sent.has(id)), engine: "ai_service" };
+  return { item_ids: standin.applicableItems(safeProfile, items, scope, dealType), engine: "stand_in" };
+}
+
+export async function answerCompliance(
+  question: string,
+  language: string,
+  profile: MatchProfile | null,
+  sources: AnswerSource[],
+): Promise<ComplianceAnswer & { engine: Engine }> {
+  const body = {
+    question: redact(question),
+    language,
+    profile: profile && { ...profile, description: redact(profile.description) },
+  };
+  const answer = await post("/compliance/answer", body, answerSchema);
+  if (!answer) return { ...standin.answerCompliance(body.question, sources), engine: "stand_in" };
+
+  // An answer with no source to cite is not one we can stand behind,
+  // whatever the service said about its own confidence.
+  const cited = answer.citations.length > 0;
+  return {
+    ...answer,
+    confident: answer.confident && cited,
+    suggest_expert: answer.suggest_expert || !cited,
+    engine: "ai_service",
+  };
 }

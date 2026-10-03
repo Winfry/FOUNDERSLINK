@@ -15,6 +15,7 @@ export interface MatchProfile {
   months_trading: number | null;
   monthly_revenue_band: string | null;
   has_employees: boolean | null;
+  handles_personal_data: boolean | null;
 }
 
 export interface MatchFunder {
@@ -88,4 +89,38 @@ export type RiskLevel = (typeof RISK_LEVELS)[number];
 export interface RiskAssessment {
   risk_level: RiskLevel;
   signals: string[];
+}
+
+// What the rules need to know about a compliance item to decide whether
+// it applies to a business.
+export interface ApplicableItem {
+  id: string;
+  scope: string;
+  deal_type: string | null;
+  applies_when: unknown;
+}
+
+export interface Citation {
+  source: string;
+  url: string;
+  last_verified: string | null;
+}
+
+export interface ComplianceAnswer {
+  answer: string;
+  citations: Citation[];
+  confident: boolean;
+  suggest_expert: boolean;
+}
+
+// What the stand-in may answer from: an item, and whether it has been
+// checked against an official source recently enough to be quoted.
+export interface AnswerSource {
+  id: string;
+  title: string;
+  why: string | null;
+  institution: string | null;
+  source_url: string | null;
+  last_verified_at: Date | null;
+  needs_review: boolean;
 }

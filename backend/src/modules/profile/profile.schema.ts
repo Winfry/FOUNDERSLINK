@@ -22,7 +22,11 @@ const common = z.object({
   county: z.enum(COUNTIES),
   funding_amount_kes: fundingAmount.nullish(),
   use_of_funds: useOfFunds.optional(),
+  // Things she already has, ticked during onboarding. Each one is saved
+  // as a completed item on her compliance checklist.
   already_have: z.array(z.string().max(60)).max(30).default([]),
+  has_employees: z.boolean().nullish(),
+  handles_personal_data: z.boolean().nullish(),
   women_owned: z.boolean().nullish(),
   youth_owned: z.boolean().nullish(),
   pwd_owned: z.boolean().nullish(),
@@ -38,6 +42,7 @@ const sme = common.extend({
   journey_type: z.literal("sme"),
   months_trading: monthsTrading,
   monthly_revenue_band: z.enum(REVENUE_BANDS),
+  // Optional for a startup, but an SME must answer.
   has_employees: z.boolean(),
 });
 
@@ -60,4 +65,5 @@ export const extractableFields: Record<string, z.ZodType> = {
   months_trading: monthsTrading,
   monthly_revenue_band: z.enum(REVENUE_BANDS),
   has_employees: z.boolean(),
+  handles_personal_data: z.boolean(),
 };

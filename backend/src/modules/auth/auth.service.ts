@@ -4,6 +4,7 @@ import { SIGNUP_ROLES } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, unauthorized } from "../../shared/errors.js";
 import { signToken } from "../../shared/token.js";
+import { completedFor } from "../compliance/status.js";
 
 // A person picks founder, investor or expert at sign-up. `admin` is not
 // in the list, so nobody can make themselves one: admins are created
@@ -70,5 +71,6 @@ export async function getMe(userId: string) {
     },
   });
   if (!user) throw unauthorized();
-  return user;
+  if (!user.founder_profile) return user;
+  return { ...user, founder_profile: { ...user.founder_profile, already_have: await completedFor(userId) } };
 }
