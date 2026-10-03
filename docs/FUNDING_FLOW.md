@@ -62,8 +62,9 @@ Only what matching and readiness need. The step is called onboarding or founder 
 | `instruments` | startup | Any of `equity`, `convertible_note`, `loan`, `grant` |
 | `months_trading` | sme | |
 | `monthly_revenue_band` | sme | Bands, not exact figures |
-| `has_employees` | sme | |
-| `already_have` | both | Tick list of compliance items she has, e.g. registration, KRA PIN, county permit |
+| `has_employees` | both | Required for an SME, optional for a startup. Decides which compliance items apply |
+| `handles_personal_data` | both | Optional. Decides whether data protection items apply |
+| `already_have` | both | Tick list of compliance items she has, e.g. registration, KRA PIN, county permit. Each tick is saved as a completed item on her compliance checklist |
 | `women_owned`, `youth_owned`, `pwd_owned` | both | Optional and opt-in. Used only to check eligibility, never to rank |
 
 ---
@@ -147,6 +148,33 @@ POST /vetting/risk-signals
 
 The AI gets the email domain, not the address, and never the phone number. The one check that needs the database, whether the same phone number is on another account, is done by the backend and added to the signals.
 
+### 4.5 Which compliance items apply
+
+Called when a founder opens her checklist. The backend sends the items with their conditions, and uses only ids it sent: the AI cannot add an item of its own.
+
+```
+POST /compliance/applicable
+{ "profile": { ...onboarding fields... },
+  "scope": "business", "deal_type": null,
+  "items": [ { "id": "employer_registrations", "scope": "business", "deal_type": null,
+               "applies_when": { "has_employees": true } } ] }
+
+→ { "item_ids": [ "employer_registrations" ] }
+```
+
+### 4.6 Ask Compliance
+
+```
+POST /compliance/answer
+{ "question": "Do I need a county permit?", "language": "en", "profile": { ... } }
+
+→ { "answer": "...",
+    "citations": [ { "source": "County government", "url": "https://...", "last_verified": "2026-10-01" } ],
+    "confident": true, "suggest_expert": false }
+```
+
+The backend treats an answer with no citation as not confident, whatever the service says, and suggests an expert. The stand-in answers only from an item that has an official source and is not overdue for review. Otherwise it says it cannot confirm.
+
 ---
 
 ## 5. Funder record format
@@ -207,15 +235,15 @@ D7 says nobody is matched until an admin approves them. We keep that for everyth
 
 ## 7. Build status against `TEAM_DECISIONS.md`
 
-**Updated:** 3 October, 20:30. What the Node backend does today, decision by decision. "Built" means it runs and has tests.
+**Updated:** 3 October, 21:42. What the Node backend does today, decision by decision. "Built" means it runs and has tests.
 
 | Decision | Status | Built | Not built |
 |---|---|---|---|
 | **D1** Participants | Mostly | Sign-up as founder, investor or expert. Founder onboarding on the startup and SME paths. Investor and expert profiles. An investor describes what she funds as a funder record she maintains, or asks to take over an existing record and gets it on approval (section 6). | Founder ↔ founder and founder ↔ expert matching. `investor_profiles` holds the person and organisation only: the mandate lives on the funder record, so it is not stored twice. |
 | **D2** Messaging | Not started | | Conversations, messages, the real-time layer, the scam check on messages, report and block. |
-| **D3** Compliance | Small part | A compliance item list. Founders tick what they already have. Funding matches show the items a funder still requires as gaps. | The personal checklist and its status, Ask Compliance, deal compliance, deadlines, source management. |
+| **D3** Compliance | Mostly | A personal checklist chosen by rules from journey type, business status, county, sector, employees and personal data, with progress as "3 of 7 done". Status and notes per item. A message when her county is not covered. Ask Compliance, with every question, answer and feedback logged. Deadlines the founder records herself, with overdue flagged. An admin report on how fresh each item is. Completing an item closes the matching gap on her funding matches. | Deal compliance, which needs deals (D4). Reminders by SMS or push. Deadlines that come from the law: we only store dates the founder enters, because we will not invent them. Real items: all eight are demo data with no official source yet, so Ask Compliance cannot yet give a cited answer. |
 | **D4** Deals | Not started | | Everything. |
-| **D5** AI contract | 4 of 9 endpoints | `/extract-profile`, `/recommend`, `/explain-fit` and `/vetting/risk-signals`, with the API key, in the shapes in section 4. A rule-based stand-in answers each one until the AI service is reachable. | Calls to `/compliance/applicable`, `/compliance/answer`, `/moderation/check-message`, `/embeddings/refresh`. They back features that are not built yet. |
+| **D5** AI contract | 6 of 9 endpoints | `/extract-profile`, `/recommend`, `/explain-fit`, `/vetting/risk-signals`, `/compliance/applicable` and `/compliance/answer`, with the API key, in the shapes in section 4. A rule-based stand-in answers each one until the AI service is reachable. | Calls to `/moderation/check-message` and `/embeddings/refresh`. Moderation backs messaging, which is not built. |
 | **D6** Recommended profiles | Partly | A profile page for founders, investors and experts, open to approved members only. A founder sees her fit with an investor: band, per-signal breakdown and track-record highlights. Investors add portfolio entries and founders add past ventures, each labelled "Public source" or "Self-reported". A portfolio company is named only if it agreed or the deal is public. | "Verified on FounderLink" entries, which come from closed deals (D4). Activity signals, which come from messaging (D2). Connect / Save / Not relevant. |
 | **D7** Vetted network | Mostly | An approval status on every user. An application the person fills in and submits. Risk signals on submission. An admin queue sorted by risk, with approve, reject and needs-more-info, each with a written reason and recorded checks. Suspend and reinstate. An audit log. A guard that blocks unapproved members, read from the database on every request. Admins are created by a script, never by sign-up. | Real identity, OTP and register checks: the identity step is a manual admin review and no ID number or document is stored. The two-admin rule for investors. Automatic pause after several reports. Yearly re-checks. |
 | **D8** Node backend | Mostly | Node, TypeScript, Express, Prisma, PostgreSQL. The backend owns the schema and migrations. Shared key on AI calls. The backend keeps working when the AI service is down. | `pgvector` is not enabled. `docker-compose.yml` is still empty. No deployment. |
@@ -226,10 +254,12 @@ D7 says nobody is matched until an admin approves them. We keep that for everyth
 - When the AI service is down, the backend answers with its stand-in and labels the answer, where D8 says to show "temporarily unavailable".
 - A fee is a risk factor on a funder, not a scam label (section 2).
 - Before approval a member sees public information and counts, not nothing (section 6.3).
+- What a founder already has is stored once, as completed checklist items. Onboarding ticks and the checklist both write there, and funder readiness reads it.
+- `/compliance/applicable` also carries the items, so the AI service needs no copy of them.
 
 **Built but not in `TEAM_DECISIONS.md`**
 
-- Funder records with a loader, ten demo funders and five demo compliance items, all made up and marked as demo data.
+- Funder records with a loader, ten demo funders and eight demo compliance items, all marked as demo data. The funders are made up. The compliance items are real Kenyan requirements by name, but their rules and wording are placeholders nobody has checked at source.
 - Readiness gaps and the three groups: apply now, apply after, not for you.
 - Risk factors on funders: application fee, passed deadline, not verified, demo data.
 

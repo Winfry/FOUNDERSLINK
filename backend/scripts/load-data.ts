@@ -15,15 +15,38 @@ import {
   TICKET_RANGE_MESSAGE,
   ticketRangeIsValid,
 } from "../src/modules/funding/funder.schema.js";
+import { BUSINESS_STATUSES, COUNTIES, JOURNEY_TYPES, SECTORS } from "../src/shared/constants.js";
 import { prisma } from "../src/shared/db.js";
+
+const optionalText = z.string().nullish().transform((v) => v ?? null);
 
 const itemSchema = z.object({
   id: z.string().regex(/^[a-z0-9_]+$/, "use lowercase letters, digits and underscores"),
   title: z.string().min(3),
-  why: z.string().nullish().transform((v) => v ?? null),
-  institution: z.string().nullish().transform((v) => v ?? null),
+  why: optionalText,
+  institution: optionalText,
+  documents_needed: optionalText,
+  when_to_get_help: optionalText,
+  scope: z.enum(["business", "deal"]).default("business"),
+  deal_type: optionalText,
+  jurisdiction_level: z.enum(["national", "county"]).default("national"),
+  // Who the item applies to. Every condition given must hold. Empty = everyone.
+  applies_when: z
+    .strictObject({
+      journey_types: z.array(z.enum(JOURNEY_TYPES)).optional(),
+      business_statuses: z.array(z.enum(BUSINESS_STATUSES)).optional(),
+      counties: z.array(z.enum(COUNTIES)).optional(),
+      sectors: z.array(z.enum(SECTORS)).optional(),
+      has_employees: z.boolean().optional(),
+      handles_personal_data: z.boolean().optional(),
+    })
+    .default({}),
+  recurrence: z.enum(["annual", "quarterly", "monthly"]).nullish().transform((v) => v ?? null),
+  finance_act_year: z.number().int().nullish().transform((v) => v ?? null),
   source_url: optionalUrl,
   last_verified_at: optionalDate,
+  next_review_at: optionalDate,
+  owner: optionalText,
   is_demo: z.boolean().default(false),
 });
 
@@ -32,7 +55,7 @@ const funderSchema = mandateFields
   .extend({
     source_url: optionalUrl,
     last_verified_at: optionalDate,
-    verified_by: z.string().nullish().transform((v) => v ?? null),
+    verified_by: optionalText,
     is_demo: z.boolean().default(false),
   })
   .refine(ticketRangeIsValid, TICKET_RANGE_MESSAGE);

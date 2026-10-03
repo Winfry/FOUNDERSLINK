@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, vetting and profile pages. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting and profile pages. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -44,6 +44,21 @@ npm test                         # API tests, against the same database
 | POST | `/me/ventures` | founder | Adds a previous venture |
 | GET | `/profiles/:id` | approved members | A member's profile page, with fit and track record. Never contact details |
 
+### Compliance
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| GET | `/compliance` | founder | Her checklist: the items that apply to her business, with status and progress |
+| GET | `/compliance/:item_id` | founder | One item, with her status, note and due date |
+| PATCH | `/compliance/:item_id/status` | founder | `{ status: not_started / in_progress / complete, note? }` |
+| PUT | `/compliance/:item_id/deadline` | founder | `{ due_date, recurrence? }`. A date she records herself |
+| GET | `/compliance/deadlines` | founder | Her deadlines, soonest first, with `overdue` |
+| POST | `/compliance/ask` | any user | `{ question, language? }` → answer with citations, or "cannot confirm" |
+| POST | `/compliance/questions/:id/feedback` | the asker | `{ feedback: helpful / not_helpful }` |
+| GET | `/admin/compliance/sources` | admin | How fresh each item is, with the ones needing attention first |
+
+An item marked complete counts as something the founder already has, so it closes the matching gap in `/funding/matches`.
+
 ### Vetting
 
 | Method | Path | Who | What it does |
@@ -81,7 +96,7 @@ The response also has `engine`: `ai_service` when the AI service answered, `stan
 
 ## AI service
 
-Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls `POST /extract-profile`, `POST /recommend`, `POST /explain-fit` and `POST /vetting/risk-signals` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
+Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls `/extract-profile`, `/recommend`, `/explain-fit`, `/vetting/risk-signals`, `/compliance/applicable` and `/compliance/answer` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
 
 Emails and phone numbers are removed from the description before it is sent, and the eligibility flags are never sent.
 

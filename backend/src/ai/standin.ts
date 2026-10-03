@@ -5,7 +5,10 @@
 
 import { COUNTIES } from "../shared/constants.js";
 import type {
+  AnswerSource,
+  ApplicableItem,
   Band,
+  ComplianceAnswer,
   Extraction,
   FitExplanation,
   MatchFunder,
@@ -220,4 +223,73 @@ export function extractProfile(text: string): Extraction {
 export function missingCoreFields(fields: Record<string, unknown>): string[] {
   const core = ["journey_type", "business_status", "sector", "county", "funding_amount_kes"];
   return core.filter((key) => !(key in fields));
+}
+
+// The conditions an item may put on who it applies to. Every condition
+// present must hold. A yes/no condition holds only if the founder has
+// answered it that way, so nothing is assumed about her business.
+function appliesTo(profile: MatchProfile, appliesWhen: unknown): boolean {
+  const when = (appliesWhen ?? {}) as Record<string, unknown>;
+  const within = (key: string, value: string | null) => {
+    const allowed = when[key];
+    return !Array.isArray(allowed) || allowed.length === 0 || (value !== null && allowed.includes(value));
+  };
+  const answered = (key: "has_employees" | "handles_personal_data") =>
+    typeof when[key] !== "boolean" || profile[key] === when[key];
+
+  return (
+    within("journey_types", profile.journey_type) &&
+    within("business_statuses", profile.business_status) &&
+    within("counties", profile.county) &&
+    within("sectors", profile.sector) &&
+    answered("has_employees") &&
+    answered("handles_personal_data")
+  );
+}
+
+export function applicableItems(
+  profile: MatchProfile,
+  items: ApplicableItem[],
+  scope: string,
+  dealType: string | null,
+): string[] {
+  return items
+    .filter((i) => i.scope === scope && (scope !== "deal" || i.deal_type === dealType))
+    .filter((i) => appliesTo(profile, i.applies_when))
+    .map((i) => i.id);
+}
+
+const NOT_CONFIRMED =
+  "We could not confirm this from our verified sources, so we will not guess. A verified expert can help.";
+
+// Answers only by pointing at a stored item that has an official source
+// and is not overdue for review. It never writes a requirement of its own.
+export function answerCompliance(question: string, sources: AnswerSource[]): ComplianceAnswer {
+  const words = new Set(question.toLowerCase().match(/[a-z]{3,}/g) ?? []);
+  const overlap = (s: AnswerSource) =>
+    (`${s.id} ${s.title} ${s.institution ?? ""}`.toLowerCase().match(/[a-z]{3,}/g) ?? []).filter((w) => words.has(w)).length;
+
+  const best = sources.map((s) => ({ s, hits: overlap(s) })).sort((a, b) => b.hits - a.hits)[0];
+  if (!best || best.hits === 0) {
+    return { answer: NOT_CONFIRMED, citations: [], confident: false, suggest_expert: true };
+  }
+
+  const { s } = best;
+  if (!s.source_url || !s.why || s.needs_review) {
+    return {
+      answer: `This looks like it is about "${s.title}". We have not checked that item against an official source recently enough to answer from it. A verified expert can help.`,
+      citations: [],
+      confident: false,
+      suggest_expert: true,
+    };
+  }
+
+  return {
+    answer: `${s.title}. ${s.why}`,
+    citations: [
+      { source: s.institution ?? s.title, url: s.source_url, last_verified: s.last_verified_at?.toISOString() ?? null },
+    ],
+    confident: true,
+    suggest_expert: false,
+  };
 }

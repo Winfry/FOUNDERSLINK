@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { complianceRouter } from "./modules/compliance/compliance.routes.js";
 import { fundingRouter } from "./modules/funding/funding.routes.js";
 import { networkRouter } from "./modules/network/network.routes.js";
 import { profileRouter } from "./modules/profile/profile.routes.js";
@@ -39,6 +40,7 @@ app.get("/meta/options", (_req, res) => {
 app.use(authRouter);
 app.use(profileRouter);
 app.use(fundingRouter);
+app.use(complianceRouter);
 app.use(vettingRouter);
 app.use(networkRouter);
 

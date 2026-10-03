@@ -47,6 +47,7 @@ const profile = {
   months_trading: 18,
   monthly_revenue_band: "50k_to_200k",
   has_employees: false,
+  handles_personal_data: null,
 };
 
 const funders = ["a", "b"].map((id) => ({
@@ -149,4 +150,36 @@ test("vetting risk signals: sends the email domain only, and falls back to the s
   assert.equal(fallback.engine, "stand_in");
   assert.equal(fallback.risk_level, "high");
   assert.ok(fallback.signals.includes("Promises guaranteed returns or funding"));
+});
+
+test("compliance/applicable: sends the items, and ignores ids it did not send", async () => {
+  const items = [
+    { id: "kra_pin", scope: "business", deal_type: null, applies_when: {} },
+    { id: "employers", scope: "business", deal_type: null, applies_when: { has_employees: true } },
+  ];
+
+  reply = () => ({ json: { item_ids: ["kra_pin", "invented_by_the_ai"] } });
+  const out = await client.applicableItems(profile, items);
+  assert.equal(seen.path, "/compliance/applicable");
+  assert.deepEqual(Object.keys(seen.body).sort(), ["deal_type", "items", "profile", "scope"]);
+  assert.equal(seen.body.scope, "business");
+  assert.deepEqual(out, { item_ids: ["kra_pin"], engine: "ai_service" });
+
+  reply = () => ({ status: 503, json: {} });
+  assert.deepEqual(await client.applicableItems(profile, items), { item_ids: ["kra_pin"], engine: "stand_in" });
+});
+
+test("compliance/answer: an answer with nothing to cite is never treated as confident", async () => {
+  reply = () => ({ json: { answer: "Yes, definitely.", citations: [], confident: true, suggest_expert: false } });
+  const uncited = await client.answerCompliance("Do I need a permit? Call 0712345678", "en", profile, []);
+  assert.equal(seen.path, "/compliance/answer");
+  assert.equal(seen.body.question, "Do I need a permit? Call [phone removed]");
+  assert.equal(uncited.confident, false);
+  assert.equal(uncited.suggest_expert, true);
+
+  const citation = { source: "County government", url: "https://example.org/permit", last_verified: "2026-10-01" };
+  reply = () => ({ json: { answer: "Yes.", citations: [citation], confident: true, suggest_expert: false } });
+  const cited = await client.answerCompliance("Do I need a permit?", "en", profile, []);
+  assert.equal(cited.confident, true);
+  assert.deepEqual(cited.citations, [citation]);
 });

@@ -2,30 +2,64 @@
   {
     "id": "brs_registration",
     "title": "Business registration with the Business Registration Service",
+    "why": "A registered business can open a business bank account and sign contracts in its own name, and many funders ask for it.",
     "institution": "Business Registration Service",
+    "when_to_get_help": "If you are choosing between a business name and a limited company, an accountant or lawyer can explain the difference.",
     "is_demo": true
   },
   {
     "id": "kra_pin",
     "title": "KRA PIN for the business",
+    "why": "The business needs its own PIN to pay tax, and funders and banks often ask for it.",
     "institution": "Kenya Revenue Authority",
     "is_demo": true
   },
   {
     "id": "tax_compliance_certificate",
     "title": "Tax compliance certificate",
+    "why": "Some funders and tenders ask for proof that the business is up to date with its taxes.",
     "institution": "Kenya Revenue Authority",
+    "recurrence": "annual",
+    "is_demo": true
+  },
+  {
+    "id": "etims",
+    "title": "eTIMS invoicing",
+    "institution": "Kenya Revenue Authority",
+    "applies_when": { "business_statuses": ["registered_business_name", "limited_company"] },
     "is_demo": true
   },
   {
     "id": "county_business_permit",
     "title": "County business permit",
+    "why": "Counties require a permit to trade from a premises, and it is renewed regularly.",
     "institution": "County government",
+    "jurisdiction_level": "county",
+    "applies_when": { "counties": ["Nairobi", "Mombasa", "Kisumu", "Machakos"] },
+    "recurrence": "annual",
+    "is_demo": true
+  },
+  {
+    "id": "employer_registrations",
+    "title": "Employer registrations (NSSF, SHIF, Housing Levy)",
+    "why": "A business with employees has to register as an employer and make deductions for them.",
+    "applies_when": { "has_employees": true },
+    "recurrence": "monthly",
+    "when_to_get_help": "An accountant can set up payroll deductions correctly.",
+    "is_demo": true
+  },
+  {
+    "id": "odpc_registration",
+    "title": "Data protection registration with the ODPC",
+    "why": "A business that collects or stores personal data may need to register as a data controller or processor.",
+    "institution": "Office of the Data Protection Commissioner",
+    "applies_when": { "handles_personal_data": true },
     "is_demo": true
   },
   {
     "id": "business_bank_account",
     "title": "Bank account in the business name",
+    "why": "Keeps business money separate from personal money, and lenders ask for it.",
     "is_demo": true
   }
 ]

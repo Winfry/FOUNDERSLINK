@@ -4,6 +4,7 @@
 
 import { explainFit, matchFunders } from "../../ai/client.js";
 import { prisma } from "../../shared/db.js";
+import { completedItemIds } from "../compliance/status.js";
 import { conflict, notFound } from "../../shared/errors.js";
 import { listComplianceItems, toMatchFunder, toMatchProfile } from "../funding/funding.service.js";
 import { assessReadiness } from "../funding/readiness.js";
@@ -36,13 +37,15 @@ export async function getInvestorMatches(userId: string) {
     listComplianceItems(),
   ]);
   const items = new Map(itemRows.map((i) => [i.id, i]));
+  const completed = await completedItemIds(founders.map((p) => p.user_id));
   const candidate = toMatchFunder(funder);
 
   const assessed = await Promise.all(
     founders.map(async (profile) => {
       const { results } = await matchFunders(toMatchProfile(profile), [candidate]);
       const match = results[0]!;
-      return { profile, match, readiness: assessReadiness(profile, funder, items, match) };
+      const already_have = completed.get(profile.user_id)!;
+      return { profile, match, readiness: assessReadiness({ ...profile, already_have }, funder, items, match) };
     }),
   );
 

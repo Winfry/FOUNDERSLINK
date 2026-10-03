@@ -4,6 +4,7 @@ import { extractProfile } from "../../ai/client.js";
 import { requireAuth } from "../../middlewares/auth.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, forbidden } from "../../shared/errors.js";
+import { completedFor, setStatus } from "../compliance/status.js";
 import { extractableFields, profileSchema, type ProfileInput } from "./profile.schema.js";
 
 export const profileRouter = Router();
@@ -24,8 +25,8 @@ function toRow(input: ProfileInput) {
     instruments: isStartup ? input.instruments : [],
     months_trading: isStartup ? null : input.months_trading,
     monthly_revenue_band: isStartup ? null : input.monthly_revenue_band,
-    has_employees: isStartup ? null : input.has_employees,
-    already_have: input.already_have,
+    has_employees: input.has_employees ?? null,
+    handles_personal_data: input.handles_personal_data ?? null,
     women_owned: input.women_owned ?? null,
     youth_owned: input.youth_owned ?? null,
     pwd_owned: input.pwd_owned ?? null,
@@ -37,25 +38,31 @@ function toRow(input: ProfileInput) {
 profileRouter.put("/me/profile", requireAuth, async (req, res) => {
   if (req.user!.role !== "founder") throw forbidden("Only founders have a founder profile");
 
-  const row = toRow(profileSchema.parse(req.body));
+  const input = profileSchema.parse(req.body);
+  const row = toRow(input);
+  const userId = req.user!.id;
 
   const known = await prisma.complianceItem.findMany({
-    where: { id: { in: row.already_have } },
+    where: { id: { in: input.already_have } },
     select: { id: true },
   });
   const knownIds = new Set(known.map((i) => i.id));
-  const unknown = row.already_have.filter((id) => !knownIds.has(id));
+  const unknown = input.already_have.filter((id) => !knownIds.has(id));
   if (unknown.length > 0) {
     throw new AppError(400, "UNKNOWN_COMPLIANCE_ITEM", `Unknown items in already_have: ${unknown.join(", ")}`);
   }
 
   const profile = await prisma.founderProfile.upsert({
-    where: { user_id: req.user!.id },
-    create: { ...row, user_id: req.user!.id },
+    where: { user_id: userId },
+    create: { ...row, user_id: userId },
     update: row,
   });
 
-  res.json(profile);
+  // Ticking an item here marks it complete. Leaving one out changes
+  // nothing: progress is undone on the checklist, not by re-saving this form.
+  for (const itemId of input.already_have) await setStatus(userId, itemId, "complete");
+
+  res.json({ ...profile, already_have: await completedFor(userId) });
 });
 
 const extractSchema = z.object({
