@@ -11,6 +11,8 @@ What goes in (all under data/compliance/):
   sources.json           Every official source we may quote: an Act, regulation,
                          county Finance Act or regulator guidance page. Each has
                          a URL and the date a team member last checked it.
+                         Optional "unit": Section, Regulation or Rule, when
+                         detecting it from the text gets it wrong.
   national/items.json    Plain-language checklist items (same fields as the
   counties/<county>.json backend's compliance_items table), plus the county
   deals/<deal_type>.json or deal type they belong to.
@@ -41,7 +43,14 @@ from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 
-from ai.compliance_rag.chunking import PAGE_BREAK, chunk_legal_text
+from ai.compliance_rag.chunking import (
+    HEADER_RESERVE,
+    MODEL_MAX_TOKENS,
+    PAGE_BREAK,
+    UNITS,
+    chunk_legal_text,
+    estimate_tokens,
+)
 from ai.embeddings.model import load_embedder
 
 log = logging.getLogger(__name__)
@@ -81,6 +90,7 @@ class Source:
     finance_act_year: int | None = None
     language: str = "en"
     owner: str | None = None
+    unit: str | None = None   # Section, Regulation or Rule; detected from the text when not set
 
 
 @dataclass
@@ -136,6 +146,9 @@ def load_sources(problems: list[str]) -> dict[str, Source]:
                 raise IngestError(f"{sid}: a county source must name its county")
             if sid in sources:
                 raise IngestError(f"{sid}: duplicate id")
+            unit = entry.get("unit")
+            if unit is not None and unit not in UNITS:
+                raise IngestError(f"{sid}: unit must be one of {', '.join(UNITS)}")
 
             sources[sid] = Source(
                 id=sid,
@@ -153,6 +166,7 @@ def load_sources(problems: list[str]) -> dict[str, Source]:
                 finance_act_year=entry.get("finance_act_year"),
                 language=entry.get("language", "en"),
                 owner=entry.get("owner"),
+                unit=unit,
             )
         except (IngestError, KeyError) as e:
             problems.append(f"SKIPPED source {e}")
@@ -327,7 +341,14 @@ def item_chunk(item: dict, sources: dict[str, Source], problems: list[str]) -> C
     return Chunk(id=f"item:{iid}", text="\n".join(lines), metadata=meta)
 
 
-def source_chunks(src: Source, problems: list[str]) -> tuple[list[Chunk], str | None]:
+def _tokens(embedder):
+    """The model's own counter and limit, or a cautious estimate without them."""
+    count = getattr(embedder, "count_tokens", None) or estimate_tokens
+    limit = getattr(embedder, "max_tokens", None) or MODEL_MAX_TOKENS
+    return count, limit
+
+
+def source_chunks(src: Source, problems: list[str], embedder=None) -> tuple[list[Chunk], str | None]:
     """The legal text itself, split along its sections."""
     if not src.file:
         return [], None
@@ -336,8 +357,15 @@ def source_chunks(src: Source, problems: list[str]) -> tuple[list[Chunk], str | 
         problems.append(f"SKIPPED source {src.id}: file {src.file} not found")
         return [], None
 
+    count, limit = _tokens(embedder)
     chunks: list[Chunk] = []
-    for n, piece in enumerate(chunk_legal_text(read_text(path, problems, src.id))):
+    pieces = chunk_legal_text(
+        read_text(path, problems, src.id),
+        unit=src.unit,
+        count_tokens=count,
+        max_tokens=limit - HEADER_RESERVE,
+    )
+    for n, piece in enumerate(pieces):
         meta = base_metadata(src)
         meta.update({
             "doc_type": "source",
@@ -389,6 +417,11 @@ def ingest() -> int:
     sources = load_sources(problems)
     items = load_items(problems)
 
+    # Loaded first: chunking counts pieces in this model's own tokens.
+    embedder = load_embedder()
+    if embedder is None:
+        raise IngestError("EMBEDDING_MODEL is 'none'; the index needs an embedding model")
+
     chunks: list[Chunk] = []
     hashes: dict[str, str] = {}
     for item in items:
@@ -398,7 +431,7 @@ def ingest() -> int:
     for src in sources.values():
         if src.jurisdiction_level == "county" and src.county not in DEMO_COUNTIES:
             problems.append(f"WARN {src.id}: county {src.county} is outside the demo counties")
-        new, h = source_chunks(src, problems)
+        new, h = source_chunks(src, problems, embedder)
         chunks.extend(new)
         if h:
             hashes[src.id] = h
@@ -416,9 +449,14 @@ def ingest() -> int:
         if sid in previous and previous[sid] != h:
             problems.append(f"CHANGED {sid}: the file differs from the last build; re-verify it")
 
-    embedder = load_embedder()
-    if embedder is None:
-        raise IngestError("EMBEDDING_MODEL is 'none'; the index needs an embedding model")
+    # Anything longer than the model reads is cut off without warning, and
+    # the cut-off text can never be found. Report it so the source can be fixed.
+    count, limit = _tokens(embedder)
+    for c in chunks:
+        used = count(f"passage: {c.text}") + 2  # e5 prefix and the two special tokens
+        if used > limit:
+            problems.append(f"TOO LONG {c.id}: {used} tokens, the model reads {limit}; the end will not be searchable")
+
     write_index(chunks, embedder)
 
     # retrieve.py must embed questions with the same model, so record it.
