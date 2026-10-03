@@ -37,6 +37,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
@@ -66,6 +67,14 @@ MANIFEST = INDEX_DIR / "manifest.json"
 MIN_CHARS_PER_PAGE = 200
 
 LEVELS = {"national", "county"}
+
+
+def county_key(name: str | None) -> str | None:
+    """One spelling per county, so "Uasin Gishu" (the backend), "uasin_gishu"
+    (a file name) and "Murang'a" / "muranga" all match."""
+    if not name:
+        return None
+    return re.sub(r"[\s_-]+", "_", name.strip().lower().replace("'", "").replace("’", "")) or None
 DEMO_COUNTIES = {"nairobi", "mombasa", "kisumu", "machakos"}
 
 
@@ -141,7 +150,7 @@ def load_sources(problems: list[str]) -> dict[str, Source]:
             level = entry.get("jurisdiction_level", "national")
             if level not in LEVELS:
                 raise IngestError(f"{sid}: jurisdiction_level must be national or county")
-            county = (entry.get("county") or "").lower() or None
+            county = county_key(entry.get("county"))
             if level == "county" and not county:
                 raise IngestError(f"{sid}: a county source must name its county")
             if sid in sources:
@@ -310,7 +319,7 @@ def item_chunk(item: dict, sources: dict[str, Source], problems: list[str]) -> C
             last_verified_at=_parse_date(item["last_verified_at"], "last_verified_at", iid),
             next_review_at=_parse_date(item.get("next_review_at"), "next_review_at", iid),
             jurisdiction_level=item.get("jurisdiction_level", "national"),
-            county=(item.get("county") or "").lower() or None, file=None,
+            county=county_key(item.get("county")), file=None,
             deal_type=item.get("deal_type"), finance_act_year=item.get("finance_act_year"),
         )
 
@@ -323,7 +332,7 @@ def item_chunk(item: dict, sources: dict[str, Source], problems: list[str]) -> C
             lines.append(f"{label}: {item[key]}")
     lines.append(f"Institution: {item.get('institution') or src.institution}")
     if src.county:
-        lines.append(f"County: {src.county.title()}")
+        lines.append(f"County: {src.county.replace('_', ' ').title()}")
 
     meta = base_metadata(src)
     meta.update({
@@ -333,7 +342,7 @@ def item_chunk(item: dict, sources: dict[str, Source], problems: list[str]) -> C
         "scope": item.get("scope", "business"),
         "deal_type": item.get("deal_type") or meta["deal_type"],
         "jurisdiction_level": item.get("jurisdiction_level", meta["jurisdiction_level"]),
-        "county": (item.get("county") or meta["county"]).lower(),
+        "county": county_key(item.get("county")) or meta["county"],
         "is_demo": bool(item.get("is_demo", False)),
         "section": "",
         "page": 0,
@@ -441,7 +450,10 @@ def ingest() -> int:
     if dupes:
         raise IngestError(f"duplicate chunk ids: {sorted(dupes)}")
     if not chunks:
-        raise IngestError("nothing to index: add verified sources or items to data/compliance/")
+        for p in problems:
+            print(p)
+        raise IngestError("nothing to index: every source and item above was skipped. "
+                          "Verify them and set last_verified_at in data/compliance/")
 
     # Sources whose file changed since the last build must be re-verified.
     previous = (_read_json(MANIFEST) or {}).get("source_hashes", {})
