@@ -1,0 +1,10 @@
+# Maestro E2E — founder apply → status → login flow (manual credential step after admin approve)
+appId: com.founderlink.app
+---
+- launchApp
+- tapOn: "Skip"
+- tapOn: "Founder? Apply to join"
+- assertVisible: "Founder application"
+- tapOn: "Continue"
+- tapOn: "Check founder application status"
+- assertVisible: "Founder application status"

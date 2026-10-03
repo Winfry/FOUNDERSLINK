@@ -1,0 +1,11 @@
+# Maestro E2E — investor journey (run: maestro test mobile/e2e/maestro/investor-journey.yaml)
+# Requires Expo app running on device/emulator with accessibility labels from UI.
+appId: com.founderlink.app
+---
+- launchApp
+- tapOn: "Skip"
+- tapOn: "Investor? Apply to join"
+- assertVisible: "Investor application"
+- tapOn: "Back"
+- tapOn: "Log in"
+- assertVisible: "Admin sign in"

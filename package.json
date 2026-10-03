@@ -1,0 +1,13 @@
+{
+  "name": "founderlink",
+  "private": true,
+  "scripts": {
+    "test:journeys": "vitest run shared/__tests__",
+    "test:admin:e2e": "playwright test --config admin/playwright.config.ts",
+    "test:mobile:journeys": "vitest run mobile/src/__tests__"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "vitest": "^3.0.9"
+  }
+}
