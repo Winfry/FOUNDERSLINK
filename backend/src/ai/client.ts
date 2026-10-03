@@ -87,7 +87,9 @@ async function post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promi
     if (!res.ok) throw new Error(`AI service answered ${res.status}`);
     return schema.parse(await res.json());
   } catch (err) {
-    console.warn(`AI service call to ${path} failed, using the stand-in:`, err);
+    // One line, not a stack trace: this is expected whenever the AI
+    // service is down or does not have this endpoint yet.
+    console.warn(`AI service call to ${path} failed, using the stand-in: ${err instanceof Error ? err.message : err}`);
     return null;
   }
 }
