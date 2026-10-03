@@ -135,8 +135,8 @@ Nothing is agreed by default. Until she agrees, a founder is invisible to invest
 | `saveOnboardingStep(step, data)` | `PUT /me/profile` once, at the end, with the whole profile. Keep the steps in the app's own store until then | Ready |
 | `getDocuments()` | `GET /vetting/application` → `documents` | Coming |
 | `getDashboard()` | Compose from `GET /me`, `GET /funding/matches`, `GET /compliance` and `GET /connections` | Ready |
-| `getInvestorRequests()` | `GET /connections`, the ones with `direction: "received"` and `status: "pending"` | Ready (pitch fields coming) |
-| `respondToInvestorRequest(id, approve, reason)` | `PATCH /connections/:id` with `{ status: "accepted" | "declined" }` | Ready (decline reason coming) |
+| `getInvestorRequests()` | `GET /connections`, the ones with `direction: "received"` and `status: "pending"`. Each has `with.full_name`, `with.organisation_name`, `with.focus_areas`, `pitch`, `vision`, `offer` and `proposed_amount_kes` | Ready |
+| `respondToInvestorRequest(id, approve, reason)` | `PATCH /connections/:id` with `{ status: "accepted" | "declined", reason? }`. The reason is shown to the investor | Ready |
 
 Founder profile fields:
 
@@ -175,9 +175,9 @@ The founder can also type a description and have the form filled in: `POST /me/p
 | `saveMatchingQuestionnaire(data)` | Two calls: `PUT /me/investor-profile` (organisation, job title, bio) and `PUT /me/funder` (what she funds) | Ready |
 | `discover(params)` | `GET /investor/matches?search=&sector=&stage=&county=&sort=`. `sort` is `fit` (default), `amount_high`, `amount_low` or `newest`. Before approval it returns a count only: show "N businesses match your fund" | Ready |
 | `getFounderPublicProfile(id)` | `GET /profiles/:id` | Ready |
-| `submitJoinRequest(founderId, payload)` | `POST /connections` with `{ user_id, message }` | Ready (pitch, vision, offer and amount as separate fields coming) |
+| `submitJoinRequest(founderId, payload)` | `POST /connections` with `{ user_id, pitch, vision, offer, proposed_amount_kes }`. Send the amount as a number | Ready |
 | `getJoinRequests()` | `GET /connections`, the ones with `direction: "sent"` | Ready |
-| `withdrawJoinRequest(id)` | `DELETE /connections/:id` | Coming |
+| `withdrawJoinRequest(id)` | `DELETE /connections/:id`. Only while it is unanswered. She can ask again after withdrawing, but not after a decline | Ready |
 
 Investor profile fields. Her mandate lives on a funder record she maintains:
 
@@ -203,7 +203,7 @@ Discover card fields:
 
 Show `band` (`strong`, `good`, `possible`) as the match strength. Never show a percentage.
 
-`RequestStatus` maps to the connection `status`: `pending`, `accepted` (your `approved`), `declined`. `withdrawn` is coming.
+`RequestStatus` maps to the connection `status`: `pending`, `accepted` (your `approved`), `declined`, `withdrawn`.
 
 ### InvestorApplicationService and the founder application
 

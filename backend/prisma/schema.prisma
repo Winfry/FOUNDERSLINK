@@ -423,13 +423,21 @@ model Venture {
 // Two approved members agreeing to be in touch. A deal can only be
 // opened between people with an accepted connection.
 model Connection {
-  id           String    @id @default(uuid(7)) @db.Uuid
-  requester_id String    @db.Uuid
-  addressee_id String    @db.Uuid
-  status       String    @default("pending") // pending | accepted | declined
-  message      String?
-  created_at   DateTime  @default(now())
-  responded_at DateTime?
+  id                  String    @id @default(uuid(7)) @db.Uuid
+  requester_id        String    @db.Uuid
+  addressee_id        String    @db.Uuid
+  status              String    @default("pending") // pending | accepted | declined | withdrawn
+  message             String?
+  // What an investor says when she asks to join a founder: why she is a
+  // good fit, her vision, what she offers beyond money, and how much
+  // she proposes to put in. All optional.
+  pitch               String?
+  vision              String?
+  offer               String?
+  proposed_amount_kes Int?
+  decline_reason      String?
+  created_at          DateTime  @default(now())
+  responded_at        DateTime?
 
   requester User @relation("requester", fields: [requester_id], references: [id], onDelete: Cascade)
   addressee User @relation("addressee", fields: [addressee_id], references: [id], onDelete: Cascade)

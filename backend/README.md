@@ -100,9 +100,10 @@ All of these need an approved account. Inside a deal, the caller must also be on
 
 | Method | Path | What it does |
 |---|---|---|
-| POST | `/connections` | `{ user_id, message? }`. Asks another approved member to connect |
+| POST | `/connections` | `{ user_id, message?, pitch?, vision?, offer?, proposed_amount_kes? }`. Asks another approved member to connect |
 | GET | `/connections` | Mine, sent and received |
-| PATCH | `/connections/:id` | `{ status: accepted / declined }`. Only the person who was asked |
+| PATCH | `/connections/:id` | `{ status: accepted / declined, reason? }`. Only the person who was asked |
+| DELETE | `/connections/:id` | Withdraws an unanswered request. Only the person who asked |
 | POST | `/deals` | `{ type, title, with_user_id }`. Needs an accepted connection |
 | GET | `/deals`, `/deals/:id` | My deals; one deal with parties, terms, milestones and any pending move |
 | POST | `/deals/:id/parties` | `{ user_id }`. Brings in someone the caller is connected with |
