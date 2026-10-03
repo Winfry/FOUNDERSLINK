@@ -199,9 +199,13 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | GET | `/admin/vetting/queue` | admin | Waiting applications, riskiest first |
 | GET | `/admin/vetting/:id` | admin | One application with the person's profiles |
 | POST | `/admin/vetting/:id/decision` | admin | `{ decision: approve / reject / needs_info, reason, checks? }` |
+| GET | `/admin/vetting/rechecks` | admin | Approved members due to be looked at again, with why |
+| POST | `/admin/vetting/:id/recheck` | admin | `{ outcome: confirm / suspend, reason }` |
 | POST | `/admin/users/:id/suspend` | admin | `{ reason }` |
 | POST | `/admin/users/:id/reinstate` | admin | `{ reason }` |
 | GET | `/admin/actions` | admin | The audit log |
+
+Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
 
 A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
 

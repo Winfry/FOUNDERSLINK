@@ -322,6 +322,11 @@ model VettingApplication {
   decided_at           DateTime?
   decided_by           String?   @db.Uuid
   decision_reason      String?
+  // For an investor, when two admins must approve: the first to do so.
+  first_approved_by    String?   @db.Uuid
+  // When an approved member is next due to be looked at again, and why.
+  recheck_due_at       DateTime?
+  recheck_reason       String?
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
 
