@@ -115,6 +115,11 @@ test("a founder is invisible to other members until she agrees to be seen", asyn
   assert.equal(await seenBy(), false);
 });
 
+test("funding matches and profile extraction are for founders", async () => {
+  assert.equal((await call("GET", "/funding/matches", "investor")).status, 403);
+  assert.equal((await call("POST", "/me/profile/extract", "investor", { text: "We fund health startups in Nairobi" })).status, 403);
+});
+
 test("an investor's record is shown either way, but she is named only if she agrees", async () => {
   const card = async () => {
     const matches = await call("GET", "/funding/matches", "founder");

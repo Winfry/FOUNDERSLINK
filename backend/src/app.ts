@@ -20,7 +20,11 @@ import * as options from "./shared/constants.js";
 export const app = express();
 
 app.use(cors({ origin: env.CORS_ORIGIN.split(",") }));
-app.use(express.json({ limit: "100kb" }));
+// A statement upload carries a whole statement as text, so it alone may
+// be larger than an ordinary request.
+const smallBody = express.json({ limit: "100kb" });
+const statementBody = express.json({ limit: "1mb" });
+app.use((req, res, next) => (/^\/circles\/[^/]+\/statements$/.test(req.path) ? statementBody : smallBody)(req, res, next));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

@@ -29,12 +29,25 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
 
 // Use after requireAuth.
 export function requireRole(...roles: string[]) {
-  return (req: Request, _res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     if (!roles.includes(req.user!.role)) throw forbidden("Your account cannot do this");
-    // Where it is required, an admin page opens only in a session she
-    // signed into with her authenticator code.
-    if (req.user!.role === "admin" && env.ADMIN_2FA_REQUIRED && !req.user!.mfa) {
-      throw new AppError(403, "TWO_FACTOR_REQUIRED", "Set up two-step sign-in, then sign in with your code");
+
+    if (req.user!.role === "admin") {
+      // The token only says she was an admin when she signed in. The
+      // database says whether she still is, and whether she has been
+      // suspended since, so losing admin access takes effect at once.
+      const admin = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { role: true, approval_status: true },
+      });
+      if (admin?.role !== "admin" || admin.approval_status !== "approved") {
+        throw forbidden("This admin account is not active");
+      }
+      // Where it is required, an admin page opens only in a session she
+      // signed into with her authenticator code.
+      if (env.ADMIN_2FA_REQUIRED && !req.user!.mfa) {
+        throw new AppError(403, "TWO_FACTOR_REQUIRED", "Set up two-step sign-in, then sign in with your code");
+      }
     }
     next();
   };

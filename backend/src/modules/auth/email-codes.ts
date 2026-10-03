@@ -32,7 +32,7 @@ const TEXT: Record<Purpose, [string, (code: string) => string]> = {
   ],
 };
 
-async function issue(user: { id: string; email: string }, purpose: Purpose) {
+async function issue(user: { id: string; email: string }, purpose: Purpose, options: { alwaysReturnCode?: boolean } = {}) {
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const row = { code_hash: hash(code), expires_at: new Date(Date.now() + CODE_MINUTES * 60_000), attempts: 0 };
   await prisma.emailCode.upsert({
@@ -49,22 +49,34 @@ async function issue(user: { id: string; email: string }, purpose: Purpose) {
     // When the email could not be sent, the code cannot reach her. So
     // that the flow can still be shown, it is returned here, but never
     // in production.
-    ...(email.status !== "sent" && env.NODE_ENV !== "production" ? { dev_code: code } : {}),
+    ...((email.status !== "sent" || options.alwaysReturnCode) && env.NODE_ENV !== "production" ? { dev_code: code } : {}),
   };
 }
 
-// Checks a code and uses it up. Returns false for a wrong or expired one.
-async function redeem(userId: string, purpose: Purpose, code: string): Promise<boolean> {
+type Outcome = "ok" | "expired" | "too_many" | "wrong";
+
+// Checks a code and uses it up, and says what was wrong if it fails.
+async function redeem(userId: string, purpose: Purpose, code: string): Promise<Outcome> {
   const key = { user_id_purpose: { user_id: userId, purpose } };
   const pending = await prisma.emailCode.findUnique({ where: key });
-  if (!pending || pending.expires_at < new Date() || pending.attempts >= MAX_ATTEMPTS) return false;
+  if (!pending || pending.expires_at < new Date()) return "expired";
+  if (pending.attempts >= MAX_ATTEMPTS) return "too_many";
 
   if (!timingSafeEqual(Buffer.from(hash(code)), Buffer.from(pending.code_hash))) {
     await prisma.emailCode.update({ where: key, data: { attempts: { increment: 1 } } });
-    return false;
+    return "wrong";
   }
   await prisma.emailCode.delete({ where: key });
-  return true;
+  return "ok";
+}
+
+// The answers every code check in the backend gives, so an app handles
+// one situation in one way: 400 for a wrong or expired code, 429 for too
+// many tries.
+export function codeError(outcome: Exclude<Outcome, "ok">): AppError {
+  if (outcome === "expired") return new AppError(400, "CODE_EXPIRED", "That code has expired. Ask for a new one.");
+  if (outcome === "too_many") return new AppError(429, "TOO_MANY_ATTEMPTS", "Too many wrong codes. Ask for a new one.");
+  return new AppError(400, "WRONG_CODE", "That code is not right");
 }
 
 export function sendVerificationCode(user: { id: string; email: string }) {
@@ -78,9 +90,9 @@ export async function resendVerificationCode(userId: string) {
 }
 
 export async function verifyEmail(userId: string, code: string) {
-  if (!(await redeem(userId, "verify_email", code))) {
-    throw new AppError(400, "WRONG_CODE", "That code is wrong or has expired. Ask for a new one.");
-  }
+  // She is signed in, so she can be told exactly what went wrong.
+  const outcome = await redeem(userId, "verify_email", code);
+  if (outcome !== "ok") throw codeError(outcome);
   await prisma.user.update({ where: { id: userId }, data: { email_verified_at: new Date() } });
   return { email_verified: true };
 }
@@ -89,17 +101,19 @@ export async function verifyEmail(userId: string, code: string) {
 // it cannot be used to find out who is registered.
 export async function forgotPassword(email: string) {
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true } });
-  const sent = user ? await issue(user, "reset_password") : null;
-  return {
-    message: "If that address has an account, a code has been sent to it.",
-    ...(sent && "dev_code" in sent ? { dev_code: sent.dev_code } : {}),
-  };
+  const sent = user ? await issue(user, "reset_password", { alwaysReturnCode: true }) : null;
+  const message = "If that address has an account, a code has been sent to it.";
+  if (env.NODE_ENV === "production") return { message };
+  // Outside production the code is shown so the flow can be tried
+  // without email. An address with no account gets a made-up code that
+  // will never work, so the two answers still look the same.
+  return { message, dev_code: sent?.dev_code ?? String(randomInt(0, 1_000_000)).padStart(6, "0") };
 }
 
 export async function resetPassword(input: z.infer<typeof resetSchema>) {
   const user = await prisma.user.findUnique({ where: { email: input.email }, select: { id: true } });
   // One message for an unknown address and a wrong code, for the same reason.
-  if (!user || !(await redeem(user.id, "reset_password", input.code))) {
+  if (!user || (await redeem(user.id, "reset_password", input.code)) !== "ok") {
     throw new AppError(400, "WRONG_CODE", "That code is wrong or has expired. Ask for a new one.");
   }
   await prisma.user.update({

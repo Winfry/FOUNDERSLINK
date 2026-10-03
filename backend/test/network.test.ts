@@ -184,8 +184,9 @@ test("applications are scored for risk when submitted, and lock after that", asy
   });
   assert.equal(investor.risk_level, "low");
 
+  // The same number as the investor's, typed the other way.
   const fake = await apply("fake", {
-    phone: "0712000002",
+    phone: "+254712000002",
     organisation_name: "Quick Capital",
     statement: "Guaranteed funding for every founder. Pay a small processing fee to start.",
   });

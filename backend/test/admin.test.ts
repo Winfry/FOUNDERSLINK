@@ -176,3 +176,19 @@ test("an admin can list admins and make another, and that is logged", async () =
   assert.equal(log.action, "create_admin");
   assert.equal(log.admin.full_name, `${tag} Admin`);
 });
+
+test("a suspended admin loses the admin pages at once, and nobody can suspend herself", async () => {
+  const own = await call("POST", `/admin/users/${ids.admin}/suspend`, "admin", { reason: "Testing on myself." });
+  assert.equal(own.json.error.code, "OWN_ACCOUNT");
+
+  assert.equal((await call("GET", "/admin/stats", "newAdmin" as Who)).status, 200);
+  await call("POST", `/admin/users/${ids.newAdmin}/suspend`, "admin", { reason: "Left the team." });
+
+  // Her token is still valid, but the database says she is no longer active.
+  const blocked = await call("GET", "/admin/stats", "newAdmin" as Who);
+  assert.equal(blocked.status, 403);
+  assert.equal((await call("GET", "/admin/vetting/queue", "newAdmin" as Who)).status, 403);
+
+  await call("POST", `/admin/users/${ids.newAdmin}/reinstate`, "admin", { reason: "Back on the team." });
+  assert.equal((await call("GET", "/admin/stats", "newAdmin" as Who)).status, 200);
+});

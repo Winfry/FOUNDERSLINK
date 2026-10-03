@@ -17,7 +17,7 @@ const isFounder = requireRole("founder");
 
 // --- Investors ---
 
-const investorProfileSchema = z.object({
+export const investorProfileSchema = z.object({
   organisation_name: z.string().trim().min(2).max(120),
   job_title: z.string().trim().max(80).optional(),
   organisation_website: z.url().optional(),
@@ -117,7 +117,7 @@ networkRouter.patch("/me/portfolio/:id", requireAuth, isInvestor, async (req, re
 
 // --- Experts ---
 
-const expertProfileSchema = z.object({
+export const expertProfileSchema = z.object({
   profession: z.enum(PROFESSIONS),
   organisation_name: z.string().trim().max(120).optional(),
   register_body: z.string().trim().max(40).optional(),

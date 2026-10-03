@@ -8,8 +8,10 @@ import { disconnect } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
 import { env } from "../../config/env.js";
 import { AppError, conflict, unauthorized } from "../../shared/errors.js";
+import { kenyanMobile } from "../../shared/phone.js";
 import { sendSms } from "../../shared/sms.js";
 import { removeFilesOf } from "../vetting/documents.js";
+import { codeError } from "../auth/email-codes.js";
 import { listConsents } from "./consents.js";
 
 export const deleteSchema = z.object({ password: z.string().min(1) });
@@ -136,13 +138,6 @@ export async function deleteAccount(userId: string, password: string) {
 
 // --- Settings and phone number ---
 
-// Accepts 07..., 01..., 2547... or +2547..., and stores one form.
-const kenyanMobile = z
-  .string()
-  .trim()
-  .regex(/^(\+?254|0)[17]\d{8}$/, "Use a Kenyan mobile number")
-  .transform((p) => `+254${p.slice(-9)}`);
-
 export const settingsSchema = z.object({
   full_name: z.string().trim().min(2).optional(),
   phone: kenyanMobile.nullable().optional(),
@@ -213,13 +208,13 @@ export async function sendPhoneCode(userId: string) {
 
 export async function verifyPhoneCode(userId: string, code: string) {
   const pending = await prisma.phoneCode.findUnique({ where: { user_id: userId } });
-  if (!pending || pending.expires_at < new Date()) throw conflict("CODE_EXPIRED", "Ask for a new code");
-  if (pending.attempts >= MAX_ATTEMPTS) throw conflict("TOO_MANY_ATTEMPTS", "Too many wrong codes. Ask for a new one.");
+  if (!pending || pending.expires_at < new Date()) throw codeError("expired");
+  if (pending.attempts >= MAX_ATTEMPTS) throw codeError("too_many");
 
   const right = timingSafeEqual(Buffer.from(hashCode(code)), Buffer.from(pending.code_hash));
   if (!right) {
     await prisma.phoneCode.update({ where: { user_id: userId }, data: { attempts: { increment: 1 } } });
-    throw new AppError(400, "WRONG_CODE", "That code is not right");
+    throw codeError("wrong");
   }
 
   const [user] = await prisma.$transaction([

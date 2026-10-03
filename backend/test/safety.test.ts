@@ -90,7 +90,9 @@ test("a phone number is hers only after she types in the code sent to it", async
   assert.equal((await call("PATCH", "/me", "amina", { notification_channel: "sms" })).json.notification_channel, "sms");
 
   // The code is used up, and only its hash was ever stored.
-  assert.equal((await call("POST", "/me/phone/verify", "amina", { code: sent.json.dev_code })).json.error.code, "CODE_EXPIRED");
+  const used = await call("POST", "/me/phone/verify", "amina", { code: sent.json.dev_code });
+  assert.equal(used.status, 400);
+  assert.equal(used.json.error.code, "CODE_EXPIRED");
 });
 
 test("a number can be on one account only, and changing it means verifying again", async () => {

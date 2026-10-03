@@ -7,15 +7,18 @@ import { vettingRiskSignals } from "../../ai/client.js";
 import type { RiskLevel } from "../../ai/types.js";
 import { env } from "../../config/env.js";
 import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
-import { disconnect } from "../../realtime.js";
+import { setApproved } from "../../realtime.js";
 import { notify } from "../notifications/notifications.service.js";
 import { listDocuments, scheduleDeletion } from "./documents.js";
 import { prisma } from "../../shared/db.js";
+import { kenyanMobile } from "../../shared/phone.js";
 import { sendEmail } from "../../shared/email.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
 export const applicationSchema = z.object({
-  phone: z.string().trim().regex(/^(\+254|0)[17]\d{8}$/, "Use a Kenyan mobile number").optional(),
+  // Stored in one form, so the same number on two accounts is noticed
+  // however each was typed.
+  phone: kenyanMobile.optional(),
   organisation_name: z.string().trim().min(2).max(120).optional(),
   organisation_website: z.url().optional(),
   statement: z.string().trim().min(20, "Tell us a little more").max(2000).optional(),
@@ -264,6 +267,8 @@ export async function decide(adminId: string, applicationId: string, input: z.in
     }
   });
 
+  setApproved(application.user_id, status === "approved");
+
   // A final decision starts the 30 days after which the files are deleted.
   if (input.decision !== "needs_info") await scheduleDeletion(applicationId);
 
@@ -284,6 +289,8 @@ export async function decide(adminId: string, applicationId: string, input: z.in
 
 // Suspend an approved member, or bring a suspended one back.
 export async function setSuspended(adminId: string, userId: string, suspend: boolean, reason: string) {
+  // Suspending yourself would lock you out with nobody having decided it.
+  if (userId === adminId) throw conflict("OWN_ACCOUNT", "You cannot suspend or reinstate your own account");
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { approval_status: true } });
   if (!user) throw notFound("No such user");
 
@@ -299,8 +306,9 @@ export async function setSuspended(adminId: string, userId: string, suspend: boo
     }),
   ]);
 
-  // A suspended member stops receiving live messages at once.
-  if (suspend) disconnect(userId);
+  // A suspended member stops receiving live chat at once, and a
+  // reinstated one starts again.
+  setApproved(userId, !suspend);
 
   return { user_id: userId, approval_status: to };
 }
