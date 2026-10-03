@@ -10,6 +10,7 @@ import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
 import { disconnect } from "../../realtime.js";
 import { notify } from "../notifications/notifications.service.js";
 import { prisma } from "../../shared/db.js";
+import { sendEmail } from "../../shared/email.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
 export const applicationSchema = z.object({
@@ -94,6 +95,10 @@ export async function submitApplication(userId: string) {
   });
   if (!EDITABLE.includes(user.approval_status)) {
     throw conflict("APPLICATION_LOCKED", "Your application has already been submitted");
+  }
+  // The decision is sent to this address, so it has to be hers.
+  if (!user.email_verified_at) {
+    throw conflict("EMAIL_NOT_VERIFIED", "Verify your email address before submitting your application");
   }
   const application = user.vetting_application;
   if (!application?.statement || !application.phone) {
@@ -264,6 +269,10 @@ export async function decide(adminId: string, applicationId: string, input: z.in
   } as const;
   const [title, body] = OUTCOME[input.decision];
   await notify(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
+
+  // Also by email: someone who is waiting may not have the app open.
+  const applicantUser = await prisma.user.findUnique({ where: { id: application.user_id }, select: { email: true } });
+  if (applicantUser) await sendEmail(applicantUser.email, `FounderLink: ${title}`, body);
 
   return { application_id: applicationId, approval_status: status };
 }

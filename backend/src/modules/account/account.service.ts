@@ -26,6 +26,7 @@ export async function exportData(userId: string) {
       role: true,
       approval_status: true,
       created_at: true,
+      email_verified_at: true,
       phone: true,
       phone_verified_at: true,
       preferred_language: true,

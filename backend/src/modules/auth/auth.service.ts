@@ -5,6 +5,7 @@ import { prisma } from "../../shared/db.js";
 import { conflict, unauthorized } from "../../shared/errors.js";
 import { sessionExpiry, signToken } from "../../shared/token.js";
 import { completedFor } from "../compliance/status.js";
+import { sendVerificationCode } from "./email-codes.js";
 
 // A person picks founder, investor or expert at sign-up. `admin` is not
 // in the list, so nobody can make themselves one: admins are created
@@ -37,7 +38,10 @@ export async function register(input: z.infer<typeof registerSchema>) {
     select: publicUser,
   });
 
-  return { token: signToken({ sub: user.id, role: user.role }), expires_at: sessionExpiry(), user };
+  // A code goes to her address straight away, to prove it is hers.
+  const email_verification = await sendVerificationCode(user);
+
+  return { token: signToken({ sub: user.id, role: user.role }), expires_at: sessionExpiry(), user, email_verification };
 }
 
 export async function login(input: z.infer<typeof loginSchema>) {
@@ -65,6 +69,7 @@ export async function getMe(userId: string) {
     where: { id: userId },
     select: {
       ...publicUser,
+      email_verified_at: true,
       phone: true,
       phone_verified_at: true,
       preferred_language: true,

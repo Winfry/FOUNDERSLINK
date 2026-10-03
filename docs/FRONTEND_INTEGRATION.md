@@ -48,6 +48,7 @@ Error codes worth handling by name:
 | `APPROVAL_REQUIRED` | 403 | "Available once your account is approved", with a link to her application status |
 | `CONSENT_REQUIRED` | 409 | The consent screen |
 | `PROFILE_REQUIRED` | 409 | Send her to onboarding |
+| `EMAIL_NOT_VERIFIED` | 409 | The "enter the code we emailed you" screen |
 | `VALIDATION_ERROR` | 400 | Mark the fields in `fields` |
 
 `mobile/src/services/index.ts` already assigns a mock to each service. Write an HTTP version of each beside the mock and switch the assignment. Sections 3 and 8 map every method.
@@ -67,8 +68,8 @@ Why: the team wants a new member to see value before the wait, and the backend c
 | `/founder-application`, `/investor-application` | Become three steps: **sign up** (name, email, password, role), **onboarding** (profile), **vetting application** (phone, statement, organisation, documents) |
 | Login with "email or User ID" | Email only. Remove User IDs (`FL-FND-...`, `FL-INV-...`) |
 | "Set new password" on first login, `mustChangePassword` | Remove. She chose her password at sign-up |
-| Email code at sign-up | Keep. **Coming** in the backend |
-| Forgot password with a code | Keep. **Coming** in the backend |
+| Email code at sign-up | Keep. Sign-up returns a token straight away, so she is signed in while she types the code. She cannot submit her vetting application until the address is verified (`EMAIL_NOT_VERIFIED`) |
+| Forgot password with a code | Keep. Two steps, not three: ask for the code, then send the code with the new password |
 | "Check status" with email and reference number | Replace with a status screen for the signed-in user: `GET /vetting/application` |
 | *(new)* Consent screen in onboarding | Add. See 2.2 |
 | *(new)* "Waiting for approval" home | Add. See 2.1 |
@@ -118,8 +119,8 @@ Nothing is agreed by default. Until she agrees, a founder is invisible to invest
 |---|---|---|
 | `login({ identifier, password })` | `POST /auth/login` with `{ email, password }` → `{ token, user }` | Ready |
 | `signupFounder(input)` | `POST /auth/register` with `{ email, password, full_name, role }`. `role` is `founder`, `investor` or `expert`. Phone is set afterwards with `PATCH /me` | Ready |
-| `verifyEmailOtp(email, otp)` | `POST /auth/email/verify` with `{ code }` | Coming |
-| `requestPasswordReset`, `verifyResetOtp`, `resetPassword` | `POST /auth/password/forgot`, then `POST /auth/password/reset` with `{ email, code, new_password }` | Coming |
+| `verifyEmailOtp(email, otp)` | `POST /auth/email/verify` with `{ code }`, signed in. Sign-up sends the code; `POST /auth/email/code` sends a new one | Ready |
+| `requestPasswordReset`, `verifyResetOtp`, `resetPassword` | `POST /auth/password/forgot` with `{ email }`, then `POST /auth/password/reset` with `{ email, code, new_password }`. There is no separate "check the code" call: the reset call checks it | Ready |
 | `setNewPassword` | Remove | |
 | `refreshSession` | Remove | |
 | `logout()` | No call. Delete the stored token | |

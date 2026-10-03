@@ -51,6 +51,8 @@ model User {
   approval_status ApprovalStatus @default(draft)
   created_at      DateTime       @default(now())
 
+  // Set once she has typed in the code emailed to her address.
+  email_verified_at    DateTime?
   // A Kenyan mobile number. It counts as hers only once she has typed
   // in the code sent to it.
   phone                String?   @unique
@@ -91,6 +93,7 @@ model User {
   circle_votes         CircleVote[]
   consents             Consent[]
   phone_code           PhoneCode?
+  email_codes          EmailCode[]
   reports_made         UserReport[]         @relation("reporter")
   office_hours_given   OfficeHour[]         @relation("expert")
   notifications        Notification[]
@@ -826,4 +829,20 @@ model Notification {
 
   @@index([user_id, read_at])
   @@map("notifications")
+}
+
+// A code emailed to prove an address is hers, or to let her set a new
+// password. Only a hash of the code is kept, and it expires.
+model EmailCode {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  user_id    String   @db.Uuid
+  purpose    String // verify_email | reset_password
+  code_hash  String
+  expires_at DateTime
+  attempts   Int      @default(0)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, purpose])
+  @@map("email_codes")
 }

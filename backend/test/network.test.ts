@@ -46,6 +46,8 @@ async function signUp(who: keyof typeof emails, role: string, full_name: string)
   assert.equal(res.status, 201);
   tokens[who] = res.json.token;
   ids[who] = res.json.user.id;
+  // Each proves her email address, which vetting requires. Email has its own tests.
+  await call("POST", "/auth/email/verify", who, { code: res.json.email_verification.dev_code });
   return res;
 }
 

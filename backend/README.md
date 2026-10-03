@@ -24,6 +24,10 @@ npm test                         # API tests, against the same database
 | GET | `/meta/options` | no | Option lists for forms (sectors, stages and so on), each also under `labels` as `{ id, label }` pairs |
 | POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, user }`. `role` is `founder` (default), `investor` or `expert` |
 | POST | `/auth/login` | no | `{ email, password }` → `{ token, user }` |
+| POST | `/auth/email/code` | yes | Sends a new code to her address |
+| POST | `/auth/email/verify` | yes | `{ code }`. Sign-up already sent the first code |
+| POST | `/auth/password/forgot` | no | `{ email }`. The same answer whether or not the address has an account |
+| POST | `/auth/password/reset` | no | `{ email, code, new_password }` |
 | GET | `/me` | yes | The signed-in user and her `founder_profile` (null until onboarding) |
 | PUT | `/me/profile` | yes | Saves the onboarding answers. Fields are in `docs/FUNDING_FLOW.md` section 3 |
 | POST | `/me/profile/extract` | yes | `{ text, language? }` → suggested onboarding fields from a typed description. Saves nothing |
@@ -219,6 +223,8 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
 
 A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
+
+**Email** goes through Resend, with `RESEND_API_KEY`. Until a sending domain is verified with Resend, it delivers only to the address that owns the Resend account; other addresses fail. When an email cannot be sent, the response carries `dev_code` outside production, so the flow can still be shown. `EMAIL_FROM` sets the sender.
 
 Send the token as `Authorization: Bearer <token>`.
 
