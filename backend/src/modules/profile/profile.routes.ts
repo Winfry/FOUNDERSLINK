@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { extractProfile } from "../../ai/client.js";
-import { requireAuth } from "../../middlewares/auth.js";
+import { requireAuth, requireRole } from "../../middlewares/auth.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, forbidden } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
@@ -76,14 +76,14 @@ profileRouter.put("/me/profile", requireAuth, async (req, res) => {
   res.json({ ...profile, already_have: await completedFor(userId), profile_completeness: profileCompleteness(profile) });
 });
 
-const extractSchema = z.object({
+export const extractSchema = z.object({
   text: z.string().trim().min(10, "Tell us a little more about the business").max(2000),
   language: z.enum(["en", "sw"]).optional(),
 });
 
 // Turns a typed description into suggested onboarding fields. Nothing is
 // saved: the founder reviews the suggestions and submits PUT /me/profile.
-profileRouter.post("/me/profile/extract", requireAuth, async (req, res) => {
+profileRouter.post("/me/profile/extract", requireAuth, requireRole("founder"), async (req, res) => {
   const { text, language } = extractSchema.parse(req.body);
   const useAi = await hasConsent(req.user!.id, "ai_matching");
   const { fields, unsure, engine } = await extractProfile(text, language, useAi);

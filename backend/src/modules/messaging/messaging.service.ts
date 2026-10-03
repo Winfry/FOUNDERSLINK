@@ -54,7 +54,8 @@ async function membership(userId: string, conversationId: string) {
 }
 
 function deliver(message: WithSender, memberIds: string[]) {
-  for (const id of memberIds) pushTo(id, { type: "message", message: view(message, id) });
+  // Chat reaches only members who are approved right now.
+  for (const id of memberIds) pushTo(id, { type: "message", message: view(message, id) }, { approvedOnly: true });
 }
 
 // --- Direct chats ---

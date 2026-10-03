@@ -67,7 +67,8 @@ test("a wrong code is refused, the right one verifies, and it works once", async
   assert.deepEqual((await call("POST", "/auth/email/verify", { code }, token)).json, { email_verified: true });
   assert.ok((await call("GET", "/me", undefined, token)).json.email_verified_at);
 
-  assert.equal((await call("POST", "/auth/email/verify", { code }, token)).json.error.code, "WRONG_CODE");
+  // Used up: there is no code waiting any more.
+  assert.equal((await call("POST", "/auth/email/verify", { code }, token)).json.error.code, "CODE_EXPIRED");
   assert.equal((await call("POST", "/auth/email/code", undefined, token)).json.error.code, "ALREADY_VERIFIED");
   assert.equal((await call("POST", "/vetting/application/submit", undefined, token)).status, 200);
 });
@@ -79,7 +80,12 @@ test("asking to reset a password gives the same answer for any address", async (
   assert.equal(known.status, 200);
   assert.equal(unknown.status, 200);
   assert.equal(known.json.message, unknown.json.message);
-  assert.equal(unknown.json.dev_code, undefined);
+  // Outside production both answers carry a code, so they look alike.
+  // The one for an address with no account is made up and never works.
+  assert.deepEqual(Object.keys(known.json).sort(), Object.keys(unknown.json).sort());
+  assert.match(unknown.json.dev_code, /^\d{6}$/);
+  const decoy = await call("POST", "/auth/password/reset", { email: `nobody-${run}@example.com`, code: unknown.json.dev_code, new_password: newPassword });
+  assert.equal(decoy.json.error.code, "WRONG_CODE");
   code = known.json.dev_code;
 });
 
@@ -97,4 +103,16 @@ test("a new password needs the right code, and replaces the old one", async () =
   assert.equal((await call("POST", "/auth/login", { email, password: newPassword })).status, 200);
   // The code cannot be used a second time.
   assert.equal((await call("POST", "/auth/password/reset", { email, code, new_password: password })).json.error.code, "WRONG_CODE");
+});
+
+test("five wrong codes stop further tries, with the same answer the phone and 2FA checks give", async () => {
+  const again = `mail2-${run}@example.com`;
+  const res = await call("POST", "/auth/register", { email: again, password, full_name: "Second Founder" });
+  const bad = other(res.json.email_verification.dev_code);
+  for (let i = 0; i < 5; i++) await call("POST", "/auth/email/verify", { code: bad }, res.json.token);
+
+  const locked = await call("POST", "/auth/email/verify", { code: res.json.email_verification.dev_code }, res.json.token);
+  assert.equal(locked.status, 429);
+  assert.equal(locked.json.error.code, "TOO_MANY_ATTEMPTS");
+  await prisma.user.deleteMany({ where: { email: again } });
 });

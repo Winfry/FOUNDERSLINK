@@ -246,9 +246,16 @@ test("extract suggests fields from a description and saves nothing", async () =>
   assert.equal((await call("POST", "/me/profile/extract", { text: "short" }, token)).status, 400);
 });
 
-test("compliance items are public", async () => {
+test("compliance items are public, and show only what the form needs", async () => {
   const res = await call("GET", "/compliance/items");
-  assert.ok(res.json.some((i: any) => i.id === "kra_pin"));
+  const kra = res.json.find((i: any) => i.id === "kra_pin");
+  assert.deepEqual(Object.keys(kra).sort(), ["id", "institution", "title", "why"]);
+});
+
+test("a request that is too large is refused as too large", async () => {
+  const res = await call("POST", "/auth/login", { email: "a@example.com", password: "x".repeat(200_000) });
+  assert.equal(res.status, 413);
+  assert.equal(res.json.error.code, "PAYLOAD_TOO_LARGE");
 });
 
 test("options and unknown routes", async () => {

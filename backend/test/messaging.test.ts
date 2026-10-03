@@ -4,6 +4,7 @@ import { after, before, test } from "node:test";
 import bcrypt from "bcrypt";
 import { checkMessage } from "../src/ai/standin.js";
 import { app } from "../src/app.js";
+import { notify } from "../src/modules/notifications/notifications.service.js";
 import { attachRealtime } from "../src/realtime.js";
 import { prisma } from "../src/shared/db.js";
 
@@ -241,4 +242,18 @@ test("reports go to admins, and reports from three different members suspend the
 
   // Suspended means locked out at once.
   assert.equal((await say("investor", room.id, "Still here?")).json.error.code, "APPROVAL_REQUIRED");
+});
+
+test("a suspended member gets no live chat, but still gets her notifications", async () => {
+  // Grace was suspended in the test above. She can still connect.
+  const live = await listen(tokens.investor!);
+  await live.until(() => live.events.some((e) => e.type === "ready"));
+
+  const room = (await call("GET", "/conversations", "founder")).json.find((c: any) => c.type === "deal");
+  await say("founder", room.id, "Is anyone still here?");
+  await notify(ids.investor!, { type: "test", title: "Your account was suspended", body: "An admin will review it." });
+
+  await live.until(() => live.events.some((e) => e.type === "notification"));
+  assert.equal(live.events.some((e) => e.type === "message"), false);
+  live.socket.close();
 });

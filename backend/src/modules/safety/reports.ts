@@ -3,7 +3,7 @@
 // admin has looked (TEAM_DECISIONS D7).
 
 import { z } from "zod";
-import { disconnect } from "../../realtime.js";
+import { setApproved } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
@@ -28,7 +28,7 @@ export async function suspendIfReported(userId: string): Promise<boolean> {
     where: { id: userId, approval_status: "approved" },
     data: { approval_status: "suspended" },
   });
-  if (count > 0) disconnect(userId);
+  if (count > 0) setApproved(userId, false);
   return count > 0;
 }
 

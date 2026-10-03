@@ -118,6 +118,9 @@ test("a deal needs an accepted connection, and is invisible to everyone else", a
   const stranger = await call("POST", "/deals", "outsider", deal);
   assert.equal(stranger.json.error.code, "NOT_CONNECTED");
 
+  const noSuchFunder = await call("POST", "/deals", "founder", { ...deal, source_funder_id: "01999999-9999-7999-8999-999999999999" });
+  assert.equal(noSuchFunder.json.error.code, "UNKNOWN_FUNDER");
+
   const opened = await call("POST", "/deals", "founder", deal);
   assert.equal(opened.status, 201);
   dealId = opened.json.id;

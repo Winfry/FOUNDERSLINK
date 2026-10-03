@@ -155,6 +155,15 @@ test("the treasurer uploads a statement, and each payment in is matched or set a
   assert.equal(summary.json.errors[0].row, 5);
 });
 
+test("a statement much larger than an ordinary request is accepted", async () => {
+  const padding = Array.from({ length: 3000 }, (_, i) => `ZZ${String(i).padStart(8, "0")},${now},Pay Bill to 888880 KPLC,Completed,,10.00,`).join("\n");
+  const big = `${statement}\n${padding}`;
+  assert.ok(big.length > 150_000);
+  const res = await call("POST", `/circles/${circle}/statements`, "wanjiku", { csv: big });
+  assert.equal(res.status, 200);
+  assert.equal(res.json.not_payments_in, 3001);
+});
+
 test("uploading the same statement again counts nothing twice", async () => {
   const again = await call("POST", `/circles/${circle}/statements`, "wanjiku", { csv: statement });
   assert.equal(again.json.imported, 0);

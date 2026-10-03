@@ -16,6 +16,18 @@ npm run dev                      # http://localhost:8000
 npm test                         # API tests, against the same database
 ```
 
+## API docs
+
+With the server running, Swagger UI is at `http://localhost:8000/docs` and the raw OpenAPI 3.1 document at `/openapi.json`. Neither needs a token. They cover every HTTP endpoint; the WebSocket at `/ws` is described in the document's introduction, since OpenAPI has no way to describe it.
+
+The document is built in `src/docs`, one file under `src/docs/paths` per router. How it is kept in step with the code:
+
+- Request bodies and query strings are generated from the same Zod schemas the routers parse with, so they cannot drift from validation. Rules Zod checks across fields (a `.refine`) do not survive the conversion and are written into the operation's description.
+- Responses are not validated anywhere, so their schemas are written by hand in `src/docs/schemas.ts` and the path files. When a service changes what it returns, change them too.
+- `test/openapi.test.ts` walks the routes registered on the Express app and fails if a route has no operation, if an operation has no route, or if the documented access (token, approved account) differs from the route's guards. A new route therefore fails `npm test` until it is added to the matching file in `src/docs/paths`.
+
+The tables below are the short version, kept by hand.
+
 ## Basics for every call
 
 - **Base URL:** `http://localhost:8000` locally. The frontend reads it from `API_BASE_URL` (see `.env.example`).
@@ -157,18 +169,18 @@ There is no admin withdrawals or transactions screen: no money passes through Fo
 |---|---|---|---|
 | GET | `/health` | no | Liveness check |
 | GET | `/meta/options` | no | Option lists for forms (sectors, stages and so on), each also under `labels` as `{ id, label }` pairs |
-| POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, user }`. `role` is `founder` (default), `investor` or `expert` |
-| POST | `/auth/login` | no | `{ email, password }` → `{ token, user }` |
+| POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, expires_at, user, email_verification }`. `role` is `founder` (default), `investor` or `expert` |
+| POST | `/auth/login` | no | `{ email, password }` → `{ token, expires_at, user }`, or `{ two_factor_required, pending_token }` for an admin with two-step sign-in |
 | POST | `/auth/email/code` | yes | Sends a new code to her address |
 | POST | `/auth/email/verify` | yes | `{ code }`. Sign-up already sent the first code |
 | POST | `/auth/password/forgot` | no | `{ email }`. The same answer whether or not the address has an account |
 | POST | `/auth/password/reset` | no | `{ email, code, new_password }` |
 | GET | `/me` | yes | The signed-in user: `role`, `approval_status`, phone and settings, and her `founder_profile`, `investor_profile`, `expert_profile` or `funder` (null until filled in) |
 | PUT | `/me/profile` | yes | Saves the onboarding answers. Fields are in `docs/FUNDING_FLOW.md` section 3 |
-| POST | `/me/profile/extract` | yes | `{ text, language? }` → suggested onboarding fields from a typed description. Saves nothing |
+| POST | `/me/profile/extract` | founder | `{ text, language? }` → suggested onboarding fields from a typed description. Saves nothing |
 | GET | `/compliance/items` | no | The items for the "what you already have" tick list |
-| GET | `/funders` | yes | All funder records |
-| GET | `/funding/matches` | yes | The founder's funders in three groups: `apply_now`, `apply_after`, `not_for_you` |
+| GET | `/funders` | yes | The funder records a founder may see: those built from public information, and those kept by an approved investor. Funders that fund groups are left out |
+| GET | `/funding/matches` | founder | The founder's funders in three groups: `apply_now`, `apply_after`, `not_for_you` |
 
 ### Consent and her own data
 
@@ -375,6 +387,10 @@ A request from a member who is not approved gets `403` with code `APPROVAL_REQUI
 **Two-step sign-in for admins.** An admin turns it on with `POST /auth/2fa/setup` (returns a secret and an `otpauth://` link for her authenticator app) and `POST /auth/2fa/enable` with `{ code }`. After that, `POST /auth/login` answers `{ two_factor_required, pending_token }`, and `POST /auth/2fa/verify` with `{ pending_token, code }` returns the session. Set `ADMIN_2FA_REQUIRED=true` to make the admin pages refuse any session that was not signed into this way.
 
 **Email** goes through Resend, with `RESEND_API_KEY`. Until a sending domain is verified with Resend, it delivers only to the address that owns the Resend account; other addresses fail. When an email cannot be sent, the response carries `dev_code` outside production, so the flow can still be shown. `EMAIL_FROM` sets the sender.
+
+**Code checks answer the same way everywhere** (email, phone and two-step sign-in): `400 WRONG_CODE`, `400 CODE_EXPIRED`, `429 TOO_MANY_ATTEMPTS`. Password reset is the exception: it answers `400 WRONG_CODE` for everything, so it cannot be used to find out which addresses have accounts.
+
+A request body over 100 kB answers `413 PAYLOAD_TOO_LARGE`. A statement upload may be up to 1 MB.
 
 Send the token as `Authorization: Bearer <token>`.
 

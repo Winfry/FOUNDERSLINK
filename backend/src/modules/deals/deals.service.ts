@@ -151,6 +151,10 @@ export async function createDeal(userId: string, input: z.infer<typeof createSch
     throw conflict("NOT_CONNECTED", "You can only open a deal with a connection or a member of one of your circles");
   }
 
+  if (input.source_funder_id && !(await prisma.funder.findUnique({ where: { id: input.source_funder_id }, select: { id: true } }))) {
+    throw new AppError(400, "UNKNOWN_FUNDER", "source_funder_id is not a funder record");
+  }
+
   const opened = new Date();
   const deal = await prisma.deal.create({
     data: {

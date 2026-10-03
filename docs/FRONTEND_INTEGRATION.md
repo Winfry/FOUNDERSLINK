@@ -69,7 +69,7 @@ git push
 | Token | One token, valid 7 days. Login and sign-up also return `expires_at` (milliseconds). There is no refresh token: drop `refreshToken` and `refreshSession`, and send the user to login on a `401` |
 | Field names | The backend uses `snake_case` (`full_name`, `funding_amount_kes`). Map to your `camelCase` types inside the service layer, so screens do not change |
 | Errors | Always `{ "error": { "code", "message" } }`. Validation errors add `fields: [{ path, message }]`, which maps onto form fields |
-| Live updates | WebSocket at `/ws`, one for the whole app. Send `{"type":"auth","token":"..."}` first. It pushes `{"type":"message",...}` and `{"type":"notification",...}` |
+| Live updates | WebSocket at `/ws`, one for the whole app. Send `{"type":"auth","token":"..."}` first. It pushes `{"type":"message",...}` and `{"type":"notification",...}`. Connect as soon as she is signed in: notifications arrive before approval, chat only after |
 | IDs | UUID strings |
 | Money | Whole Kenyan shillings, integer, field name ends in `_kes` |
 | Dates | ISO 8601 strings, UTC |
@@ -88,6 +88,8 @@ Error codes worth handling by name:
 | `CONSENT_REQUIRED` | 409 | The consent screen |
 | `PROFILE_REQUIRED` | 409 | Send her to onboarding |
 | `EMAIL_NOT_VERIFIED` | 409 | The "enter the code we emailed you" screen |
+| `WRONG_CODE`, `CODE_EXPIRED` | 400 | "That code is not right" or "ask for a new code". The same for email, phone and admin 2FA |
+| `TOO_MANY_ATTEMPTS` | 429 | "Too many tries. Ask for a new code" |
 | `VALIDATION_ERROR` | 400 | Mark the fields in `fields` |
 
 `mobile/src/services/index.ts` already assigns a mock to each service. Write an HTTP version of each beside the mock and switch the assignment. Sections 3 and 8 map every method.
