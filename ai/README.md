@@ -34,6 +34,15 @@ AI_SERVICE_API_KEY=<same value as the AI service's AI_SERVICE_API_KEY>
 | `GET /health` | Liveness, plus which embedding model is loaded |
 | `POST /extract-profile` | Free text (English, Swahili, Sheng) → onboarding fields, using only the allowed values in `ai/extraction/options.py` |
 | `POST /recommend` | Profile + candidate funders → a verdict for **every** candidate: band, score (sorting only), signals, explanation |
+| `POST /explain-fit` | Profile + one funder + its track record (no company names) + language → the profile page: the same band as the match card, one component per signal, reasons in English or Swahili, and track-record highlights labelled by source (`docs/FUNDING_FLOW.md` §4.3) |
+
+### Sheng and spoken Swahili
+
+Before extraction, `ai/extraction/sheng.py` rewrites Sheng words and spoken amounts into plain words and digits: "Niko na biz ya mtumba, nataka ngiri hamsini" becomes "niko na biashara ya mitumba, nataka 50000". It reads amounts such as "laki mbili na nusu" (250,000) and "milioni moja na laki tano" (1,500,000).
+
+The words live in `ai/extraction/lexicons/sheng.json`, so anyone can add one without touching code. Add a word only when you are sure of its everyday meaning, and add a test in `ai/tests/test_sheng.py`. Other parts of the AI can reuse it: `from ai.extraction.sheng import normalise`.
+
+All founder-facing sentences live in `ai/explanations/messages.py`, in English and Swahili. The Swahili needs a native speaker's review before the demo.
 
 ## Tests
 

@@ -1,0 +1,45 @@
+{
+  "_about": [
+    "Sheng and Swahili words FounderLink understands, used by ai/extraction/sheng.py.",
+    "Add a word only if you are sure what it means in everyday Nairobi Sheng, then add a test in ai/tests/test_sheng.py.",
+    "Keys are lower case. Values in 'words' are the plain Swahili or English word the rest of the AI already knows."
+  ],
+
+  "units": {
+    "_note": "Words that multiply the number after them (Swahili order: 'elfu hamsini' = 50,000) or before them ('50 ngiri').",
+    "mia": 100,
+    "soo": 100,
+    "elfu": 1000,
+    "ngiri": 1000,
+    "thao": 1000,
+    "laki": 100000,
+    "milioni": 1000000
+  },
+
+  "ones": {
+    "moja": 1, "mbili": 2, "tatu": 3, "nne": 4, "tano": 5,
+    "sita": 6, "saba": 7, "nane": 8, "tisa": 9
+  },
+
+  "tens": {
+    "kumi": 10, "ishirini": 20, "thelathini": 30, "arobaini": 40, "hamsini": 50,
+    "sitini": 60, "sabini": 70, "themanini": 80, "tisini": 90
+  },
+
+  "words": {
+    "_note": "Sheng word -> the plain word the extractor and the scam check already understand.",
+    "doo": "pesa",
+    "ganji": "pesa",
+    "mullah": "pesa",
+    "chapaa": "pesa",
+    "mkwanja": "pesa",
+    "biz": "biashara",
+    "bizna": "biashara",
+    "hustle": "biashara",
+    "kuhustle": "biashara",
+    "mtumba": "mitumba",
+    "nduthi": "boda",
+    "mathree": "matatu",
+    "kibanda": "kiosk"
+  }
+}

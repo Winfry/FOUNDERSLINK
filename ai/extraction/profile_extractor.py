@@ -6,6 +6,7 @@
 import re
 
 from ai.extraction.options import COUNTIES
+from ai.extraction.sheng import normalise
 
 SECTOR_WORDS = {
     "health": r"clinic|hospital|health|afya|dawa|pharmac|chemist|medical|hospitali|kliniki",
@@ -84,7 +85,8 @@ def _amount(text: str) -> int | None:
 
 
 def extract_profile(free_text: str, language: str | None = None) -> dict:
-    text = free_text.strip()
+    # Sheng and spoken Swahili amounts first: "ngiri hamsini" -> "50000".
+    text = normalise(free_text.strip())
     fields: dict = {}
 
     if sector := _first_match(text, SECTOR_WORDS):

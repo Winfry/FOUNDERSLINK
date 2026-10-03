@@ -16,6 +16,141 @@ npm run dev                      # http://localhost:8000
 npm test                         # API tests, against the same database
 ```
 
+## Basics for every call
+
+- **Base URL:** `http://localhost:8000` locally. The frontend reads it from `API_BASE_URL` (see `.env.example`).
+- **Auth:** send the token from `/auth/register` or `/auth/login` as `Authorization: Bearer <token>`.
+- **Errors** always look like `{ "error": { "code", "message" } }`. Validation errors also carry `fields: [{ path, message }]`. Show `message` to the person: it is written for them.
+- **Error codes the screens must handle:**
+
+| Status | Code | Meaning | What the screen does |
+|---|---|---|---|
+| 401 | | No token, or it expired | Go to login |
+| 403 | `APPROVAL_REQUIRED` | She is not approved yet | Show her application status (`GET /vetting/application`) |
+| 409 | `PROFILE_REQUIRED` | Onboarding is not finished | Send her to onboarding |
+| 409 | `CONSENT_REQUIRED` | She has not agreed to what this needs | Ask for the consent (`POST /me/consents`) |
+| 404 | | Not found, or not hers to see | "This is no longer available" |
+
+- **`engine`**: answers that used AI say `ai_service`, or `stand_in` when the backend's own rules answered. Don't show it to members; it is for the team and for demos.
+- **`disclaimer`** and **`notice`** fields are written to be shown as they are, under the content they belong to.
+
+## Screens and the endpoints they use
+
+A guide for the web and mobile apps. Each screen uses the real API; no mock data. Full details of every endpoint are in the tables after this section.
+
+> **Agreed by the team (4 October):** the apps show no wallet, balance, deposit, withdrawal or escrow, and no FounderLink bank account or Paybill. FounderLink never holds or moves money. The apps collect no ID number and no ID or passport document: identity is checked by an admin, and the backend stores only the result.
+
+### 1. Sign up, onboarding and approval
+
+| Step | Call |
+|---|---|
+| Option lists for every form (sectors, stages, counties…) | `GET /meta/options` |
+| Create the account, choosing founder, investor or expert | `POST /auth/register` `{ email, password, full_name, role }` |
+| Consents, one switch each, nothing ticked by default | `GET /me/consents`, `POST /me/consents` `{ purpose, granted }` |
+| Founder: describe the business in her own words, then confirm the suggested fields | `POST /me/profile/extract` `{ text, language }` → `{ fields, unsure, engine }`; then `PUT /me/profile` |
+| Investor: the person, then what she funds | `PUT /me/investor-profile`, then `PUT /me/funder` |
+| Expert: profession, register, services, office hours | `PUT /me/expert-profile` |
+| Phone number, verified by code | `PATCH /me` `{ phone }`, `POST /me/phone/code`, `POST /me/phone/verify` `{ code }` |
+| The application for approval | `GET /vetting/application`, `PATCH /vetting/application`, `POST /vetting/application/submit` |
+| Where am I? | `GET /me` → `approval_status`: `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`, `banned` |
+
+The application takes `phone`, `organisation_name`, `organisation_website`, `statement`, `references` and, for an investor taking over an existing funder record, `claims_funder_id`. **There is no ID number or document field.** Show "Your identity is checked by the FounderLink team" in their place.
+
+### 2. Funding matches
+
+| Step | Call |
+|---|---|
+| Her matches in three groups | `GET /funding/matches` → `apply_now`, `apply_after`, `not_for_you` |
+
+Each card shows the funder's name, `band` (Strong / Good / Possible; none in "not for you"), `explanation`, and a "Why?" view built from `reasons` (one `{ signal, fits, text }` each, green tick or cross). In "apply after", list `gaps`. A gap with `kind: "requirement"` links to that compliance item (screen 4). Show `risk_factors` as a warning line, e.g. an application fee. Link `funder.how_to_apply_url`, and show "From public information, last checked <`funder.last_verified_at`>" or "Maintained by the funder" from `source`. On the startup path, label the groups Pitch / Pitch after / Don't pitch.
+
+### 3. Profile page and fit
+
+| Step | Call |
+|---|---|
+| A member's profile | `GET /profiles/:id` |
+| Connect | `POST /connections` `{ user_id, message? }`; the button reads `connection.status`: `none`, `pending`, `accepted`, `declined` |
+
+For an investor viewed by a founder, the response has `fit`: `{ band, components, reasons, track_record_highlights }`, in her preferred language.
+- `band` and the first line of `reasons` go at the top ("A good fit, with one thing to check.").
+- `components` are the fit breakdown: one row per signal with a tick or cross and its `text`.
+- The other `reasons` are the "Why it fits", "Check:" and "Add … to your profile" lines.
+- `track_record_highlights` sit above `track_record`. Each entry has a `source_label` badge: "Verified on FounderLink", "Public source" or "Self-reported".
+
+`contact` (email, phone, WhatsApp link) is present only once both have accepted the connection. Never show a profile's contact details any other way. A founder's page has `founder` and `track_record` (her past ventures); an expert's has `expert`.
+
+### 4. Compliance
+
+| Step | Call |
+|---|---|
+| Her checklist | `GET /compliance` → `{ progress: { text: "3 of 7 done" }, county: { covered, message }, items, disclaimer }` |
+| One item | `GET /compliance/:item_id`: `why`, `documents_needed`, `when_to_get_help`, `institution`, `source_url`, `last_verified_at`, `status`, `due_date` |
+| Mark progress | `PATCH /compliance/:item_id/status` `{ status: not_started / in_progress / complete, note? }` |
+| A date she records | `PUT /compliance/:item_id/deadline` `{ due_date, recurrence? }`; list: `GET /compliance/deadlines` (with `overdue`) |
+| Ask Compliance | `POST /compliance/ask` `{ question, language? }` → `{ id, answer, citations, confident, suggest_expert, experts, experts_available, disclaimer }` |
+| Was it helpful? | `POST /compliance/questions/:id/feedback` `{ feedback: helpful / not_helpful }` |
+
+Show progress as the `progress.text` sentence, never as a score or percentage. If `county.covered` is false, show `county.message`. An item with `is_demo: true` or `needs_review: true` gets a "not yet checked against the official source" label. In Ask Compliance, show every citation as a link with its `last_verified` date. When `suggest_expert` is true, show the `experts` with an "Ask for a session" button (`POST /experts/:id/office-hours`), or "N experts can help once you are approved" from `experts_available`. Always show `disclaimer`.
+
+### 5. Deals
+
+| Step | Call |
+|---|---|
+| My deals | `GET /deals` |
+| Open a deal with a connection or a circle member | `POST /deals` `{ type, title, with_user_id, source_funder_id? }`. `type`: `cofounder_partnership`, `investment`, `expert_engagement`, `joint_venture` |
+| The deal room | `GET /deals/:id` → `stage_label`, `next_stage`, `pending.waiting_for`, `terms`, `parties`, `milestones`, `notice` |
+| Move it on | `POST /deals/:id/stage` `{ to_stage }`; another party confirms with `POST /deals/:id/stage/confirm` |
+| Pause, resume, decline | `POST /deals/:id/status` `{ status, reason }` |
+| Terms | `PATCH /deals/:id/terms` `{ amount_kes?, instrument?, equity_percent?, roles?, notes? }` |
+| Timeline | `GET /deals/:id/timeline`: each event has a ready sentence in `text` |
+| Deal checklist | `GET /deals/:id/compliance`, `PATCH /deals/:id/compliance/:item_id` |
+| Milestones | `POST /deals/:id/milestones`, `PATCH /deals/:id/milestones/:mid` |
+| Show on track records after closing | `PATCH /deals/:id/sharing` `{ share }` |
+| The deal's chat | `GET /conversations` → the one with `type: "deal"` (screen 7) |
+
+Show stages as a stepper: `exploring` → `due_diligence` → `terms_agreed` → `documents_compliance` → `closed` → `active`. When `pending` is set, show "Waiting for <names> to confirm" and a Confirm button for those listed. Label terms "Recorded by the parties, not a legal document", and show the `notice`.
+
+### 6. Circles (replaces the wallet screens)
+
+| Step | Call |
+|---|---|
+| My circles, and learning circles to join | `GET /circles`, `GET /circles/suggested` |
+| A circle | `GET /circles/:id`: members, roles, who has paid this period, goals with progress |
+| Contributions recorded from M-Pesa | `POST /circles/:id/contributions` (organiser or treasurer), `GET /circles/:id/contributions` |
+| Upload an M-Pesa statement and see who has paid | `POST /circles/:id/statements` `{ csv }`, `GET /circles/:id/reconciliation` |
+| The circle's **own** Paybill or Till | `PATCH /circles/:id` `{ paybill_number }` |
+| Invite (money circles: single-use link only) | `POST /circles/:id/invites`, `GET /circles/invites/:token`, `POST /circles/join` `{ token }` |
+| Goals, notes and minutes, votes | `/circles/:id/goals`, `/circles/:id/notes`, `/circles/:id/decisions` |
+| Group funding the circle could apply for | `GET /circles/:id/funding` |
+
+The finance tab shows **contributions and who still owes**, never a balance. Money goes from members straight to the circle's own Paybill, Till or bank account, and the screen says so: "FounderLink records contributions. It never holds or moves your money."
+
+### 7. Messages and notifications
+
+| Step | Call |
+|---|---|
+| Conversations (direct, circle, deal) | `GET /conversations`, `POST /conversations` `{ user_id }` |
+| Messages | `GET /conversations/:id/messages?before=`, `POST /conversations/:id/messages` `{ body }`, `POST /conversations/:id/read` |
+| Live updates | WebSocket `/ws` (see "Live delivery" below) |
+| Report or block | `POST /messages/:id/report`, `PUT /users/:id/block` |
+| Notifications | `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all` |
+
+A message with `warning` shows `warning.text` above it in a warning colour. The message itself is still shown.
+
+### 8. Admin dashboard
+
+| Screen | Call |
+|---|---|
+| Sign in | `POST /auth/login` with an admin account (created with `npm run admin:create`); `GET /me` → `role: "admin"` |
+| Applications, riskiest first | `GET /admin/vetting/queue`, `GET /admin/vetting/:id` |
+| Decide | `POST /admin/vetting/:id/decision` `{ decision, reason, checks? }` |
+| Re-checks | `GET /admin/vetting/rechecks`, `POST /admin/vetting/:id/recheck` |
+| Reports | `GET /admin/reports`; `POST /admin/users/:id/suspend`, `/reinstate` |
+| Audit log | `GET /admin/actions` |
+| Compliance source freshness | `GET /admin/compliance/sources` |
+
+There is no admin withdrawals or transactions screen: no money passes through FounderLink.
+
 ## Endpoints
 
 | Method | Path | Auth | What it does |
@@ -24,7 +159,7 @@ npm test                         # API tests, against the same database
 | GET | `/meta/options` | no | Option lists for the onboarding form (sectors, stages and so on) |
 | POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, user }`. `role` is `founder` (default), `investor` or `expert` |
 | POST | `/auth/login` | no | `{ email, password }` → `{ token, user }` |
-| GET | `/me` | yes | The signed-in user and her `founder_profile` (null until onboarding) |
+| GET | `/me` | yes | The signed-in user: `role`, `approval_status`, phone and settings, and her `founder_profile`, `investor_profile`, `expert_profile` or `funder` (null until filled in) |
 | PUT | `/me/profile` | yes | Saves the onboarding answers. Fields are in `docs/FUNDING_FLOW.md` section 3 |
 | POST | `/me/profile/extract` | yes | `{ text, language? }` → suggested onboarding fields from a typed description. Saves nothing |
 | GET | `/compliance/items` | no | The items for the "what you already have" tick list |
@@ -47,7 +182,7 @@ Nothing is agreed by default, so the onboarding screens need to ask. What each c
 - `profile_visibility`: she appears in other members' matches and her profile page can be opened. Without it both return as if she were not there.
 - `ai_matching`: her business details may be sent to the AI service. Without it the backend's own rules answer, and responses say `engine: "stand_in"`.
 - `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Without it, sending one returns `409` with code `CONSENT_REQUIRED`. Withdrawing it clears them.
-- `contact`: recorded for SMS and WhatsApp, which are not built yet.
+- `contact`: she may be contacted by SMS (notifications and phone codes) and offered as a WhatsApp link to her accepted connections. SMS is only attempted once a provider is set up (see below).
 
 ### Settings and phone number
 
@@ -99,7 +234,7 @@ All of these need an approved account. Inside a deal, the caller must also be on
 | POST | `/connections` | `{ user_id, message? }`. Asks another approved member to connect |
 | GET | `/connections` | Mine, sent and received |
 | PATCH | `/connections/:id` | `{ status: accepted / declined }`. Only the person who was asked |
-| POST | `/deals` | `{ type, title, with_user_id }`. Needs an accepted connection |
+| POST | `/deals` | `{ type, title, with_user_id, source_funder_id? }`. Needs an accepted connection or a shared circle. `type`: `cofounder_partnership`, `investment`, `expert_engagement`, `joint_venture` |
 | GET | `/deals`, `/deals/:id` | My deals; one deal with parties, terms, milestones and any pending move |
 | POST | `/deals/:id/parties` | `{ user_id }`. Brings in someone the caller is connected with |
 | POST | `/deals/:id/stage` | `{ to_stage, note? }`. Moves one stage forward, or proposes it when every party must agree |
@@ -205,7 +340,7 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | Method | Path | Who | What it does |
 |---|---|---|---|
 | GET | `/vetting/application` | any user | Her application and approval status |
-| PATCH | `/vetting/application` | any user | Fills it in. Locked once submitted |
+| PATCH | `/vetting/application` | any user | `{ phone?, organisation_name?, organisation_website?, statement?, references?, claims_funder_id? }`. Locked once submitted. No ID number or document is taken |
 | POST | `/vetting/application/submit` | any user | Submits it and scores it for risk |
 | GET | `/admin/vetting/queue` | admin | Waiting applications, riskiest first |
 | GET | `/admin/vetting/:id` | admin | One application with the person's profiles |
@@ -218,11 +353,7 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 
 Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
 
-A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
-
-Send the token as `Authorization: Bearer <token>`.
-
-Errors always look like `{ "error": { "code", "message" } }`. Validation errors also carry `fields: [{ path, message }]`.
+A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3. Auth and errors are described in "Basics for every call" at the top.
 
 ## Funding matches
 
