@@ -2,7 +2,10 @@
 // profile pages. Founders reach investors through the funder record the
 // investor maintains, so matching always runs on records.
 
+import { z } from "zod";
 import { explainFit, matchFunders } from "../../ai/client.js";
+import type { FounderProfile, Funder } from "../../generated/prisma/client.js";
+import { COUNTIES, SECTORS, STAGES } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { consented, hasConsent } from "../account/consents.js";
 import { completedItemIds } from "../compliance/status.js";
@@ -26,7 +29,31 @@ async function mandateOf(userId: string) {
 
 // Founders that fit an investor's record. An investor who is not
 // approved yet gets the number only, never the people.
-export async function getInvestorMatches(userId: string) {
+export const discoverSchema = z.object({
+  // Looks in the business name and description.
+  search: z.string().trim().max(80).optional(),
+  sector: z.enum(SECTORS).optional(),
+  stage: z.enum(STAGES).optional(),
+  county: z.enum(COUNTIES).optional(),
+  sort: z.enum(["fit", "amount_high", "amount_low", "newest"]).default("fit"),
+});
+
+const kes = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
+
+// Why this business is on her list, in words addressed to the investor.
+// Built from the founder's profile and the investor's own record, so it
+// reads the same whichever engine did the matching.
+function reasonsFor(profile: FounderProfile, funder: Funder, ready: boolean): string[] {
+  const reasons: string[] = [];
+  reasons.push(funder.sectors.length === 0 ? `A ${profile.sector} business; you fund all sectors` : `In a sector you fund: ${profile.sector}`);
+  if (profile.stage) reasons.push(`At a stage you fund: ${profile.stage.replaceAll("_", " ")}`);
+  reasons.push(funder.counties.length === 0 ? `Based in ${profile.county}; you fund nationwide` : `Based in a county you cover: ${profile.county}`);
+  if (profile.funding_amount_kes) reasons.push(`Asking for ${kes(profile.funding_amount_kes)}, within your range`);
+  if (ready) reasons.push("Already meets everything you require");
+  return reasons;
+}
+
+export async function getInvestorMatches(userId: string, filter: z.infer<typeof discoverSchema> = { sort: "fit" }) {
   const { approved, funder } = await mandateOf(userId);
   if (!funder) throw conflict("FUNDER_REQUIRED", "Describe what you fund to see matching businesses");
 
@@ -56,9 +83,27 @@ export async function getInvestorMatches(userId: string) {
     }),
   );
 
+  // Search and filters narrow her matches. They never widen them: a
+  // business that does not fit her record is not shown, whatever she types.
+  const needle = filter.search?.toLowerCase();
+  const wanted = (p: FounderProfile) =>
+    (!filter.sector || p.sector === filter.sector) &&
+    (!filter.stage || p.stage === filter.stage) &&
+    (!filter.county || p.county === filter.county) &&
+    (!needle || `${p.business_name ?? ""} ${p.description}`.toLowerCase().includes(needle));
+
+  const amount = (p: FounderProfile) => p.funding_amount_kes ?? 0;
+  const order: Record<string, (a: (typeof assessed)[number], b: (typeof assessed)[number]) => number> = {
+    // Ready businesses first, then the best fit.
+    fit: (a, b) => a.readiness.gaps.length - b.readiness.gaps.length || b.match.score - a.match.score,
+    amount_high: (a, b) => amount(b.profile) - amount(a.profile),
+    amount_low: (a, b) => amount(a.profile) - amount(b.profile),
+    newest: (a, b) => b.profile.created_at.getTime() - a.profile.created_at.getTime(),
+  };
+
   const fitting = assessed
-    .filter((a) => a.readiness.group !== "not_for_you")
-    .sort((a, b) => a.readiness.gaps.length - b.readiness.gaps.length || b.match.score - a.match.score);
+    .filter((a) => a.readiness.group !== "not_for_you" && wanted(a.profile))
+    .sort(order[filter.sort]);
 
   const count = fitting.length;
   const summary = `${count} ${count === 1 ? "business matches" : "businesses match"} your fund`;
@@ -84,6 +129,7 @@ export async function getInvestorMatches(userId: string) {
       use_of_funds: profile.use_of_funds,
       band: match.band,
       signals: match.reasons.map((r) => ({ signal: r.signal, fits: r.fits })),
+      match_reasons: reasonsFor(profile, funder, readiness.gaps.length === 0),
       // Whether she already meets everything this funder requires.
       ready: readiness.gaps.length === 0,
     })),

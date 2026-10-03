@@ -72,7 +72,7 @@ An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GE
 |---|---|---|---|
 | PUT | `/me/investor-profile` | investor | The person and her organisation |
 | PUT | `/me/funder` | investor | What she funds. Creates or updates the funder record she maintains |
-| GET | `/investor/matches` | investor | Founders that fit her record. A count only until she is approved |
+| GET | `/investor/matches` | investor | `?search=&sector=&stage=&county=&sort=`. Founders that fit her record, each with `match_reasons`. A count only until she is approved |
 | POST | `/me/portfolio` | investor | Adds a past investment. With `source_url` it is a public source, without it self-reported |
 | PATCH | `/me/portfolio/:id` | investor | Edits an entry or its visibility |
 | PUT | `/me/expert-profile` | expert | Profession, register and bio |

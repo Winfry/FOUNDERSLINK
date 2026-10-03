@@ -173,7 +173,7 @@ The founder can also type a description and have the form filled in: `POST /me/p
 |---|---|---|
 | `getProfile()` | `GET /me` → `investor_profile` and `funder` | Ready |
 | `saveMatchingQuestionnaire(data)` | Two calls: `PUT /me/investor-profile` (organisation, job title, bio) and `PUT /me/funder` (what she funds) | Ready |
-| `discover(params)` | `GET /investor/matches`. Before approval it returns a count only: show "N businesses match your fund" | Ready (search, filters and sort coming) |
+| `discover(params)` | `GET /investor/matches?search=&sector=&stage=&county=&sort=`. `sort` is `fit` (default), `amount_high`, `amount_low` or `newest`. Before approval it returns a count only: show "N businesses match your fund" | Ready |
 | `getFounderPublicProfile(id)` | `GET /profiles/:id` | Ready |
 | `submitJoinRequest(founderId, payload)` | `POST /connections` with `{ user_id, message }` | Ready (pitch, vision, offer and amount as separate fields coming) |
 | `getJoinRequests()` | `GET /connections`, the ones with `direction: "sent"` | Ready |
@@ -197,7 +197,7 @@ Discover card fields:
 | `id` | `user_id` |
 | `businessName`, `sector`, `stage`, `county` | `business_name`, `sector`, `stage`, `county` |
 | `fundingAskKes` | `funding_amount_kes` |
-| `matchReasons` | `signals` today (`[{ signal, fits }]`). Sentences are coming |
+| `matchReasons` | `match_reasons`: sentences written for the investor, e.g. "In a sector you fund: health" |
 | `verifiedDocumentsBadge` | Use `ready`: she already meets everything this funder requires |
 | `percentRaised` | Blocked, section 9 |
 
