@@ -92,6 +92,8 @@ model User {
   consents             Consent[]
   phone_code           PhoneCode?
   reports_made         UserReport[]         @relation("reporter")
+  office_hours_given   OfficeHour[]         @relation("expert")
+  office_hours_asked   OfficeHour[]         @relation("requester")
   reports_received     UserReport[]         @relation("reported")
 
   @@map("users")
@@ -278,18 +280,22 @@ model InvestorProfile {
 }
 
 model ExpertProfile {
-  id                String   @id @default(uuid(7)) @db.Uuid
-  user_id           String   @unique @db.Uuid
-  profession        String // lawyer | accountant | mentor | other
-  organisation_name String?
+  id                     String   @id @default(uuid(7)) @db.Uuid
+  user_id                String   @unique @db.Uuid
+  profession             String // lawyer | accountant | mentor | other
+  organisation_name      String?
   // The professional register the expert says they are on, e.g. LSK.
-  register_body     String?
-  register_number   String?
-  bio               String
-  sectors           String[]
-  counties          String[]
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  register_body          String?
+  register_number        String?
+  bio                    String
+  sectors                String[]
+  counties               String[]
+  // What she offers, e.g. "Business registration", "eTIMS setup".
+  services               String[]
+  // How many office-hours sessions she will take on in a month. 0 = none.
+  office_hours_per_month Int      @default(0)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -769,4 +775,21 @@ model UserReport {
 
   @@unique([reporter_id, reported_user_id])
   @@map("reports")
+}
+
+// A short session a member asks an expert for. Experts cap how many
+// they take on each month, so helping stays a small commitment.
+model OfficeHour {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  expert_id    String    @db.Uuid
+  requester_id String    @db.Uuid
+  topic        String
+  status       String    @default("requested") // requested | accepted | declined | done
+  created_at   DateTime  @default(now())
+  responded_at DateTime?
+
+  expert    User @relation("expert", fields: [expert_id], references: [id], onDelete: Cascade)
+  requester User @relation("requester", fields: [requester_id], references: [id], onDelete: Cascade)
+
+  @@map("office_hours")
 }

@@ -11,6 +11,7 @@ import type { ComplianceItem } from "../../generated/prisma/client.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, notFound } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
+import { suggestExperts } from "../experts/experts.service.js";
 import { toMatchProfile } from "../funding/funding.service.js";
 import { setStatus } from "./status.js";
 
@@ -172,7 +173,7 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
   const [profile, items, user] = await Promise.all([
     prisma.founderProfile.findUnique({ where: { user_id: userId } }),
     prisma.complianceItem.findMany(),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferred_language: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferred_language: true, approval_status: true } }),
   ]);
   const language = input.language ?? user.preferred_language;
 
@@ -197,7 +198,19 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
     },
   });
 
-  return { id: logged.id, ...result, disclaimer: DISCLAIMER };
+  // "Get an expert" is only useful with someone to go to. Experts are
+  // members, so they are named only to an approved member. Anyone else
+  // is told how many there are.
+  const found = result.suggest_expert ? await suggestExperts(profile) : [];
+  const approved = user.approval_status === "approved";
+
+  return {
+    id: logged.id,
+    ...result,
+    experts: approved ? found : [],
+    experts_available: found.length,
+    disclaimer: DISCLAIMER,
+  };
 }
 
 export async function giveFeedback(userId: string, questionId: string, feedback: string) {

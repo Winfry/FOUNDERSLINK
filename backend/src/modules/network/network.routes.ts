@@ -118,6 +118,8 @@ const expertProfileSchema = z.object({
   bio: z.string().trim().min(10).max(1000),
   sectors: z.array(z.enum(SECTORS)).default([]),
   counties: z.array(z.enum(COUNTIES)).default([]),
+  services: z.array(z.string().trim().min(2).max(80)).max(10).default([]),
+  office_hours_per_month: z.number().int().min(0).max(40).default(0),
 });
 
 networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) => {

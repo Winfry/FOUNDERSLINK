@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging and circles. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging, circles and experts. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -164,6 +164,19 @@ All of these need an approved account, and, past joining, membership of the circ
 | GET | `/circles/:id/funding` | circle member | Funders that fund groups, and what the circle still needs for each |
 
 A circle's group chat is in `/conversations` with `type: "circle"`. Members of the same circle can open a deal with each other without a separate connection.
+
+### Experts and office hours
+
+All of these need an approved account.
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/experts` | `?profession=&sector=&county=`. Approved experts, those with a free session first |
+| POST | `/experts/:id/office-hours` | `{ topic }`. Asks for a session. Refused when she has none left this month |
+| GET | `/me/office-hours` | Sessions I asked for, or was asked for |
+| PATCH | `/office-hours/:id` | `{ status: accepted / declined / done }`. The expert only |
+
+An expert sets `services` and `office_hours_per_month` in `PUT /me/expert-profile`. Accepting a session creates an accepted connection between the two. `POST /compliance/ask` returns `experts` when `suggest_expert` is true; someone not yet approved gets `experts_available` (a number) and an empty list.
 
 ### Vetting
 

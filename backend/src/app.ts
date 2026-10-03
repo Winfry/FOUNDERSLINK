@@ -7,6 +7,7 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { circlesRouter } from "./modules/circles/circles.routes.js";
 import { complianceRouter } from "./modules/compliance/compliance.routes.js";
 import { dealsRouter } from "./modules/deals/deals.routes.js";
+import { expertsRouter } from "./modules/experts/experts.routes.js";
 import { fundingRouter } from "./modules/funding/funding.routes.js";
 import { messagingRouter } from "./modules/messaging/messaging.routes.js";
 import { networkRouter } from "./modules/network/network.routes.js";
@@ -52,6 +53,7 @@ app.use(networkRouter);
 app.use(dealsRouter);
 app.use(messagingRouter);
 app.use(circlesRouter);
+app.use(expertsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "No such endpoint" } });

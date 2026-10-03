@@ -205,6 +205,8 @@ export async function getProfile(viewerId: string, targetId: string) {
       bio: e.bio,
       sectors: e.sectors,
       counties: e.counties,
+      services: e.services,
+      office_hours_per_month: e.office_hours_per_month,
     },
   };
 }
