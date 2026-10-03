@@ -1,0 +1,31 @@
+[
+  {
+    "id": "brs_registration",
+    "title": "Business registration with the Business Registration Service",
+    "institution": "Business Registration Service",
+    "is_demo": true
+  },
+  {
+    "id": "kra_pin",
+    "title": "KRA PIN for the business",
+    "institution": "Kenya Revenue Authority",
+    "is_demo": true
+  },
+  {
+    "id": "tax_compliance_certificate",
+    "title": "Tax compliance certificate",
+    "institution": "Kenya Revenue Authority",
+    "is_demo": true
+  },
+  {
+    "id": "county_business_permit",
+    "title": "County business permit",
+    "institution": "County government",
+    "is_demo": true
+  },
+  {
+    "id": "business_bank_account",
+    "title": "Bank account in the business name",
+    "is_demo": true
+  }
+]

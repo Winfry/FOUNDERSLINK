@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { fundingRouter } from "./modules/funding/funding.routes.js";
 import { profileRouter } from "./modules/profile/profile.routes.js";
 import * as options from "./shared/constants.js";
 
@@ -24,11 +25,14 @@ app.get("/meta/options", (_req, res) => {
     stages: options.STAGES,
     instruments: options.INSTRUMENTS,
     revenue_bands: options.REVENUE_BANDS,
+    counties: options.COUNTIES,
+    eligibility_flags: options.ELIGIBILITY_FLAGS,
   });
 });
 
 app.use(authRouter);
 app.use(profileRouter);
+app.use(fundingRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "No such endpoint" } });

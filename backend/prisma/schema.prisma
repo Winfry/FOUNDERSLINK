@@ -79,3 +79,48 @@ model FounderProfile {
 
   @@map("founder_profiles")
 }
+
+// A thing a business can have or do that a funder may require, e.g. a
+// KRA PIN. The id is a readable slug so funders and profiles can refer
+// to it directly.
+model ComplianceItem {
+  id               String    @id
+  title            String
+  why              String?
+  institution      String?
+  source_url       String?
+  last_verified_at DateTime?
+  is_demo          Boolean   @default(true)
+
+  @@map("compliance_items")
+}
+
+// A funder is a record built from published information, not a user.
+// Format follows docs/FUNDING_FLOW.md section 5.
+model Funder {
+  id                  String        @id @default(uuid(7)) @db.Uuid
+  name                String        @unique
+  kind                String // angel | vc | accelerator | grant | government_fund | bank | sacco
+  mandate_text        String
+  journey_types       JourneyType[]
+  sectors             String[] // empty = any sector
+  stages              String[] // empty = any stage
+  counties            String[] // empty = nationwide
+  instruments         String[]
+  ticket_min_kes      Int
+  ticket_max_kes      Int
+  // Compliance item ids the funder requires before it will fund.
+  requirements        String[]
+  // Any of women_owned, youth_owned, pwd_owned. Empty = open to all.
+  eligibility         String[]
+  application_fee_kes Int           @default(0)
+  deadline            DateTime?
+  how_to_apply_url    String?
+  source_url          String?
+  last_verified_at    DateTime?
+  verified_by         String?
+  is_demo             Boolean       @default(true)
+  created_at          DateTime      @default(now())
+
+  @@map("funders")
+}
