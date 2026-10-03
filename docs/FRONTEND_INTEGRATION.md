@@ -312,8 +312,9 @@ For screen 1, show the label on every funder that has `is_demo: true` or a `risk
 
 | Page | Backend | Status |
 |---|---|---|
-| Login | `POST /auth/login` with an admin account | Ready |
-| Verify 2FA | `POST /auth/2fa/verify` with the code from an authenticator app | Coming |
+| Login | `POST /auth/login` with an admin account. If she has two-step sign-in on, the answer is `{ two_factor_required: true, pending_token }` and no session yet | Ready |
+| Verify 2FA | `POST /auth/2fa/verify` with `{ pending_token, code }` → `{ token, user }`. The code comes from her authenticator app | Ready |
+| Set up 2FA *(new page)* | `POST /auth/2fa/setup` → `{ secret, otpauth_url }`. Show `otpauth_url` as a QR code. Then `POST /auth/2fa/enable` with `{ code }` | Ready |
 | Founder and investor applications (list) | `GET /admin/vetting/queue`: waiting applications, riskiest first | Ready (decided applications coming) |
 | Application detail | `GET /admin/vetting/:id` | Ready |
 | Approve, reject | `POST /admin/vetting/:id/decision` with `{ decision, reason, checks }` | Ready |

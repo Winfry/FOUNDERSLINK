@@ -3,7 +3,7 @@ import { z } from "zod";
 import { SIGNUP_ROLES } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, unauthorized } from "../../shared/errors.js";
-import { sessionExpiry, signToken } from "../../shared/token.js";
+import { sessionExpiry, signPendingToken, signToken } from "../../shared/token.js";
 import { completedFor } from "../compliance/status.js";
 import { sendVerificationCode } from "./email-codes.js";
 
@@ -51,6 +51,12 @@ export async function login(input: z.infer<typeof loginSchema>) {
   const ok = user && (await bcrypt.compare(input.password, user.password_hash));
   if (!ok) throw unauthorized("Wrong email or password");
 
+  // An admin with two-step sign-in gets no session yet: only a token to
+  // exchange, with her authenticator code, at POST /auth/2fa/verify.
+  if (user.role === "admin" && user.totp_enabled) {
+    return { two_factor_required: true as const, pending_token: signPendingToken(user.id, user.role) };
+  }
+
   return {
     token: signToken({ sub: user.id, role: user.role }),
     expires_at: sessionExpiry(),
@@ -69,6 +75,7 @@ export async function getMe(userId: string) {
     where: { id: userId },
     select: {
       ...publicUser,
+      totp_enabled: true,
       email_verified_at: true,
       phone: true,
       phone_verified_at: true,

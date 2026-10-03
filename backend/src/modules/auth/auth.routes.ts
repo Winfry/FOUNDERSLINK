@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.js";
+import { forbidden } from "../../shared/errors.js";
 import { getMe, login, loginSchema, register, registerSchema } from "./auth.service.js";
+import { enable, enableSchema, setup, verify, verifySchema } from "./two-factor.js";
 import {
   codeSchema,
   forgotPassword,
@@ -39,4 +41,26 @@ authRouter.post("/auth/password/forgot", async (req, res) => {
 
 authRouter.post("/auth/password/reset", async (req, res) => {
   res.json(await resetPassword(resetSchema.parse(req.body)));
+});
+
+// Two-step sign-in, for admins.
+
+const adminOnly = (role: string) => {
+  // Checked here, not with requireRole, so an admin can reach setup
+  // even where two-step sign-in is already required everywhere else.
+  if (role !== "admin") throw forbidden("Two-step sign-in is for admin accounts");
+};
+
+authRouter.post("/auth/2fa/setup", requireAuth, async (req, res) => {
+  adminOnly(req.user!.role);
+  res.json(await setup(req.user!.id));
+});
+
+authRouter.post("/auth/2fa/enable", requireAuth, async (req, res) => {
+  adminOnly(req.user!.role);
+  res.json(await enable(req.user!.id, enableSchema.parse(req.body).code));
+});
+
+authRouter.post("/auth/2fa/verify", async (req, res) => {
+  res.json(await verify(verifySchema.parse(req.body)));
 });

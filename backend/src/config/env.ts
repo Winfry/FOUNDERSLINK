@@ -28,6 +28,13 @@ const schema = z.object({
   MPESA_CALLBACK_SECRET: z.string().min(16).optional(),
   // How many different admins must approve an investor. TEAM_DECISIONS
   // D7 asks for 2 in production and allows 1 for the demo.
+  // When true, an admin can use the admin pages only in a session she
+  // signed into with her authenticator code. Off by default so a new
+  // admin can sign in once to set it up.
+  ADMIN_2FA_REQUIRED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   INVESTOR_APPROVALS_REQUIRED: z.coerce.number().int().min(1).max(2).default(1),
 });
 

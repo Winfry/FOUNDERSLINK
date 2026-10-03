@@ -224,6 +224,8 @@ Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve a
 
 A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
 
+**Two-step sign-in for admins.** An admin turns it on with `POST /auth/2fa/setup` (returns a secret and an `otpauth://` link for her authenticator app) and `POST /auth/2fa/enable` with `{ code }`. After that, `POST /auth/login` answers `{ two_factor_required, pending_token }`, and `POST /auth/2fa/verify` with `{ pending_token, code }` returns the session. Set `ADMIN_2FA_REQUIRED=true` to make the admin pages refuse any session that was not signed into this way.
+
 **Email** goes through Resend, with `RESEND_API_KEY`. Until a sending domain is verified with Resend, it delivers only to the address that owns the Resend account; other addresses fail. When an email cannot be sent, the response carries `dev_code` outside production, so the flow can still be shown. `EMAIL_FROM` sets the sender.
 
 Send the token as `Authorization: Bearer <token>`.
