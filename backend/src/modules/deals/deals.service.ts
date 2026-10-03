@@ -10,6 +10,7 @@ import { INSTRUMENTS } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { setEntityStatus } from "../compliance/status.js";
+import { announceDealEvents } from "../messaging/messaging.service.js";
 import { areConnected } from "../network/connections.js";
 
 export const DEAL_TYPES = ["cofounder_partnership", "investment", "expert_engagement", "joint_venture"] as const;
@@ -146,6 +147,7 @@ export async function createDeal(userId: string, input: z.infer<typeof createSch
     throw conflict("NOT_CONNECTED", "You can only open a deal with someone who has accepted your connection");
   }
 
+  const opened = new Date();
   const deal = await prisma.deal.create({
     data: {
       type: input.type,
@@ -153,15 +155,18 @@ export async function createDeal(userId: string, input: z.infer<typeof createSch
       source_funder_id: input.source_funder_id ?? null,
       created_by: userId,
       parties: {
+        // A millisecond apart, so the person who opened the deal is
+        // always listed first.
         create: [
-          { user_id: userId, role: me.role },
-          { user_id: input.with_user_id, role: other.role },
+          { user_id: userId, role: me.role, joined_at: opened },
+          { user_id: input.with_user_id, role: other.role, joined_at: new Date(opened.getTime() + 1) },
         ],
       },
       events: { create: { actor_id: userId, event: "opened", to_stage: "exploring" } },
     },
     include: withParties,
   });
+  await announce(deal.id);
   return view(deal);
 }
 
@@ -193,6 +198,7 @@ export async function addParty(userId: string, dealId: string, input: z.infer<ty
     prisma.dealParty.create({ data: { deal_id: dealId, user_id: input.user_id, role: joiner.role } }),
     prisma.dealEvent.create({ data: { deal_id: dealId, actor_id: userId, event: "party_added", note: input.user_id } }),
   ]);
+  await announce(dealId);
   return getDeal(userId, dealId);
 }
 
@@ -274,6 +280,7 @@ export async function proposeStage(userId: string, dealId: string, input: z.infe
       data: { deal_id: dealId, actor_id: userId, event: "stage_proposed", from_stage: deal.stage, to_stage: input.to_stage, note: input.note ?? null },
     });
   });
+  await announce(dealId);
   return getDeal(userId, dealId);
 }
 
@@ -293,6 +300,7 @@ export async function confirmStage(userId: string, dealId: string) {
     const everyone = deal.parties.every((p) => p.user_id === userId || p.confirmed_stage === pending);
     if (everyone) await arrive(tx, deal, pending, userId);
   });
+  await announce(dealId);
   return getDeal(userId, dealId);
 }
 
@@ -308,6 +316,7 @@ export async function setDealStatus(userId: string, dealId: string, input: z.inf
     prisma.dealParty.updateMany({ where: { deal_id: dealId }, data: { confirmed_stage: null } }),
     prisma.dealEvent.create({ data: { deal_id: dealId, actor_id: userId, event: input.status === "open" ? "resumed" : input.status, note: input.reason } }),
   ]);
+  await announce(dealId);
   return getDeal(userId, dealId);
 }
 
@@ -333,6 +342,7 @@ export async function updateTerms(userId: string, dealId: string, input: z.infer
       },
     }),
   ]);
+  await announce(dealId);
   return getDeal(userId, dealId);
 }
 
@@ -349,6 +359,14 @@ const EVENT_TEXT: Record<string, (name: string, e: { to_stage: string | null; no
   milestone_added: (n, e) => `${n} added the milestone "${e.note}"`,
   checklist_updated: (n, e) => `${n} updated the checklist: ${e.note}`,
 };
+
+// Checklist and milestone changes stay on the timeline. The rest are
+// also posted in the deal room, so parties see them where they talk.
+const QUIET = new Set(["checklist_updated", "milestone_added", "stage_confirmed"]);
+
+function announce(dealId: string) {
+  return announceDealEvents(dealId, (e) => (QUIET.has(e.event) ? null : (EVENT_TEXT[e.event]?.(e.actor, e) ?? null)));
+}
 
 export async function getTimeline(userId: string, dealId: string) {
   await loadDeal(userId, dealId);

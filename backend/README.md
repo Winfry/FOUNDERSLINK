@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections and deals. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals and messaging. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -84,6 +84,27 @@ All of these need an approved account. Inside a deal, the caller must also be on
 
 Stages run `exploring` → `due_diligence` → `terms_agreed` → `documents_compliance` → `closed` → `active`. Moving to `terms_agreed` or `closed` needs every party: the first call to `/stage` proposes it, and the deal's `pending.waiting_for` lists who has yet to confirm.
 
+### Messaging
+
+All of these need an approved account, and the caller must be in the conversation; to anyone else it returns `404`.
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/conversations` | Mine, most recent first, each with `unread_count` and `last_message` |
+| POST | `/conversations` | `{ user_id }`. Opens the direct chat with a connected member, or returns the existing one |
+| GET | `/conversations/:id/messages` | `?before=<message id>&limit=50`. Newest first. `next_before` is the cursor for the older page |
+| POST | `/conversations/:id/messages` | `{ body }` |
+| POST | `/conversations/:id/read` | Marks everything read |
+| POST | `/messages/:id/report` | `{ reason }` |
+| PUT, DELETE | `/users/:id/block` | Blocks or unblocks a member for direct messages |
+| GET | `/admin/reports` | Admin only. Reported messages |
+
+A deal's room is created with the deal and listed with `type: "deal"`. Deal changes appear in it as messages with `kind: "system"` and no sender.
+
+A message that looks like a request for money has `warning: { text, reasons }` for everyone except its sender. It is still delivered.
+
+**Live delivery.** Open a WebSocket to `/ws` and send `{"type": "auth", "token": "<jwt>"}` as the first message, within 5 seconds. The server answers `{"type": "ready"}` and then pushes `{"type": "message", "message": {...}}` for every new message in the member's conversations. Sending is always done over the REST endpoint; the socket only receives. A bad token closes the socket with code `4401`.
+
 ### Vetting
 
 | Method | Path | Who | What it does |
@@ -121,7 +142,7 @@ The response also has `engine`: `ai_service` when the AI service answered, `stan
 
 ## AI service
 
-Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls `/extract-profile`, `/recommend`, `/explain-fit`, `/vetting/risk-signals`, `/compliance/applicable` and `/compliance/answer` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
+Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls `/extract-profile`, `/recommend`, `/explain-fit`, `/vetting/risk-signals`, `/compliance/applicable`, `/compliance/answer` and `/moderation/check-message` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
 
 Emails and phone numbers are removed from the description before it is sent, and the eligibility flags are never sent.
 

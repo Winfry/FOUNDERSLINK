@@ -68,6 +68,11 @@ model User {
   connections_received Connection[]         @relation("addressee")
   deal_parties         DealParty[]
   deal_events          DealEvent[]
+  conversations        ConversationMember[]
+  messages             Message[]
+  reports              MessageReport[]
+  blocks_made          Block[]              @relation("blocker")
+  blocks_received      Block[]              @relation("blocked")
 
   @@map("users")
 }
@@ -409,9 +414,10 @@ model Deal {
   created_at       DateTime  @default(now())
   closed_at        DateTime?
 
-  parties    DealParty[]
-  events     DealEvent[]
-  milestones DealMilestone[]
+  parties      DealParty[]
+  events       DealEvent[]
+  milestones   DealMilestone[]
+  conversation Conversation?
 
   @@map("deals")
 }
@@ -443,6 +449,8 @@ model DealEvent {
   from_stage String?
   to_stage   String?
   note       String?
+  // Whether this event has been posted to the deal room as a system message.
+  announced  Boolean  @default(false)
   created_at DateTime @default(now())
 
   deal  Deal @relation(fields: [deal_id], references: [id], onDelete: Cascade)
@@ -461,4 +469,83 @@ model DealMilestone {
   deal Deal @relation(fields: [deal_id], references: [id], onDelete: Cascade)
 
   @@map("deal_milestones")
+}
+
+// In-app messaging (TEAM_DECISIONS D2). A conversation is either
+// between two connected members, or the room of a deal.
+model Conversation {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  type       String // direct | deal
+  deal_id    String?  @unique @db.Uuid
+  // For a direct chat: the two user ids, sorted and joined, so the same
+  // two people can never have two chats.
+  direct_key String?  @unique
+  created_at DateTime @default(now())
+
+  deal     Deal?                @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+  members  ConversationMember[]
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  conversation_id String    @db.Uuid
+  user_id         String    @db.Uuid
+  joined_at       DateTime  @default(now())
+  last_read_at    DateTime?
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([conversation_id, user_id])
+  @@map("conversation_members")
+}
+
+model Message {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  conversation_id String   @db.Uuid
+  // Null for a system message, e.g. "Amina moved the deal to Terms agreed".
+  sender_id       String?  @db.Uuid
+  body            String
+  kind            String   @default("user") // user | system
+  // Set when the message looks like a request for money.
+  flagged         Boolean  @default(false)
+  flag_reasons    String[]
+  created_at      DateTime @default(now())
+
+  conversation Conversation    @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender       User?           @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  reports      MessageReport[]
+
+  @@index([conversation_id, id])
+  @@map("messages")
+}
+
+model MessageReport {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  message_id  String   @db.Uuid
+  reporter_id String   @db.Uuid
+  reason      String
+  created_at  DateTime @default(now())
+
+  message  Message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  reporter User    @relation(fields: [reporter_id], references: [id], onDelete: Cascade)
+
+  @@unique([message_id, reporter_id])
+  @@map("message_reports")
+}
+
+model Block {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  blocker_id String   @db.Uuid
+  blocked_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  blocker User @relation("blocker", fields: [blocker_id], references: [id], onDelete: Cascade)
+  blocked User @relation("blocked", fields: [blocked_id], references: [id], onDelete: Cascade)
+
+  @@unique([blocker_id, blocked_id])
+  @@map("blocks")
 }

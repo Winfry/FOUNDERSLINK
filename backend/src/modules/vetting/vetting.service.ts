@@ -6,6 +6,7 @@ import { z } from "zod";
 import { vettingRiskSignals } from "../../ai/client.js";
 import type { RiskLevel } from "../../ai/types.js";
 import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
+import { disconnect } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
@@ -237,6 +238,9 @@ export async function setSuspended(adminId: string, userId: string, suspend: boo
       data: { admin_id: adminId, action: suspend ? "suspend" : "reinstate", target_user_id: userId, reason },
     }),
   ]);
+
+  // A suspended member stops receiving live messages at once.
+  if (suspend) disconnect(userId);
 
   return { user_id: userId, approval_status: to };
 }
