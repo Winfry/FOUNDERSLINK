@@ -3,3 +3,7 @@
 // be running: with no address, every AI call uses the stand-in.
 // (ai-client.test.ts points this at its own fake service.)
 process.env.AI_SERVICE_URL = "";
+// Likewise no SMS provider, so nothing is ever sent from a test run.
+// (sms.test.ts points these at its own fake provider.)
+process.env.SMS_PROVIDER_API_KEY = "";
+process.env.SMS_PROVIDER_USERNAME = "";

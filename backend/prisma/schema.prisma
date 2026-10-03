@@ -51,6 +51,18 @@ model User {
   approval_status ApprovalStatus @default(draft)
   created_at      DateTime       @default(now())
 
+  // A Kenyan mobile number. It counts as hers only once she has typed
+  // in the code sent to it.
+  phone                String?   @unique
+  phone_verified_at    DateTime?
+  preferred_language   String    @default("en") // en | sw
+  notification_channel String    @default("in_app") // in_app | sms
+  // Who may ask to connect with her: anyone | verified | none.
+  // "verified" means members whose phone number is verified.
+  message_permission   String    @default("anyone")
+  // Whether an accepted connection sees her email and phone.
+  share_contact        Boolean   @default(true)
+
   founder_profile      FounderProfile?
   investor_profile     InvestorProfile?
   expert_profile       ExpertProfile?
@@ -78,6 +90,9 @@ model User {
   circle_notes         CircleNote[]
   circle_votes         CircleVote[]
   consents             Consent[]
+  phone_code           PhoneCode?
+  reports_made         UserReport[]         @relation("reporter")
+  reports_received     UserReport[]         @relation("reported")
 
   @@map("users")
 }
@@ -724,4 +739,34 @@ model Consent {
 
   @@unique([user_id, purpose])
   @@map("consents")
+}
+
+// A code sent to a phone number to prove it is hers. Only a hash of the
+// code is kept, and it expires.
+model PhoneCode {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  phone      String
+  code_hash  String
+  expires_at DateTime
+  attempts   Int      @default(0)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("phone_codes")
+}
+
+// A member reporting another member, as opposed to one message.
+model UserReport {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  reporter_id      String   @db.Uuid
+  reported_user_id String   @db.Uuid
+  reason           String
+  created_at       DateTime @default(now())
+
+  reporter User @relation("reporter", fields: [reporter_id], references: [id], onDelete: Cascade)
+  reported User @relation("reported", fields: [reported_user_id], references: [id], onDelete: Cascade)
+
+  @@unique([reporter_id, reported_user_id])
+  @@map("reports")
 }

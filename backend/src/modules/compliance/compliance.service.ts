@@ -28,7 +28,8 @@ export const deadlineSchema = z.object({
 
 export const askSchema = z.object({
   question: z.string().trim().min(5, "Ask a full question").max(500),
-  language: z.enum(["en", "sw"]).default("en"),
+  // Left out, the answer is in her preferred language.
+  language: z.enum(["en", "sw"]).optional(),
 });
 
 export const feedbackSchema = z.object({ feedback: z.enum(["helpful", "not_helpful"]) });
@@ -168,14 +169,16 @@ export async function listDeadlines(userId: string, now = new Date()) {
 // Ask Compliance. Every question and answer is kept, with its citations,
 // so the answers can be checked and improved.
 export async function ask(userId: string, input: z.infer<typeof askSchema>) {
-  const [profile, items] = await Promise.all([
+  const [profile, items, user] = await Promise.all([
     prisma.founderProfile.findUnique({ where: { user_id: userId } }),
     prisma.complianceItem.findMany(),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { preferred_language: true } }),
   ]);
+  const language = input.language ?? user.preferred_language;
 
   const result = await answerCompliance(
     input.question,
-    input.language,
+    language,
     // Without her consent the question is still answered, but her
     // business details are not sent along with it.
     profile && (await hasConsent(userId, "ai_matching")) ? toMatchProfile(profile) : null,
@@ -186,7 +189,7 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
     data: {
       user_id: userId,
       question: input.question,
-      language: input.language,
+      language,
       answer: result.answer,
       citations: result.citations as object[],
       confident: result.confident,

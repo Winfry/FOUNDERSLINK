@@ -1,11 +1,14 @@
 // A person's rights over her own data (Data Protection Act 2019,
 // KENYA_AMENDMENTS 9): see everything we hold about her, and delete it.
 
+import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { disconnect } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
-import { conflict, unauthorized } from "../../shared/errors.js";
+import { env } from "../../config/env.js";
+import { AppError, conflict, unauthorized } from "../../shared/errors.js";
+import { sendSms } from "../../shared/sms.js";
 import { listConsents } from "./consents.js";
 
 export const deleteSchema = z.object({ password: z.string().min(1) });
@@ -23,6 +26,12 @@ export async function exportData(userId: string) {
       role: true,
       approval_status: true,
       created_at: true,
+      phone: true,
+      phone_verified_at: true,
+      preferred_language: true,
+      notification_channel: true,
+      message_permission: true,
+      share_contact: true,
       founder_profile: true,
       investor_profile: true,
       expert_profile: true,
@@ -118,4 +127,100 @@ export async function deleteAccount(userId: string, password: string) {
   disconnect(userId);
 
   return { deleted: true };
+}
+
+// --- Settings and phone number ---
+
+// Accepts 07..., 01..., 2547... or +2547..., and stores one form.
+const kenyanMobile = z
+  .string()
+  .trim()
+  .regex(/^(\+?254|0)[17]\d{8}$/, "Use a Kenyan mobile number")
+  .transform((p) => `+254${p.slice(-9)}`);
+
+export const settingsSchema = z.object({
+  full_name: z.string().trim().min(2).optional(),
+  phone: kenyanMobile.nullable().optional(),
+  preferred_language: z.enum(["en", "sw"]).optional(),
+  notification_channel: z.enum(["in_app", "sms"]).optional(),
+  message_permission: z.enum(["anyone", "verified", "none"]).optional(),
+  share_contact: z.boolean().optional(),
+});
+
+export const codeSchema = z.object({ code: z.string().regex(/^\d{6}$/, "The code is six digits") });
+
+const settingsFields = {
+  full_name: true,
+  phone: true,
+  phone_verified_at: true,
+  preferred_language: true,
+  notification_channel: true,
+  message_permission: true,
+  share_contact: true,
+} as const;
+
+export async function updateSettings(userId: string, input: z.infer<typeof settingsSchema>) {
+  const current = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: settingsFields });
+
+  const phoneChanged = input.phone !== undefined && input.phone !== current.phone;
+  if (phoneChanged && input.phone) {
+    const taken = await prisma.user.findUnique({ where: { phone: input.phone }, select: { id: true } });
+    if (taken) throw conflict("PHONE_TAKEN", "This phone number is already on another account");
+  }
+
+  const verified = phoneChanged ? false : current.phone_verified_at !== null;
+  if ((input.notification_channel ?? current.notification_channel) === "sms" && !verified) {
+    throw conflict("PHONE_NOT_VERIFIED", "Verify your phone number before choosing SMS notifications");
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    // A new number is not hers until she proves it.
+    data: { ...input, ...(phoneChanged ? { phone_verified_at: null } : {}) },
+    select: settingsFields,
+  });
+}
+
+const CODE_MINUTES = 10;
+const MAX_ATTEMPTS = 5;
+const hashCode = (code: string) => createHash("sha256").update(code).digest("hex");
+
+// Sends a six-digit code to her phone. Only its hash is stored.
+export async function sendPhoneCode(userId: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { phone: true, phone_verified_at: true } });
+  if (!user.phone) throw conflict("NO_PHONE", "Add a phone number first");
+  if (user.phone_verified_at) throw conflict("ALREADY_VERIFIED", "This phone number is already verified");
+
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  const row = { phone: user.phone, code_hash: hashCode(code), expires_at: new Date(Date.now() + CODE_MINUTES * 60_000), attempts: 0 };
+  await prisma.phoneCode.upsert({ where: { user_id: userId }, create: { ...row, user_id: userId }, update: row });
+
+  const sms = await sendSms(user.phone, `Your FounderLink code is ${code}. It expires in ${CODE_MINUTES} minutes.`);
+  return {
+    sms: sms.status,
+    expires_in_minutes: CODE_MINUTES,
+    // With no SMS provider set up, the code cannot reach her phone. So
+    // that the flow can still be shown, it is returned here, but never
+    // in production.
+    ...(sms.status !== "sent" && env.NODE_ENV !== "production" ? { dev_code: code } : {}),
+  };
+}
+
+export async function verifyPhoneCode(userId: string, code: string) {
+  const pending = await prisma.phoneCode.findUnique({ where: { user_id: userId } });
+  if (!pending || pending.expires_at < new Date()) throw conflict("CODE_EXPIRED", "Ask for a new code");
+  if (pending.attempts >= MAX_ATTEMPTS) throw conflict("TOO_MANY_ATTEMPTS", "Too many wrong codes. Ask for a new one.");
+
+  const right = timingSafeEqual(Buffer.from(hashCode(code)), Buffer.from(pending.code_hash));
+  if (!right) {
+    await prisma.phoneCode.update({ where: { user_id: userId }, data: { attempts: { increment: 1 } } });
+    throw new AppError(400, "WRONG_CODE", "That code is not right");
+  }
+
+  const [user] = await prisma.$transaction([
+    // Only the number the code was sent to becomes verified.
+    prisma.user.update({ where: { id: userId, phone: pending.phone }, data: { phone_verified_at: new Date() }, select: settingsFields }),
+    prisma.phoneCode.delete({ where: { user_id: userId } }),
+  ]);
+  return user;
 }

@@ -49,6 +49,19 @@ Nothing is agreed by default, so the onboarding screens need to ask. What each c
 - `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Without it, sending one returns `409` with code `CONSENT_REQUIRED`. Withdrawing it clears them.
 - `contact`: recorded for SMS and WhatsApp, which are not built yet.
 
+### Settings and phone number
+
+| Method | Path | What it does |
+|---|---|---|
+| PATCH | `/me` | Any of `full_name`, `phone`, `preferred_language` (`en` / `sw`), `notification_channel` (`in_app` / `sms`), `message_permission` (`anyone` / `verified` / `none`), `share_contact` |
+| POST | `/me/phone/code` | Sends a six-digit code to her phone |
+| POST | `/me/phone/verify` | `{ code }` |
+| POST | `/reports` | `{ user_id, reason }`. Reports a member. Approved members only |
+
+With no SMS provider set (`SMS_PROVIDER_USERNAME` and `SMS_PROVIDER_API_KEY`), the code cannot be texted. Outside production the response then includes `dev_code` so the flow can still be shown. The sender targets Africa's Talking and has not been run against the real sandbox.
+
+An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GET /connections` and on the profile page, unless that member turned `share_contact` off. The phone appears only if verified.
+
 ### Investors, experts and profiles
 
 | Method | Path | Who | What it does |
@@ -115,7 +128,7 @@ All of these need an approved account, and the caller must be in the conversatio
 | POST | `/conversations/:id/read` | Marks everything read |
 | POST | `/messages/:id/report` | `{ reason }` |
 | PUT, DELETE | `/users/:id/block` | Blocks or unblocks a member for direct messages |
-| GET | `/admin/reports` | Admin only. Reported messages |
+| GET | `/admin/reports` | Admin only. `{ messages, members }`: reported messages and reported members |
 
 A deal's room is created with the deal and listed with `type: "deal"`. Deal changes appear in it as messages with `kind: "system"` and no sender.
 

@@ -11,6 +11,11 @@ const schema = z.object({
   AI_SERVICE_URL: z.string().optional(),
   // Shared secret sent to the AI service on every call.
   AI_SERVICE_API_KEY: z.string().optional(),
+  // SMS through Africa's Talking. Without the key and username nothing is sent.
+  SMS_PROVIDER_USERNAME: z.string().optional(),
+  SMS_PROVIDER_API_KEY: z.string().optional(),
+  SMS_API_URL: z.string().default("https://api.sandbox.africastalking.com/version1/messaging"),
+  NODE_ENV: z.string().default("development"),
 });
 
 const parsed = schema.safeParse(process.env);
