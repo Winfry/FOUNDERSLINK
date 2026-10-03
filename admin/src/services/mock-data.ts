@@ -1,0 +1,428 @@
+import type {
+  AdminUser,
+  AuditEntry,
+  Founder,
+  InvestmentGroup,
+  Investor,
+  InvestorApplication,
+  TimelineEvent,
+  Withdrawal,
+} from "@/types";
+
+export const founders: Founder[] = [
+  {
+    id: "fnd-001",
+    name: "Grace Wanjiru",
+    email: "grace@kilimofresh.co.ke",
+    phone: "+254712345678",
+    county: "Kiambu",
+    businessName: "KilimoFresh Produce",
+    sector: "AgriTech",
+    status: "active",
+    joinedAt: "2025-06-12T09:00:00Z",
+    groupsCount: 2,
+  },
+  {
+    id: "fnd-002",
+    name: "Brian Mutua",
+    email: "brian@nairobidelivery.co.ke",
+    phone: "+254723456789",
+    county: "Nairobi",
+    businessName: "Nairobi Last-Mile Logistics",
+    sector: "Logistics",
+    status: "pending_kyc",
+    joinedAt: "2025-09-01T14:30:00Z",
+    groupsCount: 0,
+  },
+  {
+    id: "fnd-003",
+    name: "Faith Akinyi",
+    email: "faith@solarvillage.ke",
+    phone: "+254734567890",
+    county: "Kisumu",
+    businessName: "Solar Village Solutions",
+    sector: "Clean Energy",
+    status: "active",
+    joinedAt: "2025-04-20T11:15:00Z",
+    groupsCount: 1,
+  },
+  {
+    id: "fnd-004",
+    name: "David Kiprop",
+    email: "david@eldoretdairy.co.ke",
+    phone: "+254745678901",
+    county: "Uasin Gishu",
+    businessName: "Eldoret Dairy Collective",
+    sector: "Agriculture",
+    status: "suspended",
+    joinedAt: "2024-11-05T08:00:00Z",
+    groupsCount: 1,
+  },
+];
+
+export const investorApplications: InvestorApplication[] = [
+  {
+    id: "app-001",
+    applicantName: "Michael Njenga",
+    email: "michael@capitalpartners.co.ke",
+    phone: "+254756789012",
+    county: "Nairobi",
+    organization: "Capital Partners East Africa",
+    ticketSizeKes: 5_000_000,
+    status: "pending",
+    submittedAt: "2025-10-01T10:00:00Z",
+    documents: [
+      { id: "doc-1", name: "Certificate of Incorporation", status: "pending" },
+      { id: "doc-2", name: "KRA PIN Certificate", status: "pending" },
+    ],
+  },
+  {
+    id: "app-002",
+    applicantName: "Sarah Mwangi",
+    email: "sarah@impactfund.ke",
+    phone: "+254767890123",
+    county: "Mombasa",
+    organization: "Coast Impact Fund",
+    ticketSizeKes: 2_500_000,
+    status: "under_review",
+    submittedAt: "2025-09-28T16:45:00Z",
+    documents: [
+      { id: "doc-3", name: "Investment Policy Statement", status: "verified" },
+      { id: "doc-4", name: "Board Resolution", status: "pending" },
+    ],
+  },
+  {
+    id: "app-003",
+    applicantName: "Peter Omondi",
+    email: "peter.omondi@gmail.com",
+    phone: "+254778901234",
+    county: "Nairobi",
+    organization: "Individual Angel",
+    ticketSizeKes: 500_000,
+    status: "rejected",
+    submittedAt: "2025-09-15T09:20:00Z",
+    documents: [
+      { id: "doc-5", name: "National ID", status: "verified" },
+      { id: "doc-6", name: "Proof of Funds", status: "rejected" },
+    ],
+  },
+];
+
+export const investors: Investor[] = [
+  {
+    id: "inv-001",
+    name: "East Africa Ventures Ltd",
+    email: "deals@eav.co.ke",
+    phone: "+254701234567",
+    county: "Nairobi",
+    organization: "East Africa Ventures",
+    status: "active",
+    totalInvestedKes: 18_500_000,
+    activeDeals: 4,
+    verifiedAt: "2025-03-10T00:00:00Z",
+  },
+  {
+    id: "inv-002",
+    name: "Lake Basin Capital",
+    email: "hello@lakebasin.ke",
+    phone: "+254712345679",
+    county: "Kisumu",
+    organization: "Lake Basin Capital",
+    status: "active",
+    totalInvestedKes: 7_200_000,
+    activeDeals: 2,
+    verifiedAt: "2025-05-22T00:00:00Z",
+  },
+  {
+    id: "inv-003",
+    name: "Rift Valley Angels",
+    email: "contact@rvangels.co.ke",
+    phone: "+254723456780",
+    county: "Nakuru",
+    organization: "Rift Valley Angels Network",
+    status: "pending_verification",
+    totalInvestedKes: 0,
+    activeDeals: 0,
+    verifiedAt: "2025-09-30T00:00:00Z",
+  },
+];
+
+export const groups: InvestmentGroup[] = [
+  {
+    id: "grp-001",
+    name: "Kiambu Agri Growth Round",
+    founderName: "Grace Wanjiru",
+    county: "Kiambu",
+    targetKes: 3_000_000,
+    raisedKes: 2_100_000,
+    memberCount: 12,
+    status: "active",
+    createdAt: "2025-07-01T00:00:00Z",
+  },
+  {
+    id: "grp-002",
+    name: "Kisumu Solar Expansion",
+    founderName: "Faith Akinyi",
+    county: "Kisumu",
+    targetKes: 5_500_000,
+    raisedKes: 5_500_000,
+    memberCount: 8,
+    status: "closed",
+    createdAt: "2025-02-14T00:00:00Z",
+  },
+  {
+    id: "grp-003",
+    name: "Nairobi Logistics Seed",
+    founderName: "Brian Mutua",
+    county: "Nairobi",
+    targetKes: 1_200_000,
+    raisedKes: 450_000,
+    memberCount: 5,
+    status: "forming",
+    createdAt: "2025-09-20T00:00:00Z",
+  },
+];
+
+export const withdrawals: Withdrawal[] = [
+  {
+    id: "wdr-001",
+    founderName: "Grace Wanjiru",
+    amountKes: 185_000,
+    mpesaNumber: "254712***678",
+    status: "pending",
+    requestedAt: "2025-10-02T08:30:00Z",
+    reference: "FLW-20251002-001",
+  },
+  {
+    id: "wdr-002",
+    founderName: "Faith Akinyi",
+    amountKes: 420_000,
+    mpesaNumber: "254734***890",
+    status: "processing",
+    requestedAt: "2025-10-01T14:00:00Z",
+    reference: "FLW-20251001-014",
+  },
+  {
+    id: "wdr-003",
+    founderName: "David Kiprop",
+    amountKes: 95_000,
+    mpesaNumber: "254745***901",
+    status: "completed",
+    requestedAt: "2025-09-25T11:00:00Z",
+    reference: "FLW-20250925-008",
+  },
+];
+
+export const adminUsers: AdminUser[] = [
+  {
+    id: "adm-001",
+    name: "Wanjiku Kamau",
+    email: "super@founderlink.co.ke",
+    role: "super_admin",
+    lastLogin: "2025-10-03T06:00:00Z",
+    status: "active",
+  },
+  {
+    id: "adm-002",
+    name: "James Ochieng",
+    email: "reviewer@founderlink.co.ke",
+    role: "reviewer",
+    lastLogin: "2025-10-02T17:30:00Z",
+    status: "active",
+  },
+  {
+    id: "adm-003",
+    name: "Amina Hassan",
+    email: "support@founderlink.co.ke",
+    role: "support",
+    lastLogin: "2025-10-01T09:15:00Z",
+    status: "active",
+  },
+];
+
+export const auditLog: AuditEntry[] = [
+  {
+    id: "aud-001",
+    actor: "James Ochieng",
+    action: "application.approve",
+    resource: "Investor Application app-002",
+    ipAddress: "102.215.45.12",
+    createdAt: "2025-10-02T15:00:00Z",
+  },
+  {
+    id: "aud-002",
+    actor: "Amina Hassan",
+    action: "withdrawal.process",
+    resource: "Withdrawal wdr-002",
+    ipAddress: "197.237.88.44",
+    createdAt: "2025-10-02T10:20:00Z",
+  },
+  {
+    id: "aud-003",
+    actor: "Wanjiku Kamau",
+    action: "admin.role_update",
+    resource: "Admin User adm-003",
+    ipAddress: "41.90.12.88",
+    createdAt: "2025-09-30T12:00:00Z",
+  },
+];
+
+export const chartMonthlyRegistrations = [
+  { month: "May", founders: 24, investors: 3 },
+  { month: "Jun", founders: 31, investors: 5 },
+  { month: "Jul", founders: 28, investors: 4 },
+  { month: "Aug", founders: 35, investors: 6 },
+  { month: "Sep", founders: 42, investors: 8 },
+  { month: "Oct", founders: 18, investors: 2 },
+];
+
+/** Volume in thousands of KES (chart domain 1,000–40,000) */
+export const chartVolumeKes = [
+  { month: "May", volume: 4200 },
+  { month: "Jun", volume: 5800 },
+  { month: "Jul", volume: 6100 },
+  { month: "Aug", volume: 7400 },
+  { month: "Sep", volume: 8900 },
+  { month: "Oct", volume: 3200 },
+];
+
+export const platformTransactions = [
+  {
+    id: "tx-001",
+    groupName: "KilimoFresh — Round A",
+    type: "deposit" as const,
+    memberName: "James Kariuki",
+    amountKes: 500_000,
+    reference: "MPESA-QK4H2",
+    completedAt: "2025-10-03T09:15:00Z",
+  },
+  {
+    id: "tx-002",
+    groupName: "Kisumu Solar Expansion",
+    type: "withdrawal" as const,
+    memberName: "Faith Akinyi",
+    amountKes: 420_000,
+    reference: "FLW-20251001-014",
+    completedAt: "2025-10-02T14:00:00Z",
+  },
+  {
+    id: "tx-003",
+    groupName: "KilimoFresh — Round A",
+    type: "deposit" as const,
+    memberName: "Amina Hassan",
+    amountKes: 1_000_000,
+    reference: "MPESA-P9K2L",
+    completedAt: "2025-10-02T11:30:00Z",
+  },
+  {
+    id: "tx-004",
+    groupName: "Eldoret Dairy Collective",
+    type: "withdrawal" as const,
+    memberName: "David Kiprop",
+    amountKes: 95_000,
+    reference: "FLW-20250925-008",
+    completedAt: "2025-09-25T11:00:00Z",
+  },
+  {
+    id: "tx-005",
+    groupName: "Nairobi Logistics Seed",
+    type: "deposit" as const,
+    memberName: "Peter Omondi",
+    amountKes: 250_000,
+    reference: "MPESA-R2M8N",
+    completedAt: "2025-09-24T16:45:00Z",
+  },
+  {
+    id: "tx-006",
+    groupName: "KilimoFresh — Round A",
+    type: "deposit" as const,
+    memberName: "Grace Wanjiru",
+    amountKes: 975_000,
+    reference: "MPESA-K7J1P",
+    completedAt: "2025-09-22T08:00:00Z",
+  },
+  {
+    id: "tx-007",
+    groupName: "Kisumu Solar Expansion",
+    type: "deposit" as const,
+    memberName: "Sarah Mwangi",
+    amountKes: 750_000,
+    reference: "MPESA-M3V5T",
+    completedAt: "2025-09-20T13:20:00Z",
+  },
+  {
+    id: "tx-008",
+    groupName: "KilimoFresh — Round A",
+    type: "withdrawal" as const,
+    memberName: "Grace Wanjiru",
+    amountKes: 185_000,
+    reference: "FLW-20250918-003",
+    completedAt: "2025-09-18T10:00:00Z",
+  },
+  {
+    id: "tx-009",
+    groupName: "Nairobi Logistics Seed",
+    type: "deposit" as const,
+    memberName: "Michael Njenga",
+    amountKes: 200_000,
+    reference: "MPESA-H4W9Q",
+    completedAt: "2025-09-15T09:30:00Z",
+  },
+  {
+    id: "tx-010",
+    groupName: "Eldoret Dairy Collective",
+    type: "deposit" as const,
+    memberName: "David Kiprop",
+    amountKes: 310_000,
+    reference: "MPESA-L8C2R",
+    completedAt: "2025-09-12T15:00:00Z",
+  },
+  {
+    id: "tx-011",
+    groupName: "Kisumu Solar Expansion",
+    type: "deposit" as const,
+    memberName: "Faith Akinyi",
+    amountKes: 1_200_000,
+    reference: "MPESA-N1B6S",
+    completedAt: "2025-09-10T12:00:00Z",
+  },
+];
+
+export function timelineForApplication(id: string): TimelineEvent[] {
+  return [
+    {
+      id: "tl-1",
+      title: "Application submitted",
+      at: "2025-10-01T10:00:00Z",
+      actor: "Applicant",
+    },
+    {
+      id: "tl-2",
+      title: "Documents uploaded",
+      description: "2 files attached",
+      at: "2025-10-01T10:05:00Z",
+    },
+    {
+      id: "tl-3",
+      title: "Assigned to reviewer",
+      at: "2025-10-01T11:00:00Z",
+      actor: "James Ochieng",
+    },
+  ].filter(() => id.startsWith("app"));
+}
+
+export function timelineForFounder(id: string): TimelineEvent[] {
+  return [
+    {
+      id: `tl-f1-${id}`,
+      title: "Account created",
+      at: "2025-06-12T09:00:00Z",
+    },
+    {
+      id: "tl-f2",
+      title: "KYC verified",
+      at: "2025-06-14T14:00:00Z",
+      actor: "System",
+    },
+  ];
+}

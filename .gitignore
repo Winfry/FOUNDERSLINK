@@ -158,6 +158,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+node_modules
 
 # Spyder project settings
 .spyderproject
@@ -240,3 +241,7 @@ models_cache/
 
 # Uploaded M-Pesa statements must never be committed
 uploads/
+node_modules/
+.env
+.env.*
+test-results/
