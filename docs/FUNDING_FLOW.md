@@ -11,10 +11,11 @@ We build one flow first: a founder describes her business, and we show which fun
 
 | # | Decision | What it changes |
 |---|---|---|
-| F1 | The backend is **Node**. It owns the database and the API the frontend calls. | `TEAM_DECISIONS.md` and the README say FastAPI. |
-| F2 | The AI code is **exposed over HTTP**. | The backend can't import the `ai` package, so the function contract in D5 becomes the two endpoints in section 4. |
+| F1 | The backend is **Node**. It owns the database and the API the frontend calls. | Agreed: D8 in `TEAM_DECISIONS.md`. |
+| F2 | The AI code is **exposed over HTTP** as an internal service. The backend sends a shared key on every call. | Same as D8 in `TEAM_DECISIONS.md`. |
 | F3 | Funders are **records built from published information**, not users. | D1 makes investors first-class users in the MVP. Investor sign-up moves to the roadmap. This removes the cold-start problem. |
 | F4 | Onboarding takes a **typed description** tonight. | Deck upload is a nice-to-have. |
+| F5 | The AI service **never reads the database**. The backend sends everything it needs in each request. | D8 lets the AI service read profile tables and own vector tables. Under F5 it does neither, so `user_id` in `/recommend` is replaced by the profile and the candidates. |
 
 ---
 
@@ -69,37 +70,46 @@ Only what matching and readiness need. The step is called onboarding or founder 
 
 ## 4. AI endpoints the backend will call
 
-The backend sends everything the AI needs in each request, so the AI service does not read the database. No names, emails, phone numbers or ID numbers are sent.
+This merges the endpoint list in `TEAM_DECISIONS.md` (D5, D8) with F5. From their version: the endpoint names, `free_text`, the response fields, bands and the API key. From this proposal: the AI service never reads the database, and every funder sent comes back with a verdict.
+
+Rules for both calls:
+
+- The backend sends `X-Internal-Api-Key` on every call (`AI_SERVICE_API_KEY`).
+- No names, emails, phone numbers or ID numbers are sent. Emails and phone numbers are removed from free text first. The eligibility flags (`women_owned` and so on) are never sent, so they cannot affect ranking.
+- If a call fails, times out after 8 seconds or returns something invalid, the backend answers with its own rule-based stand-in and says so in the response (`engine: "stand_in"`).
 
 ### 4.1 Extract a profile from the description
 
-The founder confirms the fields before anything is saved.
+The founder confirms the fields before anything is saved. The backend drops any field it does not know or whose value is not a valid option.
 
 ```
 POST /extract-profile
-{ "text": "Nina salon Mombasa, nataka 150k ya stock", "language": "sw" }
+{ "free_text": "Nina salon Mombasa, nataka 150k ya stock", "language": "sw" }
 
-→ { "fields": { "journey_type": "sme", "sector": "retail",
-                "county": "Mombasa", "funding_amount_kes": 150000 },
-    "unsure": ["business_status"] }
+→ { "journey_type": "sme", "sector": "retail",
+    "county": "Mombasa", "funding_amount_kes": 150000 }
 ```
 
-### 4.2 Match funders
+### 4.2 Recommend funders
 
-Every funder sent must come back with a verdict and reasons, including the ones that don't fit. The "not for you" list depends on this.
+Every candidate sent must come back, including the ones that don't fit. The "not for you" list depends on this, so there is no `limit`.
 
 ```
-POST /match-funders
+POST /recommend
 { "profile": { ...onboarding fields, no personal data... },
-  "funders": [ { "id": "...", "kind": "...", "mandate_text": "...",
-                 "journey_types": [], "sectors": [], "stages": [],
-                 "counties": [], "instruments": [],
-                 "ticket_min_kes": 0, "ticket_max_kes": 0 } ] }
+  "candidates": [ { "id": "...", "kind": "...", "mandate_text": "...",
+                    "journey_types": [], "sectors": [], "stages": [],
+                    "counties": [], "instruments": [],
+                    "ticket_min_kes": 0, "ticket_max_kes": 0 } ] }
 
-→ { "results": [ { "funder_id": "...", "fits": true, "score": 0.82,
-                   "reasons": [ { "signal": "sector", "fits": true,
-                                  "text": "Funds health businesses" } ] } ] }
+→ [ { "candidate_id": "...", "score": 0.82, "band": "good",
+      "signals": [ { "signal": "sector", "fits": true,
+                     "text": "Funds health businesses" } ],
+      "explanation": "Funds health businesses at your stage." } ]
 ```
+
+- `band` is one of `strong`, `good`, `possible`, `not_a_fit`. Founders see the band, never the number: a score from hand-picked weights would claim precision it does not have. `score` is used only to sort.
+- `signals` carries one entry per thing checked, so a "not for you" card can say exactly what did not fit.
 
 The backend then adds readiness: for each funder that fits, it compares the funder's requirements with what the founder already has and returns the gaps.
 
