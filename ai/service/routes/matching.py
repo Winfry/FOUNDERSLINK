@@ -1,9 +1,16 @@
 from fastapi import APIRouter, Depends, Request
 
+from ai.explanations.messages import language_of
 from ai.extraction.profile_extractor import extract_profile
-from ai.matching.pipeline import recommend
+from ai.matching.pipeline import explain_fit, recommend
 from ai.service.auth import require_api_key
-from ai.service.schemas import ExtractRequest, RecommendItem, RecommendRequest
+from ai.service.schemas import (
+    ExplainFitRequest,
+    ExtractRequest,
+    FitExplanation,
+    RecommendItem,
+    RecommendRequest,
+)
 
 router = APIRouter(dependencies=[Depends(require_api_key)])
 
@@ -16,3 +23,14 @@ def extract(body: ExtractRequest) -> dict:
 @router.post("/recommend")
 def recommend_funders(body: RecommendRequest, request: Request) -> list[RecommendItem]:
     return recommend(body.profile, body.candidates, request.app.state.embedder)
+
+
+@router.post("/explain-fit")
+def explain(body: ExplainFitRequest, request: Request) -> FitExplanation:
+    return explain_fit(
+        body.profile,
+        body.candidate,
+        body.track_record,
+        language_of(body.language),
+        request.app.state.embedder,
+    )

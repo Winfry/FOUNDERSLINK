@@ -27,6 +27,7 @@ class MatchProfile(BaseModel):
     months_trading: int | None = None
     monthly_revenue_band: str | None = None
     has_employees: bool | None = None
+    handles_personal_data: bool | None = None
 
 
 class Candidate(BaseModel):
@@ -59,3 +60,28 @@ class RecommendItem(BaseModel):
     band: Band
     signals: list[Signal]
     explanation: str
+
+
+class TrackRecordItem(BaseModel):
+    """One past investment, as the backend shares it: no company name and
+    no amount. `source` is platform_deal, public or self_reported."""
+
+    sector: str
+    stage: str | None = None
+    source: str = "self_reported"
+
+
+class ExplainFitRequest(BaseModel):
+    profile: MatchProfile
+    candidate: Candidate
+    track_record: list[TrackRecordItem] = []
+    # Free string on purpose: an unknown language falls back to English
+    # rather than failing the request.
+    language: str | None = "en"
+
+
+class FitExplanation(BaseModel):
+    band: Band
+    components: list[Signal]
+    reasons: list[str]
+    track_record_highlights: list[str]
