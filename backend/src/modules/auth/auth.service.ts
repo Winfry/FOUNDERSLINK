@@ -3,8 +3,10 @@ import { z } from "zod";
 import { SIGNUP_ROLES } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, unauthorized } from "../../shared/errors.js";
-import { signToken } from "../../shared/token.js";
+import { sessionExpiry, signPendingToken, signToken } from "../../shared/token.js";
 import { completedFor } from "../compliance/status.js";
+import { profileCompleteness } from "../profile/profile.schema.js";
+import { sendVerificationCode } from "./email-codes.js";
 
 // A person picks founder, investor or expert at sign-up. `admin` is not
 // in the list, so nobody can make themselves one: admins are created
@@ -37,7 +39,10 @@ export async function register(input: z.infer<typeof registerSchema>) {
     select: publicUser,
   });
 
-  return { token: signToken({ sub: user.id, role: user.role }), user };
+  // A code goes to her address straight away, to prove it is hers.
+  const email_verification = await sendVerificationCode(user);
+
+  return { token: signToken({ sub: user.id, role: user.role }), expires_at: sessionExpiry(), user, email_verification };
 }
 
 export async function login(input: z.infer<typeof loginSchema>) {
@@ -47,8 +52,15 @@ export async function login(input: z.infer<typeof loginSchema>) {
   const ok = user && (await bcrypt.compare(input.password, user.password_hash));
   if (!ok) throw unauthorized("Wrong email or password");
 
+  // An admin with two-step sign-in gets no session yet: only a token to
+  // exchange, with her authenticator code, at POST /auth/2fa/verify.
+  if (user.role === "admin" && user.totp_enabled) {
+    return { two_factor_required: true as const, pending_token: signPendingToken(user.id, user.role) };
+  }
+
   return {
     token: signToken({ sub: user.id, role: user.role }),
+    expires_at: sessionExpiry(),
     user: {
       id: user.id,
       email: user.email,
@@ -64,6 +76,8 @@ export async function getMe(userId: string) {
     where: { id: userId },
     select: {
       ...publicUser,
+      totp_enabled: true,
+      email_verified_at: true,
       phone: true,
       phone_verified_at: true,
       preferred_language: true,
@@ -78,5 +92,12 @@ export async function getMe(userId: string) {
   });
   if (!user) throw unauthorized();
   if (!user.founder_profile) return user;
-  return { ...user, founder_profile: { ...user.founder_profile, already_have: await completedFor(userId) } };
+  return {
+    ...user,
+    founder_profile: {
+      ...user.founder_profile,
+      already_have: await completedFor(userId),
+      profile_completeness: profileCompleteness(user.founder_profile),
+    },
+  };
 }

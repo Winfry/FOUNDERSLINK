@@ -5,7 +5,9 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16),
   PORT: z.coerce.number().default(8000),
-  CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  // Comma-separated. The defaults are the mobile app in a browser (Expo
+  // web) and the admin dashboard (Next.js) on their usual local ports.
+  CORS_ORIGIN: z.string().default("http://localhost:8081,http://localhost:3000"),
   // Base URL of the AI service. Left empty, the backend uses its own
   // rule-based stand-in so the flow still works.
   AI_SERVICE_URL: z.string().optional(),
@@ -16,10 +18,25 @@ const schema = z.object({
   SMS_PROVIDER_API_KEY: z.string().optional(),
   SMS_API_URL: z.string().default("https://api.sandbox.africastalking.com/version1/messaging"),
   NODE_ENV: z.string().default("development"),
+  // Where uploaded vetting documents are kept, on this machine's disk.
+  UPLOAD_DIR: z.string().default("./uploads"),
+  // Email through Resend. Without the key nothing is sent. Until a
+  // sending domain is verified with Resend, it only delivers to the
+  // address that owns the Resend account.
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("FounderLink <onboarding@resend.dev>"),
+  EMAIL_API_URL: z.string().default("https://api.resend.com/emails"),
   // A secret in the M-Pesa confirmation URL. Without it the endpoint is off.
   MPESA_CALLBACK_SECRET: z.string().min(16).optional(),
   // How many different admins must approve an investor. TEAM_DECISIONS
   // D7 asks for 2 in production and allows 1 for the demo.
+  // When true, an admin can use the admin pages only in a session she
+  // signed into with her authenticator code. Off by default so a new
+  // admin can sign in once to set it up.
+  ADMIN_2FA_REQUIRED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   INVESTOR_APPROVALS_REQUIRED: z.coerce.number().int().min(1).max(2).default(1),
 });
 

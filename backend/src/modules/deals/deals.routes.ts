@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireApproved, requireAuth } from "../../middlewares/auth.js";
-import { listConnections, requestConnection, requestSchema, respond, respondSchema } from "../network/connections.js";
+import { listConnections, requestConnection, requestSchema, respond, respondSchema, withdraw } from "../network/connections.js";
 import {
   addMilestone,
   addParty,
@@ -45,8 +45,11 @@ dealsRouter.get("/connections", ...member, async (req, res) => {
 });
 
 dealsRouter.patch("/connections/:id", ...member, async (req, res) => {
-  const { status } = respondSchema.parse(req.body);
-  res.json(await respond(req.user!.id, id(req.params.id), status));
+  res.json(await respond(req.user!.id, id(req.params.id), respondSchema.parse(req.body)));
+});
+
+dealsRouter.delete("/connections/:id", ...member, async (req, res) => {
+  res.json(await withdraw(req.user!.id, id(req.params.id)));
 });
 
 dealsRouter.post("/deals", ...member, async (req, res) => {

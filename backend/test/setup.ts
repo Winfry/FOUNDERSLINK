@@ -9,3 +9,8 @@ process.env.SMS_PROVIDER_API_KEY = "";
 process.env.SMS_PROVIDER_USERNAME = "";
 // The M-Pesa confirmation endpoint is off without a secret. Tests turn it on.
 process.env.MPESA_CALLBACK_SECRET = "test-callback-secret-0123456789";
+// And no email provider, so a test run never sends a real email.
+// (email.test.ts points these at its own fake provider.)
+process.env.RESEND_API_KEY = "";
+// Uploaded files go to a temporary folder, not the project.
+process.env.UPLOAD_DIR = `${process.env.TMPDIR ?? "/tmp"}/founderlink-test-uploads`;

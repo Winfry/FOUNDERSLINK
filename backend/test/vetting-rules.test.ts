@@ -64,7 +64,7 @@ before(async () => {
     const { role, full_name, status } = people[who];
     // Lowercase, because sign-in lowercases the email it is given.
     const email = `rules-${who.toLowerCase()}-${run}@example.com`;
-    const user = await prisma.user.create({ data: { email, role, full_name, password_hash, approval_status: status } });
+    const user = await prisma.user.create({ data: { email, role, full_name, password_hash, approval_status: status, email_verified_at: new Date() } });
     ids[who] = user.id;
     tokens[who] = (await call("POST", "/auth/login", undefined, { email, password })).json.token;
   }

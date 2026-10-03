@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { MulterError } from "multer";
 import { ZodError } from "zod";
 import { AppError } from "../shared/errors.js";
 
@@ -16,6 +17,15 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
 
   if (err instanceof AppError) {
     res.status(err.status).json({ error: { code: err.code, message: err.message } });
+    return;
+  }
+
+  // A file over the size limit, or more than one file.
+  if (err instanceof MulterError) {
+    const tooLarge = err.code === "LIMIT_FILE_SIZE";
+    res.status(400).json({
+      error: { code: tooLarge ? "FILE_TOO_LARGE" : "UPLOAD_ERROR", message: tooLarge ? "The file is larger than 5 MB" : err.message },
+    });
     return;
   }
 

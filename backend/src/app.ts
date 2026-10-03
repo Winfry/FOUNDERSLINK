@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error.js";
 import { accountRouter } from "./modules/account/account.routes.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { circlesRouter } from "./modules/circles/circles.routes.js";
 import { complianceRouter } from "./modules/compliance/compliance.routes.js";
@@ -25,9 +26,10 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// Option lists for the onboarding form.
+// Option lists for forms. Each list is given twice: the bare values the
+// API accepts, and the same values with a label to show.
 app.get("/meta/options", (_req, res) => {
-  res.json({
+  const lists = {
     journey_types: options.JOURNEY_TYPES,
     business_statuses: options.BUSINESS_STATUSES,
     sectors: options.SECTORS,
@@ -41,7 +43,9 @@ app.get("/meta/options", (_req, res) => {
     funder_kinds: options.FUNDER_KINDS,
     professions: options.PROFESSIONS,
     check_types: options.CHECK_TYPES,
-  });
+  };
+  const labels = Object.fromEntries(Object.entries(lists).map(([name, values]) => [name, options.labelled(values)]));
+  res.json({ ...lists, labels });
 });
 
 app.use(authRouter);
@@ -49,6 +53,9 @@ app.use(accountRouter);
 app.use(profileRouter);
 app.use(fundingRouter);
 app.use(complianceRouter);
+// Before the vetting router, whose "/admin/vetting/:id" would otherwise
+// read "applications" as an id.
+app.use(adminRouter);
 app.use(vettingRouter);
 app.use(networkRouter);
 app.use(dealsRouter);

@@ -29,7 +29,9 @@ export function attachRealtime(server: Server) {
       try {
         const message = JSON.parse(String(raw));
         if (message.type !== "auth") throw new Error("expected auth");
-        const { sub } = verifyToken(message.token);
+        const { sub, stage } = verifyToken(message.token);
+        // A token waiting for an authenticator code is not a session.
+        if (stage) throw new Error("not a session token");
         const user = await prisma.user.findUnique({ where: { id: sub }, select: { approval_status: true } });
         if (user?.approval_status !== "approved") throw new Error("not approved");
 
