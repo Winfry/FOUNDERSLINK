@@ -36,11 +36,18 @@ export interface Reason {
   text: string;
 }
 
+// How well a funder fits. Shown to founders in place of a number, because
+// a score from hand-picked weights would claim precision it does not have.
+export const BANDS = ["strong", "good", "possible", "not_a_fit"] as const;
+export type Band = (typeof BANDS)[number];
+
 export interface MatchResult {
   funder_id: string;
-  fits: boolean;
+  band: Band;
+  // Used for sorting only. Never sent to the frontend.
   score: number;
   reasons: Reason[];
+  explanation: string;
 }
 
 export interface Extraction {

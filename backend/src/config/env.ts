@@ -9,6 +9,8 @@ const schema = z.object({
   // Base URL of the AI service. Left empty, the backend uses its own
   // rule-based stand-in so the flow still works.
   AI_SERVICE_URL: z.string().optional(),
+  // Shared secret sent to the AI service on every call.
+  AI_SERVICE_API_KEY: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

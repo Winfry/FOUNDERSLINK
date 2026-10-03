@@ -4,7 +4,7 @@
 // the `engine` field.
 
 import { COUNTIES } from "../shared/constants.js";
-import type { Extraction, MatchFunder, MatchProfile, MatchResult, Reason } from "./types.js";
+import type { Band, Extraction, MatchFunder, MatchProfile, MatchResult, Reason } from "./types.js";
 
 export const kes = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
 
@@ -26,7 +26,18 @@ const PREFERENCE_ONLY = new Set(["instrument"]);
 
 function assess(p: MatchProfile, f: MatchFunder): MatchResult {
   const reasons: Reason[] = [];
-  const add = (signal: string, fits: boolean, text: string) => reasons.push({ signal, fits, text });
+  let earned = 0;
+  let possible = 0;
+  let softMisses = 0;
+  // `credit` is the share of the signal's weight earned: 1 for a fit,
+  // 0 for a miss, and something between when we cannot tell.
+  const add = (signal: string, fits: boolean, text: string, credit = fits ? 1 : 0) => {
+    reasons.push({ signal, fits, text });
+    const weight = WEIGHTS[signal] ?? 0;
+    possible += weight;
+    earned += weight * credit;
+    if (credit < 1) softMisses += 1;
+  };
 
   const funded = f.journey_types.map((j) => JOURNEY_LABEL[j] ?? j).join(" and ");
   const mine = JOURNEY_LABEL[p.journey_type] ?? p.journey_type;
@@ -48,7 +59,7 @@ function assess(p: MatchProfile, f: MatchFunder): MatchResult {
 
   const range = `${kes(f.ticket_min_kes)} to ${kes(f.ticket_max_kes)}`;
   const need = p.funding_amount_kes;
-  if (need === null) add("amount", true, `You have not said how much you need. They fund ${range}`);
+  if (need === null) add("amount", true, `You have not said how much you need. They fund ${range}`, 0.5);
   else if (need < f.ticket_min_kes)
     add("amount", false, `You need ${kes(need)}; their minimum is ${kes(f.ticket_min_kes)}`);
   else if (need > f.ticket_max_kes)
@@ -61,20 +72,17 @@ function assess(p: MatchProfile, f: MatchFunder): MatchResult {
     else add("instrument", false, `Offers ${list(f.instruments)}; you asked for ${list(p.instruments)}`);
   }
 
-  let earned = 0;
-  let possible = 0;
-  for (const r of reasons) {
-    const weight = WEIGHTS[r.signal] ?? 0;
-    possible += weight;
-    if (r.fits) earned += weight;
-  }
+  const ruledOut = reasons.some((r) => !r.fits && !PREFERENCE_ONLY.has(r.signal));
+  const score = Math.round((earned / possible) * 100) / 100;
+  // Not ruled out means every miss left is a soft one: a preference that
+  // does not match, or something the founder has not told us.
+  const band: Band = ruledOut ? "not_a_fit" : softMisses === 0 ? "strong" : softMisses === 1 ? "good" : "possible";
 
-  return {
-    funder_id: f.id,
-    fits: reasons.every((r) => r.fits || PREFERENCE_ONLY.has(r.signal)),
-    score: Math.round((earned / possible) * 100) / 100,
-    reasons,
-  };
+  // Say why it fits, or why it does not.
+  const shown = reasons.filter((r) => r.fits !== ruledOut);
+  const explanation = `${shown.map((r) => r.text).join(". ")}.`;
+
+  return { funder_id: f.id, band, score, reasons, explanation };
 }
 
 export function matchFunders(profile: MatchProfile, funders: MatchFunder[]): MatchResult[] {
@@ -135,6 +143,12 @@ export function extractProfile(text: string): Extraction {
   const amount = findAmount(text);
   if (amount) fields.funding_amount_kes = amount;
 
-  const expected = ["journey_type", "business_status", "sector", "county", "funding_amount_kes"];
-  return { fields, unsure: expected.filter((key) => !(key in fields)) };
+  return { fields, unsure: missingCoreFields(fields) };
+}
+
+// The fields onboarding cannot do without. Whatever an extraction did not
+// find is handed back as "unsure" so the form asks for it.
+export function missingCoreFields(fields: Record<string, unknown>): string[] {
+  const core = ["journey_type", "business_status", "sector", "county", "funding_amount_kes"];
+  return core.filter((key) => !(key in fields));
 }

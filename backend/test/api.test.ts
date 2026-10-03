@@ -169,7 +169,11 @@ test("startup founder: matches are grouped with reasons and gaps", async () => {
   assert.equal(res.status, 200);
   assert.equal(res.json.engine, "stand_in");
 
-  assert.ok(names(res.json.apply_now).includes("HealthBridge Accelerator (demo)"));
+  const healthBridge = res.json.apply_now.find((c: any) => c.funder.name === "HealthBridge Accelerator (demo)");
+  assert.equal(healthBridge.band, "strong");
+  assert.ok(healthBridge.explanation.length > 0);
+  // Founders see a band, never a number.
+  assert.equal(healthBridge.score, undefined);
 
   // Fits, but she has registered the business and has no KRA PIN yet.
   const angels = res.json.apply_after.find((c: any) => c.funder.name === "Savanna Angels Network (demo)");
@@ -178,6 +182,8 @@ test("startup founder: matches are grouped with reasons and gaps", async () => {
   const rift = res.json.not_for_you.find((c: any) => c.funder.name === "Rift Growth Fund (demo)");
   assert.ok(rift.reasons.some((r: any) => !r.fits));
   assert.deepEqual(rift.gaps, []);
+  assert.equal(rift.band, null);
+  assert.match(rift.explanation, /their minimum is KSh 10,000,000/);
 });
 
 test("SME founder: sees what she can apply for now, after fixing gaps, and not at all", async () => {

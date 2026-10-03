@@ -76,7 +76,17 @@ export async function getMatches(userId: string) {
   const cards = funders.map((funder) => {
     const match = byFunder.get(funder.id)!;
     const readiness = assessReadiness(profile, funder, items, match);
-    return { funder, score: match.score, ...readiness };
+    const ruledOut = readiness.group === "not_for_you";
+    return {
+      funder,
+      score: match.score,
+      // A band says how well a funder fits, so a funder that is ruled out has none.
+      band: ruledOut ? null : match.band,
+      explanation: ruledOut
+        ? `${readiness.reasons.filter((r) => !r.fits).map((r) => r.text).join(". ")}.`
+        : match.explanation,
+      ...readiness,
+    };
   });
 
   const inGroup = (group: Group) =>
@@ -84,7 +94,8 @@ export async function getMatches(userId: string) {
       .filter((c) => c.group === group)
       // Fewest gaps first, then best score.
       .sort((a, b) => a.gaps.length - b.gaps.length || b.score - a.score)
-      .map(({ group: _group, ...card }) => card);
+      // The score is for sorting only: founders see the band.
+      .map(({ group: _group, score: _score, ...card }) => card);
 
   return {
     engine,

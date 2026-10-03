@@ -39,7 +39,9 @@ Errors always look like `{ "error": { "code", "message" } }`. Validation errors 
 Each card in `/funding/matches` has:
 
 - `funder`: the record, including `how_to_apply_url`, `source_url` and `last_verified_at`
-- `score` and `reasons`: why the funder fits or does not, one `{ signal, fits, text }` per signal
+- `band`: how well the funder fits: `strong`, `good` or `possible`. It is `null` in `not_for_you`
+- `explanation`: one or two sentences on why it fits, or why it does not
+- `reasons`: the detail behind that, one `{ signal, fits, text }` per signal
 - `gaps`: what stands between the founder and this funder. `kind: "requirement"` points at a compliance item; `kind: "unanswered"` points at a profile field she has not filled in
 - `risk_factors`: things to check before applying, e.g. an application fee. They never change the group
 
@@ -47,7 +49,7 @@ The response also has `engine`: `ai_service` when the AI service answered, `stan
 
 ## AI service
 
-Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. The backend calls `POST /extract-profile` and `POST /match-funders` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
+Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls `POST /extract-profile` and `POST /recommend` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
 
 Emails and phone numbers are removed from the description before it is sent, and the eligibility flags are never sent.
 

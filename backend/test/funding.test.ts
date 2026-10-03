@@ -62,19 +62,22 @@ const items = new Map([["kra_pin", { title: "KRA PIN", source_url: null, last_ve
 test("stand-in returns a verdict and reasons for every funder", () => {
   const [bank, vc] = matchFunders(salon, [bankLoan, ventureFund]);
 
-  assert.equal(bank!.fits, true);
-  assert.equal(bank!.score, 1);
+  assert.equal(bank!.band, "strong");
+  assert.match(bank!.explanation, /Funds small businesses.*within their range/);
 
-  assert.equal(vc!.fits, false);
+  assert.equal(vc!.band, "not_a_fit");
+  assert.match(vc!.explanation, /^Funds startups, not small businesses\./);
   const failed = vc!.reasons.filter((r) => !r.fits).map((r) => r.signal);
   assert.deepEqual(failed, ["journey", "sector", "stage", "amount"]);
   assert.match(vc!.reasons.find((r) => r.signal === "amount")!.text, /KSh 150,000.*minimum is KSh 10,000,000/);
 });
 
-test("an instrument mismatch lowers the score but does not rule a funder out", () => {
-  const [result] = matchFunders({ ...salon, instruments: ["grant"] }, [bankLoan]);
-  assert.equal(result!.fits, true);
-  assert.ok(result!.score < 1);
+test("soft misses lower the band but do not rule a funder out", () => {
+  const band = (changes: Partial<MatchProfile>) => matchFunders({ ...salon, ...changes }, [bankLoan])[0]!.band;
+
+  assert.equal(band({ instruments: ["grant"] }), "good");
+  assert.equal(band({ funding_amount_kes: null }), "good");
+  assert.equal(band({ instruments: ["grant"], funding_amount_kes: null }), "possible");
 });
 
 test("a missing requirement moves a fitting funder to apply_after", () => {

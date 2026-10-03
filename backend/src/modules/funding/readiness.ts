@@ -112,7 +112,7 @@ export function assessReadiness(
   }
 
   const group: Group =
-    !match.fits || !eligible ? "not_for_you" : gaps.length > 0 ? "apply_after" : "apply_now";
+    match.band === "not_a_fit" || !eligible ? "not_for_you" : gaps.length > 0 ? "apply_after" : "apply_now";
 
   // Gaps only matter for a funder the founder could actually go to.
   return { group, reasons, gaps: group === "not_for_you" ? [] : gaps, risk_factors };
