@@ -315,16 +315,16 @@ For screen 1, show the label on every funder that has `is_demo: true` or a `risk
 | Login | `POST /auth/login` with an admin account. If she has two-step sign-in on, the answer is `{ two_factor_required: true, pending_token }` and no session yet | Ready |
 | Verify 2FA | `POST /auth/2fa/verify` with `{ pending_token, code }` → `{ token, user }`. The code comes from her authenticator app | Ready |
 | Set up 2FA *(new page)* | `POST /auth/2fa/setup` → `{ secret, otpauth_url }`. Show `otpauth_url` as a QR code. Then `POST /auth/2fa/enable` with `{ code }` | Ready |
-| Founder and investor applications (list) | `GET /admin/vetting/queue`: waiting applications, riskiest first | Ready (decided applications coming) |
+| Founder and investor applications (list) | `GET /admin/vetting/queue`: waiting applications, riskiest first. `GET /admin/vetting/applications?role=&status=&page=` lists every application, decided ones included | Ready |
 | Application detail | `GET /admin/vetting/:id` | Ready |
 | Approve, reject | `POST /admin/vetting/:id/decision` with `{ decision, reason, checks }` | Ready |
 | Document status | Per-document verified or rejected | Coming |
-| Founders, investors (lists and detail) | `GET /admin/users?role=` | Coming |
+| Founders, investors (lists and detail) | `GET /admin/users?role=&status=&search=&page=&page_size=` → `{ items, total, page, pages }`. `GET /admin/users/:id` is one member with her profiles, application, reports against her and a `timeline` | Ready |
 | Update a member's status | `POST /admin/users/:id/suspend` and `/reinstate`, each with `{ reason }` | Ready |
 | Audit log | `GET /admin/actions` | Ready |
 | Reports | `GET /admin/reports` → `{ messages, members }` | Ready |
 | Admin users | List and create | Coming |
-| Dashboard numbers and charts | `GET /admin/stats` | Coming |
+| Dashboard numbers and charts | `GET /admin/stats`: members by role and status, applications waiting, re-checks due, reports, deals by stage, circles, and `registrations` for the last six months. There are no transaction volumes: the backend records no money moving | Ready |
 | Groups, withdrawals, transactions | | Blocked, section 9 |
 
 Changes to the application pages:

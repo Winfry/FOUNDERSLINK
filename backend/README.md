@@ -217,6 +217,10 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | POST | `/admin/vetting/:id/decision` | admin | `{ decision: approve / reject / needs_info, reason, checks? }` |
 | GET | `/admin/vetting/rechecks` | admin | Approved members due to be looked at again, with why |
 | POST | `/admin/vetting/:id/recheck` | admin | `{ outcome: confirm / suspend, reason }` |
+| GET | `/admin/vetting/applications` | admin | `?role=&status=&page=`. Every application, decided ones included |
+| GET | `/admin/users` | admin | `?role=&status=&search=&page=&page_size=`. Members, a page at a time |
+| GET | `/admin/users/:id` | admin | One member: profiles, application, reports against her, and her history |
+| GET | `/admin/stats` | admin | The dashboard's numbers, with sign-ups for the last six months |
 | POST | `/admin/users/:id/suspend` | admin | `{ reason }` |
 | POST | `/admin/users/:id/reinstate` | admin | `{ reason }` |
 | GET | `/admin/actions` | admin | The audit log |

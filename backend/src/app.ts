@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error.js";
 import { accountRouter } from "./modules/account/account.routes.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { circlesRouter } from "./modules/circles/circles.routes.js";
 import { complianceRouter } from "./modules/compliance/compliance.routes.js";
@@ -52,6 +53,9 @@ app.use(accountRouter);
 app.use(profileRouter);
 app.use(fundingRouter);
 app.use(complianceRouter);
+// Before the vetting router, whose "/admin/vetting/:id" would otherwise
+// read "applications" as an id.
+app.use(adminRouter);
 app.use(vettingRouter);
 app.use(networkRouter);
 app.use(dealsRouter);
