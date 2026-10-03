@@ -5,7 +5,9 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16),
   PORT: z.coerce.number().default(8000),
-  CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  // Comma-separated. The defaults are the mobile app in a browser (Expo
+  // web) and the admin dashboard (Next.js) on their usual local ports.
+  CORS_ORIGIN: z.string().default("http://localhost:8081,http://localhost:3000"),
   // Base URL of the AI service. Left empty, the backend uses its own
   // rule-based stand-in so the flow still works.
   AI_SERVICE_URL: z.string().optional(),

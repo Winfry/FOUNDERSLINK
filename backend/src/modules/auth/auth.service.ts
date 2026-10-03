@@ -3,7 +3,7 @@ import { z } from "zod";
 import { SIGNUP_ROLES } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, unauthorized } from "../../shared/errors.js";
-import { signToken } from "../../shared/token.js";
+import { sessionExpiry, signToken } from "../../shared/token.js";
 import { completedFor } from "../compliance/status.js";
 
 // A person picks founder, investor or expert at sign-up. `admin` is not
@@ -37,7 +37,7 @@ export async function register(input: z.infer<typeof registerSchema>) {
     select: publicUser,
   });
 
-  return { token: signToken({ sub: user.id, role: user.role }), user };
+  return { token: signToken({ sub: user.id, role: user.role }), expires_at: sessionExpiry(), user };
 }
 
 export async function login(input: z.infer<typeof loginSchema>) {
@@ -49,6 +49,7 @@ export async function login(input: z.infer<typeof loginSchema>) {
 
   return {
     token: signToken({ sub: user.id, role: user.role }),
+    expires_at: sessionExpiry(),
     user: {
       id: user.id,
       email: user.email,

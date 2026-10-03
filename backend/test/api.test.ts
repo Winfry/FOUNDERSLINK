@@ -54,6 +54,9 @@ test("register returns a token and never the password hash", async () => {
   assert.ok(res.json.token);
   assert.equal(res.json.user.role, "founder");
   assert.equal(res.json.user.password_hash, undefined);
+  // The session lasts a week, and the response says when it ends.
+  const days = (res.json.expires_at - Date.now()) / (24 * 60 * 60 * 1000);
+  assert.ok(days > 6.9 && days <= 7);
   token = res.json.token;
 });
 
@@ -243,5 +246,11 @@ test("compliance items are public", async () => {
 test("options and unknown routes", async () => {
   const options = await call("GET", "/meta/options");
   assert.ok(options.json.sectors.includes("health"));
+  // Every list also comes with labels to show.
+  assert.deepEqual(options.json.labels.sectors.slice(0, 2), [
+    { id: "health", label: "Health" },
+    { id: "agri", label: "Agriculture" },
+  ]);
+  assert.deepEqual(options.json.labels.business_statuses[2], { id: "registered_business_name", label: "Registered business name" });
   assert.equal((await call("GET", "/nope")).status, 404);
 });

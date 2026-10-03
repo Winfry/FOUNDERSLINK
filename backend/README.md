@@ -21,7 +21,7 @@ npm test                         # API tests, against the same database
 | Method | Path | Auth | What it does |
 |---|---|---|---|
 | GET | `/health` | no | Liveness check |
-| GET | `/meta/options` | no | Option lists for the onboarding form (sectors, stages and so on) |
+| GET | `/meta/options` | no | Option lists for forms (sectors, stages and so on), each also under `labels` as `{ id, label }` pairs |
 | POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, user }`. `role` is `founder` (default), `investor` or `expert` |
 | POST | `/auth/login` | no | `{ email, password }` → `{ token, user }` |
 | GET | `/me` | yes | The signed-in user and her `founder_profile` (null until onboarding) |

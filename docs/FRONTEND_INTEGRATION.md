@@ -36,7 +36,7 @@ Changing `lib/` to `/lib/` in the root `.gitignore` stops it happening again.
 |---|---|
 | Base URL | `http://localhost:8000` locally. Put it in one config value |
 | Auth | `Authorization: Bearer <token>` on every call except sign-up, login and `/meta/options` |
-| Token | One token, valid 7 days. There is no refresh token: drop `refreshToken` and `refreshSession`, and send the user to login on a `401` |
+| Token | One token, valid 7 days. Login and sign-up also return `expires_at` (milliseconds). There is no refresh token: drop `refreshToken` and `refreshSession`, and send the user to login on a `401` |
 | Field names | The backend uses `snake_case` (`full_name`, `funding_amount_kes`). Map to your `camelCase` types inside the service layer, so screens do not change |
 | Errors | Always `{ "error": { "code", "message" } }`. Validation errors add `fields: [{ path, message }]`, which maps onto form fields |
 | Live updates | WebSocket at `/ws`. Send `{"type":"auth","token":"..."}` first. It pushes `{"type":"message",...}` and `{"type":"notification",...}` |
@@ -247,7 +247,7 @@ Each has `title`, `body` and a `link` to open.
 
 ### ReferenceDataService
 
-`GET /meta/options` returns every list: `sectors`, `stages`, `counties`, `instruments`, `revenue_bands`, `business_statuses`, `funder_kinds`, `signup_roles`, `consent_purposes`. Values only today. Labels are coming as `{ id, label }`.
+`GET /meta/options` returns every list: `sectors`, `stages`, `counties`, `instruments`, `revenue_bands`, `business_statuses`, `funder_kinds`, `signup_roles`, `consent_purposes`. Each list is there twice: the bare values at the top level, and under `labels` as `{ id, label }` pairs for dropdowns, e.g. `labels.sectors`.
 
 ### GroupService
 

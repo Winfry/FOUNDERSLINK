@@ -25,9 +25,10 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// Option lists for the onboarding form.
+// Option lists for forms. Each list is given twice: the bare values the
+// API accepts, and the same values with a label to show.
 app.get("/meta/options", (_req, res) => {
-  res.json({
+  const lists = {
     journey_types: options.JOURNEY_TYPES,
     business_statuses: options.BUSINESS_STATUSES,
     sectors: options.SECTORS,
@@ -41,7 +42,9 @@ app.get("/meta/options", (_req, res) => {
     funder_kinds: options.FUNDER_KINDS,
     professions: options.PROFESSIONS,
     check_types: options.CHECK_TYPES,
-  });
+  };
+  const labels = Object.fromEntries(Object.entries(lists).map(([name, values]) => [name, options.labelled(values)]));
+  res.json({ ...lists, labels });
 });
 
 app.use(authRouter);
