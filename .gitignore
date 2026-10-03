@@ -246,3 +246,6 @@ node_modules/
 .env
 .env.*
 test-results/
+
+# PDFs and other generated files
+*.pdf
