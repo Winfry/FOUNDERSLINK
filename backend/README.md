@@ -163,6 +163,17 @@ All of these need an approved account, and, past joining, membership of the circ
 | POST | `/circles/:id/decisions/:decisionId/close` | organiser | |
 | GET | `/circles/:id/funding` | circle member | Funders that fund groups, and what the circle still needs for each |
 
+**M-Pesa.** None of this has been run against a real statement or the Daraja sandbox; see the notes at the top of `src/modules/circles/mpesa.ts`.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| POST | `/circles/:id/statements` | organiser or treasurer | `{ csv }` or `{ rows }`. Reads payments in, matches them to members, and returns a summary. The upload is not stored |
+| GET | `/circles/:id/reconciliation` | circle member | Who has paid, who still owes this period, and unmatched payments (details for the organiser and treasurer only) |
+| PATCH | `/circles/:id/payments/:paymentId` | organiser or treasurer | `{ member_id }` assigns an unmatched payment, `{ ignore: true }` sets it aside |
+| POST | `/payments/mpesa/callback/:secret` | Safaricom | The Paybill confirmation. Off unless `MPESA_CALLBACK_SECRET` is set |
+
+A statement needs columns for the receipt number, completion time, details and amount paid in. A row is `{ receipt, completed_at, details, paid_in_kes }`. The circle's own number is set with `paybill_number` in `PATCH /circles/:id`.
+
 A circle's group chat is in `/conversations` with `type: "circle"`. Members of the same circle can open a deal with each other without a separate connection.
 
 ### Experts and office hours

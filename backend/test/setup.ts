@@ -7,3 +7,5 @@ process.env.AI_SERVICE_URL = "";
 // (sms.test.ts points these at its own fake provider.)
 process.env.SMS_PROVIDER_API_KEY = "";
 process.env.SMS_PROVIDER_USERNAME = "";
+// The M-Pesa confirmation endpoint is off without a secret. Tests turn it on.
+process.env.MPESA_CALLBACK_SECRET = "test-callback-secret-0123456789";

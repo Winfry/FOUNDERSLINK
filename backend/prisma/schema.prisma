@@ -606,6 +606,8 @@ model Circle {
   contribution_frequency  String? // weekly | monthly
   registration_status     String   @default("unregistered") // unregistered | in_progress | registered
   registration_number     String?
+  // The circle's own Paybill or Till number, where members pay in.
+  paybill_number          String?  @unique
   created_by              String   @db.Uuid
   created_at              DateTime @default(now())
 
@@ -672,19 +674,23 @@ model CircleGoal {
 model PaymentRecord {
   id             String   @id @default(uuid(7)) @db.Uuid
   circle_id      String   @db.Uuid
-  member_id      String   @db.Uuid
+  // Null while a payment read from a statement has not been matched to a member.
+  member_id      String?  @db.Uuid
   goal_id        String?  @db.Uuid
   amount_kes     Int
   paid_at        DateTime
   mpesa_receipt  String?
   source         String   @default("manual") // manual | statement | paybill_callback
-  matched_status String   @default("matched") // matched | unmatched
+  matched_status String   @default("matched") // matched | unmatched | ignored
+  // For an unmatched payment: who the statement says paid, with any
+  // phone number masked, so the treasurer can tell whose it is.
+  payer_label    String?
   note           String?
   recorded_by    String   @db.Uuid
   recorded_at    DateTime @default(now())
 
   circle Circle      @relation(fields: [circle_id], references: [id], onDelete: Cascade)
-  member User        @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  member User?       @relation(fields: [member_id], references: [id], onDelete: Cascade)
   goal   CircleGoal? @relation(fields: [goal_id], references: [id], onDelete: SetNull)
 
   // The same M-Pesa receipt can never be counted twice in a circle.

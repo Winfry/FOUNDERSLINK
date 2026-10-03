@@ -3,6 +3,16 @@ import { z } from "zod";
 import { requireApproved, requireAuth } from "../../middlewares/auth.js";
 import { syncCircleRoom } from "../messaging/messaging.service.js";
 import {
+  checkSecret,
+  confirmationSchema,
+  importStatement,
+  reconciliation,
+  recordConfirmation,
+  resolvePayment,
+  resolveSchema,
+  statementSchema,
+} from "./mpesa.js";
+import {
   addDecision,
   addGoal,
   addNote,
@@ -145,4 +155,26 @@ circlesRouter.post("/circles/:id/decisions/:decisionId/close", ...approved, asyn
 
 circlesRouter.get("/circles/:id/funding", ...approved, async (req, res) => {
   res.json(await groupFunding(req.user!.id, id(req.params.id)));
+});
+
+// --- M-Pesa: reading what members paid into the circle's own account ---
+
+circlesRouter.post("/circles/:id/statements", ...approved, async (req, res) => {
+  res.json(await importStatement(req.user!.id, id(req.params.id), statementSchema.parse(req.body)));
+});
+
+circlesRouter.get("/circles/:id/reconciliation", ...approved, async (req, res) => {
+  res.json(await reconciliation(req.user!.id, id(req.params.id)));
+});
+
+circlesRouter.patch("/circles/:id/payments/:paymentId", ...approved, async (req, res) => {
+  const input = resolveSchema.parse(req.body);
+  res.json(await resolvePayment(req.user!.id, id(req.params.id), id(req.params.paymentId), input));
+});
+
+// Called by Safaricom, not by a signed-in member, so it is guarded by a
+// secret in the URL. It is off unless MPESA_CALLBACK_SECRET is set.
+circlesRouter.post("/payments/mpesa/callback/:secret", async (req, res) => {
+  checkSecret(String(req.params.secret));
+  res.json(await recordConfirmation(confirmationSchema.parse(req.body)));
 });

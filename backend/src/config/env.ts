@@ -16,6 +16,8 @@ const schema = z.object({
   SMS_PROVIDER_API_KEY: z.string().optional(),
   SMS_API_URL: z.string().default("https://api.sandbox.africastalking.com/version1/messaging"),
   NODE_ENV: z.string().default("development"),
+  // A secret in the M-Pesa confirmation URL. Without it the endpoint is off.
+  MPESA_CALLBACK_SECRET: z.string().min(16).optional(),
   // How many different admins must approve an investor. TEAM_DECISIONS
   // D7 asks for 2 in production and allows 1 for the demo.
   INVESTOR_APPROVALS_REQUIRED: z.coerce.number().int().min(1).max(2).default(1),
