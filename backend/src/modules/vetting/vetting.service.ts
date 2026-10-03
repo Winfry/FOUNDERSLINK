@@ -9,6 +9,7 @@ import { env } from "../../config/env.js";
 import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
 import { disconnect } from "../../realtime.js";
 import { notify } from "../notifications/notifications.service.js";
+import { listDocuments, scheduleDeletion } from "./documents.js";
 import { prisma } from "../../shared/db.js";
 import { sendEmail } from "../../shared/email.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
@@ -60,6 +61,7 @@ export async function getApplication(userId: string) {
   return {
     approval_status: user.approval_status,
     application,
+    documents: application ? await listDocuments(application.id) : [],
     identity_check: "For this demo, identity is reviewed by an admin by hand. No ID number or document is stored.",
   };
 }
@@ -186,7 +188,7 @@ export async function getApplicationForReview(applicationId: string) {
       })
     : null;
 
-  return { ...application, claims_funder: claims };
+  return { ...application, claims_funder: claims, documents: await listDocuments(application.id) };
 }
 
 const STATUS_AFTER = { approve: "approved", reject: "rejected", needs_info: "needs_info" } as const;
@@ -261,6 +263,9 @@ export async function decide(adminId: string, applicationId: string, input: z.in
       });
     }
   });
+
+  // A final decision starts the 30 days after which the files are deleted.
+  if (input.decision !== "needs_info") await scheduleDeletion(applicationId);
 
   const OUTCOME = {
     approve: ["You are approved", "You can now see and connect with other members."],

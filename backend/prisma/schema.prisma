@@ -340,8 +340,9 @@ model VettingApplication {
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
 
-  user   User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  checks VettingCheck[]
+  user      User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  checks    VettingCheck[]
+  documents VettingDocument[]
 
   @@map("vetting_applications")
 }
@@ -860,4 +861,31 @@ model EmailCode {
 
   @@unique([user_id, purpose])
   @@map("email_codes")
+}
+
+// Evidence uploaded with a vetting application, e.g. a business
+// registration certificate. Only admins can open the file. The file is
+// deleted 30 days after the decision; this row, with the outcome of the
+// review, stays. ID documents are not collected.
+model VettingDocument {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  application_id   String    @db.Uuid
+  type             String
+  label            String?
+  file_name        String
+  mime_type        String
+  size_bytes       Int
+  // The file's name on disk. Null once the file has been deleted.
+  storage_key      String?
+  status           String    @default("uploaded") // uploaded | verified | rejected
+  rejection_reason String?
+  uploaded_at      DateTime  @default(now())
+  reviewed_by      String?   @db.Uuid
+  reviewed_at      DateTime?
+  delete_after     DateTime?
+  deleted_at       DateTime?
+
+  application VettingApplication @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@map("vetting_documents")
 }

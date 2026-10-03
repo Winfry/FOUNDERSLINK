@@ -212,6 +212,11 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | GET | `/vetting/application` | any user | Her application and approval status |
 | PATCH | `/vetting/application` | any user | Fills it in. Locked once submitted |
 | POST | `/vetting/application/submit` | any user | Submits it and scores it for risk |
+| POST | `/vetting/application/documents` | any user | `multipart/form-data` with `file` and `type`. PDF, JPEG or PNG, up to 5 MB. Before she submits |
+| DELETE | `/vetting/application/documents/:id` | its owner | Before she submits |
+| GET | `/admin/vetting/documents/:id/file` | admin | Downloads the file |
+| PATCH | `/admin/vetting/documents/:id` | admin | `{ status: verified / rejected, reason }` |
+| POST | `/admin/jobs/purge-documents` | admin | Deletes files past their 30 days now. It also runs hourly |
 | GET | `/admin/vetting/queue` | admin | Waiting applications, riskiest first |
 | GET | `/admin/vetting/:id` | admin | One application with the person's profiles |
 | POST | `/admin/vetting/:id/decision` | admin | `{ decision: approve / reject / needs_info, reason, checks? }` |
@@ -227,6 +232,8 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | GET | `/admin/actions` | admin | The audit log |
 
 Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
+
+Uploaded files are kept on the server's disk under `UPLOAD_DIR` (default `./uploads`), under a name the backend chooses. They are **not encrypted**, and a real deployment needs proper file storage. Each file is deleted 30 days after the decision on its application; the record of the review stays.
 
 A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
 

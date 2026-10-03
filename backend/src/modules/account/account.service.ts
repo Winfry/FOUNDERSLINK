@@ -9,6 +9,7 @@ import { prisma } from "../../shared/db.js";
 import { env } from "../../config/env.js";
 import { AppError, conflict, unauthorized } from "../../shared/errors.js";
 import { sendSms } from "../../shared/sms.js";
+import { removeFilesOf } from "../vetting/documents.js";
 import { listConsents } from "./consents.js";
 
 export const deleteSchema = z.object({ password: z.string().min(1) });
@@ -37,7 +38,7 @@ export async function exportData(userId: string) {
       investor_profile: true,
       expert_profile: true,
       funder: true,
-      vetting_application: { include: { checks: true } },
+      vetting_application: { include: { checks: true, documents: { select: { type: true, file_name: true, status: true, uploaded_at: true, deleted_at: true } } } },
       portfolio: true,
       ventures: true,
     },
@@ -115,6 +116,9 @@ export async function deleteAccount(userId: string, password: string) {
   if (deals.length > 0) {
     throw conflict("DEALS_IN_PROGRESS", `Close or decline your deals in progress first: ${deals.map((d) => d.title).join(", ")}`);
   }
+
+  // Her uploaded files, before the rows that say where they are.
+  await removeFilesOf(userId);
 
   await prisma.$transaction([
     // Circles where she was the only member go with her.

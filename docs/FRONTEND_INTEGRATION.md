@@ -133,7 +133,7 @@ Nothing is agreed by default. Until she agrees, a founder is invisible to invest
 |---|---|---|
 | `getProfile()` | `GET /me` → `founder_profile` | Ready |
 | `saveOnboardingStep(step, data)` | `PUT /me/profile` once, at the end, with the whole profile. Keep the steps in the app's own store until then | Ready |
-| `getDocuments()` | `GET /vetting/application` → `documents` | Coming |
+| `getDocuments()` | `GET /vetting/application` → `documents`, each with `status` (`uploaded`, `verified`, `rejected`) and `rejection_reason` | Ready |
 | `getDashboard()` | Compose from `GET /me`, `GET /funding/matches`, `GET /compliance` and `GET /connections` | Ready |
 | `getInvestorRequests()` | `GET /connections`, the ones with `direction: "received"` and `status: "pending"`. Each has `with.full_name`, `with.organisation_name`, `with.focus_areas`, `pitch`, `vision`, `offer` and `proposed_amount_kes` | Ready |
 | `respondToInvestorRequest(id, approve, reason)` | `PATCH /connections/:id` with `{ status: "accepted" | "declined", reason? }`. The reason is shown to the investor | Ready |
@@ -214,9 +214,11 @@ Both become the vetting application of the signed-in user:
 | `saveDraft(step, data)` | `PATCH /vetting/application` with any of `phone`, `organisation_name`, `organisation_website`, `statement`, `references` | Ready |
 | `submit(data)` | `POST /vetting/application/submit` | Ready |
 | `checkStatus(email, ref)` | `GET /vetting/application` → `approval_status` and `application.decision_reason` | Ready |
-| Document upload | `POST /vetting/application/documents` | Coming |
+| Document upload | `POST /vetting/application/documents` as `multipart/form-data` with a `file` and a `type`. PDF, JPEG or PNG, up to 5 MB, at most 10. `DELETE /vetting/application/documents/:id` removes one. Both only before she submits | Ready |
 
-There is no reference number. Do not collect an ID number: the backend stores none.
+There is no reference number. Do not collect an ID number or an ID document: the backend stores none.
+
+Document `type` is one of `business_registration`, `kra_pin_certificate`, `organisation_proof`, `professional_certificate`, `track_record`, `other`. Map `DocumentStatus` as: `not_uploaded` is "no document of that type", `uploaded` and `under_review` are `uploaded`, and `verified` and `rejected` are the same. A file is deleted 30 days after the decision; its row then has `deleted_at` set.
 
 ### ChatService
 
@@ -318,7 +320,7 @@ For screen 1, show the label on every funder that has `is_demo: true` or a `risk
 | Founder and investor applications (list) | `GET /admin/vetting/queue`: waiting applications, riskiest first. `GET /admin/vetting/applications?role=&status=&page=` lists every application, decided ones included | Ready |
 | Application detail | `GET /admin/vetting/:id` | Ready |
 | Approve, reject | `POST /admin/vetting/:id/decision` with `{ decision, reason, checks }` | Ready |
-| Document status | Per-document verified or rejected | Coming |
+| Document status | Documents are on `GET /admin/vetting/:id`. `GET /admin/vetting/documents/:id/file` downloads one (admins only). `PATCH /admin/vetting/documents/:id` with `{ status: "verified" | "rejected", reason }` | Ready |
 | Founders, investors (lists and detail) | `GET /admin/users?role=&status=&search=&page=&page_size=` → `{ items, total, page, pages }`. `GET /admin/users/:id` is one member with her profiles, application, reports against her and a `timeline` | Ready |
 | Update a member's status | `POST /admin/users/:id/suspend` and `/reinstate`, each with `{ reason }` | Ready |
 | Audit log | `GET /admin/actions` | Ready |

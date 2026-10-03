@@ -18,6 +18,8 @@ const schema = z.object({
   SMS_PROVIDER_API_KEY: z.string().optional(),
   SMS_API_URL: z.string().default("https://api.sandbox.africastalking.com/version1/messaging"),
   NODE_ENV: z.string().default("development"),
+  // Where uploaded vetting documents are kept, on this machine's disk.
+  UPLOAD_DIR: z.string().default("./uploads"),
   // Email through Resend. Without the key nothing is sent. Until a
   // sending domain is verified with Resend, it only delivers to the
   // address that owns the Resend account.
