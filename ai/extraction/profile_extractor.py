@@ -18,8 +18,6 @@ SECTOR_WORDS = {
     "logistics": r"delivery|logistics|boda|transport|courier|usafiri|matatu|truck",
 }
 
-STARTUP_WORDS = r"\b(app|platform|software|startup|saas|tech|ai|marketplace)\b"
-SME_WORDS = r"\b(salon|duka|shop|kiosk|shamba|farm|kinyozi|mitumba|boutique|biashara|hardware)\b"
 
 # Checked in order: "not registered" must win over "registered".
 STATUS_WORDS = {
@@ -96,19 +94,17 @@ def extract_profile(free_text: str, language: str | None = None) -> dict:
     if county := next((c for c in COUNTIES if c.lower() in lowered), None):
         fields["county"] = county
 
-    if re.search(STARTUP_WORDS, text, re.IGNORECASE):
-        fields["journey_type"] = "startup"
-    elif re.search(SME_WORDS, text, re.IGNORECASE):
-        fields["journey_type"] = "sme"
+    # Every founder is on the startup path for now (TEAM_DECISIONS D11).
+    fields["journey_type"] = "startup"
 
     if status := _first_match(text, STATUS_WORDS):
         fields["business_status"] = status
 
-    if fields.get("journey_type") == "startup" and (stage := _first_match(text, STAGE_WORDS)):
+    if stage := _first_match(text, STAGE_WORDS):
         fields["stage"] = stage
 
     instruments = [i for i, p in INSTRUMENT_WORDS.items() if re.search(p, text, re.IGNORECASE)]
-    if instruments and fields.get("journey_type") == "startup":
+    if instruments:
         fields["instruments"] = instruments
 
     if amount := _amount(text):

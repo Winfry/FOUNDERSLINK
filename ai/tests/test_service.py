@@ -47,7 +47,7 @@ def test_sme_profiles_are_not_checked_on_stage(client, candidates, profile):
     "text, expected",
     [
         ("Nina salon Mombasa, nataka 150k ya stock",
-         {"journey_type": "sme", "sector": "retail", "county": "Mombasa", "funding_amount_kes": 150_000}),
+         {"journey_type": "startup", "sector": "retail", "county": "Mombasa", "funding_amount_kes": 150_000}),
         ("Duka langu Kisumu haijasajiliwa, nahitaji laki 2",
          {"sector": "retail", "county": "Kisumu", "business_status": "informal", "funding_amount_kes": 200_000}),
         ("We are a fintech startup in Nairobi with a working product, raising KSh 1.5m in equity",

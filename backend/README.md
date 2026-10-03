@@ -60,7 +60,7 @@ The application takes `phone`, `organisation_name`, `organisation_website`, `sta
 
 | Step | Call |
 |---|---|
-| Her matches in three groups | `GET /funding/matches` → `apply_now`, `apply_after`, `not_for_you` |
+| Her matches in three groups | `GET /funding/matches` → `apply_now`, `apply_after`, `not_for_you`. Investors and accelerators only (D11), labelled Pitch / Pitch after / Don't pitch |
 
 Each card shows the funder's name, `band` (Strong / Good / Possible; none in "not for you"), `explanation`, and a "Why?" view built from `reasons` (one `{ signal, fits, text }` each, green tick or cross). In "apply after", list `gaps`. A gap with `kind: "requirement"` links to that compliance item (screen 4). Show `risk_factors` as a warning line, e.g. an application fee. Link `funder.how_to_apply_url`, and show "From public information, last checked <`funder.last_verified_at`>" or "Maintained by the funder" from `source`. On the startup path, label the groups Pitch / Pitch after / Don't pitch.
 
@@ -121,7 +121,7 @@ Show stages as a stepper: `exploring` → `due_diligence` → `terms_agreed` →
 | The circle's **own** Paybill or Till | `PATCH /circles/:id` `{ paybill_number }` |
 | Invite (money circles: single-use link only) | `POST /circles/:id/invites`, `GET /circles/invites/:token`, `POST /circles/join` `{ token }` |
 | Goals, notes and minutes, votes | `/circles/:id/goals`, `/circles/:id/notes`, `/circles/:id/decisions` |
-| Group funding the circle could apply for | `GET /circles/:id/funding` |
+| ~~Group funding the circle could apply for~~ | Out of scope for now (`docs/TEAM_DECISIONS.md` D11): don't build a screen |
 
 The finance tab shows **contributions and who still owes**, never a balance. Money goes from members straight to the circle's own Paybill, Till or bank account, and the screen says so: "FounderLink records contributions. It never holds or moves your money."
 

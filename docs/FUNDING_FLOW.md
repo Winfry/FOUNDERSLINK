@@ -1,6 +1,8 @@
 # FounderLink — Funding Flow Proposal
 
 **Status:** proposal from the backend owner, for the team to confirm.
+
+> **Since 4 October:** funding comes from investors only and founders are startups only (`docs/TEAM_DECISIONS.md` D11): the grant, government-fund, bank, SACCO, SME and group-funding parts below are out of scope for now. Verification happens in levels (D12), which changes section 6.3. The current picture is `docs/PRODUCT.md`. Section 4 (the AI contract) and section 7 (build status) are still current.
 **Builds on:** `docs/TEAM_DECISIONS.md` and `docs/KENYA_AMENDMENTS.md`. Section 1 lists the points where this file would change them.
 
 We build one flow first: a founder describes her business, and we show which funders fit, which don't and why, and what she must fix before applying. Circles, messaging and deals wait until this works end to end.

@@ -3,6 +3,8 @@
 **Status:** Proposed changes to the FounderLink Product & Engineering Documentation
 **Purpose:** Fix ten gaps that make the current spec generic rather than Kenyan. Each amendment says **where** it goes in the main spec (§ numbers refer to the original document), gives **replacement or additional text** to paste in, and lists the **data/API/scope** changes it implies.
 
+> **History. For what we are building now, read `docs/PRODUCT.md`.** Status of each amendment (4 October): **dropped for now (D11):** 4 (SME journey), 6 (local funding: grants, government funds, SACCOs, AGPO), and group funding in 7. **Changed:** 8 and 9 (verification now happens in levels, D12; identity through a provider, no ID stored). **Still apply:** 1 (M-Pesa, for circle contributions only), 2 (phone first), 3 (Swahili), 5 (Kenyan compliance, for startups), 7 (circles, without group funding), 10 (experts; the business model is a pitch slide).
+>
 > **Superseded in places by `docs/TEAM_DECISIONS.md`.** In particular: the backend is **Node.js**, so "FastAPI" below refers only to the internal Python AI service (D8); everyone is vetted and approved before joining, which replaces optional verification and the "no national ID" rule in §8–9 (D7); and customers and suppliers are no longer platform participants (D1).
 
 > Regulatory details (tax thresholds, levies, county permit names) change frequently, often with each year's Finance Act. Every factual requirement below must be checked against the official source before it is used in the product or the pitch, and recorded with a "last verified" date.

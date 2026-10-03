@@ -54,7 +54,7 @@ def test_lexicon_has_no_unknown_sections():
     "text, expected",
     [
         ("Niko na biz ya mtumba Nairobi, nataka ngiri hamsini",
-         {"journey_type": "sme", "sector": "retail", "county": "Nairobi", "funding_amount_kes": 50_000}),
+         {"journey_type": "startup", "sector": "retail", "county": "Nairobi", "funding_amount_kes": 50_000}),
         ("Nina shamba ya kuku Kakamega, nahitaji laki mbili na nusu",
          {"sector": "agri", "county": "Kakamega", "funding_amount_kes": 250_000}),
         ("Nataka kuanzisha biz ya nduthi Mombasa, milioni moja",
