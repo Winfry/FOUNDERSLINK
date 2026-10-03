@@ -16,6 +16,18 @@ npm run dev                      # http://localhost:8000
 npm test                         # API tests, against the same database
 ```
 
+## API docs
+
+With the server running, Swagger UI is at `http://localhost:8000/docs` and the raw OpenAPI 3.1 document at `/openapi.json`. Neither needs a token. They cover every HTTP endpoint; the WebSocket at `/ws` is described in the document's introduction, since OpenAPI has no way to describe it.
+
+The document is built in `src/docs`, one file under `src/docs/paths` per router. How it is kept in step with the code:
+
+- Request bodies and query strings are generated from the same Zod schemas the routers parse with, so they cannot drift from validation. Rules Zod checks across fields (a `.refine`) do not survive the conversion and are written into the operation's description.
+- Responses are not validated anywhere, so their schemas are written by hand in `src/docs/schemas.ts` and the path files. When a service changes what it returns, change them too.
+- `test/openapi.test.ts` walks the routes registered on the Express app and fails if a route has no operation, if an operation has no route, or if the documented access (token, approved account) differs from the route's guards. A new route therefore fails `npm test` until it is added to the matching file in `src/docs/paths`.
+
+The tables below are the short version, kept by hand.
+
 ## Basics for every call
 
 - **Base URL:** `http://localhost:8000` locally. The frontend reads it from `API_BASE_URL` (see `.env.example`).

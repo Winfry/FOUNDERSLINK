@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
+import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
+import { openapiSpec } from "./docs/openapi.js";
 import { errorHandler } from "./middlewares/error.js";
 import { accountRouter } from "./modules/account/account.routes.js";
 import { adminRouter } from "./modules/admin/admin.routes.js";
@@ -67,6 +69,13 @@ app.use(messagingRouter);
 app.use(circlesRouter);
 app.use(expertsRouter);
 app.use(notificationsRouter);
+
+// API documentation. The spec is built from the routers' own Zod schemas
+// (src/docs), and test/openapi.test.ts fails if it misses a route.
+app.get("/openapi.json", (_req, res) => {
+  res.json(openapiSpec);
+});
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTitle: "FounderLink API" }));
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "No such endpoint" } });
