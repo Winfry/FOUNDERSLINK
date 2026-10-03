@@ -70,8 +70,11 @@ const riskSchema = z.object({
   signals: z.array(z.string()),
 });
 
-async function post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promise<T | null> {
-  if (!env.AI_SERVICE_URL) return null;
+// `useAi` is false when the person has not agreed to her details being
+// sent to the AI service. The call then never leaves the backend, and
+// the stand-in answers.
+async function post<T>(path: string, body: unknown, schema: z.ZodType<T>, useAi = true): Promise<T | null> {
+  if (!env.AI_SERVICE_URL || !useAi) return null;
 
   try {
     const res = await fetch(env.AI_SERVICE_URL + path, {
@@ -97,9 +100,10 @@ async function post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promi
 export async function extractProfile(
   text: string,
   language?: string,
+  useAi = true,
 ): Promise<Extraction & { engine: Engine }> {
   const free_text = redact(text);
-  const fields = await post("/extract-profile", { free_text, language }, extractionSchema);
+  const fields = await post("/extract-profile", { free_text, language }, extractionSchema, useAi);
   if (fields) return { fields, unsure: standin.missingCoreFields(fields), engine: "ai_service" };
   return { ...standin.extractProfile(free_text), engine: "stand_in" };
 }
@@ -107,9 +111,10 @@ export async function extractProfile(
 export async function matchFunders(
   profile: MatchProfile,
   funders: MatchFunder[],
+  useAi = true,
 ): Promise<{ results: MatchResult[]; engine: Engine }> {
   const safeProfile = { ...profile, description: redact(profile.description) };
-  const answer = await post("/recommend", { profile: safeProfile, candidates: funders }, recommendSchema);
+  const answer = await post("/recommend", { profile: safeProfile, candidates: funders }, recommendSchema, useAi);
 
   // The "not for you" list needs a verdict for every funder that was sent.
   const answered = new Set(answer?.map((r) => r.candidate_id));
@@ -131,10 +136,11 @@ export async function explainFit(
   funder: MatchFunder,
   track: TrackRecordItem[],
   language = "en",
+  useAi = true,
 ): Promise<FitExplanation & { engine: Engine }> {
   const safeProfile = { ...profile, description: redact(profile.description) };
   const body = { profile: safeProfile, candidate: funder, track_record: track, language };
-  const answer = await post("/explain-fit", body, explainSchema);
+  const answer = await post("/explain-fit", body, explainSchema, useAi);
   if (answer) return { ...answer, engine: "ai_service" };
   return { ...standin.explainFit(safeProfile, funder, track), engine: "stand_in" };
 }
@@ -155,10 +161,11 @@ export async function applicableItems(
   items: ApplicableItem[],
   scope: "business" | "deal" = "business",
   dealType: string | null = null,
+  useAi = true,
 ): Promise<{ item_ids: string[]; engine: Engine }> {
   const safeProfile = { ...profile, description: redact(profile.description) };
   const body = { profile: safeProfile, scope, deal_type: dealType, items };
-  const answer = await post("/compliance/applicable", body, applicableSchema);
+  const answer = await post("/compliance/applicable", body, applicableSchema, useAi);
 
   // Only ids we sent can come back: the AI cannot add an item of its own.
   const sent = new Set(items.map((i) => i.id));

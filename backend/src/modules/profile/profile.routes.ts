@@ -4,6 +4,7 @@ import { extractProfile } from "../../ai/client.js";
 import { requireAuth } from "../../middlewares/auth.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, forbidden } from "../../shared/errors.js";
+import { hasConsent } from "../account/consents.js";
 import { completedFor, setStatus } from "../compliance/status.js";
 import { extractableFields, profileSchema, type ProfileInput } from "./profile.schema.js";
 
@@ -42,6 +43,13 @@ profileRouter.put("/me/profile", requireAuth, async (req, res) => {
   const row = toRow(input);
   const userId = req.user!.id;
 
+  // Women-, youth- and PWD-owned are sensitive. They are stored only if
+  // she has agreed to that, and used only to check funder eligibility.
+  const givesEligibility = [row.women_owned, row.youth_owned, row.pwd_owned].some((v) => v !== null);
+  if (givesEligibility && !(await hasConsent(userId, "eligibility_attributes"))) {
+    throw new AppError(409, "CONSENT_REQUIRED", "Agree to share eligibility details before adding them");
+  }
+
   const known = await prisma.complianceItem.findMany({
     where: { id: { in: input.already_have }, scope: "business" },
     select: { id: true },
@@ -74,7 +82,8 @@ const extractSchema = z.object({
 // saved: the founder reviews the suggestions and submits PUT /me/profile.
 profileRouter.post("/me/profile/extract", requireAuth, async (req, res) => {
   const { text, language } = extractSchema.parse(req.body);
-  const { fields, unsure, engine } = await extractProfile(text, language);
+  const useAi = await hasConsent(req.user!.id, "ai_matching");
+  const { fields, unsure, engine } = await extractProfile(text, language, useAi);
 
   // Keep only fields we know, with values the profile would accept.
   const suggested: Record<string, unknown> = {};

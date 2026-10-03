@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error.js";
+import { accountRouter } from "./modules/account/account.routes.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { circlesRouter } from "./modules/circles/circles.routes.js";
 import { complianceRouter } from "./modules/compliance/compliance.routes.js";
@@ -34,6 +35,7 @@ app.get("/meta/options", (_req, res) => {
     counties: options.COUNTIES,
     eligibility_flags: options.ELIGIBILITY_FLAGS,
     signup_roles: options.SIGNUP_ROLES,
+    consent_purposes: options.CONSENT_PURPOSES,
     funder_kinds: options.FUNDER_KINDS,
     professions: options.PROFESSIONS,
     check_types: options.CHECK_TYPES,
@@ -41,6 +43,7 @@ app.get("/meta/options", (_req, res) => {
 });
 
 app.use(authRouter);
+app.use(accountRouter);
 app.use(profileRouter);
 app.use(fundingRouter);
 app.use(complianceRouter);

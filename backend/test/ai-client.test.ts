@@ -198,3 +198,18 @@ test("moderation: the AI sees the message with contact details replaced, and the
   assert.equal(fallback.engine, "stand_in");
   assert.equal(fallback.flagged, true);
 });
+
+test("without consent nothing is sent to the AI service, and the stand-in answers", async () => {
+  let calls = 0;
+  reply = () => {
+    calls += 1;
+    return { json: {} };
+  };
+  const noAi = false;
+
+  assert.equal((await client.matchFunders(profile, funders, noAi)).engine, "stand_in");
+  assert.equal((await client.extractProfile("Nina salon Mombasa, nataka 150k ya stock", "sw", noAi)).engine, "stand_in");
+  assert.equal((await client.explainFit(profile, funders[0]!, [], "en", noAi)).engine, "stand_in");
+  assert.equal((await client.applicableItems(profile, [], "business", null, noAi)).engine, "stand_in");
+  assert.equal(calls, 0);
+});

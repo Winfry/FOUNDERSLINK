@@ -77,6 +77,7 @@ model User {
   circle_payments      PaymentRecord[]
   circle_notes         CircleNote[]
   circle_votes         CircleVote[]
+  consents             Consent[]
 
   @@map("users")
 }
@@ -707,4 +708,20 @@ model CircleVote {
 
   @@unique([decision_id, user_id])
   @@map("circle_votes")
+}
+
+// What a person has agreed to, purpose by purpose (Data Protection Act
+// 2019, KENYA_AMENDMENTS 9). Nothing is assumed: no row means no consent.
+model Consent {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  user_id      String    @db.Uuid
+  purpose      String
+  granted      Boolean
+  granted_at   DateTime?
+  withdrawn_at DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, purpose])
+  @@map("consents")
 }

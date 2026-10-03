@@ -31,6 +31,24 @@ npm test                         # API tests, against the same database
 | GET | `/funders` | yes | All funder records |
 | GET | `/funding/matches` | yes | The founder's funders in three groups: `apply_now`, `apply_after`, `not_for_you` |
 
+### Consent and her own data
+
+None of these need approval.
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/me/consents` | Every purpose, with whether and when she agreed |
+| POST | `/me/consents` | `{ purpose, granted }`. Purposes: `profile_visibility`, `ai_matching`, `eligibility_attributes`, `contact` |
+| GET | `/me/export` | Everything held about her, as a JSON file |
+| DELETE | `/me` | `{ password }`. Deletes the account. Refused while she organises a circle with other members or has a deal in progress |
+
+Nothing is agreed by default, so the onboarding screens need to ask. What each consent switches on:
+
+- `profile_visibility`: she appears in other members' matches and her profile page can be opened. Without it both return as if she were not there.
+- `ai_matching`: her business details may be sent to the AI service. Without it the backend's own rules answer, and responses say `engine: "stand_in"`.
+- `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Without it, sending one returns `409` with code `CONSENT_REQUIRED`. Withdrawing it clears them.
+- `contact`: recorded for SMS and WhatsApp, which are not built yet.
+
 ### Investors, experts and profiles
 
 | Method | Path | Who | What it does |

@@ -10,6 +10,7 @@ import { answerCompliance, applicableItems } from "../../ai/client.js";
 import type { ComplianceItem } from "../../generated/prisma/client.js";
 import { prisma } from "../../shared/db.js";
 import { conflict, notFound } from "../../shared/errors.js";
+import { hasConsent } from "../account/consents.js";
 import { toMatchProfile } from "../funding/funding.service.js";
 import { setStatus } from "./status.js";
 
@@ -70,7 +71,8 @@ export async function getChecklist(userId: string) {
     prisma.complianceStatus.findMany({ where: { entity_type: "business", entity_id: userId } }),
   ]);
 
-  const { item_ids, engine } = await applicableItems(toMatchProfile(profile), items);
+  const useAi = await hasConsent(userId, "ai_matching");
+  const { item_ids, engine } = await applicableItems(toMatchProfile(profile), items, "business", null, useAi);
   const applies = new Set(item_ids);
   const statusOf = new Map(statuses.map((s) => [s.item_id, s]));
 
@@ -174,7 +176,9 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
   const result = await answerCompliance(
     input.question,
     input.language,
-    profile && toMatchProfile(profile),
+    // Without her consent the question is still answered, but her
+    // business details are not sent along with it.
+    profile && (await hasConsent(userId, "ai_matching")) ? toMatchProfile(profile) : null,
     items.map((i) => ({ ...i, needs_review: needsReview(i) })),
   );
 

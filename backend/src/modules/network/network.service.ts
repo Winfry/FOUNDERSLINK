@@ -4,6 +4,7 @@
 
 import { explainFit, matchFunders } from "../../ai/client.js";
 import { prisma } from "../../shared/db.js";
+import { consented, hasConsent } from "../account/consents.js";
 import { completedItemIds } from "../compliance/status.js";
 import { conflict, notFound } from "../../shared/errors.js";
 import { listComplianceItems, toMatchFunder, toMatchProfile } from "../funding/funding.service.js";
@@ -29,7 +30,7 @@ export async function getInvestorMatches(userId: string) {
   const { approved, funder } = await mandateOf(userId);
   if (!funder) throw conflict("FUNDER_REQUIRED", "Describe what you fund to see matching businesses");
 
-  const [founders, itemRows] = await Promise.all([
+  const [approvedFounders, itemRows] = await Promise.all([
     // Matching only ever returns approved members.
     prisma.founderProfile.findMany({
       where: { user: { approval_status: "approved", role: "founder" } },
@@ -37,13 +38,18 @@ export async function getInvestorMatches(userId: string) {
     }),
     listComplianceItems(),
   ]);
+  // And only founders who have agreed to be seen by other members.
+  const founderIds = approvedFounders.map((p) => p.user_id);
+  const visible = await consented(founderIds, "profile_visibility");
+  const allowAi = await consented(founderIds, "ai_matching");
+  const founders = approvedFounders.filter((p) => visible.has(p.user_id));
   const items = new Map(itemRows.map((i) => [i.id, i]));
   const completed = await completedItemIds(founders.map((p) => p.user_id));
   const candidate = toMatchFunder(funder);
 
   const assessed = await Promise.all(
     founders.map(async (profile) => {
-      const { results } = await matchFunders(toMatchProfile(profile), [candidate]);
+      const { results } = await matchFunders(toMatchProfile(profile), [candidate], allowAi.has(profile.user_id));
       const match = results[0]!;
       const already_have = completed.get(profile.user_id)!;
       return { profile, match, readiness: assessReadiness({ ...profile, already_have }, funder, items, match) };
@@ -109,6 +115,9 @@ export async function getProfile(viewerId: string, targetId: string) {
   if (!target || target.approval_status !== "approved" || target.role === "admin") {
     throw notFound("No such member");
   }
+  // The same answer for someone who has not agreed to be seen, so the
+  // response does not reveal that she is here.
+  if (!(await hasConsent(targetId, "profile_visibility"))) throw notFound("No such member");
 
   const connection = await connectionBetween(viewerId, targetId);
   const base = {
@@ -131,6 +140,8 @@ export async function getProfile(viewerId: string, targetId: string) {
             target.portfolio
               .filter((e) => e.visibility === "public")
               .map((e) => ({ sector: e.sector, stage: e.stage, source: e.source })),
+            "en",
+            await hasConsent(viewerId, "ai_matching"),
           )
         : null;
 
