@@ -6,7 +6,7 @@ import { prisma } from "../../shared/db.js";
 import { AppError, forbidden } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
 import { completedFor, setStatus } from "../compliance/status.js";
-import { extractableFields, profileSchema, type ProfileInput } from "./profile.schema.js";
+import { extractableFields, profileCompleteness, profileSchema, type ProfileInput } from "./profile.schema.js";
 
 export const profileRouter = Router();
 
@@ -22,6 +22,9 @@ function toRow(input: ProfileInput) {
     county: input.county,
     funding_amount_kes: input.funding_amount_kes ?? null,
     use_of_funds: input.use_of_funds ?? null,
+    year_started: input.year_started ?? null,
+    website: input.website ?? null,
+    social_links: input.social_links,
     stage: isStartup ? input.stage : null,
     instruments: isStartup ? input.instruments : [],
     months_trading: isStartup ? null : input.months_trading,
@@ -70,7 +73,7 @@ profileRouter.put("/me/profile", requireAuth, async (req, res) => {
   // nothing: progress is undone on the checklist, not by re-saving this form.
   for (const itemId of input.already_have) await setStatus(userId, itemId, "complete");
 
-  res.json({ ...profile, already_have: await completedFor(userId) });
+  res.json({ ...profile, already_have: await completedFor(userId), profile_completeness: profileCompleteness(profile) });
 });
 
 const extractSchema = z.object({

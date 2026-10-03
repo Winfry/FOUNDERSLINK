@@ -81,3 +81,28 @@ export const CHECK_METHODS = [
 //   eligibility_attributes  she may record women-, youth- or PWD-owned, to check funder eligibility
 //   contact                 she may be contacted by SMS or WhatsApp
 export const CONSENT_PURPOSES = ["profile_visibility", "ai_matching", "eligibility_attributes", "contact"] as const;
+
+// How each value reads on a screen. Anything not listed here is shown
+// with its underscores turned into spaces and a capital first letter.
+const LABELS: Record<string, string> = {
+  agri: "Agriculture",
+  mvp: "MVP",
+  sme: "Small business",
+  vc: "Venture capital fund",
+  sacco: "SACCO",
+  angel: "Angel investor",
+  bank: "Bank product",
+  under_50k: "Under KSh 50,000",
+  "50k_to_200k": "KSh 50,000 to 200,000",
+  "200k_to_1m": "KSh 200,000 to 1 million",
+  over_1m: "Over KSh 1 million",
+  registered_business_name: "Registered business name",
+  pwd_owned: "Owned by a person with a disability",
+  ai_matching: "AI matching",
+};
+
+export const labelled = (values: readonly string[]) =>
+  values.map((id) => {
+    const words = id.replaceAll("_", " ");
+    return { id, label: LABELS[id] ?? words.charAt(0).toUpperCase() + words.slice(1) };
+  });

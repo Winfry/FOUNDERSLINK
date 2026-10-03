@@ -156,9 +156,13 @@ There is no admin withdrawals or transactions screen: no money passes through Fo
 | Method | Path | Auth | What it does |
 |---|---|---|---|
 | GET | `/health` | no | Liveness check |
-| GET | `/meta/options` | no | Option lists for the onboarding form (sectors, stages and so on) |
+| GET | `/meta/options` | no | Option lists for forms (sectors, stages and so on), each also under `labels` as `{ id, label }` pairs |
 | POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, user }`. `role` is `founder` (default), `investor` or `expert` |
 | POST | `/auth/login` | no | `{ email, password }` → `{ token, user }` |
+| POST | `/auth/email/code` | yes | Sends a new code to her address |
+| POST | `/auth/email/verify` | yes | `{ code }`. Sign-up already sent the first code |
+| POST | `/auth/password/forgot` | no | `{ email }`. The same answer whether or not the address has an account |
+| POST | `/auth/password/reset` | no | `{ email, code, new_password }` |
 | GET | `/me` | yes | The signed-in user: `role`, `approval_status`, phone and settings, and her `founder_profile`, `investor_profile`, `expert_profile` or `funder` (null until filled in) |
 | PUT | `/me/profile` | yes | Saves the onboarding answers. Fields are in `docs/FUNDING_FLOW.md` section 3 |
 | POST | `/me/profile/extract` | yes | `{ text, language? }` → suggested onboarding fields from a typed description. Saves nothing |
@@ -203,7 +207,7 @@ An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GE
 |---|---|---|---|
 | PUT | `/me/investor-profile` | investor | The person and her organisation |
 | PUT | `/me/funder` | investor | What she funds. Creates or updates the funder record she maintains |
-| GET | `/investor/matches` | investor | Founders that fit her record. A count only until she is approved |
+| GET | `/investor/matches` | investor | `?search=&sector=&stage=&county=&sort=`. Founders that fit her record, each with `match_reasons`. A count only until she is approved |
 | POST | `/me/portfolio` | investor | Adds a past investment. With `source_url` it is a public source, without it self-reported |
 | PATCH | `/me/portfolio/:id` | investor | Edits an entry or its visibility |
 | PUT | `/me/expert-profile` | expert | Profession, register and bio |
@@ -231,9 +235,10 @@ All of these need an approved account. Inside a deal, the caller must also be on
 
 | Method | Path | What it does |
 |---|---|---|
-| POST | `/connections` | `{ user_id, message? }`. Asks another approved member to connect |
+| POST | `/connections` | `{ user_id, message?, pitch?, vision?, offer?, proposed_amount_kes? }`. Asks another approved member to connect |
 | GET | `/connections` | Mine, sent and received |
-| PATCH | `/connections/:id` | `{ status: accepted / declined }`. Only the person who was asked |
+| PATCH | `/connections/:id` | `{ status: accepted / declined, reason? }`. Only the person who was asked |
+| DELETE | `/connections/:id` | Withdraws an unanswered request. Only the person who asked |
 | POST | `/deals` | `{ type, title, with_user_id, source_funder_id? }`. Needs an accepted connection or a shared circle. `type`: `cofounder_partnership`, `investment`, `expert_engagement`, `joint_venture` |
 | GET | `/deals`, `/deals/:id` | My deals; one deal with parties, terms, milestones and any pending move |
 | POST | `/deals/:id/parties` | `{ user_id }`. Brings in someone the caller is connected with |
@@ -340,20 +345,40 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | Method | Path | Who | What it does |
 |---|---|---|---|
 | GET | `/vetting/application` | any user | Her application and approval status |
-| PATCH | `/vetting/application` | any user | `{ phone?, organisation_name?, organisation_website?, statement?, references?, claims_funder_id? }`. Locked once submitted. No ID number or document is taken |
+| PATCH | `/vetting/application` | any user | `{ phone?, organisation_name?, organisation_website?, statement?, references?, claims_funder_id? }`. Locked once submitted. No ID number or ID document is ever taken; business documents are uploaded with the endpoint below |
 | POST | `/vetting/application/submit` | any user | Submits it and scores it for risk |
+| POST | `/vetting/application/documents` | any user | `multipart/form-data` with `file` and `type`. PDF, JPEG or PNG, up to 5 MB. Before she submits |
+| DELETE | `/vetting/application/documents/:id` | its owner | Before she submits |
+| GET | `/admin/vetting/documents/:id/file` | admin | Downloads the file |
+| PATCH | `/admin/vetting/documents/:id` | admin | `{ status: verified / rejected, reason }` |
+| POST | `/admin/jobs/purge-documents` | admin | Deletes files past their 30 days now. It also runs hourly |
 | GET | `/admin/vetting/queue` | admin | Waiting applications, riskiest first |
 | GET | `/admin/vetting/:id` | admin | One application with the person's profiles |
 | POST | `/admin/vetting/:id/decision` | admin | `{ decision: approve / reject / needs_info, reason, checks? }` |
 | GET | `/admin/vetting/rechecks` | admin | Approved members due to be looked at again, with why |
 | POST | `/admin/vetting/:id/recheck` | admin | `{ outcome: confirm / suspend, reason }` |
+| GET | `/admin/vetting/applications` | admin | `?role=&status=&page=`. Every application, decided ones included |
+| GET | `/admin/users` | admin | `?role=&status=&search=&page=&page_size=`. Members, a page at a time |
+| GET | `/admin/users/:id` | admin | One member: profiles, application, reports against her, and her history |
+| GET | `/admin/stats` | admin | The dashboard's numbers, with sign-ups for the last six months |
+| GET, POST | `/admin/admins` | admin | Lists admin accounts, or creates one with `{ email, full_name, password }` |
 | POST | `/admin/users/:id/suspend` | admin | `{ reason }` |
 | POST | `/admin/users/:id/reinstate` | admin | `{ reason }` |
 | GET | `/admin/actions` | admin | The audit log |
 
 Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
 
-A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3. Auth and errors are described in "Basics for every call" at the top.
+Uploaded files are kept on the server's disk under `UPLOAD_DIR` (default `./uploads`), under a name the backend chooses. They are **not encrypted**, and a real deployment needs proper file storage. Each file is deleted 30 days after the decision on its application; the record of the review stays.
+
+A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
+
+**Two-step sign-in for admins.** An admin turns it on with `POST /auth/2fa/setup` (returns a secret and an `otpauth://` link for her authenticator app) and `POST /auth/2fa/enable` with `{ code }`. After that, `POST /auth/login` answers `{ two_factor_required, pending_token }`, and `POST /auth/2fa/verify` with `{ pending_token, code }` returns the session. Set `ADMIN_2FA_REQUIRED=true` to make the admin pages refuse any session that was not signed into this way.
+
+**Email** goes through Resend, with `RESEND_API_KEY`. Until a sending domain is verified with Resend, it delivers only to the address that owns the Resend account; other addresses fail. When an email cannot be sent, the response carries `dev_code` outside production, so the flow can still be shown. `EMAIL_FROM` sets the sender.
+
+Send the token as `Authorization: Bearer <token>`.
+
+Errors always look like `{ "error": { "code", "message" } }`. Validation errors also carry `fields: [{ path, message }]`.
 
 ## Funding matches
 

@@ -22,6 +22,9 @@ const common = z.object({
   county: z.enum(COUNTIES),
   funding_amount_kes: fundingAmount.nullish(),
   use_of_funds: useOfFunds.optional(),
+  year_started: z.number().int().min(1950).max(new Date().getFullYear()).nullish(),
+  website: z.url().nullish(),
+  social_links: z.array(z.url()).max(5).default([]),
   // Things she already has, ticked during onboarding. Each one is saved
   // as a completed item on her compliance checklist.
   already_have: z.array(z.string().max(60)).max(30).default([]),
@@ -67,3 +70,17 @@ export const extractableFields: Record<string, z.ZodType> = {
   has_employees: z.boolean(),
   handles_personal_data: z.boolean(),
 };
+
+// How much of her profile is filled in, as a whole percentage. It counts
+// the fields that make her matches and her profile page better, and only
+// the ones that apply to her path.
+export function profileCompleteness(p: Record<string, unknown>): number {
+  const common = ["business_name", "description", "funding_amount_kes", "use_of_funds", "year_started", "website", "has_employees", "handles_personal_data"];
+  const path = p.journey_type === "startup" ? ["stage", "instruments"] : ["months_trading", "monthly_revenue_band"];
+  const fields = [...common, ...path];
+  const filled = fields.filter((f) => {
+    const value = p[f];
+    return value !== null && value !== undefined && value !== "" && !(Array.isArray(value) && value.length === 0);
+  });
+  return Math.round((filled.length / fields.length) * 100);
+}

@@ -9,7 +9,9 @@ import { env } from "../../config/env.js";
 import { CHECK_METHODS, CHECK_TYPES } from "../../shared/constants.js";
 import { disconnect } from "../../realtime.js";
 import { notify } from "../notifications/notifications.service.js";
+import { listDocuments, scheduleDeletion } from "./documents.js";
 import { prisma } from "../../shared/db.js";
+import { sendEmail } from "../../shared/email.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 
 export const applicationSchema = z.object({
@@ -59,6 +61,7 @@ export async function getApplication(userId: string) {
   return {
     approval_status: user.approval_status,
     application,
+    documents: application ? await listDocuments(application.id) : [],
     identity_check: "For this demo, identity is reviewed by an admin by hand. No ID number or document is stored.",
   };
 }
@@ -94,6 +97,10 @@ export async function submitApplication(userId: string) {
   });
   if (!EDITABLE.includes(user.approval_status)) {
     throw conflict("APPLICATION_LOCKED", "Your application has already been submitted");
+  }
+  // The decision is sent to this address, so it has to be hers.
+  if (!user.email_verified_at) {
+    throw conflict("EMAIL_NOT_VERIFIED", "Verify your email address before submitting your application");
   }
   const application = user.vetting_application;
   if (!application?.statement || !application.phone) {
@@ -181,7 +188,7 @@ export async function getApplicationForReview(applicationId: string) {
       })
     : null;
 
-  return { ...application, claims_funder: claims };
+  return { ...application, claims_funder: claims, documents: await listDocuments(application.id) };
 }
 
 const STATUS_AFTER = { approve: "approved", reject: "rejected", needs_info: "needs_info" } as const;
@@ -257,6 +264,9 @@ export async function decide(adminId: string, applicationId: string, input: z.in
     }
   });
 
+  // A final decision starts the 30 days after which the files are deleted.
+  if (input.decision !== "needs_info") await scheduleDeletion(applicationId);
+
   const OUTCOME = {
     approve: ["You are approved", "You can now see and connect with other members."],
     reject: ["Your application was not approved", input.reason],
@@ -264,6 +274,10 @@ export async function decide(adminId: string, applicationId: string, input: z.in
   } as const;
   const [title, body] = OUTCOME[input.decision];
   await notify(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
+
+  // Also by email: someone who is waiting may not have the app open.
+  const applicantUser = await prisma.user.findUnique({ where: { id: application.user_id }, select: { email: true } });
+  if (applicantUser) await sendEmail(applicantUser.email, `FounderLink: ${title}`, body);
 
   return { application_id: applicationId, approval_status: status };
 }

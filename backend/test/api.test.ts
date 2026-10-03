@@ -54,6 +54,9 @@ test("register returns a token and never the password hash", async () => {
   assert.ok(res.json.token);
   assert.equal(res.json.user.role, "founder");
   assert.equal(res.json.user.password_hash, undefined);
+  // The session lasts a week, and the response says when it ends.
+  const days = (res.json.expires_at - Date.now()) / (24 * 60 * 60 * 1000);
+  assert.ok(days > 6.9 && days <= 7);
   token = res.json.token;
 });
 
@@ -127,6 +130,14 @@ test("startup profile saves and shows on /me", async () => {
   assert.equal(saved.status, 200);
   assert.equal(saved.json.stage, "mvp");
   assert.equal(saved.json.women_owned, null);
+  // 4 of the 10 fields that count are filled in: description, amount, stage and instruments.
+  assert.equal(saved.json.profile_completeness, 40);
+
+  const fuller = await call("PUT", "/me/profile", { ...startupProfile, business_name: "Afya Booking", use_of_funds: "Hire two engineers", year_started: 2024, website: "https://afya.example.com", social_links: ["https://x.com/afya"], has_employees: true, handles_personal_data: true }, token);
+  assert.equal(fuller.json.profile_completeness, 100);
+  assert.equal(fuller.json.year_started, 2024);
+  assert.equal((await call("PUT", "/me/profile", { ...startupProfile, website: "not a link" }, token)).status, 400);
+  await call("PUT", "/me/profile", startupProfile, token);
 
   const me = await call("GET", "/me", undefined, token);
   assert.equal(me.json.founder_profile.sector, "health");
@@ -243,5 +254,11 @@ test("compliance items are public", async () => {
 test("options and unknown routes", async () => {
   const options = await call("GET", "/meta/options");
   assert.ok(options.json.sectors.includes("health"));
+  // Every list also comes with labels to show.
+  assert.deepEqual(options.json.labels.sectors.slice(0, 2), [
+    { id: "health", label: "Health" },
+    { id: "agri", label: "Agriculture" },
+  ]);
+  assert.deepEqual(options.json.labels.business_statuses[2], { id: "registered_business_name", label: "Registered business name" });
   assert.equal((await call("GET", "/nope")).status, 404);
 });

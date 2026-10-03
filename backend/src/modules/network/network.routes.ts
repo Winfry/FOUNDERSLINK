@@ -6,7 +6,7 @@ import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { mandateSchema } from "../funding/funder.schema.js";
 import { flagForRecheck } from "../vetting/vetting.service.js";
-import { getInvestorMatches, getProfile } from "./network.service.js";
+import { discoverSchema, getInvestorMatches, getProfile } from "./network.service.js";
 import { portfolioPatchSchema, portfolioSchema, sourceOf, ventureSchema } from "./track-record.js";
 
 export const networkRouter = Router();
@@ -83,7 +83,7 @@ networkRouter.put("/me/funder", requireAuth, isInvestor, async (req, res) => {
 });
 
 networkRouter.get("/investor/matches", requireAuth, isInvestor, async (req, res) => {
-  res.json(await getInvestorMatches(req.user!.id));
+  res.json(await getInvestorMatches(req.user!.id, discoverSchema.parse(req.query)));
 });
 
 networkRouter.post("/me/portfolio", requireAuth, isInvestor, async (req, res) => {
