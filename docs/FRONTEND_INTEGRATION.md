@@ -323,7 +323,7 @@ For screen 1, show the label on every funder that has `is_demo: true` or a `risk
 | Update a member's status | `POST /admin/users/:id/suspend` and `/reinstate`, each with `{ reason }` | Ready |
 | Audit log | `GET /admin/actions` | Ready |
 | Reports | `GET /admin/reports` → `{ messages, members }` | Ready |
-| Admin users | List and create | Coming |
+| Admin users | `GET /admin/admins` lists them. `POST /admin/admins` with `{ email, full_name, password }` creates one. The password needs 12 or more characters | Ready |
 | Dashboard numbers and charts | `GET /admin/stats`: members by role and status, applications waiting, re-checks due, reports, deals by stage, circles, and `registrations` for the last six months. There are no transaction volumes: the backend records no money moving | Ready |
 | Groups, withdrawals, transactions | | Blocked, section 9 |
 

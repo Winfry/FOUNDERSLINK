@@ -149,3 +149,30 @@ test("the dashboard numbers add up", async () => {
   assert.equal(thisMonth.month, new Date().toISOString().slice(0, 7));
   assert.ok(thisMonth.founders >= 2 && thisMonth.investors >= 1);
 });
+
+test("an admin can list admins and make another, and that is logged", async () => {
+  const email = `adm-new-${run}@example.com`;
+  ids.newAdmin = "";
+
+  assert.equal((await call("POST", "/admin/admins", "otieno", { email, full_name: "Sneaky", password: "a-long-enough-password" })).status, 403);
+  assert.equal((await call("POST", "/admin/admins", "admin", { email, full_name: "New Admin", password: "short" })).status, 400);
+
+  const made = await call("POST", "/admin/admins", "admin", { email, full_name: `${tag} New Admin`, password: "a-long-enough-password" });
+  assert.equal(made.status, 201);
+  assert.equal(made.json.totp_enabled, false);
+  ids.newAdmin = made.json.id;
+  assert.equal((await call("POST", "/admin/admins", "admin", { email, full_name: "Again", password: "a-long-enough-password" })).status, 409);
+
+  // The new admin can sign in and use the admin pages.
+  const login = await call("POST", "/auth/login", undefined, { email, password: "a-long-enough-password" });
+  tokens.newAdmin = login.json.token;
+  assert.equal((await call("GET", "/admin/stats", "newAdmin" as Who)).status, 200);
+
+  const admins = (await call("GET", "/admin/admins", "admin")).json;
+  assert.ok(admins.some((a: any) => a.id === made.json.id));
+  assert.ok(!JSON.stringify(admins).includes("password_hash"));
+
+  const log = (await call("GET", "/admin/actions", "admin")).json.find((a: any) => a.target.id === made.json.id);
+  assert.equal(log.action, "create_admin");
+  assert.equal(log.admin.full_name, `${tag} Admin`);
+});

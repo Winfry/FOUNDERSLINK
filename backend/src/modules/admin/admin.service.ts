@@ -5,9 +5,10 @@
 // Admins see members' contact details, because checking them is their
 // job. Password hashes and two-step secrets are never returned.
 
+import bcrypt from "bcrypt";
 import { z } from "zod";
 import { prisma } from "../../shared/db.js";
-import { notFound } from "../../shared/errors.js";
+import { conflict, notFound } from "../../shared/errors.js";
 
 const STATUSES = ["draft", "submitted", "in_review", "needs_info", "approved", "rejected", "suspended", "banned"] as const;
 
@@ -209,4 +210,42 @@ export async function getStats(now = new Date()) {
     circles: { total: circles.reduce((t, c) => t + c._count, 0), by_type: count(circles, "type") },
     registrations,
   };
+}
+
+// --- Admin accounts ---
+
+export const newAdminSchema = z.object({
+  email: z.email().toLowerCase(),
+  full_name: z.string().trim().min(2),
+  password: z.string().min(12, "Use at least 12 characters for an admin"),
+});
+
+const adminFields = { id: true, full_name: true, email: true, totp_enabled: true, approval_status: true, created_at: true } as const;
+
+export function listAdmins() {
+  return prisma.user.findMany({ where: { role: "admin" }, select: adminFields, orderBy: { created_at: "asc" } });
+}
+
+// An admin makes another admin. It is the only way to become one from
+// inside the app, and it is written to the audit log with who did it.
+export async function createAdmin(byAdminId: string, input: z.infer<typeof newAdminSchema>) {
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) throw conflict("EMAIL_TAKEN", "An account with this email already exists");
+
+  return prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        email: input.email,
+        full_name: input.full_name,
+        role: "admin",
+        approval_status: "approved",
+        password_hash: await bcrypt.hash(input.password, 10),
+      },
+      select: adminFields,
+    });
+    await tx.adminAction.create({
+      data: { admin_id: byAdminId, action: "create_admin", target_user_id: created.id, reason: `Created admin account for ${input.full_name}` },
+    });
+    return created;
+  });
 }

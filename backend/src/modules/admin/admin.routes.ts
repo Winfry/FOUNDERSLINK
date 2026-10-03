@@ -1,7 +1,17 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../../middlewares/auth.js";
-import { applicationsQuery, getStats, getUser, listApplications, listUsers, usersQuery } from "./admin.service.js";
+import {
+  applicationsQuery,
+  createAdmin,
+  getStats,
+  getUser,
+  listAdmins,
+  listApplications,
+  listUsers,
+  newAdminSchema,
+  usersQuery,
+} from "./admin.service.js";
 
 export const adminRouter = Router();
 
@@ -22,4 +32,12 @@ adminRouter.get("/admin/users/:id", ...admin, async (req, res) => {
 
 adminRouter.get("/admin/vetting/applications", ...admin, async (req, res) => {
   res.json(await listApplications(applicationsQuery.parse(req.query)));
+});
+
+adminRouter.get("/admin/admins", ...admin, async (_req, res) => {
+  res.json(await listAdmins());
+});
+
+adminRouter.post("/admin/admins", ...admin, async (req, res) => {
+  res.status(201).json(await createAdmin(req.user!.id, newAdminSchema.parse(req.body)));
 });

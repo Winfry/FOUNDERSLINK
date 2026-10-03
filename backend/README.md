@@ -221,6 +221,7 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 | GET | `/admin/users` | admin | `?role=&status=&search=&page=&page_size=`. Members, a page at a time |
 | GET | `/admin/users/:id` | admin | One member: profiles, application, reports against her, and her history |
 | GET | `/admin/stats` | admin | The dashboard's numbers, with sign-ups for the last six months |
+| GET, POST | `/admin/admins` | admin | Lists admin accounts, or creates one with `{ email, full_name, password }` |
 | POST | `/admin/users/:id/suspend` | admin | `{ reason }` |
 | POST | `/admin/users/:id/reinstate` | admin | `{ reason }` |
 | GET | `/admin/actions` | admin | The audit log |
