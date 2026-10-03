@@ -3,6 +3,8 @@
 **Status:** Proposed changes to the FounderLink Product & Engineering Documentation
 **Purpose:** Fix ten gaps that make the current spec generic rather than Kenyan. Each amendment says **where** it goes in the main spec (§ numbers refer to the original document), gives **replacement or additional text** to paste in, and lists the **data/API/scope** changes it implies.
 
+> **Superseded in places by `docs/TEAM_DECISIONS.md`.** In particular: the backend is **Node.js**, so "FastAPI" below refers only to the internal Python AI service (D8); everyone is vetted and approved before joining, which replaces optional verification and the "no national ID" rule in §8–9 (D7); and customers and suppliers are no longer platform participants (D1).
+
 > Regulatory details (tax thresholds, levies, county permit names) change frequently, often with each year's Finance Act. Every factual requirement below must be checked against the official source before it is used in the product or the pitch, and recorded with a "last verified" date.
 
 ---

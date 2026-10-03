@@ -6,8 +6,8 @@ FounderLink is an AI-powered ecosystem for early-stage and under-networked Afric
 | Folder | What lives here | Owner |
 |---|---|---|
 | `frontend/` | Web/mobile app (stack to be confirmed) | Full-stack 1 |
-| `backend/` | FastAPI API, database models, WebSocket messaging, deals | Full-stack 2 |
-| `ai/` | Profile extraction, matching, ranking, explanations, compliance RAG, scam detection, evaluation | AI/ML 1 and 2 |
+| `backend/` | **Node.js** API, database, auth, vetting and admin approval, real-time messaging, deals | Full-stack 2 |
+| `ai/` | Internal Python AI service (`ai/service`): matching, explanations, compliance RAG, scam detection, vetting risk signals, evaluation | AI/ML 1 and 2 |
 | `data/` | Seed profiles, opportunities, compliance sources (national, county, deal) | AI/ML 1 and 2 |
 | `scripts/` | Seeding, compliance ingestion, embedding builds | Shared |
 | `docs/` | Spec, Kenya amendments, team decisions | Shared |
