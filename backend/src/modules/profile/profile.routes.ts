@@ -43,7 +43,7 @@ profileRouter.put("/me/profile", requireAuth, async (req, res) => {
   const userId = req.user!.id;
 
   const known = await prisma.complianceItem.findMany({
-    where: { id: { in: input.already_have } },
+    where: { id: { in: input.already_have }, scope: "business" },
     select: { id: true },
   });
   const knownIds = new Set(known.map((i) => i.id));

@@ -1,6 +1,6 @@
 # FounderLink backend
 
-Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting and profile pages. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
+Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections and deals. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
 ## Run it
 
@@ -58,6 +58,31 @@ npm test                         # API tests, against the same database
 | GET | `/admin/compliance/sources` | admin | How fresh each item is, with the ones needing attention first |
 
 An item marked complete counts as something the founder already has, so it closes the matching gap in `/funding/matches`.
+
+### Connections and deals
+
+All of these need an approved account. Inside a deal, the caller must also be one of its parties; to anyone else the deal returns `404`.
+
+| Method | Path | What it does |
+|---|---|---|
+| POST | `/connections` | `{ user_id, message? }`. Asks another approved member to connect |
+| GET | `/connections` | Mine, sent and received |
+| PATCH | `/connections/:id` | `{ status: accepted / declined }`. Only the person who was asked |
+| POST | `/deals` | `{ type, title, with_user_id }`. Needs an accepted connection |
+| GET | `/deals`, `/deals/:id` | My deals; one deal with parties, terms, milestones and any pending move |
+| POST | `/deals/:id/parties` | `{ user_id }`. Brings in someone the caller is connected with |
+| POST | `/deals/:id/stage` | `{ to_stage, note? }`. Moves one stage forward, or proposes it when every party must agree |
+| POST | `/deals/:id/stage/confirm` | Confirms a proposed move |
+| POST | `/deals/:id/status` | `{ status: paused / open / declined, reason }` |
+| PATCH | `/deals/:id/terms` | `{ amount_kes?, instrument?, equity_percent?, roles?, notes? }`. Locked once terms are agreed |
+| GET | `/deals/:id/timeline` | Every change, oldest first, with a ready-made sentence in `text` |
+| POST | `/deals/:id/milestones` | `{ title, due_date? }` |
+| PATCH | `/deals/:id/milestones/:mid` | `{ title?, due_date?, status? }` |
+| GET | `/deals/:id/compliance` | The checklist for this deal type |
+| PATCH | `/deals/:id/compliance/:item_id` | `{ status, note? }` |
+| PATCH | `/deals/:id/sharing` | `{ share }`. Whether this party lets the closed deal show on track records |
+
+Stages run `exploring` → `due_diligence` → `terms_agreed` → `documents_compliance` → `closed` → `active`. Moving to `terms_agreed` or `closed` needs every party: the first call to `/stage` proposes it, and the deal's `pending.waiting_for` lists who has yet to confirm.
 
 ### Vetting
 
