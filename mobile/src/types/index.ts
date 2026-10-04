@@ -255,6 +255,11 @@ export interface VettingApplication {
   organisationName?: string;
   organisationWebsite?: string;
   decisionReason?: string | null;
+  /** Whether her email and her phone have been confirmed by code. */
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  /** The number on her account, confirmed or not. */
+  accountPhone?: string;
 }
 
 export interface ConsentRecord {

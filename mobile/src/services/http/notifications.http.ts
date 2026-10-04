@@ -1,5 +1,5 @@
 import type { NotificationService } from '../types/api';
-import { get, post } from './client';
+import { currentUserRole, get, post } from './client';
 
 interface ApiNotification {
   id: string;
@@ -12,13 +12,13 @@ interface ApiNotification {
 
 // The backend names the thing a notification is about. These are the
 // screens the app has for each.
-function screenFor(link: string | null): string | undefined {
+function screenFor(link: string | null, investor: boolean): string | undefined {
   if (!link) return undefined;
   const deal = link.match(/^\/deals\/([^/]+)/);
   if (deal) return `/deal/${deal[1]}`;
-  if (link.startsWith('/connections')) return '/(founder)/(tabs)/connections';
+  if (link.startsWith('/connections')) return investor ? '/(investor)/(tabs)/requests' : '/(founder)/(tabs)/connections';
   if (link.startsWith('/vetting')) return '/founder/verify/status';
-  if (link.startsWith('/compliance')) return '/(founder)/(tabs)/readiness';
+  if (link.startsWith('/compliance')) return investor ? undefined : '/(founder)/(tabs)/readiness';
   if (link.startsWith('/conversations')) return '/conversations';
   // Anything the app has no screen for is shown without a link.
   return undefined;
@@ -26,7 +26,11 @@ function screenFor(link: string | null): string | undefined {
 
 export const httpNotificationService: NotificationService = {
   async list() {
-    const answer = await get<{ unread_count: number; notifications: ApiNotification[] }>('/notifications');
+    const [answer, role] = await Promise.all([
+      get<{ unread_count: number; notifications: ApiNotification[] }>('/notifications'),
+      currentUserRole(),
+    ]);
+    const investor = role === 'investor';
     return {
       unreadCount: answer.unread_count,
       notifications: answer.notifications.map((n) => ({
@@ -35,7 +39,7 @@ export const httpNotificationService: NotificationService = {
         body: n.body,
         read: n.read_at !== null,
         createdAt: n.created_at,
-        link: screenFor(n.link),
+        link: screenFor(n.link, investor),
       })),
     };
   },

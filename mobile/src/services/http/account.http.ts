@@ -2,7 +2,7 @@
  * Account settings that live on the backend: her language, how she is
  * told about things, and deleting her account.
  */
-import { API_URL, currentToken, patch } from './client';
+import { API_URL, currentToken, patch, post } from './client';
 import type { ApiError } from '../../types';
 
 export interface AccountPreferences {
@@ -37,4 +37,9 @@ export async function deleteAccount(password: string, reason?: string): Promise<
     code: json?.error?.code ?? 'UNKNOWN_ERROR',
     message: json?.error?.message ?? 'Could not delete your account. Try again.',
   } satisfies ApiError;
+}
+
+/** Tells FoundersLink's staff about a member. It appears on their Reports page. */
+export async function reportMember(userId: string, reason: string): Promise<void> {
+  await post('/reports', { user_id: userId, reason });
 }

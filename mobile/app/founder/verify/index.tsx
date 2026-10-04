@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { FileText } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
@@ -28,21 +29,41 @@ export default function VerifyToConnectScreen() {
   // What is wrong with the field on screen, said under it.
   const [error, setError] = useState<string | null>(null);
 
+  // What she has already done, so she picks up where she left off: a
+  // confirmed phone is not asked for again, and her statement is kept.
+  const saved = useQuery({ queryKey: ['vetting'], queryFn: () => vettingService.getApplication() });
+  const [resumed, setResumed] = useState(false);
+  useEffect(() => {
+    if (resumed || !saved.data) return;
+    setResumed(true);
+    if (saved.data.accountPhone) setPhone(saved.data.accountPhone);
+    if (saved.data.statement) setStatement(saved.data.statement);
+    if (saved.data.phoneVerified) setStep('statement');
+  }, [saved.data, resumed]);
+
   const sendCode = async () => {
-    const number = phone.replace(/\s/g, '');
+    // Kenyans write their number as 07… or 01…; the backend keeps it as +254….
+    const typed = phone.replace(/[\s-]/g, '');
+    const number = /^0[17]\d{8}$/.test(typed) ? `+254${typed.slice(1)}` : typed;
     const checked = phoneKenyaSchema.safeParse(number);
     if (!checked.success) {
-      setError('Enter your number starting with +254, like +254712345678.');
+      setError('Enter a Kenyan mobile number, like 0712 345 678 or +254712345678.');
       return;
     }
     setError(null);
     setLoading(true);
     try {
-      await vettingService.verifyPhoneSend(number);
+      setPhone(number);
       await vettingService.saveDraft({ phone: number });
+      await vettingService.verifyPhoneSend(number);
       setCode('');
       setStep('code');
     } catch (e) {
+      // The number is already confirmed as hers: nothing more to prove.
+      if ((e as { code?: string })?.code === 'ALREADY_VERIFIED') {
+        setStep('statement');
+        return;
+      }
       setError(messageOf(e, 'We could not send the code. Check the number and try again.'));
     } finally {
       setLoading(false);
@@ -107,6 +128,18 @@ export default function VerifyToConnectScreen() {
         <Steps names={STEP_NAMES} current={STEP_NAMES.indexOf(step === 'phone' ? 'Phone' : step === 'code' ? 'Code' : 'Statement') + 1} />
       </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {saved.data && saved.data.emailVerified === false ? (
+          <View style={styles.example}>
+            <Text style={styles.exampleTitle}>First, confirm your email</Text>
+            <Text style={styles.exampleText}>
+              We send the decision on your verification to your email, so it has to be confirmed before you can submit.
+            </Text>
+            <View style={{ marginTop: spacing[1.5] }}>
+              <Button title="Confirm my email" onPress={() => router.push('/auth/verify-email')} />
+            </View>
+          </View>
+        ) : null}
+
         {step === 'phone' ? (
           <>
             <Text style={styles.heading}>What is your phone number?</Text>
@@ -123,7 +156,7 @@ export default function VerifyToConnectScreen() {
                 }}
                 keyboardType="phone-pad"
                 autoComplete="tel"
-                hint="A Kenyan number, like +254712345678."
+                hint="A Kenyan mobile number, like 0712 345 678."
                 error={error ?? undefined}
               />
             </View>

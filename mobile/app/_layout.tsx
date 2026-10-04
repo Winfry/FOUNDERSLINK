@@ -1,6 +1,6 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,14 +14,33 @@ function SessionGuard() {
   const router = useRouter();
   useLiveUpdates();
 
-  // When she is signed out, by her own press or because her session
-  // ended, she goes to the login screen wherever she was.
-  const signedIn = useAuthStore((s) => s.user !== null);
-  const wasSignedIn = useRef(false);
+  // Where she is, as folder names: ['(founder)', '(tabs)', 'matches'].
+  const segments = useSegments() as string[];
+  const hydrated = useAuthStore((s) => s.hydrated);
+  const role = useAuthStore((s) => s.user?.role ?? null);
+  const area = segments[0];
+
   useEffect(() => {
-    if (wasSignedIn.current && !signedIn) router.replace('/auth/login');
-    wasSignedIn.current = signedIn;
-  }, [signedIn, router]);
+    if (!hydrated) return;
+    const open = area === undefined || area === 'auth' || area === 'welcome' || area === 'splash';
+
+    // Signed out, by her own press, an ended session, or a link opened
+    // cold: every screen but the opening ones leads to the login screen.
+    if (role === null) {
+      if (!open) router.replace('/auth/login');
+      return;
+    }
+
+    // Each role has its own screens. Two of them share an address
+    // ("/profile", "/notifications"), and a notification or a shared
+    // screen can point at the other role's, so anyone who lands on the
+    // wrong side is sent to her own home. Verification is shared.
+    const verify = area === 'founder' && segments[1] === 'verify';
+    const foundersOnly = (area === '(founder)' || area === 'founder') && !verify;
+    const investorsOnly = area === '(investor)' || area === 'investor';
+    if (role === 'investor' && foundersOnly) router.replace('/(investor)/(tabs)/discover');
+    if (role === 'founder' && investorsOnly) router.replace('/(founder)/(tabs)/matches');
+  }, [hydrated, role, area, segments, router]);
 
   useEffect(() => {
     const id = setInterval(async () => {

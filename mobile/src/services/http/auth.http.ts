@@ -83,7 +83,7 @@ export const httpAuthService: AuthService = {
   },
 
   async requestPasswordReset(email) {
-    await post('/auth/password/forgot', { email });
+    showDemoCode(await post<{ dev_code?: string }>('/auth/password/forgot', { email }), 'email');
   },
 
   async resetPassword(email, code, newPassword) {

@@ -46,7 +46,8 @@ function when(at: string) {
 
 export default function DealScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const q = useQuery({ queryKey: ['deal', id], queryFn: () => dealService.get(String(id)) });
+  // Asked again every few seconds: the other party and staff change a deal too.
+  const q = useQuery({ queryKey: ['deal', id], queryFn: () => dealService.get(String(id)), refetchInterval: 6000 });
   const me = useAuthStore((s) => s.user?.id);
   const [busy, setBusy] = useState<string | null>(null);
 

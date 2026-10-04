@@ -33,6 +33,9 @@ export function useLiveUpdates() {
         void qc.invalidateQueries({ queryKey: ['connections'] });
         void qc.invalidateQueries({ queryKey: ['funding-matches'] });
         void qc.invalidateQueries({ queryKey: ['vetting'] });
+        void qc.invalidateQueries({ queryKey: ['join-requests'] });
+        void qc.invalidateQueries({ queryKey: ['deals'] });
+        void qc.invalidateQueries({ queryKey: ['deal'] });
       }
     });
   }, [qc, userId]);

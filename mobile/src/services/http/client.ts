@@ -42,6 +42,16 @@ export async function currentUserId(): Promise<string | null> {
   }
 }
 
+/** The signed-in user's role, from the saved session. */
+export async function currentUserRole(): Promise<string | null> {
+  try {
+    const raw = await SecureStore.getItemAsync(SESSION_KEY);
+    return raw ? (JSON.parse(raw).user?.role ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
 type Body = Record<string, unknown> | FormData | undefined;
 
 /**
