@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardScroll } from '../ui/KeyboardScroll';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Header } from '../layout/Header';
 import { Text } from '../ui/Text';
@@ -28,13 +27,13 @@ export function SettingsPage({
   return (
     <>
       <Header title={title} onBack={back} />
-      <KeyboardScroll style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.top}>
           <Text style={styles.heading}>{heading}</Text>
           {intro ? <Text style={styles.intro}>{intro}</Text> : null}
         </View>
         {children}
-      </KeyboardScroll>
+      </ScrollView>
     </>
   );
 }
