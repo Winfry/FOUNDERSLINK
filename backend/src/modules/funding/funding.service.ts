@@ -40,8 +40,24 @@ const visibleToFounders = {
   OR: [{ claimed_by_user_id: null }, { claimed_by: { approval_status: "approved" as const } }],
 };
 
-export function listFunders() {
-  return prisma.funder.findMany({ where: visibleToFounders, select: funderFields, orderBy: { name: "asc" } });
+// A record an investor maintains is a member's. Its name, wording and
+// links are shown only to an approved member (TEAM_DECISIONS D12), the
+// same rule the matches follow.
+export async function listFunders(viewerId: string) {
+  const [viewer, funders] = await Promise.all([
+    prisma.user.findUnique({ where: { id: viewerId }, select: { approval_status: true } }),
+    prisma.funder.findMany({
+      where: visibleToFounders,
+      select: { ...funderFields, claimed_by_user_id: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+  const approved = viewer?.approval_status === "approved";
+  return funders.map(({ claimed_by_user_id, ...funder }) =>
+    claimed_by_user_id !== null && !approved
+      ? { ...funder, name: null, mandate_text: null, how_to_apply_url: null, source_url: null }
+      : funder,
+  );
 }
 
 export function listComplianceItems() {

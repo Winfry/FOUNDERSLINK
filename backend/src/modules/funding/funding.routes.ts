@@ -16,8 +16,8 @@ fundingRouter.get("/compliance/items", async (_req, res) => {
   );
 });
 
-fundingRouter.get("/funders", requireAuth, async (_req, res) => {
-  res.json(await listFunders());
+fundingRouter.get("/funders", requireAuth, async (req, res) => {
+  res.json(await listFunders(req.user!.id));
 });
 
 fundingRouter.get("/funding/matches", requireAuth, requireRole("founder"), async (req, res) => {
