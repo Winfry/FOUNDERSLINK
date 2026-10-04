@@ -217,26 +217,47 @@ class _TextOnly(HTMLParser):
 
     SKIP = {"script", "style", "nav", "header", "footer", "noscript"}
     BLOCK = {"p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "br", "section"}
+    # Many government sites (KRA, Nairobi County) build their menus from
+    # plain divs and lists, so a menu is also recognised by its class or id.
+    # Without this, every chunk of a KRA page starts with the whole site menu.
+    # Whole name segments only: "main-nav-bar" is a menu, but Nairobi's
+    # "realfactory-sidebar-style-none" wraps the article itself.
+    CHROME = re.compile(r"(?:^|[-_\s])(?:nav|navbar|navigation|menu|submenu|breadcrumbs?|footer|cookie)(?=$|[-_\s])", re.I)
 
     def __init__(self):
         super().__init__()
         self.parts: list[str] = []
         self._skip = 0
+        self._chrome_tag: str | None = None  # the element being skipped as site chrome
+        self._chrome_depth = 0
 
     def handle_starttag(self, tag, attrs):
-        if tag in self.SKIP:
+        if self._chrome_tag:
+            if tag == self._chrome_tag:
+                self._chrome_depth += 1
+            return
+        names = " ".join(v or "" for k, v in attrs if k in ("class", "id"))
+        if tag in ("div", "ul", "aside", "section") and self.CHROME.search(names):
+            self._chrome_tag, self._chrome_depth = tag, 1
+        elif tag in self.SKIP:
             self._skip += 1
         elif tag in self.BLOCK:
             self.parts.append("\n")
 
     def handle_endtag(self, tag):
+        if self._chrome_tag:
+            if tag == self._chrome_tag:
+                self._chrome_depth -= 1
+                if not self._chrome_depth:
+                    self._chrome_tag = None
+            return
         if tag in self.SKIP and self._skip:
             self._skip -= 1
         elif tag in self.BLOCK:
             self.parts.append("\n")
 
     def handle_data(self, data):
-        if not self._skip:
+        if not self._skip and not self._chrome_tag:
             self.parts.append(data)
 
 

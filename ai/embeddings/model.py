@@ -23,6 +23,14 @@ class Embedder:
             texts = [f"{prefix}: {t}" for t in texts]
         return self.model.encode(texts, normalize_embeddings=True)
 
+    def encode_query(self, text: str):
+        """One normalised vector for a question or a founder's description."""
+        return self._encode([text], "query")[0]
+
+    def encode_passages(self, texts: list[str]):
+        """Normalised vectors for stored texts (mandates, compliance passages)."""
+        return self._encode(texts, "passage")
+
     def similarities(self, query: str, passages: list[str]) -> list[float]:
         """Cosine similarity between one query and each passage, in [0, 1]."""
         if not passages:
