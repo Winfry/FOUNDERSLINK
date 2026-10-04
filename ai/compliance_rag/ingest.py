@@ -309,14 +309,15 @@ def item_chunk(item: dict, sources: dict[str, Source], problems: list[str]) -> C
     src = sources.get(item.get("source_id", ""))
     if src is None:
         # Items may give their own url and date instead of pointing to sources.json.
-        if not item.get("source_url") or not item.get("last_verified_at"):
+        verified = _parse_date(item.get("last_verified_at"), "last_verified_at", iid)
+        if not item.get("source_url") or verified is None:
             problems.append(f"SKIPPED item {iid} ({item['_file']}): no verified official source")
             return None
         src = Source(
             id=f"item:{iid}", title=item.get("title", iid),
             institution=item.get("institution", ""), regulator=item.get("regulator", "").upper(),
             url=item["source_url"],
-            last_verified_at=_parse_date(item["last_verified_at"], "last_verified_at", iid),
+            last_verified_at=verified,
             next_review_at=_parse_date(item.get("next_review_at"), "next_review_at", iid),
             jurisdiction_level=item.get("jurisdiction_level", "national"),
             county=county_key(item.get("county")), file=None,
@@ -350,10 +351,34 @@ def item_chunk(item: dict, sources: dict[str, Source], problems: list[str]) -> C
     return Chunk(id=f"item:{iid}", text="\n".join(lines), metadata=meta)
 
 
+# The embedding model is shared with matching (ai/embeddings/model.py) and
+# is used here as it is: these helpers add what compliance needs on top of
+# it, without changing it. A stand-in in tests may provide the same methods.
+
+def encode_passages(embedder, texts: list[str]):
+    """Vectors for pieces stored in the index ("passage: " prefix for e5)."""
+    own = getattr(embedder, "encode_passages", None)
+    return own(texts) if own else embedder._encode(texts, "passage")
+
+
+def encode_query(embedder, text: str):
+    """The vector for a question searched against the index ("query: " prefix for e5)."""
+    own = getattr(embedder, "encode_query", None)
+    return own(text) if own else embedder._encode([text], "query")[0]
+
+
 def _tokens(embedder):
-    """The model's own counter and limit, or a cautious estimate without them."""
-    count = getattr(embedder, "count_tokens", None) or estimate_tokens
-    limit = getattr(embedder, "max_tokens", None) or MODEL_MAX_TOKENS
+    """The model's own token counter and input limit, or a cautious estimate."""
+    model = getattr(embedder, "model", None)
+    tokenizer = getattr(model, "tokenizer", None)
+
+    def by_tokenizer(text: str) -> int:
+        # verbose=False: counting a long section before it is split is expected,
+        # so the "longer than the maximum sequence length" warning is noise.
+        return len(tokenizer(text, add_special_tokens=False, verbose=False)["input_ids"])  # type: ignore[misc]
+
+    count = getattr(embedder, "count_tokens", None) or (by_tokenizer if tokenizer is not None else estimate_tokens)
+    limit = getattr(embedder, "max_tokens", None) or getattr(model, "max_seq_length", None) or MODEL_MAX_TOKENS
     return count, limit
 
 
@@ -412,7 +437,7 @@ def write_index(chunks: list[Chunk], embedder) -> None:
     batch = 256
     for i in range(0, len(chunks), batch):
         part = chunks[i:i + batch]
-        vectors = embedder.encode_passages([c.text for c in part])
+        vectors = encode_passages(embedder, [c.text for c in part])
         collection.add(
             ids=[c.id for c in part],
             documents=[c.text for c in part],
