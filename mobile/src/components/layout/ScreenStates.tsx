@@ -1,7 +1,9 @@
 import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../ui/Text';
-import { CloudOff, RefreshCw, AlertCircle } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { CloudOff, RefreshCw, AlertCircle, ShieldCheck } from 'lucide-react-native';
+import { useAuthStore } from '../../stores/authStore';
 import { colors, spacing } from '../../theme/tokens';
 import { Button } from '../ui/Button';
 import { SkeletonCard } from '../ui/Skeleton';
@@ -17,15 +19,45 @@ export function ScreenLoading({ rows = 3 }: { rows?: number }) {
   );
 }
 
-export function ScreenError({ message, onRetry }: { message: string; onRetry?: () => void }) {
+/**
+ * Shown when a screen could not load. Being refused because she is not
+ * verified yet is not an error: it is the next step, so it gets its own
+ * message and a button that takes her there.
+ */
+export function ScreenError({ message, code, onRetry }: { message: string; code?: string; onRetry?: () => void }) {
+  const router = useRouter();
+  const status = useAuthStore((s) => s.user?.approvalStatus);
+
+  if (code === 'APPROVAL_REQUIRED' || /must be approved/i.test(message)) {
+    const waiting = status === 'submitted' || status === 'in_review';
+    return (
+      <View style={styles.center}>
+        <View style={[styles.icon, { backgroundColor: colors.primaryLight }]}>
+          <ShieldCheck size={28} color={colors.primary} />
+        </View>
+        <Text style={styles.title}>{waiting ? "We're checking your details" : 'Verify to open this'}</Text>
+        <Text style={styles.desc}>
+          {waiting
+            ? 'This opens as soon as FounderLink approves you. You can keep exploring your matches and readiness.'
+            : 'Everyone you meet here has been checked. Verify once, and chamas, connections and chat open for you.'}
+        </Text>
+        <Button
+          title={waiting ? 'See my verification status' : 'Verify to connect'}
+          onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
+          style={styles.btn}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.center}>
-      <AlertCircle size={40} color={colors.error} />
-      <Text style={styles.title}>Something went wrong</Text>
+      <View style={[styles.icon, { backgroundColor: colors.errorLight }]}>
+        <AlertCircle size={28} color={colors.error} />
+      </View>
+      <Text style={styles.title}>We couldn't load this</Text>
       <Text style={styles.desc}>{message}</Text>
-      {onRetry ? (
-        <Button title="Try again" onPress={onRetry} style={styles.btn} />
-      ) : null}
+      {onRetry ? <Button title="Try again" variant="secondary" onPress={onRetry} style={styles.btn} /> : null}
     </View>
   );
 }
@@ -70,9 +102,10 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     gap: spacing[1],
   },
-  title: { fontSize: 18, fontWeight: '600', color: colors.text },
-  desc: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
-  btn: { marginTop: spacing[2], alignSelf: 'stretch', maxWidth: 280 },
+  icon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: spacing[1] },
+  title: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  desc: { fontSize: 16, color: colors.textMuted, textAlign: 'center', maxWidth: 320 },
+  btn: { marginTop: spacing[2], alignSelf: 'stretch' },
   refreshRow: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', padding: 8 },
   refreshText: { fontSize: 12, color: colors.textMuted },
 });

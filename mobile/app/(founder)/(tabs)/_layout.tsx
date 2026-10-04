@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from 'expo-router';
-import { Bell, CheckSquare, Handshake, Layers, User } from 'lucide-react-native';
+import { Bell, CircleUserRound, ClipboardCheck, HandCoins, Handshake, UsersRound } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { notificationService } from '../../../src/services';
@@ -47,15 +47,15 @@ export default function FounderTabsLayout() {
         headerShadowVisible: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { borderTopColor: colors.border, minHeight: 56 },
-        tabBarLabelStyle: { fontSize: 11, fontFamily: 'PlusJakartaSans_600SemiBold' },
+        tabBarStyle: { borderTopColor: colors.border, minHeight: 64, paddingTop: 6 },
+        tabBarLabelStyle: { fontSize: 12, fontFamily: 'PlusJakartaSans_600SemiBold' },
       }}
     >
-      <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, size }) => <Handshake color={color} size={size} /> }} />
-      <Tabs.Screen name="readiness" options={{ title: 'Readiness', tabBarIcon: ({ color, size }) => <CheckSquare color={color} size={size} /> }} />
-      <Tabs.Screen name="connections" options={{ title: 'Connections', tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
-      <Tabs.Screen name="chamas" options={{ title: 'Chamas', tabBarIcon: ({ color, size }) => <Layers color={color} size={size} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
+      <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, focused }) => <Handshake color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="readiness" options={{ title: 'Readiness', tabBarIcon: ({ color, focused }) => <ClipboardCheck color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="connections" options={{ title: 'Connections', tabBarIcon: ({ color, focused }) => <UsersRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="chamas" options={{ title: 'Chamas', tabBarIcon: ({ color, focused }) => <HandCoins color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, focused }) => <CircleUserRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
   );
