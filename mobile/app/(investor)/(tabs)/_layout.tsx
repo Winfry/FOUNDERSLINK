@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from 'expo-router';
-import { Bell, CircleUserRound, Compass, HandCoins, Send } from 'lucide-react-native';
+import { Bell, CircleUserRound, Compass, Send } from 'lucide-react-native';
 import { Image, Pressable, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { useQuery } from '@tanstack/react-query';
@@ -69,7 +69,6 @@ export default function InvestorTabsLayout() {
     >
       <Tabs.Screen name="discover" options={{ title: 'Discover', tabBarIcon: ({ color, focused }) => <Compass color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="requests" options={{ title: 'Requests', tabBarIcon: ({ color, focused }) => <Send color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
-      <Tabs.Screen name="groups" options={{ title: 'Chamas', tabBarIcon: ({ color, focused }) => <HandCoins color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, focused }) => <CircleUserRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       {/* Reached from the bell, as on the founder's side. */}
       <Tabs.Screen name="notifications" options={{ href: null }} />

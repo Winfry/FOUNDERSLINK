@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight, Inbox, MessageCircle } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -8,7 +8,10 @@ import { Avatar, Badge, Button, Card } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { kes, words } from '../../../src/components/matches/parts';
 import { useToast } from '../../../src/components/ui/Toast';
-import { connectionService, dealService } from '../../../src/services';
+import { DealOfferSheet, type OfferInstrument } from '../../../src/components/connections/DealOfferSheet';
+import { DeclineSheet } from '../../../src/components/connections/DeclineSheet';
+import { connectionService, dealService, founderService } from '../../../src/services';
+import { useAuthStore } from '../../../src/stores/authStore';
 import type { ConnectionJoinRequest } from '../../../src/types';
 import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
@@ -30,6 +33,16 @@ export default function ConnectionsScreen() {
   const q = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list(), refetchInterval: 8000 });
   // Which request is being answered, and how, so only that button spins.
   const [busy, setBusy] = useState<{ id: string; action: 'accept' | 'decline' } | null>(null);
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+  // Her deals, to know who she is connected with but has no deal with yet.
+  const dealsQ = useQuery({ queryKey: ['deals'], queryFn: () => dealService.list() });
+  // The deal offer (D13): shown after she accepts, and again from the link under "Connected".
+  const [offer, setOffer] = useState<ConnectionJoinRequest | null>(null);
+  const [instrument, setInstrument] = useState<OfferInstrument | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [declining, setDeclining] = useState<ConnectionJoinRequest | null>(null);
+  const [reason, setReason] = useState('');
 
   if (q.isLoading) return <ScreenLoading />;
   if (q.isError) {
@@ -49,21 +62,20 @@ export default function ConnectionsScreen() {
   const connected = all.filter((c) => c.status === 'accepted');
   const sent = all.filter((c) => c.direction === 'sent' && c.status !== 'accepted');
 
+  const openOffer = (item: ConnectionJoinRequest) => {
+    setInstrument(null);
+    setOffer(item);
+  };
+
+  // Accepting only connects the two. A deal is a separate choice she makes afterwards.
   const accept = async (item: ConnectionJoinRequest) => {
     setBusy({ id: item.id, action: 'accept' });
     try {
       await connectionService.respond(item.id, true);
-      // A plain request to connect proposes no money, so there is no deal to open.
-      if (item.proposedAmountKes > 0) {
-        const deal = await dealService.createInvestment(item.withUserId, 'Investment deal');
-        await dealService.updateTerms(deal.id, { amountKes: item.proposedAmountKes, instrument: 'equity' });
-        show(`You accepted ${item.withFullName}. Your deal is open.`, 'success');
-        void q.refetch();
-        router.push(`/deal/${deal.id}`);
-      } else {
-        show(`You are now connected with ${item.withFullName}.`, 'success');
-        void q.refetch();
-      }
+      show(`You are now connected with ${item.withFullName}.`, 'success');
+      void q.refetch();
+      // A plain request to connect proposes no money, so there is no deal to offer.
+      if (item.proposedAmountKes > 0) openOffer(item);
     } catch (e) {
       show((e as { message?: string })?.message ?? 'Could not accept the request. Try again.', 'error');
       void q.refetch();
@@ -72,11 +84,46 @@ export default function ConnectionsScreen() {
     }
   };
 
-  const decline = async (item: ConnectionJoinRequest) => {
+  const startDeal = async () => {
+    if (!offer || !instrument) return;
+    setStarting(true);
+    let dealId: string | null = null;
+    try {
+      const profile = await founderService.getProfile().catch(() => null);
+      const hers = profile?.businessName?.trim() || user?.fullName || 'the business';
+      const theirs = offer.withOrganisationName?.trim() || offer.withFullName;
+      const deal = await dealService.createInvestment(offer.withUserId, `${theirs} invests in ${hers}`);
+      dealId = deal.id;
+      await dealService.updateTerms(deal.id, { amountKes: offer.proposedAmountKes, instrument });
+      show(`Your deal with ${offer.withFullName} is open.`, 'success');
+    } catch (e) {
+      const message = (e as { message?: string })?.message;
+      show(
+        dealId
+          ? message ?? 'The deal is open, but the amount was not saved. Add it in the deal.'
+          : message ?? 'Could not start the deal. Try again.',
+        'error',
+      );
+    } finally {
+      setStarting(false);
+    }
+    if (dealId) {
+      setOffer(null);
+      void queryClient.invalidateQueries({ queryKey: ['deals'] });
+      router.push(`/deal/${dealId}`);
+    }
+  };
+
+  const decline = async () => {
+    const item = declining;
+    if (!item) return;
     setBusy({ id: item.id, action: 'decline' });
     try {
-      await connectionService.respond(item.id, false, 'Not the right time');
+      // Her own words, or no reason at all.
+      await connectionService.respond(item.id, false, reason.trim() || undefined);
       show(`You declined ${item.withFullName}'s request.`, 'success');
+      setDeclining(null);
+      setReason('');
       void q.refetch();
     } catch (e) {
       show((e as { message?: string })?.message ?? 'Could not decline the request. Try again.', 'error');
@@ -84,6 +131,11 @@ export default function ConnectionsScreen() {
       setBusy(null);
     }
   };
+
+  // Only known once her deals have loaded, so the link never shows beside a deal that exists.
+  const dealWith = new Set((dealsQ.data ?? []).map((d) => d.withUserId));
+  const canOfferDeal = (c: ConnectionJoinRequest) =>
+    dealsQ.isSuccess && c.direction === 'received' && c.proposedAmountKes > 0 && !dealWith.has(c.withUserId);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -170,7 +222,10 @@ export default function ConnectionsScreen() {
                     style={styles.flexOne}
                     disabled={isBusy}
                     loading={isBusy && busy?.action === 'decline'}
-                    onPress={() => void decline(item)}
+                    onPress={() => {
+                      setReason('');
+                      setDeclining(item);
+                    }}
                   />
                   <Button
                     title="Accept"
@@ -182,7 +237,7 @@ export default function ConnectionsScreen() {
                 </View>
                 <Text style={styles.fine}>
                   {hasAmount
-                    ? 'Accepting connects you and opens a deal with this amount. Nothing is final until you both agree terms.'
+                    ? 'Accepting connects you, so you can chat. You can then choose to start a deal with this amount, or leave it for later.'
                     : 'Accepting connects you, so you can chat.'}
                 </Text>
               </Card>
@@ -200,9 +255,9 @@ export default function ConnectionsScreen() {
         ) : (
           <Card style={styles.listCard}>
             {connected.map((item, i) => (
+              <View key={item.id} style={i > 0 && styles.divider}>
               <Pressable
-                key={item.id}
-                style={({ pressed }) => [styles.listRow, i > 0 && styles.divider, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.listRow, pressed && styles.pressed]}
                 onPress={() => router.push('/conversations')}
                 accessibilityRole="button"
                 accessibilityLabel={`Message ${item.withFullName}`}
@@ -219,6 +274,18 @@ export default function ConnectionsScreen() {
                   <Text style={styles.linkText}>Message</Text>
                 </View>
               </Pressable>
+              {canOfferDeal(item) ? (
+                <Pressable
+                  style={({ pressed }) => [styles.dealLink, pressed && styles.pressed]}
+                  onPress={() => openOffer(item)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Start an investment deal with ${item.withFullName}`}
+                >
+                  <Text style={styles.linkText}>Start an investment deal</Text>
+                  <Text style={styles.meta}>They proposed {kes(item.proposedAmountKes)}</Text>
+                </Pressable>
+              ) : null}
+              </View>
             ))}
           </Card>
         )}
@@ -254,6 +321,30 @@ export default function ConnectionsScreen() {
           </Card>
         )}
       </View>
+
+      <DealOfferSheet
+        visible={offer !== null}
+        investorName={offer?.withFullName ?? ''}
+        amountKes={offer?.proposedAmountKes ?? 0}
+        instrument={instrument}
+        onChoose={setInstrument}
+        onStart={() => void startDeal()}
+        onClose={() => {
+          if (!starting) setOffer(null);
+        }}
+        loading={starting}
+      />
+      <DeclineSheet
+        visible={declining !== null}
+        investorName={declining?.withFullName ?? ''}
+        reason={reason}
+        onChangeReason={setReason}
+        onDecline={() => void decline()}
+        onClose={() => {
+          if (!busy) setDeclining(null);
+        }}
+        loading={busy?.action === 'decline'}
+      />
     </ScrollView>
   );
 }
@@ -331,6 +422,13 @@ const styles = StyleSheet.create({
     minHeight: touchTargetMin,
   },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
+  dealLink: {
+    minHeight: touchTargetMin,
+    justifyContent: 'center',
+    paddingHorizontal: spacing[2],
+    paddingBottom: spacing[1.5],
+    paddingLeft: spacing[2] + 40 + spacing[1.5],
+  },
   messageLink: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
   linkText: { fontSize: 14, fontWeight: '700', color: colors.primary },
 
