@@ -27,7 +27,7 @@ function when(iso: string): string {
 export default function ConnectionsScreen() {
   const router = useRouter();
   const { show } = useToast();
-  const q = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list() });
+  const q = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list(), refetchInterval: 8000 });
   // Which request is being answered, and how, so only that button spins.
   const [busy, setBusy] = useState<{ id: string; action: 'accept' | 'decline' } | null>(null);
 

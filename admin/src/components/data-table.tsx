@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { flexRender, type RowData } from "@tanstack/react-table";
 import {
   getCoreRowModel,
@@ -44,7 +44,8 @@ export function DataTable<T extends RowData>({
   getRowHref,
 }: DataTableProps<T>) {
   const router = useRouter();
-  const [search, setSearch] = React.useState("");
+  // Starts from what the address already says, so the box and the list agree after a reload.
+  const [search, setSearch] = React.useState(useSearchParams().get("search") ?? "");
   const table = useLegacyTable({
     data,
     columns,
@@ -57,8 +58,9 @@ export function DataTable<T extends RowData>({
 
   const handleSearch = (value: string) => {
     setSearch(value);
+    // The page that owns the table goes back to its first page itself.
+    // Asking for page 1 here as well overwrote the search it had just set.
     onSearchChange?.(value);
-    onPageChange?.(1);
   };
 
   return (

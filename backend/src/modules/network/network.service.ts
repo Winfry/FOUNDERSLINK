@@ -94,7 +94,10 @@ export async function getInvestorMatches(userId: string, filter: z.infer<typeof 
     (!filter.sector || p.sector === filter.sector) &&
     (!filter.stage || p.stage === filter.stage) &&
     (!filter.county || p.county === filter.county) &&
-    (!needle || `${p.business_name ?? ""} ${p.description}`.toLowerCase().includes(needle));
+    // Below level 2 she is not shown a business's name or description,
+    // so her search may not look in them either: it would tell her which
+    // anonymous card belongs to which business.
+    (!needle || `${approved ? `${p.business_name ?? ""} ${p.description}` : ""} ${p.sector} ${p.county}`.toLowerCase().includes(needle));
 
   const amount = (p: FounderProfile) => p.funding_amount_kes ?? 0;
   const order: Record<string, (a: (typeof assessed)[number], b: (typeof assessed)[number]) => number> = {

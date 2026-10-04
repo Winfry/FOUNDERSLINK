@@ -18,7 +18,7 @@ const SECTIONS: { title: string; rows: { label: string; href: string; icon: Luci
     rows: [
       { label: 'Privacy policy', href: '/settings/privacy', icon: ShieldCheck },
       { label: 'Terms of service', href: '/settings/terms', icon: FileText },
-      { label: 'Report or block someone', href: '/settings/report', icon: Flag },
+      { label: 'Report someone', href: '/settings/report', icon: Flag },
       { label: 'Delete my account', href: '/settings/delete-account', icon: Trash2 },
     ],
   },

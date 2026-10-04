@@ -16,7 +16,11 @@ interface ApiVetting {
 }
 
 async function load(): Promise<VettingApplication> {
-  const { approval_status, application } = await get<ApiVetting>('/vetting/application');
+  const [{ approval_status, application }, me] = await Promise.all([
+    get<ApiVetting>('/vetting/application'),
+    get<{ email_verified_at: string | null; phone: string | null; phone_verified_at: string | null }>('/me'),
+  ]);
+  await syncSessionUser({ emailVerified: me.email_verified_at !== null });
   // An admin may have decided since she signed in.
   await syncSessionUser({ approvalStatus: approval_status });
   return {
@@ -26,6 +30,9 @@ async function load(): Promise<VettingApplication> {
     organisationName: application?.organisation_name ?? undefined,
     organisationWebsite: application?.organisation_website ?? undefined,
     decisionReason: application?.decision_reason ?? null,
+    emailVerified: me.email_verified_at !== null,
+    phoneVerified: me.phone_verified_at !== null,
+    accountPhone: me.phone ?? undefined,
   };
 }
 

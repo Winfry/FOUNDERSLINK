@@ -85,7 +85,12 @@ export default function VerificationStatusScreen() {
   const Icon = state.icon;
   // The admin's own words, when a decision came with a reason.
   const reason = status !== 'approved' && status !== 'draft' ? q.data?.decisionReason : null;
-  const toMatches = () => router.replace('/(founder)/(tabs)/matches');
+  // The opening screen sends each role to her own home.
+  const toMatches = () => router.replace('/');
+  const investor = user?.role === 'investor';
+  // The same screen serves both roles, so the words follow who is reading.
+  const forRole = (text: string) =>
+    investor ? text.replace(/investors/g, 'founders').replace(/your business/g, 'what you fund').replace(/See your matches/g, 'See founders') : text;
 
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
@@ -96,7 +101,7 @@ export default function VerificationStatusScreen() {
         <Text style={styles.title} accessibilityRole="header">
           {state.title}
         </Text>
-        <Text style={styles.body}>{state.body}</Text>
+        <Text style={styles.body}>{forRole(state.body)}</Text>
         {reason ? (
           <View style={styles.reason}>
             <Text style={styles.reasonLabel}>What our reviewer said</Text>
@@ -107,11 +112,11 @@ export default function VerificationStatusScreen() {
       <View style={styles.actions}>
         {status === 'draft' ? <Button title="Start verification" onPress={() => router.push('/founder/verify')} /> : null}
         {status === 'needs_info' ? <Button title="Edit and resubmit" onPress={() => router.push('/founder/verify')} /> : null}
-        {status === 'approved' ? <Button title="See your matches" onPress={toMatches} /> : null}
+        {status === 'approved' ? <Button title={forRole('See your matches')} onPress={toMatches} /> : null}
         {status === 'draft' || status === 'needs_info' ? (
-          <Button title="Back to matches" variant="secondary" onPress={toMatches} />
+          <Button title="Back to the app" variant="secondary" onPress={toMatches} />
         ) : status === 'approved' ? null : (
-          <Button title={status === 'submitted' || status === 'in_review' ? 'Keep exploring' : 'Back to matches'} onPress={toMatches} />
+          <Button title={status === 'submitted' || status === 'in_review' ? 'Keep exploring' : 'Back to the app'} onPress={toMatches} />
         )}
       </View>
     </ScrollView>

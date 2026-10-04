@@ -24,8 +24,9 @@ export default function InvestorRequestsTab() {
   const router = useRouter();
   const qc = useQueryClient();
   const toast = useToast();
-  const q = useQuery({ queryKey: ['join-requests'], queryFn: () => investorService.getJoinRequests() });
-  const dealsQ = useQuery({ queryKey: ['deals'], queryFn: () => dealService.list() });
+  // Asked again every few seconds, so a founder's answer shows without a reload.
+  const q = useQuery({ queryKey: ['join-requests'], queryFn: () => investorService.getJoinRequests(), refetchInterval: 8000 });
+  const dealsQ = useQuery({ queryKey: ['deals'], queryFn: () => dealService.list(), refetchInterval: 8000 });
   const [withdrawing, setWithdrawing] = useState<JoinRequestRow | null>(null);
   const [busy, setBusy] = useState(false);
 
