@@ -31,9 +31,15 @@ export function DocumentViewer({
           <div className="flex min-h-[240px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-[#EFF6FF] p-8 text-center">
             <FileText className="mb-3 h-10 w-10 text-[#1D4ED8]" aria-hidden />
             <p className="text-sm font-medium text-foreground">{fileName}</p>
-            <p className="mt-2 max-w-xs text-xs text-muted">
-              PDF preview placeholder{previewUrl ? ` — ${previewUrl}` : ""}.
-            </p>
+            {previewUrl?.startsWith("/api/") ? (
+              <a href={previewUrl} target="_blank" rel="noreferrer" className="mt-2 text-sm font-medium text-[#1D4ED8] hover:underline">
+                Open document
+              </a>
+            ) : (
+              <p className="mt-2 max-w-xs text-xs text-muted">
+                PDF preview placeholder{previewUrl ? ` — ${previewUrl}` : ""}.
+              </p>
+            )}
           </div>
         )}
       </CardContent>
