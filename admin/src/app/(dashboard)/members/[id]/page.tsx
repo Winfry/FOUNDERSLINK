@@ -1,25 +1,26 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MemberDetailView } from "./member-detail-view";
+import { BackLink } from "@/components/back-link";
+import { ListError } from "@/components/list-state";
 import { fetchMemberDetail } from "@/services/members.service";
 
 export default async function MemberDetailPage({ params }: { params: { id: string } }) {
+  let member;
   try {
-    const member = await fetchMemberDetail(params.id);
-    if (!member) notFound();
-    return (
-      <div className="space-y-4">
-        <Link href="/members" className="text-sm text-[#0454DB] hover:underline">
-          ← Back to members
-        </Link>
-        <MemberDetailView member={member} />
-      </div>
-    );
+    member = await fetchMemberDetail(params.id);
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load member.
+      <div className="space-y-4">
+        <BackLink href="/members">Back to members</BackLink>
+        <ListError what="this member" />
       </div>
     );
   }
+  if (!member) notFound();
+  return (
+    <div className="space-y-4">
+      <BackLink href="/members">Back to members</BackLink>
+      <MemberDetailView member={member} />
+    </div>
+  );
 }

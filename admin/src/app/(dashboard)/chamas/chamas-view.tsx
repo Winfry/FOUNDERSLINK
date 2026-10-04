@@ -1,47 +1,61 @@
 import Link from "next/link";
+import { UsersRound } from "lucide-react";
 import type { ChamaListItem } from "@/types";
+import { EmptyState } from "@/components/empty-state";
+import { formatDay } from "@/components/labels";
+import { PageHeader } from "@/components/page-header";
+import { Table, TableWrap, Td, Th, THead, Tr } from "@/components/ui/table";
 
 export function ChamasView({ chamas }: { chamas: ChamaListItem[] }) {
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Chamas</h1>
-        <p className="text-sm text-muted">Read-only list of money and learning circles.</p>
-        <p className="mt-2 text-sm font-medium text-[#113373]">
-          FoundersLink records contributions. It never holds or moves money.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Chamas"
+        description="Savings and learning groups that members run in the app. FoundersLink records contributions; it never holds or moves money."
+      />
       {chamas.length === 0 ? (
-        <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted">No chamas yet.</div>
+        <EmptyState
+          icon={UsersRound}
+          title="Chamas cannot be listed here yet"
+          description="The dashboard cannot read chamas from the FoundersLink server yet, so this list is empty even when members have created some. Nothing is broken. The number of chamas is on the Overview page."
+          action={
+            <Link
+              href="/overview"
+              className="inline-flex min-h-10 items-center rounded-btn border border-border bg-white px-4 text-sm font-bold text-primary hover:border-primary hover:bg-primary-light"
+            >
+              Go to overview
+            </Link>
+          }
+        />
       ) : (
-        <div className="overflow-x-auto rounded-card border border-border bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-[#EAF1FE]">
+        <TableWrap>
+          <Table>
+            <THead>
               <tr>
-                <th className="px-4 py-3 font-semibold">Chama</th>
-                <th className="px-4 py-3 font-semibold">Type</th>
-                <th className="px-4 py-3 font-semibold">Members</th>
-                <th className="px-4 py-3 font-semibold">Organiser</th>
-                <th className="px-4 py-3 font-semibold">Created</th>
+                <Th>Chama</Th>
+                <Th>Type</Th>
+                <Th>Members</Th>
+                <Th>Organiser</Th>
+                <Th>Created</Th>
               </tr>
-            </thead>
+            </THead>
             <tbody>
               {chamas.map((c) => (
-                <tr key={c.id} className="border-b border-border hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/chamas/${c.id}`} className="font-medium text-[#0454DB] hover:underline">
+                <Tr key={c.id}>
+                  <Td>
+                    <Link href={`/chamas/${c.id}`} className="text-link">
                       {c.name}
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 capitalize">{c.type === "money" ? "Money" : "Learning"}</td>
-                  <td className="px-4 py-3">{c.memberCount}</td>
-                  <td className="px-4 py-3">{c.organiserName}</td>
-                  <td className="px-4 py-3">{new Date(c.createdAt).toLocaleDateString("en-KE")}</td>
-                </tr>
+                  </Td>
+                  <Td>{c.type === "money" ? "Savings" : "Learning"}</Td>
+                  <Td>{c.memberCount}</Td>
+                  <Td>{c.organiserName}</Td>
+                  <Td className="whitespace-nowrap">{formatDay(c.createdAt)}</Td>
+                </Tr>
               ))}
             </tbody>
-          </table>
-        </div>
+          </Table>
+        </TableWrap>
       )}
     </div>
   );

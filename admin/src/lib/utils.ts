@@ -6,11 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatKes(amount: number): string {
-  return new Intl.NumberFormat("en-KE", {
-    style: "currency",
-    currency: "KES",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  // Written the way it is written in Kenya, and the same as the mobile app.
+  return `KSh ${Math.round(amount).toLocaleString("en-KE")}`;
 }
 
 export function formatDate(iso: string): string {

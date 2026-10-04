@@ -10,20 +10,13 @@ interface StatCardProps {
 
 export function StatCard({ title, value, icon: Icon, className }: StatCardProps) {
   return (
-    <div
-      className={cn(
-        "flex min-w-0 items-start gap-3 rounded-card border border-border bg-white p-3 shadow-sm sm:gap-3.5 sm:p-4",
-        className,
-      )}
-    >
-      <div className="ml-0.5 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary">
-        <Icon className="h-3 w-3 text-white" strokeWidth={2.5} aria-hidden />
+    <div className={cn("flex min-w-0 items-center gap-4 rounded-card border border-border bg-white p-5 transition-colors", className)}>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-primary-light text-primary">
+        <Icon className="h-5 w-5" strokeWidth={2.25} aria-hidden />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium leading-snug text-muted sm:text-sm">{title}</p>
-        <p className="mt-0.5 break-words text-base font-bold leading-snug text-foreground sm:text-lg">
-          {value}
-        </p>
+        <p className="text-2xl font-extrabold leading-8 text-foreground">{value}</p>
+        <p className="text-sm font-medium text-muted">{title}</p>
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import { ListError } from "@/components/list-state";
+import { PageHeader } from "@/components/page-header";
 import { ChamasView } from "./chamas-view";
 import { fetchChamas } from "@/services/chamas.service";
 
@@ -7,8 +9,9 @@ export default async function ChamasPage() {
     return <ChamasView chamas={chamas} />;
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load chamas.
+      <div className="space-y-6">
+        <PageHeader title="Chamas" />
+        <ListError what="the chamas" />
       </div>
     );
   }

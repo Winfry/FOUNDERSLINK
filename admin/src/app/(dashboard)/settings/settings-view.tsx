@@ -1,22 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { LogOut } from "lucide-react";
 import type { AdminSettingsState } from "@/types";
-import { changePasswordAction, enableTwoFactorAction } from "@/app/actions/admin-actions";
-import { ToastBanner } from "@/components/toast-banner";
+import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Changing the password and turning two-step sign-in on are not connected
+// to the backend, so this page shows the current state and does not offer
+// forms that would not save.
 export function SettingsView({ settings }: { settings: AdminSettingsState }) {
   const router = useRouter();
-  const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [toast, setToast] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -24,106 +20,53 @@ export function SettingsView({ settings }: { settings: AdminSettingsState }) {
     router.refresh();
   }
 
-  function enable2fa() {
-    startTransition(async () => {
-      const res = await enableTwoFactorAction(twoFactorCode);
-      if (res.ok) {
-        setToast("Two-step sign-in is on.");
-        setTwoFactorCode("");
-      } else {
-        setToast(res.error ?? "Could not enable two-step sign-in.");
-      }
-    });
-  }
-
-  function changePassword() {
-    startTransition(async () => {
-      const res = await changePasswordAction(currentPassword, newPassword, confirmPassword);
-      if (res.ok) {
-        setToast("Password updated.");
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        setToast(res.error ?? "Could not change password.");
-      }
-    });
-  }
-
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      {toast ? <ToastBanner message={toast} onDismiss={() => setToast(null)} variant={toast.includes("not") ? "error" : "success"} /> : null}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm text-muted">Security for your admin account.</p>
-      </div>
+    <div className="max-w-2xl space-y-6">
+      <PageHeader title="Settings" description="The security of your admin account." />
 
       <Card>
         <CardHeader>
-          <CardTitle>Set up two-step sign-in</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          <p className="text-muted">
-            Scan this placeholder QR in your authenticator app, or enter the secret manually.
-          </p>
-          <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-[#0454DB] bg-[#EAF1FE] text-[#113373]">
-            QR code placeholder
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle>Two-step sign-in</CardTitle>
+            <Badge variant={settings.twoFactorEnabled ? "success" : "muted"}>{settings.twoFactorEnabled ? "On" : "Off"}</Badge>
           </div>
-          <p>
-            <span className="font-medium">Secret:</span>{" "}
-            <code className="rounded bg-slate-100 px-2 py-0.5">{settings.twoFactorSecret}</code>
+          <CardDescription>
+            {settings.twoFactorEnabled
+              ? "You are asked for a 6-digit code from your authenticator app each time you sign in."
+              : "You sign in with your email and password only."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="rounded-btn bg-surface px-4 py-3 text-sm font-medium text-muted">
+            Turning two-step sign-in on or off from the dashboard is not available yet.
           </p>
-          <Input
-            label="Enter 6-digit code to turn on"
-            inputMode="numeric"
-            maxLength={6}
-            value={twoFactorCode}
-            onChange={(e) => setTwoFactorCode(e.target.value)}
-          />
-          <Button type="button" loading={pending} disabled={twoFactorCode.length !== 6} onClick={enable2fa}>
-            Turn on two-step sign-in
-          </Button>
-          {settings.twoFactorEnabled ? (
-            <p className="text-xs text-[#0454DB]">Two-step sign-in is currently enabled for sign-in.</p>
-          ) : null}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Change password</CardTitle>
+          <CardTitle>Password</CardTitle>
+          <CardDescription>The password you use to sign in to this dashboard.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <Input
-            label="Current password"
-            type="password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-          />
-          <Input
-            label="New password"
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <Input
-            label="Confirm new password"
-            type="password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <Button type="button" loading={pending} onClick={changePassword}>
-            Update password
-          </Button>
+        <CardContent>
+          <p className="rounded-btn bg-surface px-4 py-3 text-sm font-medium text-muted">
+            Changing your password from the dashboard is not available yet.
+          </p>
         </CardContent>
       </Card>
 
-      <Button type="button" variant="secondary" className="w-full" onClick={logout}>
-        Log out
-      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>This session</CardTitle>
+          <CardDescription>Log out when you finish, especially on a shared computer.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button type="button" variant="secondary" onClick={logout}>
+            <LogOut className="h-4 w-4" aria-hidden />
+            Log out
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

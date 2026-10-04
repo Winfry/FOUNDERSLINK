@@ -1,53 +1,64 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/back-link";
+import { roleLabel } from "@/components/labels";
+import { ListError } from "@/components/list-state";
+import { PageHeader } from "@/components/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchChamaDetail } from "@/services/chamas.service";
 
 export default async function ChamaDetailPage({ params }: { params: { id: string } }) {
+  let chama;
   try {
-    const chama = await fetchChamaDetail(params.id);
-    if (!chama) notFound();
-    return (
-      <div className="space-y-6">
-        <Link href="/chamas" className="text-sm text-[#0454DB] hover:underline">
-          ← Back to chamas
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{chama.name}</h1>
-          <p className="text-sm text-muted capitalize">
-            {chama.type === "money" ? "Money chama" : "Learning circle"} · Organiser: {chama.organiserName}
-          </p>
-          <p className="mt-2 text-sm font-medium text-[#113373]">
-            FoundersLink records contributions. It never holds or moves money.
-          </p>
-        </div>
-        <div className="rounded-card border border-border bg-white p-4">
-          <h2 className="text-sm font-semibold">Members and roles</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {chama.members.map((m) => (
-              <li key={m.memberId} className="flex justify-between border-b border-border pb-2">
-                <span>{m.name}</span>
-                <span className="capitalize text-muted">{m.role}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-card border border-border bg-[#EAF1FE] p-4 text-center">
-            <p className="text-xs text-muted">Contributions recorded</p>
-            <p className="text-2xl font-bold text-[#0454DB]">{chama.contributionCount}</p>
-          </div>
-          <div className="rounded-card border border-border bg-[#EAF1FE] p-4 text-center">
-            <p className="text-xs text-muted">Goals tracked</p>
-            <p className="text-2xl font-bold text-[#0454DB]">{chama.goalCount}</p>
-          </div>
-        </div>
-      </div>
-    );
+    chama = await fetchChamaDetail(params.id);
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load chama.
+      <div className="space-y-4">
+        <BackLink href="/chamas">Back to chamas</BackLink>
+        <ListError what="this chama" />
       </div>
     );
   }
+  if (!chama) notFound();
+  return (
+    <div className="space-y-6">
+      <BackLink href="/chamas">Back to chamas</BackLink>
+      <PageHeader
+        title={chama.name}
+        description={`${chama.type === "money" ? "Savings chama" : "Learning circle"} organised by ${chama.organiserName}. FoundersLink records contributions; it never holds or moves money.`}
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-2xl font-extrabold text-foreground">{chama.contributionCount}</p>
+            <p className="text-sm text-muted">Contributions recorded</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-2xl font-extrabold text-foreground">{chama.goalCount}</p>
+            <p className="text-sm text-muted">Goals tracked</p>
+          </CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Members</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chama.members.length === 0 ? (
+            <p className="text-sm text-muted">Nobody has joined this chama yet.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {chama.members.map((m) => (
+                <li key={m.memberId} className="flex justify-between gap-4 py-2.5 text-sm font-medium first:pt-0 last:pb-0">
+                  <span>{m.name}</span>
+                  <span className="text-muted">{roleLabel(m.role)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Dialog } from "@/components/ui/dialog";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -12,6 +12,10 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: "primary" | "destructive";
   loading?: boolean;
+  /** Keeps the confirm button off, e.g. until a reason is written. */
+  confirmDisabled?: boolean;
+  /** Form fields the decision needs, shown inside the dialog. */
+  children?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -24,47 +28,29 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   variant = "primary",
   loading,
+  confirmDisabled,
+  children,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  React.useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onCancel]);
-
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
-        className="absolute inset-0 bg-slate-900/40"
-        aria-label="Close dialog"
-        onClick={onCancel}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-        className={cn("relative z-10 w-full max-w-md rounded-card border border-border bg-white p-6 shadow-md")}
-      >
-        <h2 id="confirm-title" className="text-lg font-semibold text-foreground">
-          {title}
-        </h2>
-        {description ? <p className="mt-2 text-sm text-muted">{description}</p> : null}
-        <div className="mt-6 flex justify-end gap-2">
+    <Dialog
+      open={open}
+      title={title}
+      description={description}
+      onClose={onCancel}
+      footer={
+        <>
           <Button variant="secondary" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button variant={variant} loading={loading} onClick={onConfirm}>
+          <Button variant={variant} loading={loading} disabled={confirmDisabled} onClick={onConfirm}>
             {confirmLabel}
           </Button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      {children}
+    </Dialog>
   );
 }

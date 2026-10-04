@@ -1,46 +1,60 @@
 "use client";
 
 import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 import type { RecheckListItem } from "@/types";
+import { EmptyState } from "@/components/empty-state";
+import { formatDay, roleLabel } from "@/components/labels";
+import { PageHeader } from "@/components/page-header";
+import { Table, TableWrap, Td, Th, THead, Tr } from "@/components/ui/table";
 
 export function RechecksView({ items }: { items: RecheckListItem[] }) {
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Re-checks</h1>
-        <p className="text-sm text-muted">Approved members due for another verification look.</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Re-checks"
+        description="Approved members whose verification is due another look, because time has passed or something changed."
+      />
       {items.length === 0 ? (
-        <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted">No re-checks due.</div>
+        <EmptyState
+          icon={RefreshCw}
+          title="No re-checks are due"
+          description="Approved members come back to this list when it is time to look at their verification again."
+        />
       ) : (
-        <div className="overflow-x-auto rounded-card border border-border bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-[#EAF1FE]">
+        <TableWrap>
+          <Table>
+            <THead>
               <tr>
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Role</th>
-                <th className="px-4 py-3 font-semibold">Last checked</th>
-                <th className="px-4 py-3 font-semibold">Why due</th>
-                <th className="px-4 py-3 font-semibold">Action</th>
+                <Th>Name</Th>
+                <Th>Role</Th>
+                <Th>Last checked</Th>
+                <Th>Why it is due</Th>
+                <Th>
+                  <span className="sr-only">Open</span>
+                </Th>
               </tr>
-            </thead>
+            </THead>
             <tbody>
               {items.map((row) => (
-                <tr key={row.id} className="border-b border-border">
-                  <td className="px-4 py-3 font-medium">{row.fullName}</td>
-                  <td className="px-4 py-3 capitalize">{row.role}</td>
-                  <td className="px-4 py-3">{row.lastCheckedAt ? new Date(row.lastCheckedAt).toLocaleDateString("en-KE") : "—"}</td>
-                  <td className="px-4 py-3 text-muted">{row.dueReason}</td>
-                  <td className="px-4 py-3">
-                    <Link href={row.id.startsWith("rc-") ? `/verification/vet-${row.memberId}` : `/verification/${row.id}`} className="text-[#0454DB] hover:underline">
-                      Open verification detail
+                <Tr key={row.id}>
+                  <Td className="font-semibold">{row.fullName}</Td>
+                  <Td>{roleLabel(row.role)}</Td>
+                  <Td className="whitespace-nowrap">{row.lastCheckedAt ? formatDay(row.lastCheckedAt) : "Never"}</Td>
+                  <Td className="text-muted">{row.dueReason}</Td>
+                  <Td className="text-right">
+                    <Link
+                      href={row.id.startsWith("rc-") ? `/verification/vet-${row.memberId}` : `/verification/${row.id}`}
+                      className="inline-flex min-h-10 items-center whitespace-nowrap rounded-btn border border-border bg-white px-4 text-sm font-bold text-primary hover:border-primary hover:bg-primary-light"
+                    >
+                      Review verification
                     </Link>
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
             </tbody>
-          </table>
-        </div>
+          </Table>
+        </TableWrap>
       )}
     </div>
   );

@@ -35,6 +35,7 @@ function LoginFlow() {
   const next = searchParams.get("next");
   const stepParam = searchParams.get("step");
   const [step, setStep] = useState<"login" | "verify">("login");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (stepParam === "verify") setStep("verify");
@@ -89,9 +90,9 @@ function LoginFlow() {
       <AuthProgress current={step === "login" ? "login" : "verify"} />
       {step === "login" ? (
         <>
-          <h1 className="text-2xl font-bold text-foreground">Admin sign in</h1>
-          <p className="mt-1 text-sm text-muted">FoundersLink platform administration</p>
-          <form className="mt-8 space-y-4" onSubmit={loginForm.handleSubmit(onLogin)}>
+          <h1 className="text-2xl font-extrabold text-foreground">Sign in to FoundersLink admin</h1>
+          <p className="mt-1 text-base text-muted">Use your staff email and password.</p>
+          <form className="mt-8 space-y-5" noValidate onSubmit={loginForm.handleSubmit(onLogin)}>
             <Input
               label="Email"
               type="email"
@@ -101,26 +102,38 @@ function LoginFlow() {
             />
             <Input
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
+              trailing={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-pressed={showPassword}
+                  className="min-h-9 rounded-[10px] px-3 text-sm font-bold text-primary hover:bg-primary-light"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              }
               error={loginForm.formState.errors.password?.message}
               {...loginForm.register("password")}
             />
             {loginForm.formState.errors.root ? (
-              <p className="text-sm text-destructive">{loginForm.formState.errors.root.message}</p>
+              <p role="alert" className="rounded-btn border border-destructive/30 bg-destructive-light px-4 py-3 text-sm font-semibold text-destructive">
+                That email and password do not match an admin account. Check both and try again.
+              </p>
             ) : null}
             <Button type="submit" className="w-full" loading={loginForm.formState.isSubmitting}>
-              Continue
+              Sign in
             </Button>
           </form>
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-bold text-foreground">Verification code</h1>
-          <p className="mt-1 text-sm text-muted">Enter the 6-digit code from your authenticator app.</p>
-          <form className="mt-8 space-y-4" onSubmit={verifyForm.handleSubmit(onVerify)}>
+          <h1 className="text-2xl font-extrabold text-foreground">Enter your sign-in code</h1>
+          <p className="mt-1 text-base text-muted">Enter the 6-digit code from your authenticator app.</p>
+          <form className="mt-8 space-y-5" noValidate onSubmit={verifyForm.handleSubmit(onVerify)}>
             <Input
-              label="Verification code"
+              label="6-digit code"
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
@@ -128,7 +141,9 @@ function LoginFlow() {
               {...verifyForm.register("code")}
             />
             {verifyForm.formState.errors.root ? (
-              <p className="text-sm text-destructive">{verifyForm.formState.errors.root.message}</p>
+              <p role="alert" className="rounded-btn border border-destructive/30 bg-destructive-light px-4 py-3 text-sm font-semibold text-destructive">
+                That code was not accepted. Codes change every 30 seconds: enter the newest one.
+              </p>
             ) : null}
             <Button type="submit" className="w-full" loading={verifyForm.formState.isSubmitting}>
               Verify and continue

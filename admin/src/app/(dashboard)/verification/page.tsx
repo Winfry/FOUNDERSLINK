@@ -1,4 +1,6 @@
 import { VerificationView } from "./verification-view";
+import { ListError } from "@/components/list-state";
+import { PageHeader } from "@/components/page-header";
 import { fetchVerificationQueue } from "@/services/verification.service";
 
 export default async function VerificationPage({
@@ -16,14 +18,12 @@ export default async function VerificationPage({
       search: searchParams.search,
       status: role === "all" ? undefined : role,
     });
-    if (result.data.length === 0 && result.total === 0) {
-      // still render view for empty state inside table
-    }
     return <VerificationView tab={tab} role={role} page={page} result={result} />;
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load the verification queue.
+      <div className="space-y-6">
+        <PageHeader title="Verification" />
+        <ListError what="the verification queue" />
       </div>
     );
   }

@@ -1,3 +1,5 @@
+import { ListError } from "@/components/list-state";
+import { PageHeader } from "@/components/page-header";
 import { OverviewView } from "./overview-view";
 import { fetchAdminStats } from "@/services/stats.service";
 
@@ -7,8 +9,9 @@ export default async function OverviewPage() {
     return <OverviewView stats={stats} />;
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load overview. Refresh to try again.
+      <div className="space-y-6">
+        <PageHeader title="Overview" />
+        <ListError what="the overview numbers" />
       </div>
     );
   }

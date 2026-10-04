@@ -1,3 +1,5 @@
+import { ListError } from "@/components/list-state";
+import { PageHeader } from "@/components/page-header";
 import { AuditLogView } from "./audit-log-view";
 import { fetchAuditLog } from "@/services/audit.service";
 
@@ -19,8 +21,9 @@ export default async function AuditLogPage({
     return <AuditLogView page={page} result={result} />;
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load audit log.
+      <div className="space-y-6">
+        <PageHeader title="Audit log" />
+        <ListError what="the audit log" />
       </div>
     );
   }

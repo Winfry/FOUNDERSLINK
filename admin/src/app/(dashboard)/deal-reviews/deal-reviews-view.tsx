@@ -1,54 +1,72 @@
 "use client";
 
 import Link from "next/link";
+import { ClipboardCheck } from "lucide-react";
 import type { DealReviewListItem } from "@/types";
+import { EmptyState } from "@/components/empty-state";
+import { dealTypeLabel, stageLabel } from "@/components/labels";
+import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableWrap, Td, Th, THead, Tr } from "@/components/ui/table";
 
 export function DealReviewsView({ deals }: { deals: DealReviewListItem[] }) {
-  if (deals.length === 0) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-foreground">Deal reviews</h1>
-        <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted">
-          No deals waiting for document review.
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Deal reviews</h1>
-        <p className="text-sm text-muted">Deals at due diligence — confirm documents after AI pre-check.</p>
-      </div>
-      <div className="overflow-x-auto rounded-card border border-border bg-white">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-border bg-[#EAF1FE]">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Deal</th>
-              <th className="px-4 py-3 font-semibold">Parties</th>
-              <th className="px-4 py-3 font-semibold">Type</th>
-              <th className="px-4 py-3 font-semibold">Stage</th>
-              <th className="px-4 py-3 font-semibold">Documents waiting</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deals.map((d) => (
-              <tr key={d.id} className="border-b border-border hover:bg-slate-50">
-                <td className="px-4 py-3">
-                  <Link href={`/deal-reviews/${d.id}`} className="font-medium text-[#0454DB] hover:underline">
-                    {d.title}
-                  </Link>
-                </td>
-                <td className="px-4 py-3">{d.parties.join(", ")}</td>
-                <td className="px-4 py-3 capitalize">{d.dealType.replace(/_/g, " ")}</td>
-                <td className="px-4 py-3 capitalize">{d.stage.replace(/_/g, " ")}</td>
-                <td className="px-4 py-3">{d.documentsWaiting}</td>
+    <div className="space-y-6">
+      <PageHeader
+        title="Deal reviews"
+        description="Deals where a founder or investor has shared a document that needs FoundersLink to confirm or reject it."
+      />
+      {deals.length === 0 ? (
+        <EmptyState
+          icon={ClipboardCheck}
+          title="No documents are waiting for review"
+          description="When a founder or investor shares a document in a deal, the deal appears here until every document is confirmed or rejected."
+        />
+      ) : (
+        <TableWrap>
+          <Table>
+            <THead>
+              <tr>
+                <Th>Deal</Th>
+                <Th>Between</Th>
+                <Th>Type</Th>
+                <Th>Stage</Th>
+                <Th>Documents waiting</Th>
+                <Th>
+                  <span className="sr-only">Open</span>
+                </Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </THead>
+            <tbody>
+              {deals.map((d) => (
+                <Tr key={d.id}>
+                  <Td>
+                    <Link href={`/deal-reviews/${d.id}`} className="text-link">
+                      {d.title}
+                    </Link>
+                  </Td>
+                  <Td>{d.parties.join(" and ")}</Td>
+                  <Td>{dealTypeLabel(d.dealType)}</Td>
+                  <Td>
+                    <Badge variant="muted">{stageLabel(d.stage)}</Badge>
+                  </Td>
+                  <Td>
+                    <Badge variant={d.documentsWaiting > 0 ? "warning" : "muted"}>{d.documentsWaiting} waiting</Badge>
+                  </Td>
+                  <Td className="text-right">
+                    <Link
+                      href={`/deal-reviews/${d.id}`}
+                      className="inline-flex min-h-10 items-center rounded-btn bg-primary px-4 text-sm font-bold text-white hover:bg-primary-dark"
+                    >
+                      Review
+                    </Link>
+                  </Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+        </TableWrap>
+      )}
     </div>
   );
 }

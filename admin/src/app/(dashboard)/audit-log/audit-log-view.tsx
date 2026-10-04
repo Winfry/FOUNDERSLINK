@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ColumnDef } from "@tanstack/react-table/legacy";
+import type { LegacyColumnDef as ColumnDef } from "@tanstack/react-table/legacy";
 import type { AuditEntry } from "@/types";
 import { DataTable } from "@/components/data-table";
+import { formatDayTime, humanize } from "@/components/labels";
+import { PageHeader } from "@/components/page-header";
 
 export function AuditLogView({
   page,
@@ -27,64 +29,77 @@ export function AuditLogView({
     router.push(`/audit-log?${q.toString()}`);
   }
 
+  const filtered = Boolean(params.get("search")) || actionType !== "all" || Boolean(dateFrom) || Boolean(dateTo);
+
   const columns: ColumnDef<AuditEntry, unknown>[] = [
     {
       header: "Date and time",
       accessorKey: "createdAt",
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleString("en-KE"),
+      cell: ({ row }) => <span className="whitespace-nowrap">{formatDayTime(row.original.createdAt)}</span>,
     },
-    { header: "Action", accessorKey: "action" },
-    { header: "Target member", accessorKey: "targetMember" },
-    { header: "Reason", accessorKey: "reason" },
+    {
+      header: "Action",
+      accessorKey: "action",
+      cell: ({ row }) => <span className="font-semibold">{/[_.]/.test(row.original.action) ? humanize(row.original.action.replace(/\./g, " ")) : row.original.action}</span>,
+    },
+    { header: "Member", accessorKey: "targetMember", cell: ({ row }) => row.original.targetMember || <span className="text-muted">None</span> },
+    {
+      header: "Reason",
+      accessorKey: "reason",
+      cell: ({ row }) => row.original.reason || <span className="text-muted">No reason recorded</span>,
+    },
   ];
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Audit log</h1>
-        <p className="text-sm text-muted">Every admin decision and action with a written reason.</p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => updateQuery({ dateFrom: e.target.value, page: 1 })}
-          className="min-h-11 rounded-md border border-border px-3 text-sm"
-          aria-label="From date"
-        />
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => updateQuery({ dateTo: e.target.value, page: 1 })}
-          className="min-h-11 rounded-md border border-border px-3 text-sm"
-          aria-label="To date"
-        />
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Audit log"
+        description="Every decision and action an admin has taken, with the written reason. Entries cannot be edited."
+      />
       <DataTable
         columns={columns}
         data={result.data}
         total={result.total}
         page={page}
         pageSize={result.pageSize}
-        searchPlaceholder="Search audit log"
+        searchPlaceholder="Search by member or reason"
         onSearchChange={(s) => updateQuery({ search: s, page: 1 })}
         onPageChange={(p) => updateQuery({ page: p })}
         statusFilter={
-          <select
-            className="min-h-11 rounded-md border border-border bg-white px-3 text-sm"
-            value={actionType}
-            onChange={(e) => updateQuery({ actionType: e.target.value, page: 1 })}
-            aria-label="Filter by action"
-          >
-            <option value="all">All actions</option>
-            <option value="verification">Verification</option>
-            <option value="document">Document</option>
-            <option value="member">Member</option>
-            <option value="report">Report</option>
-            <option value="compliance">Compliance</option>
-          </select>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="audit-from" className="text-xs font-semibold text-muted">
+                From
+              </label>
+              <input id="audit-from" type="date" value={dateFrom} onChange={(e) => updateQuery({ dateFrom: e.target.value, page: 1 })} className="field !w-auto" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="audit-to" className="text-xs font-semibold text-muted">
+                To
+              </label>
+              <input id="audit-to" type="date" value={dateTo} onChange={(e) => updateQuery({ dateTo: e.target.value, page: 1 })} className="field !w-auto" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="audit-action" className="text-xs font-semibold text-muted">
+                Kind of action
+              </label>
+              <select id="audit-action" className="field" value={actionType} onChange={(e) => updateQuery({ actionType: e.target.value, page: 1 })}>
+                <option value="all">All actions</option>
+                <option value="verification">Verification</option>
+                <option value="document">Document</option>
+                <option value="member">Member</option>
+                <option value="report">Report</option>
+                <option value="compliance">Compliance</option>
+              </select>
+            </div>
+          </div>
         }
-        emptyMessage="No audit entries yet."
+        emptyTitle={filtered ? "No entries match those filters" : "No admin actions yet"}
+        emptyMessage={
+          filtered
+            ? "Clear the dates, the search or the kind of action to see every entry."
+            : "When an admin approves, rejects, suspends or confirms something, it is recorded here with the reason."
+        }
       />
     </div>
   );

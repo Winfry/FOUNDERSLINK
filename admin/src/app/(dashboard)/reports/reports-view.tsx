@@ -1,15 +1,24 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Flag, Info } from "lucide-react";
 import type { ReportedMemberRow, ReportedMessageRow } from "@/types";
 import { reportMemberAction, reportMessageAction } from "@/app/actions/admin-actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { formatDayTime } from "@/components/labels";
+import { PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
 import { ToastBanner } from "@/components/toast-banner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs } from "@/components/ui/tabs";
 
 type Tab = "messages" | "members";
+type Row = (ReportedMessageRow | ReportedMemberRow) & { messageText?: string };
+
+const MIN_REASON = 8;
 
 export function ReportsView({
   messages: initialMessages,
@@ -22,157 +31,143 @@ export function ReportsView({
   const [messages, setMessages] = useState(initialMessages);
   const [members, setMembers] = useState(initialMembers);
   const [reason, setReason] = useState("");
-  const [pendingAction, setPendingAction] = useState<{
-    kind: Tab;
-    id: string;
-    action: "dismiss" | "warn" | "suspend";
-  } | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [target, setTarget] = useState<{ kind: Tab; id: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function runAction() {
-    if (!pendingAction) return;
-    const needsReason = pendingAction.action !== "dismiss";
-    if (needsReason && reason.trim().length < 8) return;
+  const reasonLength = reason.trim().length;
+
+  function close() {
+    setTarget(null);
+    setReason("");
+  }
+
+  function suspend() {
+    const t = target;
+    if (!t || reasonLength < MIN_REASON) return;
     startTransition(async () => {
-      const r = needsReason ? reason.trim() : "Dismissed — no further action.";
-      const result =
-        pendingAction.kind === "messages"
-          ? await reportMessageAction(pendingAction.id, pendingAction.action, r)
-          : await reportMemberAction(pendingAction.id, pendingAction.action, r);
-      // The backend says so when it could not do what was asked.
-      if (result && "ok" in result && !result.ok) {
-        setToast(result.error ?? "The report was not changed.");
-        setPendingAction(null);
-        setReason("");
-        return;
+      try {
+        const result =
+          t.kind === "messages"
+            ? await reportMessageAction(t.id, "suspend", reason.trim())
+            : await reportMemberAction(t.id, "suspend", reason.trim());
+        // The backend says so when it could not do what was asked.
+        if (result && "ok" in result && !result.ok) {
+          setToast({ text: result.error ?? "Nothing was changed.", error: true });
+        } else {
+          if (t.kind === "messages") {
+            setMessages((list) => list.map((x) => (x.id === t.id ? { ...x, status: "handled" as const } : x)));
+          } else {
+            setMembers((list) => list.map((x) => (x.id === t.id ? { ...x, status: "handled" as const } : x)));
+          }
+          setToast({ text: `${t.name} was suspended. Your reason is in the audit log.` });
+        }
+      } catch {
+        setToast({ text: "Nothing was changed: the server did not answer. Try again.", error: true });
       }
-      if (pendingAction.kind === "messages") {
-        setMessages((list) => list.map((x) => (x.id === pendingAction.id ? { ...x, status: "handled" as const } : x)));
-      } else {
-        setMembers((list) => list.map((x) => (x.id === pendingAction.id ? { ...x, status: "handled" as const } : x)));
-      }
-      setToast("Report marked as handled.");
-      setPendingAction(null);
-      setReason("");
+      close();
     });
   }
 
-  const rows = tab === "messages" ? messages : members;
+  const rows: Row[] = tab === "messages" ? messages : members;
 
   return (
-    <div className="space-y-4">
-      {toast ? <ToastBanner message={toast} onDismiss={() => setToast(null)} /> : null}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Reports</h1>
-        <p className="text-sm text-muted">Reported messages and members — AI warnings are guidance only.</p>
+    <div className="space-y-6">
+      {toast ? (
+        <ToastBanner message={toast.text} variant={toast.error ? "error" : "success"} onDismiss={() => setToast(null)} />
+      ) : null}
+      <PageHeader title="Reports" description="Messages and members that other members have reported to FoundersLink." />
+
+      <div className="flex items-start gap-3 rounded-btn bg-primary-light px-4 py-3 text-sm font-medium text-foreground">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+        <p>
+          The one action you can take from a report today is suspending the reported member. Dismissing a report and
+          warning a member are not available yet, so reports stay in this list.
+        </p>
       </div>
-      <div className="flex gap-2">
-        {(["messages", "members"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium capitalize",
-              tab === t ? "bg-[#0454DB] text-white" : "bg-white hover:bg-[#EAF1FE]",
-            )}
-          >
-            {t === "messages" ? "Reported messages" : "Reported members"}
-          </button>
-        ))}
-      </div>
+
+      <Tabs
+        label="Report type"
+        items={[
+          { id: "messages", label: "Reported messages", count: messages.length },
+          { id: "members", label: "Reported members", count: members.length },
+        ]}
+        active={tab}
+        onChange={(id) => setTab(id as Tab)}
+      />
+
       {rows.length === 0 ? (
-        <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted">No open reports.</div>
+        <EmptyState
+          icon={Flag}
+          title={tab === "messages" ? "No messages have been reported" : "No members have been reported"}
+          description={
+            tab === "messages"
+              ? "When a member reports a message in a conversation, it appears here with the message and their reason."
+              : "When a member reports another member, it appears here with their reason."
+          }
+        />
       ) : (
         <div className="space-y-4">
-          {tab === "messages"
-            ? messages.map((row) => (
-                <div key={row.id} className="rounded-card border border-border bg-white p-4 text-sm">
-                  <div className="flex flex-wrap justify-between gap-2">
-                    <p>
-                      <span className="font-medium">{row.reporterName}</span> reported{" "}
-                      <span className="font-medium">{row.reportedMemberName}</span>
-                    </p>
-                    {row.aiWarning ? (
-                      <span className="rounded-full bg-[#113373] px-2 py-0.5 text-xs font-semibold text-white">AI warning</span>
-                    ) : null}
+          {rows.map((row) => (
+            <Card key={row.id}>
+              <CardContent className="space-y-3 pt-6">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="text-base font-medium text-foreground">
+                    <span className="font-bold">{row.reporterName}</span> reported{" "}
+                    <span className="font-bold">{row.reportedMemberName}</span>
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {row.aiWarning ? <Badge variant="warning">Flagged automatically</Badge> : null}
+                    <StatusBadge status={row.status} />
                   </div>
-                  <p className="mt-1 text-muted">{row.reason}</p>
-                  <p className="mt-2 rounded-md bg-[#EAF1FE] p-2 text-foreground">&ldquo;{row.messageText}&rdquo;</p>
-                  <p className="mt-1 text-xs text-muted">{new Date(row.reportedAt).toLocaleString("en-KE")}</p>
-                  {row.status === "open" ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button type="button" variant="secondary" onClick={() => setPendingAction({ kind: "messages", id: row.id, action: "dismiss" })}>
-                        Dismiss
-                      </Button>
-                      <Button type="button" variant="secondary" onClick={() => setPendingAction({ kind: "messages", id: row.id, action: "warn" })}>
-                        Warn member
-                      </Button>
-                      <Button type="button" variant="destructive" onClick={() => setPendingAction({ kind: "messages", id: row.id, action: "suspend" })}>
-                        Suspend member
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-xs font-medium text-[#0454DB]">Handled</p>
-                  )}
                 </div>
-              ))
-            : members.map((row) => (
-                <div key={row.id} className="rounded-card border border-border bg-white p-4 text-sm">
-                  <div className="flex flex-wrap justify-between gap-2">
-                    <p>
-                      <span className="font-medium">{row.reporterName}</span> reported{" "}
-                      <span className="font-medium">{row.reportedMemberName}</span>
+                <div>
+                  <p className="text-xs font-semibold text-muted">Their reason</p>
+                  <p className="text-sm font-medium text-foreground">{row.reason}</p>
+                </div>
+                {row.messageText ? (
+                  <div>
+                    <p className="text-xs font-semibold text-muted">The reported message</p>
+                    <p className="mt-1 rounded-btn border-l-4 border-primary bg-surface px-4 py-3 text-sm font-medium text-foreground">
+                      {row.messageText}
                     </p>
-                    {row.aiWarning ? (
-                      <span className="rounded-full bg-[#113373] px-2 py-0.5 text-xs font-semibold text-white">AI warning</span>
-                    ) : null}
                   </div>
-                  <p className="mt-1 text-muted">{row.reason}</p>
-                  <p className="mt-1 text-xs text-muted">{new Date(row.reportedAt).toLocaleString("en-KE")}</p>
+                ) : null}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+                  <p className="text-xs font-semibold text-muted">Reported {formatDayTime(row.reportedAt)}</p>
                   {row.status === "open" ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button type="button" variant="secondary" onClick={() => setPendingAction({ kind: "members", id: row.id, action: "dismiss" })}>
-                        Dismiss
-                      </Button>
-                      <Button type="button" variant="secondary" onClick={() => setPendingAction({ kind: "members", id: row.id, action: "warn" })}>
-                        Warn member
-                      </Button>
-                      <Button type="button" variant="destructive" onClick={() => setPendingAction({ kind: "members", id: row.id, action: "suspend" })}>
-                        Suspend member
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-xs font-medium text-[#0454DB]">Handled</p>
-                  )}
+                    <Button type="button" variant="destructive" onClick={() => setTarget({ kind: tab, id: row.id, name: row.reportedMemberName })}>
+                      Suspend {row.reportedMemberName}
+                    </Button>
+                  ) : null}
                 </div>
-              ))}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
       <ConfirmDialog
-        open={pendingAction !== null}
-        title="Confirm report action"
-        description={
-          pendingAction?.action === "dismiss"
-            ? "Dismiss this report?"
-            : "Add a written reason below, then confirm."
-        }
-        confirmLabel="Mark as handled"
-        variant={pendingAction?.action === "suspend" ? "destructive" : "primary"}
+        open={target !== null}
+        title={`Suspend ${target?.name ?? "this member"}?`}
+        description="They will not be able to use FoundersLink until they are reinstated. This is recorded in the audit log with your reason."
+        confirmLabel="Suspend member"
+        variant="destructive"
         loading={pending}
-        onCancel={() => {
-          setPendingAction(null);
-          setReason("");
-        }}
-        onConfirm={runAction}
-      />
-      {pendingAction && pendingAction.action !== "dismiss" ? (
-        <div className="max-w-md">
-          <Input label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+        confirmDisabled={reasonLength < MIN_REASON}
+        onCancel={close}
+        onConfirm={suspend}
+      >
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="report-reason" className="text-sm font-semibold text-foreground">
+            Written reason <span className="text-destructive">(required)</span>
+          </label>
+          <textarea id="report-reason" rows={3} autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className="field resize-y" />
+          <p className="text-xs font-semibold text-muted">
+            {reasonLength >= MIN_REASON ? "Reason written." : `Write at least ${MIN_REASON} characters to turn on the button.`}
+          </p>
         </div>
-      ) : null}
+      </ConfirmDialog>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { ListError } from "@/components/list-state";
+import { PageHeader } from "@/components/page-header";
 import { MembersView } from "./members-view";
 import { fetchMembers } from "@/services/members.service";
 import type { MemberRole } from "@/types";
@@ -19,8 +21,9 @@ export default async function MembersPage({
     return <MembersView role={role} page={page} result={result} />;
   } catch {
     return (
-      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
-        Could not load members.
+      <div className="space-y-6">
+        <PageHeader title="Members" />
+        <ListError what="the members list" />
       </div>
     );
   }

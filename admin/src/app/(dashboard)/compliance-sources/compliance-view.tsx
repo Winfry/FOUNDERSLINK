@@ -1,87 +1,68 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Info, Scale } from "lucide-react";
 import type { ComplianceSourceRow } from "@/types";
-import { complianceReviewAction } from "@/app/actions/admin-actions";
-import { ToastBanner } from "@/components/toast-banner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/empty-state";
+import { formatDay } from "@/components/labels";
+import { PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
+import { Card, CardContent } from "@/components/ui/card";
 
-const statusStyle: Record<ComplianceSourceRow["status"], string> = {
-  current: "bg-[#EAF1FE] text-[#0454DB]",
-  due: "bg-[#DBEAFE] text-[#113373]",
-  out_of_date: "bg-[#113373] text-white",
-};
+const SCOPE: Record<string, string> = { business: "Business requirement", deal: "Deal requirement" };
 
-export function ComplianceSourcesView({ sources: initial }: { sources: ComplianceSourceRow[] }) {
-  const [sources, setSources] = useState(initial);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [note, setNote] = useState("");
-  const [toast, setToast] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+// "business · Kenya Revenue Authority" arrives with the scope as a raw word.
+function coversText(covers: string) {
+  return covers
+    .split(" · ")
+    .map((part, i) => (i === 0 ? SCOPE[part] ?? part : part))
+    .join(" · ");
+}
 
-  function submitReview(id: string) {
-    if (note.trim().length < 4) return;
-    startTransition(async () => {
-      const updated = await complianceReviewAction(id, note.trim());
-      if (updated) {
-        setSources((list) => list.map((s) => (s.id === id ? updated : s)));
-        setToast("Source marked as reviewed.");
-        setActiveId(null);
-        setNote("");
-      } else {
-        setToast("Review not saved: the backend cannot record this yet.");
-        setActiveId(null);
-      }
-    });
-  }
+export function ComplianceSourcesView({ sources }: { sources: ComplianceSourceRow[] }) {
+  const attention = sources.filter((s) => s.status !== "current").length;
 
   return (
-    <div className="space-y-4">
-      {toast ? <ToastBanner message={toast} onDismiss={() => setToast(null)} /> : null}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Compliance sources</h1>
-        <p className="text-sm text-muted">Freshness report for official sources Ask Compliance relies on.</p>
+    <div className="space-y-6">
+      <PageHeader
+        title="Compliance sources"
+        description="The official sources that Ask Compliance answers from, and how recently each one was checked. Those needing attention are first."
+      />
+      <div className="flex items-start gap-3 rounded-btn bg-primary-light px-4 py-3 text-sm font-medium text-foreground">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+        <p>
+          This page is read-only for now. Marking a source as reviewed from the dashboard is not available yet.
+          {sources.length > 0
+            ? attention === 0
+              ? " Every source is current."
+              : ` ${attention} of ${sources.length} ${sources.length === 1 ? "source needs" : "sources need"} attention.`
+            : ""}
+        </p>
       </div>
       {sources.length === 0 ? (
-        <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted">No sources listed.</div>
+        <EmptyState
+          icon={Scale}
+          title="No compliance sources are listed"
+          description="Each official source that Ask Compliance relies on will be listed here with the date it was last checked."
+        />
       ) : (
         <div className="space-y-3">
           {sources.map((s) => (
-            <div key={s.id} className="rounded-card border border-border bg-white p-4 text-sm">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-foreground">{s.name}</p>
-                  <p className="text-muted">{s.covers}</p>
-                </div>
-                <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize", statusStyle[s.status])}>
-                  {s.status.replace(/_/g, " ")}
-                </span>
-              </div>
-              <p className="mt-2 text-xs text-muted">
-                Last updated: {s.lastUpdatedAt ? new Date(s.lastUpdatedAt).toLocaleDateString("en-KE") : "never"}
-                {s.lastReviewedAt ? ` · Last reviewed: ${new Date(s.lastReviewedAt).toLocaleDateString("en-KE")}` : ""}
-              </p>
-              {s.reviewNote ? <p className="mt-1 text-muted">Note: {s.reviewNote}</p> : null}
-              {activeId === s.id ? (
-                <div className="mt-3 space-y-2">
-                  <Input label="Review note" value={note} onChange={(e) => setNote(e.target.value)} />
-                  <div className="flex gap-2">
-                    <Button type="button" loading={pending} disabled={note.trim().length < 4} onClick={() => submitReview(s.id)}>
-                      Mark as reviewed
-                    </Button>
-                    <Button type="button" variant="secondary" onClick={() => setActiveId(null)}>
-                      Cancel
-                    </Button>
+            <Card key={s.id}>
+              <CardContent className="pt-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[17px] font-bold text-foreground">{s.name}</p>
+                    {s.covers ? <p className="text-sm text-muted">{coversText(s.covers)}</p> : null}
                   </div>
+                  <StatusBadge status={s.status} />
                 </div>
-              ) : (
-                <Button type="button" variant="secondary" className="mt-3" onClick={() => setActiveId(s.id)}>
-                  Mark as reviewed
-                </Button>
-              )}
-            </div>
+                {s.reviewNote ? <p className="mt-3 text-sm font-medium text-foreground">{s.reviewNote}</p> : null}
+                <p className="mt-3 text-xs font-semibold text-muted">
+                  {s.lastUpdatedAt ? `Last checked ${formatDay(s.lastUpdatedAt)}` : "Never checked against the official source"}
+                  {s.lastReviewedAt ? ` · Last reviewed ${formatDay(s.lastReviewedAt)}` : ""}
+                </p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

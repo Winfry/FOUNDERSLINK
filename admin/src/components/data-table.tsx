@@ -22,6 +22,7 @@ interface DataTableProps<T extends RowData> {
   statusFilter?: React.ReactNode;
   onSearchChange?: (value: string) => void;
   onPageChange?: (page: number) => void;
+  emptyTitle?: string;
   emptyMessage?: string;
   className?: string;
   getRowHref?: (row: T) => string;
@@ -37,7 +38,8 @@ export function DataTable<T extends RowData>({
   statusFilter,
   onSearchChange,
   onPageChange,
-  emptyMessage = "No results found.",
+  emptyTitle = "Nothing to show",
+  emptyMessage = "Nothing matches yet. Try a different search or filter.",
   className,
   getRowHref,
 }: DataTableProps<T>) {
@@ -61,30 +63,27 @@ export function DataTable<T extends RowData>({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="relative max-w-sm flex-1">
-          <Search className="pointer-events-none absolute left-3 top-[11px] h-4 w-4 text-muted" aria-hidden />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input
             type="search"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="min-h-11 w-full rounded-card border border-border bg-white py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            aria-label="Search table"
+            className="field pl-9"
+            aria-label={searchPlaceholder}
           />
         </div>
         {statusFilter}
       </div>
-      <div className="overflow-x-auto rounded-card border border-border">
+      <div className="overflow-x-auto rounded-card border border-border bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-border bg-slate-50">
+          <thead className="border-b border-border bg-surface">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-4 py-3 font-semibold text-foreground"
-                  >
+                  <th key={header.id} className="px-4 py-3 text-xs font-semibold text-muted">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -96,65 +95,62 @@ export function DataTable<T extends RowData>({
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-muted">
-                  {emptyMessage}
+                <td colSpan={columns.length} className="px-6 py-12 text-center">
+                  <p className="text-[17px] font-bold text-foreground">{emptyTitle}</p>
+                  <p className="mx-auto mt-1 max-w-md text-sm text-muted">{emptyMessage}</p>
                 </td>
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => {
                 const href = getRowHref?.(row.original);
                 return (
-                <tr
-                  key={row.id}
-                  className={cn(
-                    "border-b border-border last:border-0 hover:bg-slate-50/80",
-                    href && "cursor-pointer",
-                  )}
-                  onClick={
-                    href
-                      ? (e) => {
-                          const target = e.target as HTMLElement;
-                          if (target.closest("a, button")) return;
-                          router.push(href);
-                        }
-                      : undefined
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 text-foreground">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              );
+                  <tr
+                    key={row.id}
+                    className={cn(
+                      "border-b border-border last:border-0 hover:bg-surface",
+                      href && "cursor-pointer hover:bg-primary-light/60",
+                    )}
+                    onClick={
+                      href
+                        ? (e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest("a, button")) return;
+                            router.push(href);
+                          }
+                        : undefined
+                    }
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-3.5 align-middle font-medium text-foreground">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                );
               })
             )}
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between text-sm text-muted">
-        <span>
-          Page {page} of {totalPages} · {total} total
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            className="min-h-9 px-3"
-            disabled={page <= 1}
-            onClick={() => onPageChange?.(page - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            className="min-h-9 px-3"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange?.(page + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      {total > 0 ? (
+        <div className="flex items-center justify-between gap-3 text-sm text-muted">
+          <span>
+            {total === 1 ? "1 result" : `${total} results`} · page {page} of {totalPages}
+          </span>
+          {totalPages > 1 ? (
+            <div className="flex gap-2">
+              <Button variant="secondary" disabled={page <= 1} onClick={() => onPageChange?.(page - 1)}>
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+                Previous
+              </Button>
+              <Button variant="secondary" disabled={page >= totalPages} onClick={() => onPageChange?.(page + 1)}>
+                Next
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </Button>
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
