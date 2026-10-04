@@ -9,7 +9,7 @@ from ai.explanations import explain as explanations
 from ai.explanations.messages import t
 from ai.matching.filters import Check, check
 from ai.ranking import scoring
-from ai.ranking.weights import MANDATE_HIGH, MANDATE_LOW
+from ai.ranking.weights import MANDATE_HIGH, MEANING_SHARE
 from ai.service.schemas import (
     Candidate,
     FitExplanation,
@@ -27,12 +27,13 @@ def _founder_text(p: MatchProfile) -> str:
     return " ".join(parts)
 
 
-def _mandate_check(similarity: float, lang: str) -> Check:
+def _mandate_check(similarity: float, lang: str) -> Check | None:
+    """A reason only when the meaning match is clearly strong. A low
+    similarity is never shown as a miss: measured on the labelled set, true
+    fits and non-fits overlap too much for that to be honest (weights.py)."""
     if similarity >= MANDATE_HIGH:
         return Check("mandate", True, t("mandate.fit", lang), 1.0)
-    if similarity >= MANDATE_LOW:
-        return Check("mandate", True, t("mandate.partial", lang), 0.5)
-    return Check("mandate", False, t("mandate.miss", lang), 0.0)
+    return None
 
 
 def _similarities(profile: MatchProfile, candidates: list[Candidate], embedder: Embedder | None):
@@ -43,9 +44,28 @@ def _similarities(profile: MatchProfile, candidates: list[Candidate], embedder: 
 
 def assess(profile: MatchProfile, candidate: Candidate, similarity: float | None, lang: str = "en") -> list[Check]:
     checks = check(profile, candidate, lang)
-    if similarity is not None:
-        checks.append(_mandate_check(similarity, lang))
+    if similarity is not None and (mandate := _mandate_check(similarity, lang)):
+        checks.append(mandate)
     return checks
+
+
+def _relative(similarities: list) -> list[float | None]:
+    """Each similarity relative to the others in this request, in [0, 1].
+    The model's absolute scores are compressed (about 0.76 to 0.87 for every
+    mandate), but their order carries signal."""
+    known = [s for s in similarities if s is not None]
+    if len(known) < 2 or max(known) == min(known):
+        return [None] * len(similarities)
+    low, high = min(known), max(known)
+    return [None if s is None else (s - low) / (high - low) for s in similarities]
+
+
+def _sort_score(checks: list[Check], relative: float | None) -> float:
+    """The score the backend sorts by: the checks, nudged by meaning."""
+    base = scoring.score(checks)
+    if relative is None:
+        return base
+    return round((1 - MEANING_SHARE) * base + MEANING_SHARE * relative, 2)
 
 
 def _signals(checks: list[Check]) -> list[Signal]:
@@ -58,13 +78,14 @@ def recommend(
     """Returns a verdict for every candidate, in the order they were sent.
     The backend relies on getting all of them back."""
     items = []
-    for candidate, similarity in zip(candidates, _similarities(profile, candidates, embedder)):
+    similarities = _similarities(profile, candidates, embedder)
+    for candidate, similarity, relative in zip(candidates, similarities, _relative(similarities)):
         checks = assess(profile, candidate, similarity)
         band = scoring.band(checks)
         items.append(
             RecommendItem(
                 candidate_id=candidate.id,
-                score=scoring.score(checks),
+                score=_sort_score(checks, relative),
                 band=band,
                 signals=_signals(checks),
                 explanation=explanations.explain(checks, band),

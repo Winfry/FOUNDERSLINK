@@ -68,6 +68,6 @@ Tests run without the embedding model and use the backend's `backend/data/demo-f
 
 ## Next steps
 
-1. Install the embedding model and calibrate `MANDATE_LOW` / `MANDATE_HIGH` in `ai/ranking/weights.py` on real descriptions.
+1. Re-measure `MANDATE_HIGH` and `MEANING_SHARE` in `ai/ranking/weights.py` with `python -m ai.evaluation.eval_matching --embed` whenever the model or the investor data changes.
 2. Fill `ai/evaluation/datasets/labelled_matches.jsonl` and measure precision@10 for this service against the backend's stand-in rules.
 3. Add an LLM pass to `/extract-profile` for descriptions the rules miss.

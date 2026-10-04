@@ -11,8 +11,16 @@ SIGNAL_WEIGHTS = {
     "mandate": 0.15,
 }
 
-# Similarity between the founder's description and the funder's mandate,
-# from the embedding model. Below LOW it counts as a soft miss; at or above
-# HIGH it counts as a clear fit. Calibrate these on the labelled set.
-MANDATE_LOW = 0.78
+# Meaning match between the founder's description and the investor's
+# mandate, from intfloat/multilingual-e5-small. Measured on 4 October on the
+# labelled set (ai/evaluation/eval_matching.py, 14 founders x 18 investors):
+#   true fits   median 0.818, range 0.757-0.870
+#   non-fits    median 0.799, 90th percentile 0.826, max 0.846
+# The two overlap heavily, so a low similarity is never shown as a miss.
+# At or above MANDATE_HIGH, which almost no non-fit reaches, it is shown as
+# a reason. Re-measure if the model or the investor data changes.
 MANDATE_HIGH = 0.84
+
+# Share of the sort score that comes from meaning, relative to the other
+# investors in the same request. Bands never depend on it.
+MEANING_SHARE = 0.2

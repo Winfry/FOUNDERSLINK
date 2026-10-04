@@ -110,14 +110,39 @@ def test_a_soft_miss_is_something_to_check(client, profile, funder):
     assert "Check: offers equity and convertible notes; you asked for loans." in out["reasons"]
 
 
-def test_partial_mandate_match_is_something_to_check(profile, funder):
-    class HalfwayEmbedder:
-        def similarities(self, query, passages):
-            return [0.80] * len(passages)
+class FixedEmbedder:
+    def __init__(self, similarity):
+        self.similarity = similarity
 
-    out = explain_fit(MatchProfile(**profile()), Candidate(**funder("Savanna")), [], "en", HalfwayEmbedder())
-    assert out.band == "good"
-    assert "Check: what you described partly matches what they say they fund." in out.reasons
+    def similarities(self, query, passages):
+        return [self.similarity] * len(passages)
+
+
+def test_a_middling_meaning_match_is_never_shown_as_a_miss(profile, funder):
+    # Measured: true fits and non-fits overlap at this similarity (weights.py).
+    out = explain_fit(MatchProfile(**profile()), Candidate(**funder("Savanna")), [], "en", FixedEmbedder(0.80))
+    assert out.band == "strong"
+    assert all(c.signal != "mandate" for c in out.components)
+
+
+def test_a_strong_meaning_match_is_a_reason(profile, funder):
+    out = explain_fit(MatchProfile(**profile()), Candidate(**funder("Savanna")), [], "en", FixedEmbedder(0.86))
+    assert out.band == "strong"
+    assert any(c.signal == "mandate" and c.fits for c in out.components)
+
+
+def test_meaning_changes_the_order_but_never_the_band(profile, candidates):
+    from ai.matching.pipeline import recommend
+
+    class Ordered:
+        def similarities(self, query, passages):
+            return [0.76 + 0.005 * i for i in range(len(passages))]
+
+    plain = recommend(MatchProfile(**profile()), [Candidate(**c) for c in candidates], None)
+    meaning = recommend(MatchProfile(**profile()), [Candidate(**c) for c in candidates], Ordered())
+    assert [i.band for i in plain] == [i.band for i in meaning]
+    assert any(a.score != b.score for a, b in zip(plain, meaning))
+    assert all(0 <= i.score <= 1 for i in meaning)
 
 
 def test_swahili_reasons_and_components(client, profile, funder):

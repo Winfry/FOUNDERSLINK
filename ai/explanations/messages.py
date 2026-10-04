@@ -95,14 +95,6 @@ MESSAGES = {
         "en": "What you described matches what they say they fund",
         "sw": "Ulichoeleza kinalingana na wanachosema wanafadhili",
     },
-    "mandate.partial": {
-        "en": "What you described partly matches what they say they fund",
-        "sw": "Ulichoeleza kinalingana kwa kiasi na wanachosema wanafadhili",
-    },
-    "mandate.miss": {
-        "en": "What you described is not close to what they say they fund",
-        "sw": "Ulichoeleza hakikaribiani na wanachosema wanafadhili",
-    },
     # Band summaries, the first reason on a profile page
     "band.strong": {"en": "A strong fit: everything we checked lines up.", "sw": "Inafaa sana: kila tulichokagua kinalingana."},
     "band.good": {"en": "A good fit, with one thing to check.", "sw": "Inafaa, ila kuna jambo moja la kuangalia."},

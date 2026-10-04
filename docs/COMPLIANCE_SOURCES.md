@@ -14,7 +14,7 @@ Scope since D11: **startups only**, so no SME, grant, SACCO or government-fund s
 3. **Record where it came from:** the exact page or PDF link (`url`) and the day you checked it (`last_verified_at`). Her ingest refuses any source without both.
 4. **Download once,** save it under `data/compliance/`, and point `file` at it. Never fetch while answering a question.
 
-> **Git note:** the root `.gitignore` ignores `*.pdf`, so source PDFs won't reach the repo. Either add an exception (`!data/compliance/**/*.pdf`) or agree that each machine runs a download script. Decide before the demo.
+> **Getting the files:** the root `.gitignore` ignores `*.pdf`, so each machine downloads them: `python -m scripts.fetch_compliance_sources` fetches every source in `sources.json`, then `python -m ai.compliance_rag.ingest` builds the index. Priority 1 is in `sources.json` as of 4 October. `python -m scripts.make_source_pack` writes the summary PDF to `docs/Kenya_Founder_Compliance_Source_Pack.pdf`.
 
 ---
 
