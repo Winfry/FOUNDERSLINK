@@ -15,6 +15,7 @@ interface Me {
   preferred_language: string;
   founder_profile: object | null;
   investor_profile: object | null;
+  expert_profile: object | null;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -45,6 +46,7 @@ export async function fetchSessionUser(): Promise<SessionUser> {
     // Onboarding is done once she has saved a profile.
     founderOnboardingComplete: me.role !== 'founder' || me.founder_profile !== null,
     investorOnboardingComplete: me.role !== 'investor' || me.investor_profile !== null,
+    expertOnboardingComplete: me.role !== 'expert' || me.expert_profile !== null,
   };
 }
 

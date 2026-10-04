@@ -411,9 +411,11 @@ const styles = StyleSheet.create({
   ruleTextMet: { color: colors.text },
 
   choiceWrap: { marginBottom: spacing[2] },
-  choiceRow: { flexDirection: 'row', gap: spacing[1.5] },
+  // Wraps when there are more cards than fit: two side by side, the rest below.
+  choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1.5] },
   choice: {
     flex: 1,
+    minWidth: 140,
     minHeight: touchTargetMin,
     borderRadius: 16,
     borderWidth: 1,

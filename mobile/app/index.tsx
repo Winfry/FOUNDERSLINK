@@ -38,6 +38,14 @@ export default function Index() {
     return <Redirect href="/(investor)/(tabs)/discover" />;
   }
 
+  if (user.role === 'expert') {
+    // An expert first says what she does and how many sessions she offers.
+    if (!user.expertOnboardingComplete) {
+      return <Redirect href="/expert/onboarding" />;
+    }
+    return <Redirect href="/expert/home" />;
+  }
+
   return <Redirect href="/welcome" />;
 }
 

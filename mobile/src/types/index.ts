@@ -59,6 +59,8 @@ export interface SessionUser {
   preferredLanguage: 'en' | 'sw';
   founderOnboardingComplete: boolean;
   investorOnboardingComplete: boolean;
+  /** An expert has saved her professional profile. */
+  expertOnboardingComplete?: boolean;
   avatarUrl?: string;
 }
 
