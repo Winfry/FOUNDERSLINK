@@ -142,7 +142,7 @@ export interface Precheck {
 export interface PackPartyInput {
   role: string;
   profile: Record<string, unknown>;
-  // What FounderLink has already confirmed about her, in plain words.
+  // What FoundersLink has already confirmed about her, in plain words.
   checks: string[];
   // The documents this kind of deal asks her for.
   required: { type: string; title: string }[];

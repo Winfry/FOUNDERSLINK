@@ -75,7 +75,7 @@ export default function ConversationThreadScreen() {
     setTarget(null);
     conversationService
       .reportMessage(item.id, 'Asks for money')
-      .then(() => show('Reported to FounderLink', 'success'))
+      .then(() => show('Reported to FoundersLink', 'success'))
       .catch((e: { message?: string }) => show(e?.message ?? 'Could not report', 'error'));
   };
 
@@ -173,7 +173,7 @@ export default function ConversationThreadScreen() {
               <Flag size={22} color={colors.primaryDark} />
               <View style={styles.flex}>
                 <Text style={styles.sheetTitle}>Report this message</Text>
-                <Text style={styles.sheetHint}>FounderLink's team will look at it.</Text>
+                <Text style={styles.sheetHint}>FoundersLink's team will look at it.</Text>
               </View>
             </Pressable>
             {target.senderId ? (

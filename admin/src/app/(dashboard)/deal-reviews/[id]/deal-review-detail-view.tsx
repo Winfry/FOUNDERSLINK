@@ -31,7 +31,7 @@ export function DealReviewDetailView({ deal: initial }: { deal: DealReviewDetail
           doc.id === documentId ? { ...doc, adminStatus: "confirmed" as const } : doc,
         ),
       }));
-      setToast("Document marked as Confirmed by FounderLink.");
+      setToast("Document marked as Confirmed by FoundersLink.");
     });
   }
 
@@ -112,7 +112,7 @@ export function DealReviewDetailView({ deal: initial }: { deal: DealReviewDetail
               </div>
               <span className="rounded-full bg-[#EAF1FE] px-2 py-0.5 text-xs font-semibold text-[#0454DB]">
                 {doc.adminStatus === "confirmed"
-                  ? "Confirmed by FounderLink"
+                  ? "Confirmed by FoundersLink"
                   : doc.adminStatus === "rejected"
                     ? "Rejected"
                     : doc.aiPrechecked

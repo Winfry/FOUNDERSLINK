@@ -4,7 +4,7 @@ const SECTIONS: LegalSection[] = [
   {
     title: 'The law we follow',
     body: [
-      'FounderLink handles your personal data in line with Kenya’s Data Protection Act, 2019. FounderLink is a demo built at GirlCode Kenya 2026, and this policy describes what the demo really does.',
+      'FoundersLink handles your personal data in line with Kenya’s Data Protection Act, 2019. FoundersLink is a demo built at GirlCode Kenya 2026, and this policy describes what the demo really does.',
     ],
   },
   {
@@ -30,7 +30,7 @@ const SECTIONS: LegalSection[] = [
     title: 'Who sees your details',
     body: [
       'Your contact details are shown to another member only after you have both accepted a connection.',
-      'A FounderLink admin sees your application in order to check it. Every decision is made by a person. A risk check only sorts the review queue.',
+      'A FoundersLink admin sees your application in order to check it. Every decision is made by a person. A risk check only sorts the review queue.',
     ],
   },
   {

@@ -28,7 +28,7 @@ export function Sidebar({ navCounts, collapsed, onNavigate }: SidebarProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-mark.png" alt="" className="h-full w-full object-contain" />
           </div>
-          {!collapsed ? <span className="font-bold tracking-tight">FounderLink</span> : null}
+          {!collapsed ? <span className="font-bold tracking-tight">FoundersLink</span> : null}
         </Link>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">

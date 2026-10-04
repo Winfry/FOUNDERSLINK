@@ -5,7 +5,7 @@ import { purgeExpired } from "./modules/vetting/documents.js";
 import { attachRealtime } from "./realtime.js";
 
 const server = app.listen(env.PORT, () => {
-  console.log(`FounderLink API listening on http://localhost:${env.PORT}`);
+  console.log(`FoundersLink API listening on http://localhost:${env.PORT}`);
 });
 
 attachRealtime(server);

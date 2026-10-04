@@ -90,7 +90,7 @@ function LoginFlow() {
       {step === "login" ? (
         <>
           <h1 className="text-2xl font-bold text-foreground">Admin sign in</h1>
-          <p className="mt-1 text-sm text-muted">FounderLink platform administration</p>
+          <p className="mt-1 text-sm text-muted">FoundersLink platform administration</p>
           <form className="mt-8 space-y-4" onSubmit={loginForm.handleSubmit(onLogin)}>
             <Input
               label="Email"

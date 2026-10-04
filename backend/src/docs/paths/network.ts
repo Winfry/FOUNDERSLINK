@@ -93,7 +93,7 @@ export const ops: Op[] = [
     method: "post",
     path: "/me/portfolio",
     summary: "Add a past investment",
-    description: "With `source_url` the entry is a `public` source; without it, `self_reported`. An entry can never be marked as verified by hand: that comes only from a deal closed on FounderLink.",
+    description: "With `source_url` the entry is a `public` source; without it, `self_reported`. An entry can never be marked as verified by hand: that comes only from a deal closed on FoundersLink.",
     access: "investor",
     body: portfolioSchema,
     ok: { status: 201, description: "The entry.", schema: ref("PortfolioEntry") },
@@ -108,7 +108,7 @@ export const ops: Op[] = [
     ok: { description: "The entry.", schema: ref("PortfolioEntry") },
     errors: [
       [404, "NOT_FOUND", "No such entry, or it belongs to another investor."],
-      [409, "VERIFIED_ENTRY", "The entry comes from a deal closed on FounderLink. Its visibility is set in the deal."],
+      [409, "VERIFIED_ENTRY", "The entry comes from a deal closed on FoundersLink. Its visibility is set in the deal."],
     ],
   },
   {

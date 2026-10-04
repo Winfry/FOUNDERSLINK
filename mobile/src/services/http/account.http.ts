@@ -29,7 +29,7 @@ export async function deleteAccount(password: string, reason?: string): Promise<
       body: JSON.stringify(reason ? { password, reason } : { password }),
     });
   } catch {
-    throw { code: 'NETWORK_ERROR', message: 'Cannot reach FounderLink. Check your connection and try again.' } satisfies ApiError;
+    throw { code: 'NETWORK_ERROR', message: 'Cannot reach FoundersLink. Check your connection and try again.' } satisfies ApiError;
   }
   if (res.ok) return;
   const json = await res.json().catch(() => null);

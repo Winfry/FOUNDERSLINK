@@ -1,5 +1,5 @@
 /**
- * The one place the app talks to the FounderLink backend.
+ * The one place the app talks to the FoundersLink backend.
  *
  * Set EXPO_PUBLIC_API_URL (e.g. http://192.168.1.20:8000) to use the
  * backend. Without it the app runs on the mocks. On a phone, the
@@ -65,7 +65,7 @@ export async function api<T>(method: string, path: string, body?: Body): Promise
       body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
     });
   } catch {
-    throw { code: 'NETWORK_ERROR', message: 'Cannot reach FounderLink. Check your connection and try again.' } satisfies ApiError;
+    throw { code: 'NETWORK_ERROR', message: 'Cannot reach FoundersLink. Check your connection and try again.' } satisfies ApiError;
   }
 
   const json = await res.json().catch(() => null);

@@ -89,7 +89,7 @@ export default function MatchesScreen() {
               <Text style={styles.inviteTitle}>{waiting ? "We're checking your details" : 'Verify to connect'}</Text>
               <Text style={styles.inviteText}>
                 {waiting
-                  ? 'Names and the Connect button open as soon as FounderLink approves you.'
+                  ? 'Names and the Connect button open as soon as FoundersLink approves you.'
                   : 'Verify once to see investor names and send them a request to connect.'}
               </Text>
             </View>
@@ -137,7 +137,7 @@ export default function MatchesScreen() {
         {header}
         <ScreenEmpty
           title="Matching is off"
-          description="You have not allowed FounderLink to use your business details for matching, so there are no investors to show. You can allow it in your business details."
+          description="You have not allowed FoundersLink to use your business details for matching, so there are no investors to show. You can allow it in your business details."
           actionLabel="Open my business details"
           onAction={() => router.push('/founder/onboarding')}
         />

@@ -19,7 +19,7 @@ import { person, progress, ROLE } from "../schemas.js";
 export const tag = {
   name: "Deals",
   description:
-    "Connections between members, and deals: the record of a working relationship from first conversation to result. A deal records what its parties tell it. FounderLink moves no money and drafts no legal document, and terms are self-reported.\n\nInside a deal the caller must be one of its parties; to anyone else it returns `404`.",
+    "Connections between members, and deals: the record of a working relationship from first conversation to result. A deal records what its parties tell it. FoundersLink moves no money and drafts no legal document, and terms are self-reported.\n\nInside a deal the caller must be one of its parties; to anyone else it returns `404`.",
 };
 
 const NO_DEAL: ErrorCase = [404, "NOT_FOUND", "No such deal, or the caller is not one of its parties."];
@@ -59,7 +59,7 @@ const dealDocument = obj({
   size_bytes: int,
   status: oneOf(["uploaded", "verified", "rejected"]),
   check: described(oneOf(["uploaded", "ai_pre_checked", "confirmed", "rejected"]), "What to show. `ai_pre_checked` only when the AI service really read it; `confirmed` only once an admin has."),
-  check_label: described(str, '"Uploaded", "AI pre-checked", "Confirmed by FounderLink" or "Not accepted".'),
+  check_label: described(str, '"Uploaded", "AI pre-checked", "Confirmed by FoundersLink" or "Not accepted".'),
   precheck,
   rejection_reason: nullable(str),
   uploaded_at: dateTime,
@@ -82,7 +82,7 @@ const dueDiligence = obj({
       ready: bool,
       required: arr(obj({ type: str, title: str, provided: bool })),
       documents: arr(dealDocument),
-      verified: described(arr(str), "What FounderLink has confirmed about her."),
+      verified: described(arr(str), "What FoundersLink has confirmed about her."),
       self_reported: described(arr(str), "What she says herself, including documents not yet confirmed."),
       missing: described(arr(str), "Required documents not shared yet, or rejected."),
     }),
@@ -306,7 +306,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/deals/:id/compliance",
     summary: "The deal's checklist",
-    description: "The compliance items for this type of deal, with the status the parties have recorded. FounderLink records and guides; it does not draft legal documents or give legal advice.",
+    description: "The compliance items for this type of deal, with the status the parties have recorded. FoundersLink records and guides; it does not draft legal documents or give legal advice.",
     access: "approved",
     params: dealId,
     ok: {
@@ -435,7 +435,7 @@ export const ops: Op[] = [
     method: "patch",
     path: "/admin/deal-documents/:id",
     summary: "Confirm or reject a deal document",
-    description: "`verified` makes it \"Confirmed by FounderLink\". `rejected` needs a `reason`, which she is sent, and the document no longer counts towards being deal-ready.",
+    description: "`verified` makes it \"Confirmed by FoundersLink\". `rejected` needs a `reason`, which she is sent, and the document no longer counts towards being deal-ready.",
     access: "admin",
     params: { id: described(uuid, "The document id.") },
     body: reviewSchema,

@@ -32,10 +32,10 @@ export default function NotificationSettingsScreen() {
   };
 
   return (
-    <SettingsPage title="Notifications" heading="How we reach you" intro="Choose where FounderLink tells you about requests, messages and deal steps.">
+    <SettingsPage title="Notifications" heading="How we reach you" intro="Choose where FoundersLink tells you about requests, messages and deal steps.">
       <Section title="Where to tell you">
         <RowGroup>
-          <RadioRow label="In the app" line="Updates wait for you in FounderLink." selected={channel === 'in_app'} onPress={() => pickChannel('in_app')} />
+          <RadioRow label="In the app" line="Updates wait for you in FoundersLink." selected={channel === 'in_app'} onPress={() => pickChannel('in_app')} />
           <RadioRow label="By SMS" line="Sent to the phone number on your account." selected={channel === 'sms'} onPress={() => pickChannel('sms')} last />
         </RowGroup>
       </Section>

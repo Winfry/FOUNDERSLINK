@@ -44,7 +44,7 @@ function Brand() {
       <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' }}>
         <Image source={require('../../../assets/images/logo-mark.png')} style={{ width: 22, height: 19 }} resizeMode="contain" />
       </View>
-      <Text style={{ fontSize: 17, fontWeight: '800', color: colors.white }}>FounderLink</Text>
+      <Text style={{ fontSize: 17, fontWeight: '800', color: colors.white }}>FoundersLink</Text>
     </View>
   );
 }

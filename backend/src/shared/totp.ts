@@ -47,6 +47,6 @@ export function verifyCode(secret: string, code: string, nowMs = Date.now()): bo
 
 // What an authenticator app reads from a QR code.
 export function otpauthUrl(email: string, secret: string): string {
-  const label = encodeURIComponent(`FounderLink:${email}`);
-  return `otpauth://totp/${label}?secret=${secret}&issuer=FounderLink&algorithm=SHA1&digits=${DIGITS}&period=${STEP_SECONDS}`;
+  const label = encodeURIComponent(`FoundersLink:${email}`);
+  return `otpauth://totp/${label}?secret=${secret}&issuer=FoundersLink&algorithm=SHA1&digits=${DIGITS}&period=${STEP_SECONDS}`;
 }

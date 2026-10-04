@@ -25,7 +25,7 @@ const INSTRUMENTS = ['equity', 'convertible_note', 'loan'];
 const CONSENTS = [
   ['profile_visibility', 'Show my profile', 'Verified investors and members can see your business profile.'],
   ['ai_matching', 'Match me with investors', 'Your business details are used to suggest investors who fit.'],
-  ['contact', 'Contact me', 'FounderLink can reach you by SMS or WhatsApp.'],
+  ['contact', 'Contact me', 'FoundersLink can reach you by SMS or WhatsApp.'],
 ] as const;
 
 // The fields step 2 will not continue without, in the order they appear, and what to call each.

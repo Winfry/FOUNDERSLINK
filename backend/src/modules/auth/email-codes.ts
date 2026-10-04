@@ -25,10 +25,10 @@ export const resetSchema = z.object({
 const hash = (code: string) => createHash("sha256").update(code).digest("hex");
 
 const TEXT: Record<Purpose, [string, (code: string) => string]> = {
-  verify_email: ["Your FounderLink code", (c) => `Your FounderLink code is ${c}. It expires in ${CODE_MINUTES} minutes.`],
+  verify_email: ["Your FoundersLink code", (c) => `Your FoundersLink code is ${c}. It expires in ${CODE_MINUTES} minutes.`],
   reset_password: [
-    "Reset your FounderLink password",
-    (c) => `Your code to set a new FounderLink password is ${c}. It expires in ${CODE_MINUTES} minutes. If you did not ask for this, ignore this email.`,
+    "Reset your FoundersLink password",
+    (c) => `Your code to set a new FoundersLink password is ${c}. It expires in ${CODE_MINUTES} minutes. If you did not ask for this, ignore this email.`,
   ],
 };
 

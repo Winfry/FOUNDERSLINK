@@ -104,7 +104,7 @@ networkRouter.patch("/me/portfolio/:id", requireAuth, isInvestor, async (req, re
   // An entry created by a closed deal is verified because nobody typed
   // it in. Its visibility is set by the deal's parties, in the deal.
   if (mine.source === "platform_deal") {
-    throw conflict("VERIFIED_ENTRY", "This entry comes from a deal closed on FounderLink and cannot be edited");
+    throw conflict("VERIFIED_ENTRY", "This entry comes from a deal closed on FoundersLink and cannot be edited");
   }
 
   const source_url = "source_url" in input ? input.source_url : (mine.source_url ?? undefined);

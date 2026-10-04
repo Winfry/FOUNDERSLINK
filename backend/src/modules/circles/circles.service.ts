@@ -5,7 +5,7 @@
 // way in is an invite from its organiser. A learning circle has no money
 // and may be found and joined.
 //
-// FounderLink keeps a circle's records. It never receives, holds or
+// FoundersLink keeps a circle's records. It never receives, holds or
 // forwards money: members pay into the circle's own account, and the
 // treasurer records what was paid.
 
@@ -16,7 +16,7 @@ import { prisma } from "../../shared/db.js";
 import { AppError, conflict, forbidden, notFound } from "../../shared/errors.js";
 
 const NOTICE =
-  "FounderLink keeps this circle's records. It does not hold or move money: contributions go to the circle's own account and are recorded here by the treasurer.";
+  "FoundersLink keeps this circle's records. It does not hold or move money: contributions go to the circle's own account and are recorded here by the treasurer.";
 
 const INVITE_DAYS = 7;
 

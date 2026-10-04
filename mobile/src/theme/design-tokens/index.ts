@@ -1,5 +1,5 @@
 /**
- * FounderLink design tokens — single source of truth for mobile and admin.
+ * FoundersLink design tokens — single source of truth for mobile and admin.
  * Solid colors only; no gradients.
  */
 

@@ -9,8 +9,8 @@ const inter = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FounderLink Admin",
-  description: "Platform administration for FounderLink Kenya",
+  title: "FoundersLink Admin",
+  description: "Platform administration for FoundersLink Kenya",
 };
 
 export default function RootLayout({

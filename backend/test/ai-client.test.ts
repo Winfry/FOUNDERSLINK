@@ -244,7 +244,7 @@ test("deals/due-diligence-pack: an answer that does not cover every party is not
   const party = {
     role: "founder",
     profile: {},
-    checks: ["Verified member, approved by FounderLink"],
+    checks: ["Verified member, approved by FoundersLink"],
     required: [{ type: "kra_pin_certificate", title: "KRA PIN certificate" }],
     documents: [],
   };

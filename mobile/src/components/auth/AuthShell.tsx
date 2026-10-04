@@ -41,7 +41,7 @@ export function AuthShell({
           source={require('../../../assets/images/logo-mark.png')}
           style={styles.mark}
           resizeMode="contain"
-          accessibilityLabel="FounderLink"
+          accessibilityLabel="FoundersLink"
         />
         <Text style={styles.title} accessibilityRole="header">
           {title}

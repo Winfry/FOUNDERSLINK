@@ -35,7 +35,7 @@ const STAGE_LABEL: Record<string, string> = {
 };
 
 const NOTICE =
-  "FounderLink records this deal. The money moves between the parties through their bank, never through FounderLink, and the terms here are self-reported, not a legal document.";
+  "FoundersLink records this deal. The money moves between the parties through their bank, never through FoundersLink, and the terms here are self-reported, not a legal document.";
 
 export const createSchema = z.object({
   type: z.enum(DEAL_TYPES),
@@ -247,7 +247,7 @@ async function arrive(tx: Tx, deal: LoadedDeal, toStage: string, actorId: string
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 // A closed investment becomes an entry on each investor's track record.
-// It is the only way an entry can say "Verified on FounderLink", and it
+// It is the only way an entry can say "Verified on FoundersLink", and it
 // stays hidden until every party agrees to show it.
 async function recordTrackRecord(tx: Tx, deal: LoadedDeal) {
   if (deal.type !== "investment") return;
@@ -471,7 +471,7 @@ export async function getDealChecklist(userId: string, dealId: string) {
     deal_type: deal.type,
     progress: { done, total: checklist.length, text: `${done} of ${checklist.length} done` },
     items: checklist,
-    disclaimer: "FounderLink records and guides. It does not draft legal documents or give legal advice.",
+    disclaimer: "FoundersLink records and guides. It does not draft legal documents or give legal advice.",
   };
 }
 

@@ -8,7 +8,7 @@ export function ChamasView({ chamas }: { chamas: ChamaListItem[] }) {
         <h1 className="text-2xl font-bold text-foreground">Chamas</h1>
         <p className="text-sm text-muted">Read-only list of money and learning circles.</p>
         <p className="mt-2 text-sm font-medium text-[#113373]">
-          FounderLink records contributions. It never holds or moves money.
+          FoundersLink records contributions. It never holds or moves money.
         </p>
       </div>
       {chamas.length === 0 ? (

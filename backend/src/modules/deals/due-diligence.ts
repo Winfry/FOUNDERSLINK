@@ -9,7 +9,7 @@
 // - If the AI service does not answer, the document is stored without a
 //   pre-check and is not labelled as pre-checked.
 // - Identity is not checked here. In production that comes from a
-//   regulated provider as pass or fail; FounderLink stores no ID.
+//   regulated provider as pass or fail; FoundersLink stores no ID.
 // - Files are kept as vetting documents are: on this machine's disk,
 //   not encrypted, deleted 30 days after the deal closes or is declined.
 
@@ -48,7 +48,7 @@ const SHARING_STAGES = ["due_diligence", "terms_agreed", "documents_compliance"]
 const MAX_PER_PARTY = 10;
 
 const NOTICE =
-  "The AI pre-check reads a document and compares it with the profile. It does not prove a document is genuine: only FounderLink confirming it does. Identity is not checked in this demo.";
+  "The AI pre-check reads a document and compares it with the profile. It does not prove a document is genuine: only FoundersLink confirming it does. Identity is not checked in this demo.";
 
 export const dealUploadSchema = z.object({
   type: z.enum(DEAL_DOCUMENT_TYPES),
@@ -66,7 +66,7 @@ function labelOf(d: Pick<Doc, "status" | "precheck">) {
 }
 
 const LABEL_TEXT: Record<string, string> = {
-  confirmed: "Confirmed by FounderLink",
+  confirmed: "Confirmed by FoundersLink",
   rejected: "Not accepted",
   ai_pre_checked: "AI pre-checked",
   uploaded: "Uploaded",
@@ -246,7 +246,7 @@ async function build(dealId: string) {
       role: party.role,
       profile: { ...(party.user.founder_profile ?? {}), ...(party.user.investor_profile ?? {}) },
       checks: [
-        "Verified member, approved by FounderLink",
+        "Verified member, approved by FoundersLink",
         ...(party.user.phone_verified_at ? ["Phone number confirmed by code"] : []),
         ...new Set((party.user.vetting_application?.checks ?? []).map((c) => CHECK_TITLES[c.check_type] ?? c.check_type)),
       ],
@@ -322,7 +322,7 @@ export async function reviewDealDocument(adminId: string, documentId: string, in
   await notify(
     document.user_id,
     input.status === "verified"
-      ? { type: "deal_document", title: "Document confirmed", body: `${title} for "${document.deal.title}" was confirmed by FounderLink.`, link: `/deals/${document.deal_id}` }
+      ? { type: "deal_document", title: "Document confirmed", body: `${title} for "${document.deal.title}" was confirmed by FoundersLink.`, link: `/deals/${document.deal_id}` }
       : { type: "deal_document", title: "Document not accepted", body: `${title} for "${document.deal.title}": ${input.reason}. Please share another.`, link: `/deals/${document.deal_id}` },
   );
   return viewDocument(saved);

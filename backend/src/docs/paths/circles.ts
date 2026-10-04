@@ -17,7 +17,7 @@ import { person } from "../schemas.js";
 export const tag = {
   name: "Circles",
   description:
-    "Founder circles. A money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FounderLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
+    "Founder circles. A money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
 };
 
 const NO_CIRCLE: ErrorCase = [404, "NOT_FOUND", "No such circle, or the caller is not a member."];
@@ -210,7 +210,7 @@ export const ops: Op[] = [
     path: "/circles/:id/contributions",
     summary: "Record a contribution",
     description:
-      "The organiser or treasurer writes down a payment a member made to the circle's own account. This is a record only: FounderLink does not receive or move the money, and nothing checks that the payment happened. `mpesa_receipt` is uppercased before it is checked, so lowercase is accepted.",
+      "The organiser or treasurer writes down a payment a member made to the circle's own account. This is a record only: FoundersLink does not receive or move the money, and nothing checks that the payment happened. `mpesa_receipt` is uppercased before it is checked, so lowercase is accepted.",
     access: "approved",
     params: circleId,
     body: contributionSchema,
@@ -398,7 +398,7 @@ export const ops: Op[] = [
     method: "post",
     path: "/payments/mpesa/callback/:secret",
     summary: "M-Pesa Paybill confirmation (called by Safaricom)",
-    description: `Meant to be registered with Safaricom as the C2B confirmation URL for a circle's own Paybill. It records a payment Safaricom says was made; FounderLink is not in the path of the money.\n\n${UNTESTED} The field names follow Daraja's C2B confirmation as remembered, and no real confirmation has ever been received.\n\nThere is no bearer token: the only guard is the secret in the URL, compared with \`MPESA_CALLBACK_SECRET\`. Without that variable the endpoint answers \`404\`. The origin of the request is not otherwise checked.\n\nThe circle is found by \`BusinessShortCode\` matching its \`paybill_number\`, and the member by the phone number or name typed as \`BillRefNumber\`. A payment for an unknown short code, or a receipt already recorded, is accepted and ignored. \`TransTime\` is read as East Africa Time.`,
+    description: `Meant to be registered with Safaricom as the C2B confirmation URL for a circle's own Paybill. It records a payment Safaricom says was made; FoundersLink is not in the path of the money.\n\n${UNTESTED} The field names follow Daraja's C2B confirmation as remembered, and no real confirmation has ever been received.\n\nThere is no bearer token: the only guard is the secret in the URL, compared with \`MPESA_CALLBACK_SECRET\`. Without that variable the endpoint answers \`404\`. The origin of the request is not otherwise checked.\n\nThe circle is found by \`BusinessShortCode\` matching its \`paybill_number\`, and the member by the phone number or name typed as \`BillRefNumber\`. A payment for an unknown short code, or a receipt already recorded, is accepted and ignored. \`TransTime\` is read as East Africa Time.`,
     access: "public",
     params: { secret: described(str, "Must equal `MPESA_CALLBACK_SECRET`.") },
     body: confirmationSchema,

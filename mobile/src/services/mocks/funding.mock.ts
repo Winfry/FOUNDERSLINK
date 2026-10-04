@@ -28,7 +28,7 @@ export const mockFundingService: FundingService = {
       ],
       whatTheyFund: 'Health, fintech, climate — MVP to early revenue in Nairobi and Mombasa.',
       trackRecord: [
-        { label: 'Backed 2 health businesses at MVP (1 Verified on FounderLink)', source: 'platform_deal' },
+        { label: 'Backed 2 health businesses at MVP (1 Verified on FoundersLink)', source: 'platform_deal' },
         { label: 'Published portfolio on their website', source: 'public' },
       ],
     };

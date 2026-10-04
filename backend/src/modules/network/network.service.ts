@@ -199,7 +199,7 @@ export async function getProfile(viewerId: string, targetId: string) {
     id: target.id,
     full_name: target.full_name,
     role: target.role,
-    badges: ["Checked by FounderLink"],
+    badges: ["Checked by FoundersLink"],
     // none | pending | accepted | declined: drives the Connect button.
     connection: connection ? { id: connection.id, status: connection.status } : { id: null, status: "none" },
     // Email and phone, only once both have accepted the connection.

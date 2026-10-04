@@ -2,16 +2,16 @@ import { LegalPage, type LegalSection } from '../../src/components/settings/Lega
 
 const SECTIONS: LegalSection[] = [
   {
-    title: 'What FounderLink is',
+    title: 'What FoundersLink is',
     body: [
-      'FounderLink connects Kenyan startup founders with investors. It was built as a demo at GirlCode Kenya 2026.',
+      'FoundersLink connects Kenyan startup founders with investors. It was built as a demo at GirlCode Kenya 2026.',
       'By using the app you agree to these terms. If you do not agree, please do not use it.',
     ],
   },
   {
-    title: 'FounderLink does not handle money',
+    title: 'FoundersLink does not handle money',
     body: [
-      'FounderLink never holds, moves or guarantees money. When you and an investor agree a deal, the app records it. The money moves between the two of you through your banks.',
+      'FoundersLink never holds, moves or guarantees money. When you and an investor agree a deal, the app records it. The money moves between the two of you through your banks.',
       'The terms recorded in a deal are what the two sides reported. They are not a legal document. Have your own agreement prepared and signed outside the app.',
       'Chama contributions go to the chama’s own Paybill or account. The app only records them.',
     ],
@@ -26,9 +26,9 @@ const SECTIONS: LegalSection[] = [
   {
     title: 'How members are checked',
     body: [
-      'A FounderLink admin checks each member before they can contact others. Every decision is made by a person.',
+      'A FoundersLink admin checks each member before they can contact others. Every decision is made by a person.',
       'A risk check is used only to sort the order in which applications are reviewed. It does not approve or refuse anyone.',
-      'Being checked does not mean FounderLink vouches for a member or for any deal. Do your own checks before you agree to anything.',
+      'Being checked does not mean FoundersLink vouches for a member or for any deal. Do your own checks before you agree to anything.',
     ],
   },
   {
@@ -47,7 +47,7 @@ const SECTIONS: LegalSection[] = [
   {
     title: 'This is a demo',
     body: [
-      'FounderLink is a hackathon demo. It may change, have faults, or be unavailable at times. Do not rely on it as your only record of a deal or a contribution.',
+      'FoundersLink is a hackathon demo. It may change, have faults, or be unavailable at times. Do not rely on it as your only record of a deal or a contribution.',
       'Questions about these terms can be sent from Contact support in Settings.',
     ],
   },
@@ -58,7 +58,7 @@ export default function TermsScreen() {
     <LegalPage
       title="Terms of service"
       heading="Terms of service"
-      intro="The rules for using FounderLink, in plain language."
+      intro="The rules for using FoundersLink, in plain language."
       sections={SECTIONS}
     />
   );

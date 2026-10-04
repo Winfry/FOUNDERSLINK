@@ -4,7 +4,7 @@ import { colors } from '../../src/theme/tokens';
 
 export default function SecuritySettingsScreen() {
   return (
-    <SettingsPage title="Security" heading="How your account is kept safe" intro="What protects you on FounderLink today.">
+    <SettingsPage title="Security" heading="How your account is kept safe" intro="What protects you on FoundersLink today.">
       <Section title="Your account">
         <RowGroup>
           <Row
@@ -14,7 +14,7 @@ export default function SecuritySettingsScreen() {
           />
           <Row
             label="Checked members only"
-            line="A FounderLink admin checks every member before they can contact anyone."
+            line="A FoundersLink admin checks every member before they can contact anyone."
             right={<UserCheck size={24} color={colors.primary} />}
           />
           <Row
@@ -30,7 +30,7 @@ export default function SecuritySettingsScreen() {
           />
         </RowGroup>
       </Section>
-      <Note>FounderLink never holds or moves money, and nobody should ask you for a fee to receive funding. If someone does, report them from Settings.</Note>
+      <Note>FoundersLink never holds or moves money, and nobody should ask you for a fee to receive funding. If someone does, report them from Settings.</Note>
     </SettingsPage>
   );
 }

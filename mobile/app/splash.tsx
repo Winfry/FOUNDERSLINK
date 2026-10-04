@@ -43,7 +43,7 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.wrap}>
-      <Image source={require('../assets/images/logo.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="FounderLink" />
+      <Image source={require('../assets/images/logo.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="FoundersLink" />
     </View>
   );
 }

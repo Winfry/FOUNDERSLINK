@@ -32,12 +32,12 @@ before(async () => {
 after(() => server.close());
 
 test("an SMS goes to the provider with the key, the number and the message", async () => {
-  const result = await sendSms("+254712345678", "Your FounderLink code is 123456.");
+  const result = await sendSms("+254712345678", "Your FoundersLink code is 123456.");
   assert.deepEqual(result, { status: "sent" });
   assert.equal(seen.apiKey, "test-key");
   assert.equal(seen.body.get("username"), "sandbox");
   assert.equal(seen.body.get("to"), "+254712345678");
-  assert.equal(seen.body.get("message"), "Your FounderLink code is 123456.");
+  assert.equal(seen.body.get("message"), "Your FoundersLink code is 123456.");
 });
 
 test("a provider error is reported, not thrown", async () => {

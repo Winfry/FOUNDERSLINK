@@ -91,7 +91,7 @@ export async function exportData(userId: string) {
     messages_sent: messages,
     reports_made: reports,
     blocks,
-    note: "This is everything FounderLink holds about you. Other people's details are not included.",
+    note: "This is everything FoundersLink holds about you. Other people's details are not included.",
   };
 }
 
@@ -204,7 +204,7 @@ export async function sendPhoneCode(userId: string) {
   const row = { phone: user.phone, code_hash: hashCode(code), expires_at: new Date(Date.now() + CODE_MINUTES * 60_000), attempts: 0 };
   await prisma.phoneCode.upsert({ where: { user_id: userId }, create: { ...row, user_id: userId }, update: row });
 
-  const sms = await sendSms(user.phone, `Your FounderLink code is ${code}. It expires in ${CODE_MINUTES} minutes.`);
+  const sms = await sendSms(user.phone, `Your FoundersLink code is ${code}. It expires in ${CODE_MINUTES} minutes.`);
   return {
     sms: sms.status,
     expires_in_minutes: CODE_MINUTES,

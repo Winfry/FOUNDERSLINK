@@ -1,7 +1,7 @@
 // Reading a circle's M-Pesa payments (KENYA_AMENDMENTS 1), so the
 // treasurer does not have to type each one in.
 //
-// FounderLink never touches the money. Members pay into the circle's
+// FoundersLink never touches the money. Members pay into the circle's
 // own Paybill, Till or account, and this only reads what was paid: from
 // rows of a statement the treasurer uploads, or from a confirmation
 // Safaricom sends for the circle's Paybill.

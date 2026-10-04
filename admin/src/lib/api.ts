@@ -3,7 +3,7 @@ import { SESSION_COOKIE } from "@/lib/auth/config";
 import { parseSession } from "@/lib/auth/types";
 
 /**
- * The dashboard's connection to the FounderLink backend. It runs on the
+ * The dashboard's connection to the FoundersLink backend. It runs on the
  * server only (pages and server actions), so the admin's token stays in
  * an httpOnly cookie and never reaches the browser's JavaScript.
  *

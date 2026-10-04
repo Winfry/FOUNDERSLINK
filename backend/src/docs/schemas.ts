@@ -264,7 +264,7 @@ export const components: Record<string, Schema> = {
     instrument: nullable(str),
     amount_range: nullable(str),
     source: oneOf(["platform_deal", "public", "self_reported"]),
-    source_label: described(str, '"Verified on FounderLink", "Public source" or "Self-reported".'),
+    source_label: described(str, '"Verified on FoundersLink", "Public source" or "Self-reported".'),
     source_url: nullable(url),
   }),
 
@@ -348,7 +348,7 @@ export const components: Record<string, Schema> = {
     milestones: arr(ref("DealMilestone")),
     created_at: dateTime,
     closed_at: nullable(dateTime),
-    notice: described(str, "A fixed sentence saying FounderLink records the deal and does not move money."),
+    notice: described(str, "A fixed sentence saying FoundersLink records the deal and does not move money."),
   }),
 
   Message: obj({
@@ -400,7 +400,7 @@ export const components: Record<string, Schema> = {
       }),
     ),
     goals: arr(circleGoalView),
-    notice: described(nullable(str), "For a money circle: a fixed sentence saying FounderLink keeps records and does not hold or move money."),
+    notice: described(nullable(str), "For a money circle: a fixed sentence saying FoundersLink keeps records and does not hold or move money."),
   }),
 
   CircleGoal: obj({

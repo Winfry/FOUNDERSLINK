@@ -31,14 +31,14 @@ before(async () => {
 after(() => server.close());
 
 test("an email goes to the provider with the key, the sender, the recipient and the text", async () => {
-  const result = await sendEmail("amina@example.com", "Your FounderLink code", "Your FounderLink code is 123456.");
+  const result = await sendEmail("amina@example.com", "Your FoundersLink code", "Your FoundersLink code is 123456.");
   assert.deepEqual(result, { status: "sent" });
   assert.equal(seen.auth, "Bearer re_test_key");
   assert.deepEqual(seen.body, {
-    from: "FounderLink <onboarding@resend.dev>",
+    from: "FoundersLink <onboarding@resend.dev>",
     to: ["amina@example.com"],
-    subject: "Your FounderLink code",
-    text: "Your FounderLink code is 123456.",
+    subject: "Your FoundersLink code",
+    text: "Your FoundersLink code is 123456.",
   });
 });
 

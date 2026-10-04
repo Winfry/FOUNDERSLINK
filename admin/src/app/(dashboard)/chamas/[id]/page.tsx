@@ -17,7 +17,7 @@ export default async function ChamaDetailPage({ params }: { params: { id: string
             {chama.type === "money" ? "Money chama" : "Learning circle"} · Organiser: {chama.organiserName}
           </p>
           <p className="mt-2 text-sm font-medium text-[#113373]">
-            FounderLink records contributions. It never holds or moves money.
+            FoundersLink records contributions. It never holds or moves money.
           </p>
         </div>
         <div className="rounded-card border border-border bg-white p-4">

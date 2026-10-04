@@ -69,7 +69,7 @@ export function MembersView({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Members</h1>
-          <p className="text-sm text-muted">Founders, investors and experts on FounderLink.</p>
+          <p className="text-sm text-muted">Founders, investors and experts on FoundersLink.</p>
         </div>
         <Button type="button" variant="secondary" onClick={downloadCsv}>
           Export CSV

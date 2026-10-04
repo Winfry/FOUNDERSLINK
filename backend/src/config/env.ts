@@ -24,7 +24,7 @@ const schema = z.object({
   // sending domain is verified with Resend, it only delivers to the
   // address that owns the Resend account.
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default("FounderLink <onboarding@resend.dev>"),
+  EMAIL_FROM: z.string().default("FoundersLink <onboarding@resend.dev>"),
   EMAIL_API_URL: z.string().default("https://api.resend.com/emails"),
   // A secret in the M-Pesa confirmation URL. Without it the endpoint is off.
   MPESA_CALLBACK_SECRET: z.string().min(16).optional(),

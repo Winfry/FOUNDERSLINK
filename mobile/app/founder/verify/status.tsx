@@ -68,7 +68,7 @@ const STATES: Record<string, State> = {
     tint: colors.errorLight,
     ink: colors.error,
     title: 'Your account is closed',
-    body: 'You can no longer connect or message on FounderLink.',
+    body: 'You can no longer connect or message on FoundersLink.',
   },
 };
 

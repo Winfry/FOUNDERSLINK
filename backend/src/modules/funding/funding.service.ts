@@ -195,7 +195,7 @@ export async function getMatches(userId: string) {
       lockedInvestors > 0
         ? {
             investors: lockedInvestors,
-            message: `${lockedInvestors} of your matches ${lockedInvestors === 1 ? "has an investor" : "have investors"} on FounderLink. Get approved to see who they are.`,
+            message: `${lockedInvestors} of your matches ${lockedInvestors === 1 ? "has an investor" : "have investors"} on FoundersLink. Get approved to see who they are.`,
           }
         : null,
     apply_now: inGroup("apply_now"),

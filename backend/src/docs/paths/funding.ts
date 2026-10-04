@@ -4,7 +4,7 @@ import { APPROVAL_STATUS, ENGINE } from "../schemas.js";
 
 export const tag = {
   name: "Funding",
-  description: "Funder records and a founder's funding matches. Suggestions only: FounderLink does not hold or move money, and a match is not a guarantee of funding.",
+  description: "Funder records and a founder's funding matches. Suggestions only: FoundersLink does not hold or move money, and a match is not a guarantee of funding.",
 };
 
 export const ops: Op[] = [

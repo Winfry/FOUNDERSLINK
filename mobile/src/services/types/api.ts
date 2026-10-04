@@ -85,7 +85,7 @@ export interface DealService {
 export interface CircleService {
   list(): Promise<CircleSummary[]>;
   get(circleId: string): Promise<CircleDetail>;
-  /** Records a payment already made to the circle's own account. No money moves through FounderLink. */
+  /** Records a payment already made to the circle's own account. No money moves through FoundersLink. */
   recordContribution(
     circleId: string,
     payload: { memberUserId: string; amountKes: number; goalId?: string; mpesaReceipt?: string },

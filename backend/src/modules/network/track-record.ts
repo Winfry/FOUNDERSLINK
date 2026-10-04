@@ -6,7 +6,7 @@ import { INSTRUMENTS, SECTORS, STAGES } from "../../shared/constants.js";
 import type { PortfolioEntry, Venture } from "../../generated/prisma/client.js";
 
 const SOURCE_LABEL: Record<string, string> = {
-  platform_deal: "Verified on FounderLink",
+  platform_deal: "Verified on FoundersLink",
   public: "Public source",
   self_reported: "Self-reported",
 };
@@ -47,7 +47,7 @@ export const ventureSchema = z.object({
   visibility: visibility.default("public"),
 });
 
-// "Verified on FounderLink" is never something a person can claim for
+// "Verified on FoundersLink" is never something a person can claim for
 // herself: it will come only from a deal closed on the platform.
 export const sourceOf = (input: { source_url?: string | undefined }) =>
   input.source_url ? "public" : "self_reported";

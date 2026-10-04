@@ -40,7 +40,7 @@ const modules: { tag: { name: string; description: string }; ops: Op[] }[] = [
 ];
 
 const DESCRIPTION = `
-The HTTP API of the FounderLink backend. Each tag is one router under \`src/modules\`, so an operation is listed under the router that registers it.
+The HTTP API of the FoundersLink backend. Each tag is one router under \`src/modules\`, so an operation is listed under the router that registers it.
 
 ## Signing in
 
@@ -63,7 +63,7 @@ Stated here once, and again on the operations concerned:
 - **Email** goes through Resend and, until a sending domain is verified there, reaches only the address that owns the Resend account. Unsent email codes are also returned as \`dev_code\` outside production.
 - **M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's sandbox.
 - **Uploaded files** are stored on the server's local disk and are not encrypted.
-- **Money.** FounderLink never holds or moves money. Circles, contributions and deal terms are records of what members say happened.
+- **Money.** FoundersLink never holds or moves money. Circles, contributions and deal terms are records of what members say happened.
 
 ## Live delivery (WebSocket)
 
@@ -83,7 +83,7 @@ function build() {
 
   return {
     openapi: "3.1.0",
-    info: { title: "FounderLink API", version: "0.1.0", description: DESCRIPTION },
+    info: { title: "FoundersLink API", version: "0.1.0", description: DESCRIPTION },
     // Relative, so "Try it out" calls whichever host is serving the docs.
     servers: [{ url: "/" }],
     tags: modules.map((m) => m.tag),

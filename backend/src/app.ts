@@ -88,7 +88,7 @@ app.use(notificationsRouter);
 app.get("/openapi.json", (_req, res) => {
   res.json(openapiSpec);
 });
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTitle: "FounderLink API" }));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTitle: "FoundersLink API" }));
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "No such endpoint" } });

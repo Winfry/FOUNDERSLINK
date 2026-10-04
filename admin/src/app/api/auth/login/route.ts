@@ -19,7 +19,7 @@ async function backendLogin(email: string | undefined, password: string | undefi
   try {
     answer = await backend<LoginAnswer>("POST", "/auth/login", { email, password }, "");
   } catch (err) {
-    const message = err instanceof ApiError && err.status < 500 ? "Invalid email or password" : "Cannot reach the FounderLink backend";
+    const message = err instanceof ApiError && err.status < 500 ? "Invalid email or password" : "Cannot reach the FoundersLink backend";
     return NextResponse.json({ error: message }, { status: 401 });
   }
 

@@ -4,7 +4,7 @@ import { person } from "../schemas.js";
 
 export const tag = {
   name: "Experts",
-  description: "Vetted mentors, lawyers and accountants, and short office-hours sessions with them. Sessions are requested and tracked here; they are not scheduled, held or paid for through FounderLink.",
+  description: "Vetted mentors, lawyers and accountants, and short office-hours sessions with them. Sessions are requested and tracked here; they are not scheduled, held or paid for through FoundersLink.",
 };
 
 const SESSION_STATUS = oneOf(["requested", "accepted", "declined", "done"]);

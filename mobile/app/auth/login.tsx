@@ -75,7 +75,7 @@ export default function LoginScreen() {
         <Button title="Log in" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
       </View>
       <View style={styles.switch}>
-        <Text style={styles.switchText}>New to FounderLink?</Text>
+        <Text style={styles.switchText}>New to FoundersLink?</Text>
         <TextLink title="Create account" onPress={() => router.push('/auth/signup')} />
       </View>
       {/* These accounts exist only in the mock data, so they are hidden when the app uses the backend. */}

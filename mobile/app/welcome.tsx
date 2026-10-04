@@ -9,7 +9,7 @@ import { colors, spacing } from '../src/theme/tokens';
 
 const PROMISES: [LucideIcon, string][] = [
   [ShieldCheck, 'Everyone you talk to has been checked.'],
-  [HandCoins, 'FounderLink never holds your money.'],
+  [HandCoins, 'FoundersLink never holds your money.'],
 ];
 
 export default function WelcomeScreen() {
@@ -32,13 +32,13 @@ export default function WelcomeScreen() {
       <View style={[styles.block, { paddingTop: insets.top + spacing[3] }]}>
         <View style={styles.orange} />
         <View style={styles.blue} />
-        <Text style={styles.wordmark}>FounderLink</Text>
+        <Text style={styles.wordmark}>FoundersLink</Text>
         <View style={styles.disc}>
           <Image
             source={require('../assets/images/logo-mark.png')}
             style={styles.mark}
             resizeMode="contain"
-            accessibilityLabel="FounderLink"
+            accessibilityLabel="FoundersLink"
           />
         </View>
         <Text style={styles.headline} accessibilityRole="header">

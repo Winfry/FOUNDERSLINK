@@ -25,7 +25,7 @@ test("a code is accepted for its own half-minute and the ones either side", () =
   assert.equal(verifyCode(secret, "081804", now + 30_000), true);
   assert.equal(verifyCode(secret, "081804", now + 90_000), false);
   assert.equal(verifyCode(secret, "000000", now), false);
-  assert.match(otpauthUrl("admin@example.com", secret), /^otpauth:\/\/totp\/FounderLink%3Aadmin%40example\.com\?secret=GEZD/);
+  assert.match(otpauthUrl("admin@example.com", secret), /^otpauth:\/\/totp\/FoundersLink%3Aadmin%40example\.com\?secret=GEZD/);
 });
 
 const run = Date.now();

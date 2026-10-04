@@ -26,7 +26,7 @@ const REJECTED = /^Not accepted:\s*/;
 function documentState(d: DealDocument): { label: string; variant: 'muted' | 'default' | 'success' | 'error' } {
   if (d.summary && REJECTED.test(d.summary)) return { label: 'Not accepted', variant: 'error' };
   if (d.precheckStatus === 'ai_pre_checked') return { label: 'AI pre-checked', variant: 'default' };
-  if (d.precheckStatus === 'confirmed_by_founderlink') return { label: 'Confirmed by FounderLink', variant: 'success' };
+  if (d.precheckStatus === 'confirmed_by_founderlink') return { label: 'Confirmed by FoundersLink', variant: 'success' };
   return { label: 'Uploaded', variant: 'muted' };
 }
 
@@ -143,7 +143,7 @@ export default function DealScreen() {
           <View style={styles.flex}>
             <Text style={styles.closedTitle}>This deal is closed</Text>
             <Text style={styles.closedCopy}>
-              The money moves between you and the investor through a bank. FounderLink records the deal.
+              The money moves between you and the investor through a bank. FoundersLink records the deal.
             </Text>
           </View>
         </View>
@@ -242,7 +242,7 @@ export default function DealScreen() {
                     {rejected ? (
                       <View style={styles.rejected}>
                         <Text style={styles.rejectedText}>
-                          {note ? `Reason: ${note}` : 'FounderLink did not accept this document.'}
+                          {note ? `Reason: ${note}` : 'FoundersLink did not accept this document.'}
                         </Text>
                         <Text style={styles.rejectedHint}>Share a corrected copy to continue.</Text>
                       </View>

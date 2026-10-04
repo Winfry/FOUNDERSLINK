@@ -2,7 +2,7 @@ import type { CircleService } from '../types/api';
 import type { CircleDetail } from '../../types';
 import { mockDelay } from './delay';
 
-const DISCLAIMER = 'FounderLink records contributions. It never holds or moves your money.';
+const DISCLAIMER = 'FoundersLink records contributions. It never holds or moves your money.';
 
 const circles: CircleDetail[] = [
   {

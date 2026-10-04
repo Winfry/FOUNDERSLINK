@@ -145,7 +145,7 @@ test("a deal needs an accepted connection, and is invisible to everyone else", a
     ["Amina Founder", "founder"],
     ["Grace Investor", "investor"],
   ]);
-  assert.match(opened.json.notice, /through their bank, never through FounderLink/);
+  assert.match(opened.json.notice, /through their bank, never through FoundersLink/);
 
   assert.equal((await call("GET", `/deals/${dealId}`, "outsider")).status, 404);
   assert.deepEqual((await call("GET", "/deals", "outsider")).json, []);
@@ -216,14 +216,14 @@ test("terms cannot be agreed until every party has shared her documents", async 
   // She shares another, and the admin confirms the registration.
   await share("founder", "kra_pin_certificate");
   const confirmed = await call("PATCH", `/admin/deal-documents/${registration.json.id}`, "admin", { status: "verified" });
-  assert.equal(confirmed.json.check_label, "Confirmed by FounderLink");
+  assert.equal(confirmed.json.check_label, "Confirmed by FoundersLink");
 
   const pack = await call("GET", `/deals/${dealId}/due-diligence`, "investor");
   assert.equal(pack.json.deal_ready, true);
   // Compiled by the backend's rules here, and it says so.
   assert.equal(pack.json.engine, "stand_in");
   const [founder, investor] = pack.json.parties;
-  assert.ok(founder.verified.includes("Business registration certificate: confirmed by FounderLink"));
+  assert.ok(founder.verified.includes("Business registration certificate: confirmed by FoundersLink"));
   assert.ok(founder.self_reported.includes("KRA PIN certificate: uploaded, not yet confirmed"));
   assert.deepEqual(founder.missing, []);
   assert.deepEqual(investor.missing, []);
@@ -316,7 +316,7 @@ test("a closed investment shows on the investor's track record only when every p
   assert.equal(all.json.shown_on_track_records, true);
   assert.deepEqual(
     (await record()).map((e: any) => [e.company_name, e.sector, e.instrument, e.source_label]),
-    [[`Afya Booking ${run}`, "health", "equity", "Verified on FounderLink"]],
+    [[`Afya Booking ${run}`, "health", "equity", "Verified on FoundersLink"]],
   );
 
   // A verified entry cannot be edited by hand, and a party can withdraw.

@@ -282,7 +282,7 @@ export async function decide(adminId: string, applicationId: string, input: z.in
 
   // Also by email: someone who is waiting may not have the app open.
   const applicantUser = await prisma.user.findUnique({ where: { id: application.user_id }, select: { email: true } });
-  if (applicantUser) await sendEmail(applicantUser.email, `FounderLink: ${title}`, body);
+  if (applicantUser) await sendEmail(applicantUser.email, `FoundersLink: ${title}`, body);
 
   return { application_id: applicationId, approval_status: status };
 }

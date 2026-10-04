@@ -8,7 +8,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../src/shared/db.js";
 
-const [email, password, fullName = "FounderLink Admin"] = process.argv.slice(2);
+const [email, password, fullName = "FoundersLink Admin"] = process.argv.slice(2);
 
 if (!email || !password || password.length < 8) {
   console.error('Usage: npm run admin:create -- <email> <password of 8+ characters> "<full name>"');

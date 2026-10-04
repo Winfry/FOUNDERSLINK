@@ -160,7 +160,7 @@ export default function FounderProfileTab() {
             </Text>
             <Text style={styles.muted}>
               {v.state === 'checking'
-                ? 'Connections, chat and chamas open as soon as FounderLink approves you. You can keep exploring your matches.'
+                ? 'Connections, chat and chamas open as soon as FoundersLink approves you. You can keep exploring your matches.'
                 : v.state === 'needs_info'
                   ? 'Open your status to see what is missing and send it.'
                   : v.state === 'held'

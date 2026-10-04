@@ -25,7 +25,7 @@ const HERO: Record<MatchBand, { bg: string; fg: string; sub: string }> = {
 };
 
 function sourceBadge(source: string): { label: string; variant: 'success' | 'default' | 'muted' } {
-  if (source === 'platform_deal') return { label: 'Verified on FounderLink', variant: 'success' };
+  if (source === 'platform_deal') return { label: 'Verified on FoundersLink', variant: 'success' };
   if (source === 'public') return { label: 'Public source', variant: 'default' };
   return { label: 'Self-reported', variant: 'muted' };
 }
@@ -83,7 +83,7 @@ export default function InvestorMatchProfileScreen() {
   const hasFacts = sectorChips.length > 0 || stages.length > 0 || Boolean(ticket);
 
   // Who the request goes to. A match built from public information has
-  // nobody behind it on FounderLink, so there is no one to ask.
+  // nobody behind it on FoundersLink, so there is no one to ask.
   const personId = (data.connectUserId as string | null | undefined) ?? (data.connectUserId === undefined ? String(id) : null);
   const verified = user?.approvalStatus === 'approved';
 
@@ -93,7 +93,7 @@ export default function InvestorMatchProfileScreen() {
       return;
     }
     if (!personId) {
-      show('This investor is not on FounderLink yet, so there is nobody to connect with here.', 'error');
+      show('This investor is not on FoundersLink yet, so there is nobody to connect with here.', 'error');
       return;
     }
     setSending(true);
@@ -208,7 +208,7 @@ export default function InvestorMatchProfileScreen() {
           <View style={styles.infoBox}>
             <Info size={20} color={colors.primaryDark} />
             <Text style={styles.infoText}>
-              This investor is not on FounderLink yet, so there is nobody to connect with here.
+              This investor is not on FoundersLink yet, so there is nobody to connect with here.
             </Text>
           </View>
         ) : (

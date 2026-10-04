@@ -84,7 +84,7 @@ const members: StoredMember[] = [
       ],
       reportsAgainst: [],
       timeline: [
-        { id: "tl-a1", title: "Joined FounderLink", at: "2026-02-10T08:00:00.000Z" },
+        { id: "tl-a1", title: "Joined FoundersLink", at: "2026-02-10T08:00:00.000Z" },
         { id: "tl-a2", title: "Submitted verification", at: "2026-02-12T14:30:00.000Z" },
       ],
     },
@@ -148,7 +148,7 @@ const members: StoredMember[] = [
       ],
       reportsAgainst: [],
       timeline: [
-        { id: "tl-f1", title: "Joined FounderLink", at: "2026-02-11T10:00:00.000Z" },
+        { id: "tl-f1", title: "Joined FoundersLink", at: "2026-02-11T10:00:00.000Z" },
         { id: "tl-f2", title: "Submitted verification", at: "2026-02-13T09:15:00.000Z" },
       ],
     },
@@ -175,7 +175,7 @@ const members: StoredMember[] = [
         {
           id: "rs-f2",
           text: "Organisation website lacks verifiable track record",
-          explanation: "Site has no named partners or verified deals on FounderLink.",
+          explanation: "Site has no named partners or verified deals on FoundersLink.",
         },
       ],
       approvalStatus: "in_review",
@@ -301,7 +301,7 @@ const members: StoredMember[] = [
       email: "faith.akinyi@legal.demo",
       role: "expert",
       phone: "+254733200400",
-      statement: "Corporate and startup legal counsel; monthly office hours on FounderLink.",
+      statement: "Corporate and startup legal counsel; monthly office hours on FoundersLink.",
       organisationName: "Akinyi & Associates Advocates",
       website: "https://akinyilegal.demo",
       references: [],

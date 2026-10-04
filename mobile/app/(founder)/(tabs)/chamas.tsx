@@ -110,7 +110,7 @@ export default function ChamasScreen() {
             </View>
             <Text style={styles.emptyTitle}>You're not in a chama yet</Text>
             <Text style={styles.emptyBody}>
-              A chama is a group of people who save or learn together. FounderLink only records contributions: the money stays in
+              A chama is a group of people who save or learn together. FoundersLink only records contributions: the money stays in
               the chama's own Paybill or account.
             </Text>
             <Button title="Start a chama" onPress={() => setCreating(true)} style={styles.emptyBtn} />

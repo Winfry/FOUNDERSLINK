@@ -318,7 +318,7 @@ export function checkMessage(text: string): ModerationResult {
 }
 
 // The due-diligence pack without the AI: the same facts, sorted into
-// what FounderLink confirmed, what the party says herself, and what is
+// what FoundersLink confirmed, what the party says herself, and what is
 // still missing. A document counts as verified only once an admin has
 // confirmed it.
 export function dueDiligencePack(parties: PackPartyInput[]): Pack {
@@ -328,7 +328,7 @@ export function dueDiligencePack(parties: PackPartyInput[]): Pack {
     const waiting = usable.filter((d) => d.status !== "verified");
     return {
       role: party.role,
-      verified: [...party.checks, ...confirmed.map((d) => `${d.title}: confirmed by FounderLink`)],
+      verified: [...party.checks, ...confirmed.map((d) => `${d.title}: confirmed by FoundersLink`)],
       self_reported: [
         "Profile details",
         ...waiting.map((d) => `${d.title}: uploaded${d.precheck ? ", AI pre-checked" : ""}, not yet confirmed`),

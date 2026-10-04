@@ -28,7 +28,7 @@ export async function notify(userId: string, notice: Notice) {
 
     let delivery_status = "in_app";
     if (user.notification_channel === "sms" && user.phone && user.phone_verified_at && (await hasConsent(userId, "contact"))) {
-      const sms = await sendSms(user.phone, `FounderLink: ${notice.title}. ${notice.body}`);
+      const sms = await sendSms(user.phone, `FoundersLink: ${notice.title}. ${notice.body}`);
       delivery_status = `sms_${sms.status}`;
     }
 
