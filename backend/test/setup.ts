@@ -7,6 +7,8 @@ process.env.AI_SERVICE_URL = "";
 // (sms.test.ts points these at its own fake provider.)
 process.env.SMS_PROVIDER_API_KEY = "";
 process.env.SMS_PROVIDER_USERNAME = "";
+// So no test ever sends a real SMS, whatever this machine's settings are.
+for (const name of ["BONGA_CLIENT_ID", "BONGA_API_KEY", "BONGA_SECRET", "BONGA_SERVICE_ID", "BONGA_SEND_SMS_URL"]) process.env[name] = "";
 // The M-Pesa confirmation endpoint is off without a secret. Tests turn it on.
 process.env.MPESA_CALLBACK_SECRET = "test-callback-secret-0123456789";
 // And no email provider, so a test run never sends a real email.

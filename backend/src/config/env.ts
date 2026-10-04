@@ -17,6 +17,12 @@ const schema = z.object({
   SMS_PROVIDER_USERNAME: z.string().optional(),
   SMS_PROVIDER_API_KEY: z.string().optional(),
   SMS_API_URL: z.string().default("https://api.sandbox.africastalking.com/version1/messaging"),
+  // SMS through Bonga SMS instead. Used when all five are set.
+  BONGA_CLIENT_ID: z.string().optional(),
+  BONGA_API_KEY: z.string().optional(),
+  BONGA_SECRET: z.string().optional(),
+  BONGA_SERVICE_ID: z.string().optional(),
+  BONGA_SEND_SMS_URL: z.string().optional(),
   NODE_ENV: z.string().default("development"),
   // Where uploaded vetting documents are kept, on this machine's disk.
   UPLOAD_DIR: z.string().default("./uploads"),

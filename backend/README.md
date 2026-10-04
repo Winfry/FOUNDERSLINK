@@ -212,7 +212,7 @@ Nothing is agreed by default, so the onboarding screens need to ask. What each c
 | POST | `/me/phone/verify` | `{ code }` |
 | POST | `/reports` | `{ user_id, reason }`. Reports a member. Approved members only |
 
-With no SMS provider set (`SMS_PROVIDER_USERNAME` and `SMS_PROVIDER_API_KEY`), the code cannot be texted. Outside production the response then includes `dev_code` so the flow can still be shown. The sender targets Africa's Talking and has not been run against the real sandbox.
+With no SMS provider set, the code cannot be texted. Outside production the response then includes `dev_code` so the flow can still be shown. Two providers are supported: Bonga SMS (set `BONGA_CLIENT_ID`, `BONGA_API_KEY`, `BONGA_SECRET`, `BONGA_SERVICE_ID` and `BONGA_SEND_SMS_URL`; used when all five are set) and Africa's Talking (`SMS_PROVIDER_USERNAME`, `SMS_PROVIDER_API_KEY`, and `SMS_API_URL` for the live address). Neither sender has been run against the real service: both are checked against a fake server in the tests.
 
 An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GET /connections` and on the profile page, unless that member turned `share_contact` off. The phone appears only if verified.
 
