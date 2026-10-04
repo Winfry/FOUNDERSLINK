@@ -45,7 +45,11 @@ export const httpComplianceService: ComplianceService = {
   // General information, never legal advice. When the backend has no
   // current official source it says so and cites nothing.
   async ask(question) {
-    const answer = await post<ApiAnswer>('/compliance/ask', { question });
+    const answer = await post<ApiAnswer>('/compliance/ask', { question }).catch((e: { code?: string }) => {
+      // The backend needs a whole question to look for a source.
+      if (e?.code === 'VALIDATION_ERROR') throw { code: e.code, message: 'Ask a full question, for example "Do I need a KRA PIN for my business?"' };
+      throw e;
+    });
     return {
       body: answer.answer,
       citations: answer.citations.map((c) => ({ title: c.source, url: c.url })),

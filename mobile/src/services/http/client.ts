@@ -21,7 +21,7 @@ export function setToken(next: string | null) {
   token = next;
 }
 
-async function currentToken() {
+export async function currentToken() {
   if (token) return token;
   try {
     const raw = await SecureStore.getItemAsync(SESSION_KEY);

@@ -3,12 +3,14 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProviders } from '../src/providers/AppProviders';
+import { useLiveUpdates } from '../src/hooks/useLiveUpdates';
 import { useAuthStore } from '../src/stores/authStore';
 import { colors } from '../src/theme/tokens';
 
 function SessionGuard() {
   const checkTokenExpiry = useAuthStore((s) => s.checkTokenExpiry);
   const router = useRouter();
+  useLiveUpdates();
   useEffect(() => {
     const id = setInterval(async () => {
       const expired = await checkTokenExpiry();

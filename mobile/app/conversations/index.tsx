@@ -7,7 +7,7 @@ import { colors, spacing } from '../../src/theme/tokens';
 
 export default function ConversationsScreen() {
   const router = useRouter();
-  const q = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list(), refetchInterval: 5000 });
+  const q = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list(), refetchInterval: 15000 });
 
   if (q.isLoading) return <ScreenLoading />;
   if (!q.data?.length) return <ScreenEmpty title="No conversations" description="Chat appears after you connect with a member." />;
@@ -19,7 +19,10 @@ export default function ConversationsScreen() {
       keyExtractor={(c) => c.id}
       renderItem={({ item }) => (
         <Pressable style={styles.row} onPress={() => router.push(`/conversations/${item.id}`)}>
-          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.title}>
+            {item.title}
+            {item.unreadCount > 0 ? `  (${item.unreadCount} new)` : ''}
+          </Text>
           <Text style={styles.preview}>{item.lastMessagePreview}</Text>
         </Pressable>
       )}

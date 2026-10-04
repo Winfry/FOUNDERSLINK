@@ -58,6 +58,7 @@ export default function ReadinessScreen() {
             renderItem={({ item }) => (
               <Card style={styles.row}>
                 <Text style={styles.label}>{item.label}</Text>
+                {item.description ? <Text style={styles.deadline}>{item.description}</Text> : null}
                 <Badge label={item.status.replace('_', ' ')} variant={item.status === 'complete' ? 'success' : 'warning'} />
                 {item.deadline ? <Text style={styles.deadline}>Deadline: {item.deadline}</Text> : null}
                 {item.status !== 'complete' ? (

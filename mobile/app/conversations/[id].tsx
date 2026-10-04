@@ -1,12 +1,13 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../../src/components/ui';
 import { ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { useToast } from '../../src/components/ui/Toast';
 import { conversationService } from '../../src/services';
+import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing } from '../../src/theme/tokens';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ConversationThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,8 +16,21 @@ export default function ConversationThreadScreen() {
   const q = useQuery({
     queryKey: ['messages', id],
     queryFn: () => conversationService.getMessages(String(id)),
-    refetchInterval: 3000,
+    // The live connection brings new messages at once. This is the fallback.
+    refetchInterval: 15000,
   });
+  const me = useAuthStore((s) => s.user?.id);
+  const qc = useQueryClient();
+
+  // Reading a thread clears its unread count.
+  const newest = q.data?.items.at(-1)?.id;
+  useEffect(() => {
+    if (!newest) return;
+    conversationService
+      .markRead(String(id))
+      .then(() => qc.invalidateQueries({ queryKey: ['conversations'] }))
+      .catch(() => undefined);
+  }, [id, newest, qc]);
 
   const { show } = useToast();
 
@@ -44,13 +58,32 @@ export default function ConversationThreadScreen() {
             {item.warningText ? <Text style={styles.warning}>{item.warningText}</Text> : null}
             {item.kind === 'system' ? null : <Text style={styles.sender}>{item.senderName}</Text>}
             <Text style={styles.body}>{item.body}</Text>
-            {item.kind !== 'system' ? (
-              <Button title="Report" variant="ghost" onPress={() =>
-                  conversationService
-                    .reportMessage(item.id, 'Asks for money')
-                    .then(() => show('Reported to FounderLink', 'success'))
-                    .catch((e: { message?: string }) => show(e?.message ?? 'Could not report', 'error'))
-                } />
+            {/* Her own messages and the system's need neither button. */}
+            {item.kind !== 'system' && item.senderId !== me ? (
+              <View style={styles.actions}>
+                <Button
+                  title="Report"
+                  variant="ghost"
+                  onPress={() =>
+                    conversationService
+                      .reportMessage(item.id, 'Asks for money')
+                      .then(() => show('Reported to FounderLink', 'success'))
+                      .catch((e: { message?: string }) => show(e?.message ?? 'Could not report', 'error'))
+                  }
+                />
+                {item.senderId ? (
+                  <Button
+                    title="Block"
+                    variant="ghost"
+                    onPress={() =>
+                      conversationService
+                        .blockMember(item.senderId!)
+                        .then(() => show(`${item.senderName ?? 'This member'} can no longer message you`, 'success'))
+                        .catch((e: { message?: string }) => show(e?.message ?? 'Could not block', 'error'))
+                    }
+                  />
+                ) : null}
+              </View>
             ) : null}
           </View>
         )}
@@ -64,6 +97,7 @@ export default function ConversationThreadScreen() {
 }
 
 const styles = StyleSheet.create({
+  actions: { flexDirection: 'row', gap: 8 },
   flex: { flex: 1, backgroundColor: colors.white },
   list: { padding: spacing[2], gap: spacing[2] },
   bubble: { padding: spacing[2], borderWidth: 1, borderColor: colors.border, borderRadius: 12 },

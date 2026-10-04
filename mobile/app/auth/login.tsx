@@ -6,6 +6,7 @@ import { AuthScreen } from '../../src/components/layout/AuthScreen';
 import { Button, Input, PasswordInput } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';
 import { loginSchema } from '../../src/lib/auth-schemas';
+import { API_URL } from '../../src/services/http/client';
 import { listDemoAccounts, DEMO_PASSWORD } from '../../src/services/mocks/mock-store';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing } from '../../src/theme/tokens';
@@ -52,12 +53,17 @@ export default function LoginScreen() {
         <Text style={styles.forgotText}>Forgot password?</Text>
       </Pressable>
       <Button title="Log in" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
-      <Text style={styles.hint}>Demo password for all QA accounts: {DEMO_PASSWORD}</Text>
-      {listDemoAccounts().map((a) => (
-        <Text key={a.email} style={styles.hint}>
-          {a.label}: {a.email}
-        </Text>
-      ))}
+      {/* These accounts exist only in the mock data, so they are hidden when the app uses the backend. */}
+      {API_URL ? null : (
+        <>
+          <Text style={styles.hint}>Demo password for all QA accounts: {DEMO_PASSWORD}</Text>
+          {listDemoAccounts().map((a) => (
+            <Text key={a.email} style={styles.hint}>
+              {a.label}: {a.email}
+            </Text>
+          ))}
+        </>
+      )}
       <Link href="/auth/signup" asChild>
         <Pressable style={styles.link}>
           <Text style={styles.linkText}>Create account</Text>
