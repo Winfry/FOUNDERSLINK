@@ -1,31 +1,56 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Text } from '../../src/components/ui/Text';
+import { ScrollView, StyleSheet } from 'react-native';
+import { Bell, CircleHelp, FileText, Flag, Languages, LifeBuoy, Lock, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react-native';
 import { Header } from '../../src/components/layout/Header';
-import { colors, spacing, touchTargetMin } from '../../src/theme/tokens';
+import { MenuGroup, MenuRow } from '../../src/components/profile/MenuRow';
+import { colors, spacing } from '../../src/theme/tokens';
 
-const LINKS = [
-  { label: 'Notification settings', href: '/settings/notifications' },
-  { label: 'Security & privacy', href: '/settings/security' },
-  { label: 'Language', href: '/settings/language' },
-  { label: 'Help & FAQ', href: '/settings/help' },
-  { label: 'Contact support', href: '/settings/support' },
-  { label: 'Terms of service', href: '/settings/terms' },
-  { label: 'Privacy policy', href: '/settings/privacy' },
-  { label: 'Delete account request', href: '/settings/delete-account' },
-  { label: 'Report / block user', href: '/settings/report' },
+const SECTIONS: { title: string; rows: { label: string; href: string; icon: LucideIcon; destructive?: boolean }[] }[] = [
+  {
+    title: 'Account',
+    rows: [
+      { label: 'Notifications', href: '/settings/notifications', icon: Bell },
+      { label: 'Security', href: '/settings/security', icon: Lock },
+      { label: 'Language', href: '/settings/language', icon: Languages },
+    ],
+  },
+  {
+    title: 'Privacy and data',
+    rows: [
+      { label: 'Privacy policy', href: '/settings/privacy', icon: ShieldCheck },
+      { label: 'Terms of service', href: '/settings/terms', icon: FileText },
+      { label: 'Report or block someone', href: '/settings/report', icon: Flag },
+      { label: 'Ask to delete my account', href: '/settings/delete-account', icon: Trash2 },
+    ],
+  },
+  {
+    title: 'Help',
+    rows: [
+      { label: 'Help and common questions', href: '/settings/help', icon: CircleHelp },
+      { label: 'Contact support', href: '/settings/support', icon: LifeBuoy },
+    ],
+  },
 ];
 
 export default function SettingsScreen() {
   const router = useRouter();
   return (
     <>
-      <Header title="Settings" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.content}>
-        {LINKS.map((l) => (
-          <Pressable key={l.href} style={styles.row} onPress={() => router.push(l.href as never)}>
-            <Text style={styles.label}>{l.label}</Text>
-          </Pressable>
+      {/* After a reload or a link there is nothing to go back to, so it goes home. */}
+      <Header title="Settings" onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        {SECTIONS.map((s) => (
+          <MenuGroup key={s.title} title={s.title}>
+            {s.rows.map((r, i) => (
+              <MenuRow
+                key={r.href}
+                icon={r.icon}
+                label={r.label}
+                onPress={() => router.push(r.href as never)}
+                last={i === s.rows.length - 1}
+              />
+            ))}
+          </MenuGroup>
         ))}
       </ScrollView>
     </>
@@ -33,7 +58,6 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing[2] },
-  row: { minHeight: touchTargetMin, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: colors.border },
-  label: { fontSize: 16, color: colors.text },
+  screen: { backgroundColor: colors.white },
+  content: { padding: spacing[2], paddingBottom: spacing[4], gap: spacing[3] },
 });

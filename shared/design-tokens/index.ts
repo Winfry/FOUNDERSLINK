@@ -56,7 +56,7 @@ export const spacing = {
 
 export const radius = {
   sm: 8,
-  card: 12,
+  card: 16,
   full: 9999,
 } as const;
 

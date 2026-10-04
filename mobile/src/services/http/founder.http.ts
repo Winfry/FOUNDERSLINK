@@ -1,6 +1,7 @@
 import type { FounderService } from '../types/api';
-import type { FounderProfile } from '../../types';
+import type { ApprovalStatus, FounderProfile } from '../../types';
 import { get, post, put } from './client';
+import { syncSessionUser } from './session-sync';
 
 /** A founder profile as the backend sends it. */
 interface ApiProfile {
@@ -56,7 +57,9 @@ const FIELDS: Record<string, keyof FounderProfile> = {
 
 export const httpFounderService: FounderService = {
   async getProfile() {
-    const me = await get<{ founder_profile: ApiProfile | null }>('/me');
+    const me = await get<{ founder_profile: ApiProfile | null; approval_status?: ApprovalStatus }>('/me');
+    // Her profile screen shows whether she is verified, so it must be current.
+    if (me.approval_status) await syncSessionUser({ approvalStatus: me.approval_status });
     return me.founder_profile ? toProfile(me.founder_profile) : null;
   },
 
