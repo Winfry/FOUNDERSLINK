@@ -1,6 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,6 +13,16 @@ function SessionGuard() {
   const checkTokenExpiry = useAuthStore((s) => s.checkTokenExpiry);
   const router = useRouter();
   useLiveUpdates();
+
+  // When she is signed out, by her own press or because her session
+  // ended, she goes to the login screen wherever she was.
+  const signedIn = useAuthStore((s) => s.user !== null);
+  const wasSignedIn = useRef(false);
+  useEffect(() => {
+    if (wasSignedIn.current && !signedIn) router.replace('/auth/login');
+    wasSignedIn.current = signedIn;
+  }, [signedIn, router]);
+
   useEffect(() => {
     const id = setInterval(async () => {
       const expired = await checkTokenExpiry();

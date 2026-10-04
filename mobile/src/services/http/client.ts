@@ -69,6 +69,15 @@ export async function api<T>(method: string, path: string, body?: Body): Promise
   }
 
   const json = await res.json().catch(() => null);
+  // The backend no longer accepts this session (it expired, or the
+  // account was reset). Sign her out, so she lands on the welcome screen
+  // instead of on screens that all fail to load.
+  if (res.status === 401 && bearer && !path.startsWith('/auth/')) {
+    token = null;
+    const { useAuthStore } = await import('../../stores/authStore');
+    await useAuthStore.getState().logout().catch(() => undefined);
+    throw { code: 'SESSION_EXPIRED', message: 'Your session has ended. Log in again.' } satisfies ApiError;
+  }
   if (!res.ok) {
     const error: ApiError = {
       code: json?.error?.code ?? 'UNKNOWN_ERROR',

@@ -54,8 +54,12 @@ const styles = StyleSheet.create({
     padding: spacing[3],
   },
   sheet: {
+    // A small card in the middle, never a band across a wide window.
+    width: '100%',
+    maxWidth: 360,
+    alignSelf: 'center',
     backgroundColor: colors.white,
-    borderRadius: radius.card,
+    borderRadius: 20,
     padding: spacing[3],
     borderWidth: 1,
     borderColor: colors.border,
