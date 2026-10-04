@@ -108,8 +108,32 @@ export async function getInvestorMatches(userId: string, filter: z.infer<typeof 
   const count = fitting.length;
   const summary = `${count} ${count === 1 ? "business matches" : "businesses match"} your fund`;
 
+  // Below level 2 (TEAM_DECISIONS D12) she sees what kind of business
+  // each one is, and nothing that says whose: no name, no business name,
+  // no description, no id to open.
   if (!approved) {
-    return { approved: false, count, founders: [], message: `${summary}. Get approved to see them.` };
+    return {
+      approved: false,
+      count,
+      message: `${summary}. Verify to see who they are and connect.`,
+      founders: fitting.map(({ profile, match, readiness }) => ({
+        anonymised: true,
+        headline: [
+          `${profile.sector.charAt(0).toUpperCase()}${profile.sector.slice(1)} startup`,
+          profile.county,
+          profile.stage?.replaceAll("_", " "),
+          profile.funding_amount_kes ? `seeking ${kes(profile.funding_amount_kes)}` : null,
+        ]
+          .filter(Boolean)
+          .join(", "),
+        sector: profile.sector,
+        stage: profile.stage,
+        county: profile.county,
+        funding_amount_kes: profile.funding_amount_kes,
+        band: match.band,
+        ready: readiness.gaps.length === 0,
+      })),
+    };
   }
 
   return {
@@ -117,6 +141,7 @@ export async function getInvestorMatches(userId: string, filter: z.infer<typeof 
     count,
     message: `${summary}.`,
     founders: fitting.map(({ profile, match, readiness }) => ({
+      anonymised: false,
       user_id: profile.user.id,
       full_name: profile.user.full_name,
       business_name: profile.business_name,

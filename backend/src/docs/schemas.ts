@@ -228,7 +228,9 @@ export const components: Record<string, Schema> = {
   ItemStatus: obj({ item_id: str, status: COMPLIANCE_STATUS, note: nullable(str) }),
 
   MatchCard: obj({
-    funder: ref("Funder"),
+    funder: described(ref("Funder"), "When `anonymised` is true, `name`, `mandate_text`, `how_to_apply_url` and `source_url` are null."),
+    anonymised: described(bool, "True for a record an investor maintains, while the founder is not approved. Show `headline` in place of the name."),
+    headline: described(str, 'What the funder funds, with nothing that identifies it, e.g. "Angel investor · health, fintech · KSh 500,000 to KSh 5,000,000".'),
     source: described(oneOf(["public_information", "maintained_by_funder"]), "`maintained_by_funder` when an approved investor keeps the record."),
     investor: described(
       nullable(obj({ user_id: uuid, full_name: str, organisation_name: nullable(str), job_title: nullable(str) })),

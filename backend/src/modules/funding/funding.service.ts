@@ -83,6 +83,16 @@ export function toMatchFunder(f: MatchFunder): MatchFunder {
   };
 }
 
+const kes = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
+
+const KIND_LABEL: Record<string, string> = { angel: "Angel investor", vc: "Venture capital fund", accelerator: "Accelerator" };
+
+// Describes a funder by what it funds, with nothing that identifies it.
+function headlineOf(f: { kind: string; sectors: string[]; ticket_min_kes: number; ticket_max_kes: number }) {
+  const sectors = f.sectors.length > 0 ? f.sectors.join(", ") : "all sectors";
+  return `${KIND_LABEL[f.kind] ?? f.kind} · ${sectors} · ${kes(f.ticket_min_kes)} to ${kes(f.ticket_max_kes)}`;
+}
+
 export async function getMatches(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -121,12 +131,27 @@ export async function getMatches(userId: string) {
   const visibleOwners = await consented(owners, "profile_visibility");
   const byFunder = new Map(results.map((r) => [r.funder_id, r]));
 
-  const cards = funders.map(({ claimed_by, ...funder }) => {
-    const match = byFunder.get(funder.id)!;
-    const readiness = assessReadiness({ ...profile, already_have }, funder, items, match);
+  const cards = funders.map(({ claimed_by, ...record }) => {
+    const match = byFunder.get(record.id)!;
+    const readiness = assessReadiness({ ...profile, already_have }, record, items, match);
     const ruledOut = readiness.group === "not_for_you";
+
+    // Below level 2 (TEAM_DECISIONS D12) another member is shown without
+    // anything that says who she is. A record an investor maintains is
+    // hers, so its name, wording and links are held back until the
+    // founder is verified. A record built from public information is not
+    // a member, and is shown as it is.
+    const anonymised = claimed_by !== null && !approved;
+    const funder = anonymised
+      ? { ...record, name: null, mandate_text: null, how_to_apply_url: null, source_url: null }
+      : record;
+
     return {
       funder,
+      anonymised,
+      // What she can be shown in place of a name, e.g.
+      // "Angel investor · health, fintech · KSh 500,000 to KSh 5,000,000".
+      headline: headlineOf(record),
       source: claimed_by ? ("maintained_by_funder" as const) : ("public_information" as const),
       // The person behind a record is another member, so she is shown
       // only to an approved founder. Until then the card says someone is there.

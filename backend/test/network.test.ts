@@ -215,7 +215,7 @@ test("only admins see the queue, and the riskiest application comes first", asyn
 test("before approval an investor sees how many businesses match, not who they are", async () => {
   const before = await call("GET", "/investor/matches", "investor");
   assert.equal(before.json.approved, false);
-  assert.deepEqual(before.json.founders, []);
+  assert.equal(before.json.founders.length, before.json.count);
 
   const approved = await decide("founder", "approve", "Identity and business checked by hand.", [
     { check_type: "identity", result: "pass" },
@@ -225,8 +225,14 @@ test("before approval an investor sees how many businesses match, not who they a
 
   const after = await call("GET", "/investor/matches", "investor");
   assert.equal(after.json.count, before.json.count + 1);
-  assert.deepEqual(after.json.founders, []);
-  assert.match(after.json.message, /match(es)? your fund\. Get approved to see them\./);
+  assert.match(after.json.message, /match(es)? your fund\. Verify to see who they are and connect\./);
+
+  // She sees what kind of business each is, and nothing that says whose.
+  const card = after.json.founders.find((f: any) => f.headline === "Health startup, Nairobi, mvp, seeking KSh 1,000,000");
+  assert.deepEqual(Object.keys(card).sort(), ["anonymised", "band", "county", "funding_amount_kes", "headline", "ready", "sector", "stage"]);
+  assert.equal(card.anonymised, true);
+  assert.ok(!JSON.stringify(after.json).includes("Amina"));
+  assert.ok(!JSON.stringify(after.json).includes("Afya Booking"));
 });
 
 test("an admin decision needs a reason, is final, and is logged", async () => {

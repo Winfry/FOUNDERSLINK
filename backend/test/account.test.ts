@@ -93,6 +93,7 @@ test("nothing is agreed to until she says so", async () => {
       ["ai_matching", false],
       ["eligibility_attributes", false],
       ["contact", false],
+      ["document_processing", false],
     ],
   );
   assert.equal((await consent("founder", "marketing", true)).status, 400);
@@ -158,7 +159,7 @@ test("the export has everything of hers and nothing of anyone else's", async () 
 
   assert.equal(data.account.full_name, "Amina Founder");
   assert.equal(data.account.founder_profile.business_name, `Afya Booking ${run}`);
-  assert.equal(data.consents.length, 4);
+  assert.equal(data.consents.length, 5);
   assert.deepEqual(data.compliance.statuses.map((s: any) => [s.item_id, s.status]), [["kra_pin", "complete"]]);
   assert.equal(data.connections.length, 1);
   assert.deepEqual(data.messages_sent.map((m: any) => m.body), ["My message"]);

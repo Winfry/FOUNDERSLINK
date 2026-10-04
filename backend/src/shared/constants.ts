@@ -76,7 +76,14 @@ export const CHECK_METHODS = [
 //   ai_matching             her business details may be sent to the AI service
 //   eligibility_attributes  she may record women-, youth- or PWD-owned, to check funder eligibility
 //   contact                 she may be contacted by SMS or WhatsApp
-export const CONSENT_PURPOSES = ["profile_visibility", "ai_matching", "eligibility_attributes", "contact"] as const;
+//   document_processing     her uploaded documents may be read by an AI model outside the AI service (D12)
+export const CONSENT_PURPOSES = [
+  "profile_visibility",
+  "ai_matching",
+  "eligibility_attributes",
+  "contact",
+  "document_processing",
+] as const;
 
 // How each value reads on a screen. Anything not listed here is shown
 // with its underscores turned into spaces and a capital first letter.
@@ -95,6 +102,7 @@ const LABELS: Record<string, string> = {
   registered_business_name: "Registered business name",
   pwd_owned: "Owned by a person with a disability",
   ai_matching: "AI matching",
+  document_processing: "AI reading of my documents",
 };
 
 export const labelled = (values: readonly string[]) =>

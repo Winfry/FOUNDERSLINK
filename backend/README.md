@@ -189,7 +189,7 @@ None of these need approval.
 | Method | Path | What it does |
 |---|---|---|
 | GET | `/me/consents` | Every purpose, with whether and when she agreed |
-| POST | `/me/consents` | `{ purpose, granted }`. Purposes: `profile_visibility`, `ai_matching`, `eligibility_attributes`, `contact` |
+| POST | `/me/consents` | `{ purpose, granted }`. Purposes: `profile_visibility`, `ai_matching`, `eligibility_attributes`, `contact`, `document_processing` |
 | GET | `/me/export` | Everything held about her, as a JSON file |
 | DELETE | `/me` | `{ password }`. Deletes the account. Refused while she organises a circle with other members or has a deal in progress |
 
@@ -199,6 +199,7 @@ Nothing is agreed by default, so the onboarding screens need to ask. What each c
 - `ai_matching`: her business details may be sent to the AI service. Without it the backend's own rules answer, and responses say `engine: "stand_in"`.
 - `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Without it, sending one returns `409` with code `CONSENT_REQUIRED`. Withdrawing it clears them.
 - `contact`: she may be contacted by SMS (notifications and phone codes) and offered as a WhatsApp link to her accepted connections. SMS is only attempted once a provider is set up (see below).
+- `document_processing`: documents she uploads for a deal may be read by an AI model outside the AI service. Without it they are checked by a person only.
 
 ### Settings and phone number
 
@@ -219,7 +220,7 @@ An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GE
 |---|---|---|---|
 | PUT | `/me/investor-profile` | investor | The person and her organisation |
 | PUT | `/me/funder` | investor | What she funds. Creates or updates the funder record she maintains |
-| GET | `/investor/matches` | investor | `?search=&sector=&stage=&county=&sort=`. Founders that fit her record, each with `match_reasons`. A count only until she is approved |
+| GET | `/investor/matches` | investor | `?search=&sector=&stage=&county=&sort=`. Founders that fit her record, each with `match_reasons`. Until she is approved the cards are anonymised: `headline`, sector, stage, county, amount and band, no names |
 | POST | `/me/portfolio` | investor | Adds a past investment. With `source_url` it is a public source, without it self-reported |
 | PATCH | `/me/portfolio/:id` | investor | Edits an entry or its visibility |
 | PUT | `/me/expert-profile` | expert | Profession, register and bio |
@@ -400,6 +401,7 @@ Errors always look like `{ "error": { "code", "message" } }`. Validation errors 
 Each card in `/funding/matches` has:
 
 - `funder`: the record, including `how_to_apply_url`, `source_url` and `last_verified_at`
+- `anonymised` and `headline`: a record an investor maintains is shown without its name, mandate text or links until the founder is approved. Show `headline` instead. Records from public information are always shown in full
 - `source`: `public_information`, or `maintained_by_funder` when an approved investor keeps the record
 - `investor`: the person behind a maintained record, shown to approved founders only. Until then `investor_locked` is true
 - `band`: how well the funder fits: `strong`, `good` or `possible`. It is `null` in `not_for_you`

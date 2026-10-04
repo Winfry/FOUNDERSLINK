@@ -127,6 +127,31 @@ test("before approval the count follows the filters, and still names nobody", as
   await prisma.user.update({ where: { id: ids.grace }, data: { approval_status: "in_review" } });
   const all = await call("GET", "/investor/matches", "grace");
   const agri = await call("GET", "/investor/matches?sector=agri", "grace");
-  assert.deepEqual(agri.json.founders, []);
   assert.ok(agri.json.count >= 1 && agri.json.count < all.json.count);
+  assert.equal(agri.json.founders.length, agri.json.count);
+  assert.ok(agri.json.founders.every((f: any) => f.anonymised && f.sector === "agri" && f.user_id === undefined));
+  assert.ok(!JSON.stringify(agri.json).includes("Shamba Fresh"));
+});
+
+test("a founder who is not verified sees an investor's record without its name", async () => {
+  await prisma.user.update({ where: { id: ids.grace }, data: { approval_status: "approved" } });
+  const card = async () => {
+    const matches = await call("GET", "/funding/matches", "amina");
+    const all = [...matches.json.apply_now, ...matches.json.apply_after];
+    return all.find((c: any) => c.headline === "Angel investor · health, agri · KSh 100,000 to KSh 5,000,000");
+  };
+
+  const named = await card();
+  assert.equal(named.anonymised, false);
+  assert.equal(named.funder.name, fundName);
+
+  await prisma.user.update({ where: { id: ids.amina }, data: { approval_status: "draft" } });
+  const hidden = await card();
+  assert.equal(hidden.anonymised, true);
+  assert.equal(hidden.funder.name, null);
+  assert.equal(hidden.funder.mandate_text, null);
+  assert.equal(hidden.investor, null);
+  // What it funds, and how well it fits her, are still shown.
+  assert.deepEqual(hidden.funder.sectors, ["health", "agri"]);
+  assert.equal(hidden.band, named.band);
 });

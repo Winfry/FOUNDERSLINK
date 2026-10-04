@@ -56,7 +56,7 @@ export const ops: Op[] = [
     path: "/investor/matches",
     summary: "Founders that fit my fund",
     description:
-      "Approved founders who agreed to `profile_visibility` and fit the investor's funder record (or, before approval, the record she asked to take over). Filters narrow the matches and never widen them.\n\nAn investor who is not approved gets the count only: `founders` is empty.\n\nEach founder is matched by the AI service only if that founder agreed to `ai_matching` and the service answers; otherwise by the rule-based stand-in. The response does not say which engine was used.",
+      "Approved founders who agreed to `profile_visibility` and fit the investor's funder record (or, before approval, the record she asked to take over). Filters narrow the matches and never widen them.\n\nAn investor who is not approved gets anonymised cards (`anonymised: true`): `headline`, `sector`, `stage`, `county`, `funding_amount_kes`, `band` and `ready` only. There is no name, business name, description or id until she is verified.\n\nEach founder is matched by the AI service only if that founder agreed to `ai_matching` and the service answers; otherwise by the rule-based stand-in. The response does not say which engine was used.",
     access: "investor",
     query: discoverSchema,
     ok: {
@@ -81,7 +81,9 @@ export const ops: Op[] = [
             signals: arr(obj({ signal: str, fits: bool })),
             match_reasons: arr(str),
             ready: described(bool, "She already meets everything this funder requires."),
-          }),
+            anonymised: bool,
+            headline: described(str, 'Only on an anonymised card, e.g. "Health startup, Nairobi, mvp, seeking KSh 1,000,000".'),
+          }, ["user_id", "full_name", "business_name", "journey_type", "description", "use_of_funds", "signals", "match_reasons", "headline"]),
         ),
       }),
     },

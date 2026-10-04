@@ -24,7 +24,7 @@ export const ops: Op[] = [
     path: "/me/consents",
     summary: "Grant or withdraw a consent",
     description:
-      "What each purpose switches on:\n\n- `profile_visibility`: she appears in other members' matches and her profile page can be opened.\n- `ai_matching`: her business details may be sent to the AI service. Without it the backend's own rules answer, and responses say `engine: \"stand_in\"`.\n- `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Withdrawing it clears those fields from her profile.\n- `contact`: needed before a notification is sent by SMS. No SMS provider is configured, so nothing is sent either way.",
+      "What each purpose switches on:\n\n- `profile_visibility`: she appears in other members' matches and her profile page can be opened.\n- `ai_matching`: her business details may be sent to the AI service. Without it the backend's own rules answer, and responses say `engine: \"stand_in\"`.\n- `eligibility_attributes`: she may set `women_owned`, `youth_owned` or `pwd_owned`. Withdrawing it clears those fields from her profile.\n- `contact`: needed before a notification is sent by SMS. No SMS provider is configured, so nothing is sent either way.\n- `document_processing`: documents she uploads for a deal may be read by an AI model outside the AI service. Without it they are checked by a person only.",
     access: "user",
     body: consentSchema,
     ok: { description: "Every purpose, after the change.", schema: arr(ref("Consent")) },
