@@ -25,6 +25,23 @@ export const mockConnectionService: ConnectionService = {
     return seedRequests;
   },
 
+  async request(userId, message) {
+    await mockDelay();
+    seedRequests.push({
+      id: `conn-${Date.now()}`,
+      direction: 'sent',
+      status: 'pending',
+      withUserId: userId,
+      withFullName: 'Investor',
+      focusAreas: [],
+      pitch: message ?? '',
+      vision: '',
+      offer: '',
+      proposedAmountKes: 0,
+      createdAt: new Date().toISOString(),
+    });
+  },
+
   async respond(id, accept, reason) {
     await mockDelay();
     const req = seedRequests.find((r) => r.id === id);

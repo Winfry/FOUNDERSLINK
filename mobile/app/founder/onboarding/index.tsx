@@ -24,11 +24,15 @@ export default function FounderOnboardingScreen() {
   });
   const [consents, setConsents] = useState({ profile_visibility: false, ai_matching: false, contact: false });
   const [meta, setMeta] = useState<Record<string, string[]>>({});
+  // What to show for each option id. The mock sends none, so ids are tidied up instead.
+  const [labels, setLabels] = useState<Record<string, string>>({});
+  const labelOf = (id: string) => labels[id] ?? id.replace(/_/g, ' ');
   const [saving, setSaving] = useState(false);
 
   const loadMeta = async () => {
     const m = await referenceDataService.getMetaOptions();
     setMeta(m as Record<string, string[]>);
+    setLabels((m.labels as Record<string, string>) ?? {});
   };
 
   const extract = async () => {
@@ -76,14 +80,14 @@ export default function FounderOnboardingScreen() {
         {step === 2 ? (
           <>
             <Input label="Business name" value={String(profile.businessName ?? '')} onChangeText={(t) => setProfile((p) => ({ ...p, businessName: t }))} />
-            <Select label="Sector" options={(meta.sectors ?? []).map((s) => ({ label: s, value: s }))} value={String(profile.sector ?? '')} onChange={(v) => setProfile((p) => ({ ...p, sector: v }))} />
-            <Select label="Stage" options={(meta.stages ?? []).map((s) => ({ label: s.replace('_', ' '), value: s }))} value={String(profile.stage ?? '')} onChange={(v) => setProfile((p) => ({ ...p, stage: v as FounderProfile['stage'] }))} />
+            <Select label="Sector" options={(meta.sectors ?? []).map((s) => ({ label: labelOf(s), value: s }))} value={String(profile.sector ?? '')} onChange={(v) => setProfile((p) => ({ ...p, sector: v }))} />
+            <Select label="Stage" options={(meta.stages ?? []).map((s) => ({ label: labelOf(s), value: s }))} value={String(profile.stage ?? '')} onChange={(v) => setProfile((p) => ({ ...p, stage: v as FounderProfile['stage'] }))} />
             <Select label="County" options={(meta.counties ?? []).map((c) => ({ label: c, value: c }))} value={String(profile.county ?? '')} onChange={(v) => setProfile((p) => ({ ...p, county: v }))} />
             <Textarea label="Description" value={String(profile.description ?? '')} onChangeText={(t) => setProfile((p) => ({ ...p, description: t }))} />
             <Input label="Funding amount needed (KES)" keyboardType="number-pad" value={String(profile.fundingAmountKes ?? '')} onChangeText={(t) => setProfile((p) => ({ ...p, fundingAmountKes: Number(t) || 0 }))} />
-            <Select label="Business status" options={(meta.businessStatuses ?? []).map((s) => ({ label: s.replace(/_/g, ' '), value: s }))} value={String(profile.businessStatus ?? '')} onChange={(v) => setProfile((p) => ({ ...p, businessStatus: v as BusinessStatus }))} />
-            <MultiSelect label="Instruments" options={['equity', 'convertible_note', 'loan']} values={(profile.instruments as string[]) ?? []} onChange={(v) => setProfile((p) => ({ ...p, instruments: v as Instrument[] }))} />
-            <MultiSelect label="What you already have" options={meta.complianceItems ?? []} values={profile.alreadyHave ?? []} onChange={(v) => setProfile((p) => ({ ...p, alreadyHave: v }))} />
+            <Select label="Business status" options={(meta.businessStatuses ?? []).map((s) => ({ label: labelOf(s), value: s }))} value={String(profile.businessStatus ?? '')} onChange={(v) => setProfile((p) => ({ ...p, businessStatus: v as BusinessStatus }))} />
+            <MultiSelect label="Instruments" labels={Object.fromEntries(['equity', 'convertible_note', 'loan'].map((i) => [i, labelOf(i)]))} options={['equity', 'convertible_note', 'loan']} values={(profile.instruments as string[]) ?? []} onChange={(v) => setProfile((p) => ({ ...p, instruments: v as Instrument[] }))} />
+            <MultiSelect label="What you already have" labels={Object.fromEntries((meta.complianceItems ?? []).map((i) => [i, labelOf(i)]))} options={meta.complianceItems ?? []} values={profile.alreadyHave ?? []} onChange={(v) => setProfile((p) => ({ ...p, alreadyHave: v }))} />
             <Text style={styles.completeness}>Profile completeness will update after you save.</Text>
             <Button title="Continue to consents" onPress={() => setStep(3)} />
           </>

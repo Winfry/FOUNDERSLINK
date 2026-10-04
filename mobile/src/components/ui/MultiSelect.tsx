@@ -8,12 +8,15 @@ export function MultiSelect({
   values,
   onChange,
   error,
+  labels,
 }: {
   label: string;
   options: string[];
   values: string[];
   onChange: (values: string[]) => void;
   error?: string;
+  /** What to show for each option, when the option itself is an id. */
+  labels?: Record<string, string>;
 }) {
   const toggle = (opt: string) => {
     if (values.includes(opt)) onChange(values.filter((v) => v !== opt));
@@ -32,7 +35,7 @@ export function MultiSelect({
               style={[styles.chip, active && styles.chipActive]}
               accessibilityState={{ selected: active }}
             >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>{labels?.[opt] ?? opt}</Text>
               {active ? <X size={14} color={colors.primaryDark} /> : null}
             </Pressable>
           );

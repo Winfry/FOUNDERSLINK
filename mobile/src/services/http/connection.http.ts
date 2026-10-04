@@ -1,6 +1,6 @@
 import type { ConnectionService } from '../types/api';
 import type { ConnectionJoinRequest } from '../../types';
-import { del, get, patch } from './client';
+import { del, get, patch, post } from './client';
 
 /** One row of `GET /connections`. */
 interface ApiConnection {
@@ -41,6 +41,10 @@ export const httpConnectionService: ConnectionService = {
     const rows = await get<ApiConnection[]>('/connections');
     // A request that was taken back is gone, as far as the screen goes.
     return rows.filter((c) => c.status !== 'withdrawn').map(toRequest);
+  },
+
+  async request(userId, message) {
+    await post('/connections', { user_id: userId, message: message || undefined });
   },
 
   // Accepting creates a connection and nothing else (D13). The screen

@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Button } from '../../../src/components/ui';
 import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
-import { fundingService } from '../../../src/services';
+import { useToast } from '../../../src/components/ui/Toast';
+import { connectionService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, spacing } from '../../../src/theme/tokens';
 
@@ -13,18 +14,34 @@ export default function InvestorMatchProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const q = useQuery({ queryKey: ['investor-profile', id], queryFn: () => fundingService.getInvestorProfile(String(id)) });
 
+  const { show } = useToast();
+
   if (q.isLoading) return <ScreenLoading />;
 
   const data = q.data ?? {};
   const reasons = (data.reasons as { fits: boolean; text: string }[]) ?? [];
   const track = (data.trackRecord as { label: string; source: string }[]) ?? [];
 
-  const connect = () => {
+  // Who the request goes to. A match built from public information has
+  // nobody behind it on FounderLink, so there is no one to ask.
+  const personId = (data.connectUserId as string | null | undefined) ?? (data.connectUserId === undefined ? String(id) : null);
+
+  const connect = async () => {
     if (user?.approvalStatus !== 'approved') {
       router.push('/founder/verify');
       return;
     }
-    router.push('/(founder)/(tabs)/connections');
+    if (!personId) {
+      show('This investor is not on FounderLink yet, so there is nobody to connect with here.', 'error');
+      return;
+    }
+    try {
+      await connectionService.request(personId, 'I would like to connect about my business.');
+      show('Request sent', 'success');
+      router.push('/(founder)/(tabs)/connections');
+    } catch (e) {
+      show((e as { message?: string })?.message ?? 'Could not send the request', 'error');
+    }
   };
 
   return (
@@ -42,7 +59,7 @@ export default function InvestorMatchProfileScreen() {
           {t.label} ({t.source === 'platform_deal' ? 'Verified on FounderLink' : t.source === 'public' ? 'Public' : 'Self-reported'})
         </Text>
       ))}
-      <Button title="Connect" onPress={connect} />
+      <Button title="Connect" onPress={() => void connect()} />
     </ScrollView>
   );
 }

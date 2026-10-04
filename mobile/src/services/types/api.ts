@@ -53,6 +53,8 @@ export interface ComplianceService {
 
 export interface ConnectionService {
   list(): Promise<ConnectionJoinRequest[]>;
+  /** Asks another member to connect. Needs a verified account. */
+  request(userId: string, message?: string): Promise<void>;
   respond(id: string, accept: boolean, reason?: string): Promise<{ connectionId: string; proposedAmountKes?: number }>;
   withdraw(id: string): Promise<void>;
 }
