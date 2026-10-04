@@ -1,4 +1,6 @@
-# FounderLink E2E & journey testing
+# FoundersLink E2E & journey testing
+
+> **Out of date since 4 October:** this describes the earlier application-first flow, which was removed. See `docs/FINAL_VERIFICATION.md` for what was tested.
 
 ## Shared journey tests (fast, no UI)
 

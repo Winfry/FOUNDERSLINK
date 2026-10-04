@@ -1,8 +1,8 @@
-# FounderLink — Frontend Integration Guide
+# FoundersLink — Frontend Integration Guide
 
 **The one document for frontend development.** The frontend owner builds from it; the backend owner keeps it true.
 **For:** the frontend owner (mobile and admin apps) and the backend owner.
-**Status:** 4 October. Both apps run on mock data today. This page sets the rules, records the team's decisions, and lists what to change in the frontend so the apps run on the real backend, service by service. Team decision D10 in `docs/TEAM_DECISIONS.md`.
+**Status:** 4 October. Both apps call the backend when their API address is set (`EXPO_PUBLIC_API_URL` for the mobile app, `FOUNDERLINK_API_URL` for the admin dashboard) and fall back to mock data without it. This page sets the rules, records the team's decisions, and maps the frontend onto the backend, service by service. For what was tested and what is still open, see `docs/FINAL_VERIFICATION.md`. Team decision D10 in `docs/TEAM_DECISIONS.md`.
 
 Look-ups only: every endpoint's details are in `backend/README.md`, and what is built and not built is in `docs/FUNDING_FLOW.md` section 7. If this page and the code disagree, fix one of them the same day: never leave them different.
 
@@ -22,16 +22,16 @@ Look-ups only: every endpoint's details are in `backend/README.md`, and what is 
 
 Agreed on 4 October:
 
-1. **No wallet, no escrow.** No balance, deposit, withdrawal, release request or approval, and no FounderLink bank account or Paybill, in either app. FounderLink never receives, holds or moves money. Details in section 4.
+1. **No wallet, no escrow.** No balance, deposit, withdrawal, release request or approval, and no FoundersLink bank account or Paybill, in either app. FoundersLink never receives, holds or moves money. Details in section 4.
 2. **No ID collection.** No ID or passport number and no ID document, anywhere. Identity is checked by an admin. Business documents for vetting are allowed (section 3).
 3. **The apps run on the real backend**, following this page.
 4. **New screens first:** funding matches, profile fit, compliance, deals (section 6).
-5. **No "funds raised" or "% raised".** FounderLink does not raise money, and showing it reads like crowdfunding, which is regulated.
+5. **No "funds raised" or "% raised".** FoundersLink does not raise money, and showing it reads like crowdfunding, which is regulated.
 6. **Core scope: founders, investors and experts (D11).** Funding comes from investors only: angels, VC funds and accelerators that invest. No grants, government funds, bank loans or SACCOs, for now.
 7. **Startups only (D11).** No SME onboarding path, for now. Every founder signs up with `journey_type: "startup"`.
-8. **The bank is where the money goes (D11).** When a deal closes, the money moves between investor and founder through a bank, never through FounderLink. Screens that mention money say so.
+8. **The bank is where the money goes (D11).** When a deal closes, the money moves between investor and founder through a bank, never through FoundersLink. Screens that mention money say so.
 9. **Verification in levels (D12).** Join in two minutes; verify when she first tries to connect or message; share documents when a deal reaches due diligence. Section 2.1.
-10. **AI document pre-checks (D12).** Uploaded documents show "AI pre-checked" and then "Confirmed by FounderLink" once an admin confirms. Never "AI-verified".
+10. **AI document pre-checks (D12).** Uploaded documents show "AI pre-checked" and then "Confirmed by FoundersLink" once an admin confirms. Never "AI-verified".
 
 Still open, with recommendations: section 9.
 
@@ -92,7 +92,7 @@ Error codes worth handling by name:
 | `TOO_MANY_ATTEMPTS` | 429 | "Too many tries. Ask for a new code" |
 | `VALIDATION_ERROR` | 400 | Mark the fields in `fields` |
 
-`mobile/src/services/index.ts` already assigns a mock to each service. Write an HTTP version of each beside the mock and switch the assignment. Sections 3 and 8 map every method.
+`mobile/src/services/index.ts` assigns each service. As of 4 October the services call the backend when `EXPO_PUBLIC_API_URL` is set, and use the mocks when it is not. Sections 3 and 8 map every method.
 
 ---
 
@@ -147,7 +147,7 @@ Put "Verify to see who they are and connect" on these cards.
 
 Until `deal_ready` is true, moving to `terms_agreed` returns `409` with code `NOT_DEAL_READY`, and the message names what is missing and from whom: show it as is.
 
-Show each document's `check_label`, which is one of "Uploaded", "AI pre-checked", "Confirmed by FounderLink" or "Not accepted" (with `rejection_reason`). Take the label from the backend and do not write "AI pre-checked" yourself: the AI service cannot read documents yet, so today every document says "Uploaded". Likewise the pack has `engine`: call it AI-compiled only when that is `ai_service`. Today it is `stand_in`.
+Show each document's `check_label`, which is one of "Uploaded", "AI pre-checked", "Confirmed by FoundersLink" or "Not accepted" (with `rejection_reason`). Take the label from the backend and do not write "AI pre-checked" yourself: the code for the document pre-check is now in the AI service, but the build that runs in the demo is the older one, so today every document says "Uploaded" (`docs/FINAL_VERIFICATION.md` section 6). Likewise the pack has `engine`: call it AI-compiled only when that is `ai_service`. Today it is `stand_in`, and the app does not show the pack on a screen.
 
 `approval_status` on the user is one of `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`. It replaces `InvestorApplicationStatus`:
 
@@ -337,13 +337,13 @@ Each has `title`, `body` and a `link` to open.
 | `getDocuments(id)` | Use notes and minutes. No file uploads in a chama | |
 | `getTransactions`, `deposit`, `submitWithdrawal`, `getWithdrawal`, `approveWithdrawal` | **Remove** (team decision 1, section 4) | |
 
-Every chama screen carries: "FounderLink records contributions. It never holds or moves your money."
+Every chama screen carries: "FoundersLink records contributions. It never holds or moves your money."
 
 ---
 
 ## 4. The money screens are removed
 
-Team decision 1: FounderLink never receives, holds or moves money, so these screens are **removed**, not reworded:
+Team decision 1: FoundersLink never receives, holds or moves money, so these screens are **removed**, not reworded:
 
 | Remove | Mobile | Admin |
 |---|---|---|
@@ -351,7 +351,7 @@ Team decision 1: FounderLink never receives, holds or moves money, so these scre
 | Deposit | `group/[id]/deposit.tsx` | |
 | Withdrawal request, tracker and approval | `group/[id]/withdrawal/*`, `group/[id]/withdrawal-approve/*` | `withdrawals` page |
 | Transactions | `GroupService.getTransactions` | `transactions.service.ts` |
-| "FounderLink Escrow" Absa account and Paybill | `ABSA_DEPOSIT_DETAILS` in `kenya-data.ts` | |
+| "FoundersLink Escrow" Absa account and Paybill | `ABSA_DEPOSIT_DETAILS` in `kenya-data.ts` | |
 
 What a money circle's finance tab shows instead, all from the real API:
 
@@ -364,7 +364,7 @@ What a money circle's finance tab shows instead, all from the real API:
 | Goals and progress | `GET /circles/:id` → goals |
 | Decisions about the circle's own money | Votes: `/circles/:id/decisions` |
 
-Every money circle screen carries: "FounderLink records contributions. It never holds or moves your money."
+Every money circle screen carries: "FoundersLink records contributions. It never holds or moves your money."
 
 ---
 
@@ -389,11 +389,13 @@ Matching compares exact values, so the app has to send these, not its own labels
 | Circle `type`, member `role` | `money`, `learning`; `organiser`, `treasurer`, `member` |
 | Compliance `status` | `not_started`, `in_progress`, `complete` |
 | Vetting document `type` | `business_registration`, `kra_pin_certificate`, `organisation_proof`, `professional_certificate`, `track_record`, `other` |
-| Consent `purpose` | `profile_visibility`, `ai_matching`, `eligibility_attributes`, `contact` |
+| Consent `purpose` | `profile_visibility`, `ai_matching`, `eligibility_attributes`, `contact`, `document_processing` |
 
 ---
 
 ## 6. Screens the app does not have yet
+
+> **Note, 4 October:** this list was written before the screens were built. Several of them now exist. The current list of what has no screen is in `docs/FINAL_VERIFICATION.md` section 5.
 
 The backend has these and the app has no screen for them. In order of importance for the demo:
 

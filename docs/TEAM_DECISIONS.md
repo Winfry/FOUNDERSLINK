@@ -1,4 +1,4 @@
-# FounderLink — Team Decisions
+# FoundersLink — Team Decisions
 
 **Team:** 4 people — 2 full-stack (frontend, backend) and 2 AI/ML engineers.
 **Stack:** frontend (owner's choice) · **backend: Node.js** · AI service: Python (FastAPI) · database: PostgreSQL + pgvector.
@@ -7,16 +7,16 @@
 | # | Decision | Short version |
 |---|---|---|
 | D1 | Participants | Only **founders, investors and experts**. Customers and suppliers are removed. |
-| D2 | In-app messaging | All communication happens inside FounderLink: direct chats, circle group chats and deal-room group chats. |
+| D2 | In-app messaging | All communication happens inside FoundersLink: direct chats, circle group chats and deal-room group chats. |
 | D3 | Compliance | Compliance becomes a core feature with five parts: business checklist, Ask Compliance, deal compliance, deadlines and source management. |
 | D4 | Deals | When people decide to work together, they open a **deal** that tracks every stage from first conversation to closed and beyond. |
 | D5 | Ownership | Each of the four team members owns specific folders. |
 | D6 | Recommended profiles | Opening a recommended founder or investor shows key details, an explained fit prediction and their track record (previous investments or ventures), each labelled by source. |
 | **D7** | **Vetted network** | **Everyone you talk to has been checked, and everyone you do a deal with has been checked more deeply.** The checks happen in levels, when they are needed (D12). |
 | **D8** | **Backend is Node.js** | **The backend is Node.js, not FastAPI.** The AI stays in Python as a separate internal AI service that the backend calls over HTTP. |
-| D9 | How we stand out | The six things that make FounderLink different, and how to show them in the demo. |
+| D9 | How we stand out | The six things that make FoundersLink different, and how to show them in the demo. |
 | **D10** | **Frontend and backend aligned** | **One document for frontend development (`docs/FRONTEND_INTEGRATION.md`).** No wallet or escrow, no ID collection, the apps run on the real backend, and new screens for funding matches, profile fit, compliance and deals. |
-| **D11** | **Core scope: founders, investors, experts** | **Funding comes from investors only.** Grants, government funds, bank loans, SACCOs and the SME path are out of scope for now. Money from a deal moves through a bank, never through FounderLink. |
+| **D11** | **Core scope: founders, investors, experts** | **Funding comes from investors only.** Grants, government funds, bank loans, SACCOs and the SME path are out of scope for now. Money from a deal moves through a bank, never through FoundersLink. |
 | **D12** | **Verification in levels, with AI document pre-checks** | **Join in two minutes; verify when you want to make contact; share documents when a deal reaches due diligence.** The AI reads and pre-checks documents and compiles the due-diligence pack; a person always confirms. |
 | D13 | Groups, join requests and the demo | A group is a money circle, shown as a "Chama". Accepting a join request connects the two, then offers a pre-filled deal. The demo shows both apps. |
 
@@ -48,7 +48,7 @@
 
 ## D2. In-app messaging
 
-All communication between participants happens inside FounderLink, so the full history stays with the circle or deal it belongs to.
+All communication between participants happens inside FoundersLink, so the full history stays with the circle or deal it belongs to.
 
 **Conversation types**
 
@@ -120,7 +120,7 @@ When a deal is opened (D4), a checklist appears for that deal type. The Data/Com
 
 Every item says what it is, why it matters, the official source, and **when to get a lawyer or accountant**, with a button to bring a verified expert into the deal room.
 
-> FounderLink records and guides. It does not draft binding legal documents or give legal advice. Facilitating investment offers may bring Capital Markets Authority rules into play, so get legal advice before the platform does more than record relationships.
+> FoundersLink records and guides. It does not draft binding legal documents or give legal advice. Facilitating investment offers may bring Capital Markets Authority rules into play, so get legal advice before the platform does more than record relationships.
 
 ### 3.4 Deadlines and renewals
 A calendar of recurring obligations (e.g. tax filings, permit renewals, annual returns) with reminders by push or SMS. Each deadline links to its source and last-verified date.
@@ -177,7 +177,7 @@ Exploring → Due diligence → Terms agreed → Documents & compliance → Clos
 - A deal can only be opened between people with an accepted connection, or members of the same circle.
 - **Every party must confirm** a stage change to *Terms agreed* or *Closed*. One person cannot mark a deal closed alone.
 - Terms are **recorded by the parties** and labelled "self-reported, not a legal document".
-- **No money moves through FounderLink.** Investment money goes directly between the parties through their banks.
+- **No money moves through FoundersLink.** Investment money goes directly between the parties through their banks.
 - MVP stores document **names and status** only (e.g. "Shareholders' agreement — signed 12 Nov"). The parties keep the documents.
 - Every change is written to a timeline that every party can see.
 
@@ -278,7 +278,7 @@ When the AI recommends a founder or an investor and the user opens the profile, 
 
 | Label | Source | Trust |
 |---|---|---|
-| **Verified on FounderLink** | A deal that reached *Closed* in the deal tracker, confirmed by both parties (D4) | Strongest |
+| **Verified on FoundersLink** | A deal that reached *Closed* in the deal tracker, confirmed by both parties (D4) | Strongest |
 | **Public source** | Press release or the fund's own website, with a link | Medium |
 | **Self-reported** | Entered by the user | Shown as unconfirmed |
 
@@ -325,7 +325,7 @@ POST   /me/ventures                       founder adds a previous venture
 
 ## D7. Vetted network: everyone you deal with is checked
 
-**Rule (since D12):** anyone can join and explore in minutes. **Before they can contact anyone**, a FounderLink admin checks and approves them (level 2). **Before a deal reaches terms**, both sides share deeper documents (level 3). Until approved, a person sees other members only anonymised, and cannot connect, message, or join circles or deals. The levels are in D12.
+**Rule (since D12):** anyone can join and explore in minutes. **Before they can contact anyone**, a FoundersLink admin checks and approves them (level 2). **Before a deal reaches terms**, both sides share deeper documents (level 3). Until approved, a person sees other members only anonymised, and cannot connect, message, or join circles or deals. The levels are in D12.
 
 > Be precise in the pitch: say **"everyone you talk to has been checked by a person, and everyone you do a deal with has been checked more deeply"**, not "100% scam-free". No process can guarantee that, and a judge will push on it. Checks before contact, plus monitoring afterwards, are what keep scammers out.
 
@@ -351,11 +351,12 @@ Approved → Suspended (after reports or a failed re-check) → Reinstated | Ban
 | Organisation or fund documents, track-record evidence, licence where claimed (e.g. CMA register) | 3 · due diligence | — | ✓ | — |
 | Identity through a regulated provider | 3 · due diligence | ✓ | ✓ | when engaged on a deal |
 
-**Identity checks:** in production, use a regulated identity-verification provider (e.g. Smile ID, which operates in Kenya) that returns a pass/fail result, so FounderLink stores no ID. **For the hackathon, the identity step is a labelled demo**: an admin reviews a sample by hand. Never claim live KYC unless a real provider integration is running.
+**Identity checks:** in production, use a regulated identity-verification provider (e.g. Smile ID, which operates in Kenya) that returns a pass/fail result, so FoundersLink stores no ID. **For the hackathon, the identity step is a labelled demo**: an admin reviews a sample by hand. Never claim live KYC unless a real provider integration is running.
 
 ### Who decides
 - Platform admins (`users.role = admin`) make every decision, with a written reason.
 - Investors need **two admins** to approve in production (four-eyes rule). One admin is enough for the demo.
+  > **Note, 4 October (a fact about the demo, not a change to this decision):** the demo runs with one approval for an investor, and with two-step sign-in turned off for the demo admin.
 - Every admin action goes into an audit log.
 
 ### Where the AI helps (AI/ML 2)
@@ -374,8 +375,9 @@ The AI **ranks the review queue and explains why**. It never approves or rejects
 - **Messages:** the payment-request detector (D2) keeps running on every message.
 
 ### Privacy (supersedes Kenya amendments §9 "no national ID numbers")
-- The identity provider processes ID documents. **FounderLink stores only the result, the provider's reference and the date**, never the ID image or full ID number.
+- The identity provider processes ID documents. **FoundersLink stores only the result, the provider's reference and the date**, never the ID image or full ID number.
 - Documents uploaded for manual review are encrypted, visible only to admins, and deleted within 30 days of the decision.
+  > **Note, 4 October (a fact about the demo, not a change to this decision):** in the demo, files are stored on the server's local disk and are not encrypted. The app's privacy page says so.
 - A Data Protection Impact Assessment is needed before launch, because identity data is involved.
 - The application screen explains in plain language what is checked and why.
 
@@ -442,23 +444,23 @@ PostgreSQL + pgvector
 
 ## D9. How we stand out
 
-Most teams will show an AI that recommends people. These six things make FounderLink different. Each one should be visible in the demo.
+Most teams will show an AI that recommends people. These six things make FoundersLink different. Each one should be visible in the demo.
 
 | # | Differentiator | Why others don't have it | Show it in the demo |
 |---|---|---|---|
 | 1 | **A vetted network.** Everyone you talk to has been checked by a person, and everyone you do a deal with more deeply (D7, D12). | LinkedIn, WhatsApp groups and directories let anyone in, so fake investors and grant scams thrive. | The admin queue rejecting a flagged fake investor. |
 | 2 | **From match to done deal in one place.** Match → chat → deal → compliance checklist → closed (D2–D4). | Networking apps stop at "connect". Chama apps only keep records. Nobody follows the relationship through to the paperwork. | One founder going from recommendation to a confirmed co-founder deal with its checklist. |
 | 3 | **AI you can check.** Every recommendation explains itself, and accuracy is measured (precision@10), not claimed (D6). | Most "AI matching" is a black-box score. | Fit breakdown on a profile, then one slide with the measured precision@10. |
-| 4 | **Track records you can trust.** Each past investment says whether it's verified on FounderLink, public, or self-reported (D6). | Profiles elsewhere are self-declared. | An investor profile showing all three labels. |
+| 4 | **Track records you can trust.** Each past investment says whether it's verified on FoundersLink, public, or self-reported (D6). | Profiles elsewhere are self-declared. | An investor profile showing all three labels. |
 | 5 | **The network gets smarter with every deal.** Closed deals become verified track records and training data for the matcher. | Without deal outcomes, others can't learn which matches work. This advantage grows over time. | A deal reaching *Closed* and instantly appearing as a verified investment on the investor's profile. |
 | 6 | **Built for Kenya.** M-Pesa, Swahili and Sheng, county-aware compliance, and money that moves through a Kenyan bank, never through the app (D11). | Global platforms assume Silicon Valley founders. | A Swahili profile getting good matches, and a county-specific checklist. |
 
 ### The one line
-> "FounderLink is a vetted network: everyone you talk to has been checked, and the AI doesn't just connect founders with investors, it carries them all the way to a closed, compliant deal."
+> "FoundersLink is a vetted network: everyone you talk to has been checked, and the AI doesn't just connect founders with investors, it carries them all the way to a closed, compliant deal."
 
 ### What not to claim
 - "100% scam-free" (say "everyone you talk to has been checked")
-- "AI-verified documents" (say "AI pre-checked, confirmed by FounderLink")
+- "AI-verified documents" (say "AI pre-checked, confirmed by FoundersLink")
 - An accuracy figure you didn't measure
 - A live bank, M-Pesa or identity integration that is only a sandbox or demo
 
@@ -468,8 +470,8 @@ Most teams will show an AI that recommends people. These six things make Founder
 
 **Agreed on 4 October.** The frontend was built on mock data against assumptions the backend doesn't share: a group wallet with deposits and withdrawals, ID collection, "% raised", and its own field names and statuses. The team agreed:
 
-1. **No wallet, no escrow.** No balance, deposit, withdrawal, release, or FounderLink bank account or Paybill. Money circles show recorded contributions and who still owes, paid into the circle's own account. FounderLink never holds or moves money.
-2. **No ID collection.** FounderLink never asks for or stores ID or passport numbers or documents. Business documents for vetting are allowed. Identity at level 3 goes through a regulated provider that returns pass or fail (D12).
+1. **No wallet, no escrow.** No balance, deposit, withdrawal, release, or FoundersLink bank account or Paybill. Money circles show recorded contributions and who still owes, paid into the circle's own account. FoundersLink never holds or moves money.
+2. **No ID collection.** FoundersLink never asks for or stores ID or passport numbers or documents. Business documents for vetting are allowed. Identity at level 3 goes through a regulated provider that returns pass or fail (D12).
 3. **The apps run on the real backend.** No mocks in the running apps.
 4. **New screens first:** funding matches, profile fit, compliance, deals.
 5. **No "funds raised" or "% raised".**
@@ -482,12 +484,12 @@ Most teams will show an AI that recommends people. These six things make Founder
 
 ## D11. Core scope: founders, investors, experts
 
-**Agreed on 4 October.** The team narrowed FounderLink to its core, so that the core works first:
+**Agreed on 4 October.** The team narrowed FoundersLink to its core, so that the core works first:
 
 1. **Three kinds of people:** founders (startup founders), investors and experts.
 2. **Funding comes from investors only:** angels, VC funds, syndicates and accelerators that invest. **Out of scope for now:** grants, government funds (Hustler Fund, YEDF, Women Enterprise Fund, Uwezo), bank loan products, SACCOs and AGPO tenders.
 3. **Startups only.** The separate SME path (business status as an informal business, months trading, revenue bands, "Apply now / Apply after" wording) is out of scope for now.
-4. **The bank is where the money goes.** When an investor and a founder close a deal, the money moves between them through a bank (for example Absa, as a partner), never through FounderLink. FounderLink records the deal: stages, terms, checklist and timeline.
+4. **The bank is where the money goes.** When an investor and a founder close a deal, the money moves between them through a bank (for example Absa, as a partner), never through FoundersLink. FoundersLink records the deal: stages, terms, checklist and timeline.
 
 **Why:** a smaller core that works end to end beats a wide product that half works. "For now" means the code can come back later. Nothing here is deleted for good.
 
@@ -504,7 +506,7 @@ Most teams will show an AI that recommends people. These six things make Founder
 | Backend | Funding matches: startup wording only (Pitch / Pitch after / Don't pitch). The fee risk factor can stay, since an investor or accelerator could also charge a fee |
 | Backend | Circles: turn off group funding (`GET /circles/:id/funding`), since it relied on grant and government-fund records |
 | Backend | Eligibility attributes (women-, youth-, PWD-owned) were for grants and government funds. Leave them dormant, or keep them only if an investor's mandate needs them |
-| Backend | Deals: the notice says money moves through the parties' bank, never through FounderLink |
+| Backend | Deals: the notice says money moves through the parties' bank, never through FoundersLink |
 | Frontend | No SME onboarding path, no grant or loan screens, no group funding, no women/youth/PWD questions. See `docs/FRONTEND_INTEGRATION.md` |
 | AI/ML 1 | Matching and fit already work for startups. Done: extraction no longer suggests `journey_type: "sme"` |
 | Team lead | Demo script: replace the Mombasa salon (SME) story with a startup and investor story |
@@ -524,7 +526,7 @@ Most teams will show an AI that recommends people. These six things make Founder
 **Rules**
 - "Verify now so you're ready" is offered from sign-up, so nobody has to wait at the moment they want to connect.
 - An unverified member never sees a founder's name, business name or contact details.
-- FounderLink never stores ID documents or ID numbers (D10). Identity comes back from the provider as pass or fail.
+- FoundersLink never stores ID documents or ID numbers (D10). Identity comes back from the provider as pass or fail.
 - The AI prepares; a person decides. Nothing is labelled "verified" until an admin confirms it.
 
 ### AI document pre-check and the due-diligence pack (AI/ML 1)
@@ -535,7 +537,7 @@ Most teams will show an AI that recommends people. These six things make Founder
 - **Flags concerns** for the admin: mismatches, missing pages, signs of editing.
 - **Compiles the due-diligence pack** for a deal at level 3: for each party, what is verified, what is self-reported, which documents are in, and what is missing.
 
-**What it never does:** confirm a document is genuine. Only the official register (BRS, KRA's PIN checker) or a person can. The label is always **"AI pre-checked, confirmed by FounderLink"**.
+**What it never does:** confirm a document is genuine. Only the official register (BRS, KRA's PIN checker) or a person can. The label is always **"AI pre-checked, confirmed by FoundersLink"**.
 
 **Privacy:** documents are read inside the AI service and never sent to an outside AI model unless the member gave a separate `document_processing` consent. They are deleted on the existing 30-day rule.
 
@@ -585,7 +587,7 @@ Founders come together, pool money, talk, and track their money. That is the bac
 | The team wants | Built as |
 |---|---|
 | Founders come together | A circle joined by single-use invite only, with organiser, treasurer and member roles |
-| Pool funds | Members pay into **the chama's own** Paybill, Till or bank account. FounderLink never holds the pool |
+| Pool funds | Members pay into **the chama's own** Paybill, Till or bank account. FoundersLink never holds the pool |
 | A forum to communicate | The chama's group chat, notes and meeting minutes, and votes |
 | Track their money | Contributions per member, goals with progress, who has paid and who still owes, M-Pesa statement matching |
 

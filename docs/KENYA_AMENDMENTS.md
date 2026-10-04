@@ -1,6 +1,6 @@
-# FounderLink — Kenya Amendments
+# FoundersLink — Kenya Amendments
 
-**Status:** Proposed changes to the FounderLink Product & Engineering Documentation
+**Status:** Proposed changes to the FoundersLink Product & Engineering Documentation
 **Purpose:** Fix ten gaps that make the current spec generic rather than Kenyan. Each amendment says **where** it goes in the main spec (§ numbers refer to the original document), gives **replacement or additional text** to paste in, and lists the **data/API/scope** changes it implies.
 
 > **History. For what we are building now, read `docs/PRODUCT.md`.** Status of each amendment (4 October): **dropped for now (D11):** 4 (SME journey), 6 (local funding: grants, government funds, SACCOs, AGPO), and group funding in 7. **Changed:** 8 and 9 (verification now happens in levels, D12; identity through a provider, no ID stored). **Still apply:** 1 (M-Pesa, for circle contributions only), 2 (phone first), 3 (Swahili), 5 (Kenyan compliance, for startups), 7 (circles, without group funding), 10 (experts; the business model is a pitch slide).
@@ -34,14 +34,14 @@
 
 **Fix.** Make M-Pesa the default payment rail while keeping the non-custodial rule.
 
-- **Reconciliation (MVP):** a group links its own Paybill/Till, or the treasurer uploads an M-Pesa statement. FounderLink matches transactions to members and goals automatically.
-- **Contribution prompt (Should-have, sandbox only):** STK Push via Safaricom Daraja *sandbox* that sends money **directly to the group's own Paybill**. FounderLink only records the confirmation and never receives the funds.
+- **Reconciliation (MVP):** a group links its own Paybill/Till, or the treasurer uploads an M-Pesa statement. FoundersLink matches transactions to members and goals automatically.
+- **Contribution prompt (Should-have, sandbox only):** STK Push via Safaricom Daraja *sandbox* that sends money **directly to the group's own Paybill**. FoundersLink only records the confirmation and never receives the funds.
 - **Banks as pathways, not the centre:** Absa remains a potential partner, presented alongside other banks and SACCOs. The financial section recommends based on the founder's need, not the sponsor.
 
 **Where to add in the spec**
 
 - **§8.2 Critical boundary** — add:
-  > FounderLink never receives, holds or forwards money. M-Pesa payments go directly from a member to the group's own Paybill, Till or bank account. FounderLink only reads confirmations or statements to keep records accurate.
+  > FoundersLink never receives, holds or forwards money. M-Pesa payments go directly from a member to the group's own Paybill, Till or bank account. FoundersLink only reads confirmations or statements to keep records accurate.
 - **§8.1 MVP features** — replace "Track contributions" with:
   > Track contributions via M-Pesa statement upload or Paybill confirmation, with manual entry as a fallback. Flag unmatched or missing payments for the treasurer.
 - **§10** — rename to **"Financial Ecosystem Layer (M-Pesa, banks, SACCOs)"** and add:
@@ -230,7 +230,7 @@
 **Where to add in the spec**
 
 - **§8** — rename to **"Founder Circles (Chama)"** and add:
-  > FounderLink does not create money groups between strangers. Money circles are invite-only. AI suggestions are limited to non-financial learning circles. The value is linking a circle to its goals, group financing and tenders, not just recording contributions.
+  > FoundersLink does not create money groups between strangers. Money circles are invite-only. AI suggestions are limited to non-financial learning circles. The value is linking a circle to its goals, group financing and tenders, not just recording contributions.
 - **§6.2 Match types** — change "Founder ↔ Founder community/chama" to "Founder ↔ learning circle (non-financial)".
 - **§14 Demo step 16** — replace with:
   > The founder creates a circle with two people she already knows, invites them by WhatsApp link, and sees a group fund the circle could apply for once registered.
@@ -263,7 +263,7 @@ Never label anyone "KYC verified" or "ID verified" unless an actual identity che
 
 **Scam guards**
 
-- Platform rule shown on every opportunity and in the pitch: **"Legitimate grants never charge an application or processing fee. FounderLink never asks you to pay to be matched."**
+- Platform rule shown on every opportunity and in the pitch: **"Legitimate grants never charge an application or processing fee. FoundersLink never asks you to pay to be matched."**
 - Messages containing payment requests (M-Pesa numbers, "processing fee", "send money") show a warning banner to the recipient.
 - Opportunity providers must be verified before they can post.
 - One-tap report with a review queue. Accounts reported several times are paused pending review.
@@ -290,13 +290,13 @@ Never label anyone "KYC verified" or "ID verified" unless an actual identity che
 
 ---
 
-## 9. FounderLink's own data protection (Data Protection Act 2019)
+## 9. FoundersLink's own data protection (Data Protection Act 2019)
 
 **Problem.** A product that teaches compliance must be compliant itself. The spec has generic privacy rules but does not address the Kenya Data Protection Act 2019, ODPC registration or cross-border data transfer (Supabase and LLM APIs are typically hosted outside Kenya).
 
 **Fix.**
 
-- **Registration:** confirm whether FounderLink must register with the ODPC as a data controller/processor before public launch. A hackathon demo with seed data is lower risk, but the production plan must include this.
+- **Registration:** confirm whether FoundersLink must register with the ODPC as a data controller/processor before public launch. A hackathon demo with seed data is lower risk, but the production plan must include this.
 - **Minimise:** do not collect national ID numbers in the MVP. Do not store verification documents. Admins check public registers and record only the result.
 - **Consent:** explicit, granular consent for (a) profile visibility, (b) using data for matching, (c) optional eligibility attributes, (d) SMS/WhatsApp contact. Store each consent with a timestamp.
 - **Cross-border transfer:** document where each service stores data. Tell users in the privacy notice. Prefer providers with appropriate safeguards and the closest available region.
@@ -455,6 +455,6 @@ Repository · environment · database · auth with phone OTP · **mobile-first b
 ### §32 Pitch — additions
 
 - "Built for the phone in her hand, in the language she speaks."
-- "Works with M-Pesa, the way Kenyan money already moves — without FounderLink ever holding a shilling."
-- "Legitimate grants never charge a fee. FounderLink tells founders that up front."
+- "Works with M-Pesa, the way Kenyan money already moves — without FoundersLink ever holding a shilling."
+- "Legitimate grants never charge a fee. FoundersLink tells founders that up front."
 - "Free for founders, paid by the institutions that want to reach them."

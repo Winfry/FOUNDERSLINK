@@ -1,7 +1,7 @@
-# FounderLink — Official Sources for Ask Compliance
+# FoundersLink — Official Sources for Ask Compliance
 
 **For:** AI/ML 2 and whoever helps collect sources.
-**Why:** Ask Compliance answers only from official documents we have stored (TEAM_DECISIONS D3). Today `data/compliance/sources.json` is empty, so every answer is "we could not confirm this". This page lists exactly which documents to collect, where, and which checklist item each one answers.
+**Why:** Ask Compliance answers only from official documents we have stored (TEAM_DECISIONS D3). As of 4 October `data/compliance/sources.json` lists 27 sources. Ask Compliance still cannot give a cited answer: 20 of the 27 files are not in the repo and must be fetched, the index must be built, and an LLM key is needed (`docs/FINAL_VERIFICATION.md` section 6). Until then every question gets "No official source for this yet". This page lists exactly which documents to collect, where, and which checklist item each one answers.
 
 Scope since D11: **startups only**, so no SME, grant, SACCO or government-fund sources are needed.
 
@@ -72,7 +72,7 @@ One source per demo county (`jurisdiction_level: "county"`, with `county` set). 
 
 | Priority | Document | Issuer | Where to find it | Answers items |
 |---|---|---|---|---|
-| 2 | **Capital Markets (Investment-Based Crowdfunding) Regulations, 2022**, and CMA guidance on when raising money from the public is regulated | Capital Markets Authority | cma.or.ke; Kenya Law | `deal_investment_agreement`, `deal_investment_investor_checks` (and the limits of what FounderLink may do) |
+| 2 | **Capital Markets (Investment-Based Crowdfunding) Regulations, 2022**, and CMA guidance on when raising money from the public is regulated | Capital Markets Authority | cma.or.ke; Kenya Law | `deal_investment_agreement`, `deal_investment_investor_checks` (and the limits of what FoundersLink may do) |
 
 ### Items with no official source
 
