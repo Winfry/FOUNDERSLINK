@@ -24,6 +24,8 @@ export default function VerifyToConnectScreen() {
   const [phone, setPhone] = useState('+254');
   const [code, setCode] = useState('');
   const [statement, setStatement] = useState('');
+  const [website, setWebsite] = useState('');
+  const [websiteError, setWebsiteError] = useState<string | null>(null);
   const [step, setStep] = useState<'phone' | 'code' | 'statement'>('phone');
   const [loading, setLoading] = useState(false);
   // What is wrong with the field on screen, said under it.
@@ -38,6 +40,7 @@ export default function VerifyToConnectScreen() {
     setResumed(true);
     if (saved.data.accountPhone) setPhone(saved.data.accountPhone);
     if (saved.data.statement) setStatement(saved.data.statement);
+    if (saved.data.organisationWebsite) setWebsite(saved.data.organisationWebsite);
     if (saved.data.phoneVerified) setStep('statement');
   }, [saved.data, resumed]);
 
@@ -92,6 +95,18 @@ export default function VerifyToConnectScreen() {
       setError(`Write at least ${STATEMENT_MIN} characters so the reviewer knows what you do.`);
       return;
     }
+    // "example.com" is accepted: the https:// is added for her.
+    let organisationWebsite: string | undefined;
+    const typed = website.trim();
+    if (isInvestor && typed) {
+      const full = /^https?:\/\//i.test(typed) ? typed : `https://${typed}`;
+      if (!/^https?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+([/?#]\S*)?$/i.test(full)) {
+        setWebsiteError('Enter a website address, like savanna-angels.co.ke, or leave this empty.');
+        return;
+      }
+      organisationWebsite = full;
+    }
+    setWebsiteError(null);
     setError(null);
     setNeedsSetup(false);
     setLoading(true);
@@ -106,10 +121,16 @@ export default function VerifyToConnectScreen() {
           return;
         }
       }
-      await vettingService.saveDraft({ statement, organisationName });
+      await vettingService.saveDraft({ statement, organisationName, organisationWebsite });
       await vettingService.submit();
       router.replace('/founder/verify/status');
     } catch (e) {
+      // Her email has not been confirmed yet. Take her to do it now: a new
+      // code is sent, and she comes straight back here, statement kept.
+      if ((e as { code?: string })?.code === 'EMAIL_NOT_VERIFIED') {
+        router.push('/auth/verify-email?then=verify');
+        return;
+      }
       setError(messageOf(e, 'We could not submit your details. Check your connection and try again.'));
     } finally {
       setLoading(false);
@@ -135,7 +156,7 @@ export default function VerifyToConnectScreen() {
               We send the decision on your verification to your email, so it has to be confirmed before you can submit.
             </Text>
             <View style={{ marginTop: spacing[1.5] }}>
-              <Button title="Confirm my email" onPress={() => router.push('/auth/verify-email')} />
+              <Button title="Confirm my email" onPress={() => router.push('/auth/verify-email?then=verify')} />
             </View>
           </View>
         ) : null}
@@ -227,6 +248,25 @@ export default function VerifyToConnectScreen() {
                     : 'I run Afya Booking, an app that lets patients book visits at small clinics in Nairobi. We started in 2024 and 12 clinics use it today.'}
                 </Text>
               </View>
+              {isInvestor ? (
+                <View style={styles.website}>
+                  <Input
+                    label="Website (optional)"
+                    value={website}
+                    onChangeText={(t) => {
+                      setWebsite(t);
+                      setWebsiteError(null);
+                    }}
+                    placeholder="e.g. savanna-angels.co.ke"
+                    hint="A website lets our reviewer check your organisation faster"
+                    error={websiteError ?? undefined}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                    maxLength={200}
+                  />
+                </View>
+              ) : null}
             </View>
             <View style={styles.actions}>
               <Button title="Submit for review" loading={loading} onPress={() => void submit()} />
@@ -256,6 +296,7 @@ const styles = StyleSheet.create({
   helper: { fontSize: 16, color: colors.textMuted, marginTop: spacing[1] },
   strong: { fontSize: 16, fontWeight: '700', color: colors.text },
   field: { marginTop: spacing[3] },
+  website: { marginTop: spacing[3] },
   actions: { marginTop: spacing[2], gap: spacing[1] },
   // The Textarea leaves 16 below itself; the count belongs right under it.
   count: { fontSize: 14, color: colors.textMuted, marginTop: -spacing[1] },

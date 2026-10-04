@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Bell, FileText, Flag, LifeBuoy, Lock, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react-native';
+import { Bell, FileText, Flag, Eye, LifeBuoy, Lock, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react-native';
 import { Header } from '../../src/components/layout/Header';
 import { MenuGroup, MenuRow } from '../../src/components/profile/MenuRow';
 import { colors, spacing } from '../../src/theme/tokens';
@@ -16,6 +16,7 @@ const SECTIONS: { title: string; rows: { label: string; href: string; icon: Luci
   {
     title: 'Privacy and data',
     rows: [
+      { label: 'Privacy and consents', href: '/settings/consents', icon: Eye },
       { label: 'Privacy policy', href: '/settings/privacy', icon: ShieldCheck },
       { label: 'Terms of service', href: '/settings/terms', icon: FileText },
       { label: 'Report someone', href: '/settings/report', icon: Flag },

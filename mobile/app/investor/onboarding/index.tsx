@@ -8,13 +8,19 @@ import { Header } from '../../../src/components/layout/Header';
 import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { AmountField, FormError, LongSelect, Steps, TextLink } from '../../../src/components/auth/parts';
 import { KindPicker, type KindChoice } from '../../../src/components/investor-setup/KindPicker';
-import { Button, Input, MultiSelect, Textarea } from '../../../src/components/ui';
+import { Button, Input, MultiSelect, Switch, Textarea } from '../../../src/components/ui';
 import { useToast } from '../../../src/components/ui/Toast';
-import { investorService, referenceDataService, type InvestorSetup } from '../../../src/services';
+import { consentService, investorService, referenceDataService, type InvestorSetup } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
-const STEP_NAMES = ['Who you invest for', 'What you fund'];
+const STEP_NAMES = ['Who you invest for', 'What you fund', 'What is shared'];
+
+const SHARED = [
+  ['profile_visibility', 'Let verified members see my profile', 'Without this, founders cannot see who is behind your fund.'],
+  ['ai_matching', 'Use my details for AI matching', 'Without this, FoundersLink’s own rules match you with founders.'],
+] as const;
+type Shared = (typeof SHARED)[number][0];
 const MANDATE_MIN = 10;
 
 const KINDS: KindChoice[] = [
@@ -59,6 +65,9 @@ export default function InvestorOnboardingScreen() {
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [failed, setFailed] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Both off until she turns them on.
+  const [shared, setShared] = useState<Record<Shared, boolean>>({ profile_visibility: false, ai_matching: false });
+  const [savedShared, setSavedShared] = useState<Partial<Record<Shared, boolean>>>({});
 
   const labelOf = (id: string) => labels[id] ?? tidy(id);
   const labelMap = (ids: string[]) => Object.fromEntries(ids.map((i) => [i, labelOf(i)]));
@@ -103,6 +112,13 @@ export default function InvestorOnboardingScreen() {
           setTicketMin(setup.ticketMinKes);
           setTicketMax(setup.ticketMaxKes);
           setMandateText(setup.mandateText);
+          // The choices she made before, so editing does not switch them off.
+          const given = Object.fromEntries((await consentService.list()).map((c) => [c.purpose, c.granted]));
+          if (alive) {
+            const before = { profile_visibility: given.profile_visibility ?? false, ai_matching: given.ai_matching ?? false };
+            setShared(before);
+            setSavedShared(before);
+          }
         }
       } catch {
         // No setup yet, or it could not be read: she starts from an empty form.
@@ -123,7 +139,7 @@ export default function InvestorOnboardingScreen() {
     setStep(2);
   };
 
-  const save = async () => {
+  const toShared = () => {
     const found: Partial<Record<Field, string>> = {};
     if (!sectors.length) found.sectors = 'Choose at least one sector.';
     if (!stages.length) found.stages = 'Choose at least one stage.';
@@ -138,6 +154,10 @@ export default function InvestorOnboardingScreen() {
       setFailed(missing === 1 ? 'One thing above still needs your answer.' : `${missing} things above still need your answer.`);
       return;
     }
+    setStep(3);
+  };
+
+  const save = async (thenVerify = false) => {
     setFailed(null);
     setSaving(true);
     try {
@@ -154,11 +174,19 @@ export default function InvestorOnboardingScreen() {
         ticketMinKes: ticketMin as number,
         ticketMaxKes: ticketMax as number,
       });
+      for (const [purpose] of SHARED) {
+        // Only what she changed is recorded again.
+        if (savedShared[purpose] === shared[purpose]) continue;
+        await consentService.set(purpose, shared[purpose]);
+      }
+      setSavedShared(shared);
       await useAuthStore.getState().markInvestorOnboardingComplete();
+      void queryClient.invalidateQueries({ queryKey: ['consents'] });
       void queryClient.invalidateQueries({ queryKey: ['investor-setup'] });
       void queryClient.invalidateQueries({ queryKey: ['discover'] });
       show(editing ? 'What you fund is updated' : 'Saved. Here are founders that fit.', 'success');
       router.replace('/(investor)/(tabs)/discover');
+      if (thenVerify) router.push('/founder/verify');
     } catch (e) {
       setFailed(messageOf(e, 'We could not save this. Check your connection and try again.'));
     } finally {
@@ -171,7 +199,7 @@ export default function InvestorOnboardingScreen() {
     router.replace('/auth/login');
   };
 
-  const back = step > 1 ? () => setStep(1) : cameFromApp ? () => router.back() : undefined;
+  const back = step > 1 ? () => setStep(step - 1) : cameFromApp ? () => router.back() : undefined;
   const written = mandateText.trim().length;
   const countiesLeft = meta.counties.filter((c) => !counties.includes(c));
 
@@ -217,7 +245,7 @@ export default function InvestorOnboardingScreen() {
                 {!cameFromApp ? <TextLink title="Log out" onPress={() => void logOut()} /> : null}
               </View>
             </>
-          ) : (
+          ) : step === 2 ? (
             <>
               <Text style={styles.heading}>What you fund</Text>
               <Text style={styles.helper}>We use this to show you founders that fit, and to tell founders whether to pitch you.</Text>
@@ -335,8 +363,44 @@ export default function InvestorOnboardingScreen() {
 
               <View style={styles.actions}>
                 <FormError message={failed} />
-                <Button title={editing ? 'Save changes' : 'Save and see founders'} loading={saving} onPress={() => void save()} />
+                <Button title="Continue" onPress={toShared} />
                 <Button title="Back" variant="ghost" onPress={() => setStep(1)} />
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.heading}>What is shared</Text>
+              <Text style={styles.helper}>
+                {editing ? 'These are your choices today. Change any of them and save.' : 'Both are off until you turn them on. You can change them later in Settings.'}
+              </Text>
+              <View style={styles.shared}>
+                {SHARED.map(([key, title, line]) => (
+                  <Pressable
+                    key={key}
+                    style={[styles.share, shared[key] && styles.shareOn]}
+                    onPress={() => setShared((c) => ({ ...c, [key]: !c[key] }))}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: shared[key] }}
+                    accessibilityLabel={`${title}. ${line}`}
+                  >
+                    <View style={styles.shareWords}>
+                      <Text style={styles.shareTitle}>{title}</Text>
+                      <Text style={styles.small}>{line}</Text>
+                    </View>
+                    <Switch value={shared[key]} onValueChange={(on) => setShared((c) => ({ ...c, [key]: on }))} />
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.actions}>
+                <FormError message={failed} />
+                <Button title={editing ? 'Save changes' : 'Save and see founders'} loading={saving} onPress={() => void save()} />
+                {!editing ? (
+                  <>
+                    <Text style={styles.small}>Verify now so you're ready to connect. It takes a phone number and a short statement.</Text>
+                    <Button title="Save and verify now" variant="secondary" disabled={saving} onPress={() => void save(true)} />
+                  </>
+                ) : null}
+                <Button title="Back" variant="ghost" onPress={() => setStep(2)} />
               </View>
             </>
           )}
@@ -374,4 +438,19 @@ const styles = StyleSheet.create({
   exampleTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
   exampleText: { fontSize: 14, color: colors.textMuted },
   actions: { marginTop: spacing[4], gap: spacing[1] },
+  shared: { marginTop: spacing[3], gap: spacing[1.5] },
+  share: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    minHeight: touchTargetMin,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    padding: spacing[2],
+    backgroundColor: colors.white,
+  },
+  shareOn: { borderColor: colors.primary },
+  shareWords: { flex: 1, gap: spacing[0.5] },
+  shareTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
 });

@@ -33,6 +33,9 @@ export type DealType =
 export type ComplianceItemStatus = 'not_started' | 'in_progress' | 'complete';
 
 export type ConsentPurpose = 'profile_visibility' | 'ai_matching' | 'contact';
+// Every consent the backend keeps. `document_processing` is asked in
+// Settings only, so the mock members (three purposes each) stay as they are.
+export type SettingsConsentPurpose = ConsentPurpose | 'document_processing';
 
 export type ConversationType = 'direct' | 'circle' | 'deal';
 

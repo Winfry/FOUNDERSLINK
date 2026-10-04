@@ -44,7 +44,7 @@ export default function MatchesScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { isOffline } = useNetworkStatus();
-  const [segment, setSegment] = useState<Segment>('pitch');
+  const segment = 'pitch' as Segment;
 
   const consentQ = useQuery({ queryKey: ['consents'], queryFn: () => consentService.list() });
   const matchesQ = useQuery({ queryKey: ['funding-matches'], queryFn: () => fundingService.getMatches() });
@@ -78,7 +78,7 @@ export default function MatchesScreen() {
   const header = (
     <View style={styles.header}>
       <Text style={styles.heading}>Investors for you</Text>
-      <Text style={styles.sub}>Sorted by how well they fit your business.</Text>
+      <Text style={styles.sub}>The investors who fit your business today.</Text>
 
       {unverified ? (
         <View style={styles.invite}>
@@ -95,33 +95,8 @@ export default function MatchesScreen() {
         </View>
       ) : null}
 
-      {aiMatchingOn ? (
-        <>
-          <View style={styles.segments} accessibilityRole="tablist">
-            {SEGMENTS.map((s) => {
-              const on = s.key === segment;
-              return (
-                <Pressable
-                  key={s.key}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: on }}
-                  accessibilityLabel={`${s.title}, ${lists[s.key].length}`}
-                  style={[styles.segment, on && styles.segmentOn]}
-                  onPress={() => setSegment(s.key)}
-                >
-                  <Text style={[styles.segmentText, on && styles.segmentTextOn]} numberOfLines={1}>
-                    {s.label}
-                  </Text>
-                  <View style={[styles.count, on && styles.countOn]}>
-                    <Text style={[styles.countText, on && styles.countTextOn]}>{lists[s.key].length}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Text style={styles.hint}>{current.hint}</Text>
-        </>
-      ) : null}
+      {/* Only the investors who fit her today are shown. The ones that need
+          something fixed first, and the ones that do not fit, are left out. */}
     </View>
   );
 

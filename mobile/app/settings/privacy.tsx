@@ -21,8 +21,8 @@ const SECTIONS: LegalSection[] = [
   {
     title: 'Your consent',
     body: [
-      'Nothing is used without your consent. You give four separate consents: for your profile to be visible, for AI matching, for contact by SMS or WhatsApp, and for AI reading of your documents.',
-      'You can withdraw each one at any time.',
+      'Nothing is used without your consent. There are four separate consents: for your profile to be visible, for AI matching, for contact by SMS or WhatsApp, and for an AI model to read documents you share in a deal. Each one is off until you turn it on.',
+      'You can withdraw each one at any time, in Settings under Privacy and consents.',
       'Without the AI matching consent, your details are not sent to the AI service.',
     ],
   },
@@ -40,7 +40,7 @@ const SECTIONS: LegalSection[] = [
   {
     title: 'Your rights',
     body: [
-      'You can ask us for a copy of everything we hold about you, by email to support.',
+      'You can download a copy of everything we hold about you from Settings, under Privacy and consents.',
       'You can delete your account from Settings. Your profile, matches, chats and files are removed. Shared records, such as a closed deal, keep your part in anonymous form.',
     ],
   },

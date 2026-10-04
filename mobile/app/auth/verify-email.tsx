@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../../src/components/ui/Text';
@@ -27,12 +28,23 @@ export default function VerifyEmailScreen() {
     formState: { isSubmitting },
   } = useForm<Form>({ resolver: zodResolver(otpSchema), defaultValues: { otp: '' } });
 
+  // Coming from verification, the code sent at sign-up is long gone, so
+  // a new one is sent as the screen opens.
+  const { then } = useLocalSearchParams<{ then?: string }>();
+  const sentOnOpen = useRef(false);
+  useEffect(() => {
+    if (then !== 'verify' || sentOnOpen.current) return;
+    sentOnOpen.current = true;
+    authService.resendEmailCode().catch(() => undefined);
+  }, [then]);
+
   const onSubmit = async (data: Form) => {
     try {
       await authService.verifyEmailOtp(data.otp);
       await markEmailVerified();
       show('Email verified', 'success');
-      router.replace('/');
+      // Sent here from verification: go back to it, where her statement is waiting.
+      router.replace(then === 'verify' ? '/founder/verify' : '/');
     } catch (e: unknown) {
       setError('otp', {
         message: (e as { message?: string })?.message ?? 'That code is not right. Check it, or send a new one.',

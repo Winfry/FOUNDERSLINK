@@ -39,6 +39,28 @@ export async function deleteAccount(password: string, reason?: string): Promise<
   } satisfies ApiError;
 }
 
+/**
+ * Everything FoundersLink holds about her, as the backend's JSON text.
+ * Fetched directly because the screen saves it as a file.
+ */
+export async function exportMyData(): Promise<string> {
+  const bearer = await currentToken();
+  let res: Response;
+  try {
+    res = await fetch(API_URL + '/me/export', { headers: bearer ? { authorization: `Bearer ${bearer}` } : {} });
+  } catch {
+    throw { code: 'NETWORK_ERROR', message: 'Cannot reach FoundersLink. Check your connection and try again.' } satisfies ApiError;
+  }
+  const json = await res.json().catch(() => null);
+  if (!res.ok || json === null) {
+    throw {
+      code: json?.error?.code ?? 'UNKNOWN_ERROR',
+      message: json?.error?.message ?? 'Could not prepare your data. Try again.',
+    } satisfies ApiError;
+  }
+  return JSON.stringify(json, null, 2);
+}
+
 /** Tells FoundersLink's staff about a member. It appears on their Reports page. */
 export async function reportMember(userId: string, reason: string): Promise<void> {
   await post('/reports', { user_id: userId, reason });

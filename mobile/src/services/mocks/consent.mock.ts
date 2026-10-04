@@ -1,5 +1,5 @@
 import type { ConsentService } from '../types/api';
-import type { ConsentRecord } from '../../types';
+import type { ConsentPurpose, ConsentRecord } from '../../types';
 import { mockDelay } from './delay';
 import { getMemberById, upsertMember } from './mock-store';
 import { getMockSessionUserId } from './mock-session';
@@ -7,18 +7,24 @@ import { getMockSessionUserId } from './mock-session';
 const META: Omit<ConsentRecord, 'granted'>[] = [
   {
     purpose: 'profile_visibility',
-    label: 'Profile visibility',
-    description: 'Let verified investors and members see my profile.',
+    label: 'Let verified members see my profile',
+    description: 'Without this you appear in nobody’s matches and your profile cannot be opened.',
   },
   {
     purpose: 'ai_matching',
-    label: 'Matching',
-    description: 'Use my business details to match me with investors.',
+    label: 'Use my details for AI matching',
+    description: 'Without this FoundersLink’s own rules match you, and your description is not sent to the AI service.',
   },
   {
     purpose: 'contact',
-    label: 'Contact',
-    description: 'Contact me by SMS or WhatsApp.',
+    label: 'Contact me by SMS or WhatsApp',
+    description: 'FoundersLink can reach you on your phone about your matches and deals.',
+  },
+  {
+    // Asked in Settings only; see SettingsConsentPurpose in the types.
+    purpose: 'document_processing' as ConsentPurpose,
+    label: 'Let an AI model read documents I share in a deal',
+    description: 'Without this they are checked by a person only.',
   },
 ];
 
@@ -28,7 +34,7 @@ export const mockConsentService: ConsentService = {
     const uid = getMockSessionUserId();
     const member = uid ? getMemberById(uid) : null;
     const grants = member?.consents ?? { profile_visibility: false, ai_matching: false, contact: false };
-    return META.map((m) => ({ ...m, granted: grants[m.purpose] }));
+    return META.map((m) => ({ ...m, granted: grants[m.purpose] ?? false }));
   },
 
   async set(purpose, granted) {

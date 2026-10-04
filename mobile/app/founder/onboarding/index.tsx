@@ -41,6 +41,10 @@ const REQUIRED: [keyof FounderProfile, string, string][] = [
   ['businessStatus', 'Business status', 'Choose how your business is registered.'],
 ];
 
+// Words that show she is writing in Swahili or Sheng rather than English.
+const SWAHILI_WORDS = /\b(tuna|tunahitaji|tunatengeneza|tunauza|ya|kwa|na|wa|za|milioni|elfu|laki|biashara|pesa|wateja|sisi|yetu)\b/i;
+const languageOf = (text: string): 'sw' | 'en' => (SWAHILI_WORDS.test(text) ? 'sw' : 'en');
+
 const messageOf = (e: unknown, fallback: string) => (e as { message?: string })?.message ?? fallback;
 
 export default function FounderOnboardingScreen() {
@@ -73,6 +77,8 @@ export default function FounderOnboardingScreen() {
     return words.charAt(0).toUpperCase() + words.slice(1);
   };
   const [saving, setSaving] = useState(false);
+  // Her say-so, on step 1, for the AI service to read her description.
+  const [aiRead, setAiRead] = useState(false);
   // The fields "Suggest fields" filled in, until she changes them herself.
   const [suggested, setSuggested] = useState<string[]>([]);
   // null until she has asked for suggestions.
@@ -147,7 +153,13 @@ export default function FounderOnboardingScreen() {
     setSaving(true);
     try {
       await loadMeta();
-      const found = await founderService.extractProfileFromText(description, 'en');
+      // The backend only sends her words to the AI service once this consent is on record.
+      if (aiRead) {
+        await consentService.set('ai_matching', true);
+        setConsents((c) => ({ ...c, ai_matching: true }));
+        setSavedConsents((c) => ({ ...c, ai_matching: true }));
+      }
+      const found = await founderService.extractProfileFromText(description, aiRead ? languageOf(description) : 'en');
       setProfile((p) => ({ ...p, ...found, description }));
       const shown = ['businessName', 'sector', 'stage', 'county', 'fundingAmountKes', 'businessStatus', 'instruments'];
       const keys = Object.keys(found).filter((k) => shown.includes(k));
@@ -183,7 +195,7 @@ export default function FounderOnboardingScreen() {
     setStep(3);
   };
 
-  const finish = async () => {
+  const finish = async (thenVerify = false) => {
     setFailed(null);
     setSaving(true);
     try {
@@ -205,6 +217,7 @@ export default function FounderOnboardingScreen() {
       }
       show(`Profile ${saved.profileCompleteness}% complete`, 'success');
       router.replace('/(founder)/(tabs)/matches');
+      if (thenVerify) router.push('/founder/verify');
     } catch (e) {
       setFailed(messageOf(e, 'We could not save your profile. Check your connection and try again.'));
     } finally {
@@ -270,6 +283,21 @@ export default function FounderOnboardingScreen() {
                   </Pressable>
                 ))}
               </View>
+              <Pressable
+                style={[styles.consent, styles.aiRead, aiRead && styles.consentOn]}
+                onPress={() => setAiRead((on) => !on)}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: aiRead }}
+                accessibilityLabel="Let AI read this to fill in my form"
+              >
+                <View style={styles.consentWords}>
+                  <Text style={styles.consentTitle}>Let AI read this to fill in my form</Text>
+                  <Text style={styles.consentLine}>
+                    Your description is sent to FoundersLink's AI service. Without this, simple rules fill in what they can.
+                  </Text>
+                </View>
+                <Switch value={aiRead} onValueChange={setAiRead} />
+              </Pressable>
             </View>
             <View style={styles.actions}>
               <FormError message={failed} />
@@ -384,6 +412,12 @@ export default function FounderOnboardingScreen() {
             <View style={styles.actions}>
               <FormError message={failed} />
               <Button title={editing ? 'Save changes' : 'Finish'} loading={saving} onPress={() => void finish()} />
+              {!editing ? (
+                <>
+                  <Text style={styles.verifyLine}>Verify now so you're ready to connect. It takes a phone number and a short statement.</Text>
+                  <Button title="Finish and verify now" variant="secondary" disabled={saving} onPress={() => void finish(true)} />
+                </>
+              ) : null}
               <Button title="Back" variant="ghost" onPress={() => setStep(2)} />
             </View>
           </>
@@ -437,6 +471,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   consentOn: { borderColor: colors.primary },
+  aiRead: { marginTop: spacing[2] },
+  verifyLine: { fontSize: 14, color: colors.textMuted, marginTop: spacing[1] },
   consentWords: { flex: 1 },
   consentTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   consentLine: { fontSize: 14, color: colors.textMuted, marginTop: spacing[0.5] },
