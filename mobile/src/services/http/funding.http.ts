@@ -5,7 +5,15 @@ import { syncSessionUser } from './session-sync';
 
 /** One card of `GET /funding/matches`. Only the fields used here. */
 interface ApiCard {
-  funder: { id: string; name: string | null; mandate_text: string | null };
+  funder: {
+    id: string;
+    name: string | null;
+    mandate_text: string | null;
+    sectors: string[];
+    stages: string[];
+    ticket_min_kes: number | null;
+    ticket_max_kes: number | null;
+  };
   anonymised: boolean;
   headline: string;
   investor: { user_id: string; full_name: string; organisation_name: string | null } | null;
@@ -27,10 +35,14 @@ interface ApiMatches {
 // are built from public information, so a card is known by the record's
 // id, which is always there. Below level 2 a member's record has no
 // name, and its headline ("Angel investor · health · KSh …") stands in.
+// A demo record's name ends in "(demo)". The card says it is a demo
+// record in its own note, so the name is shown without the suffix.
+const nameOf = (card: ApiCard) => (card.funder.name ?? card.headline).replace(/\s*\(demo\)$/i, '');
+
 function toCard(card: ApiCard): InvestorMatchCard {
   return {
     investorUserId: card.funder.id,
-    displayName: card.funder.name ?? card.headline,
+    displayName: nameOf(card),
     band: card.band ?? 'not_a_fit',
     reasons: card.reasons,
     gaps: card.gaps.map((gap) => ({
@@ -80,12 +92,18 @@ export const httpFundingService: FundingService = {
       investorUserId,
       // Who to send a connection request to, when there is a person.
       connectUserId: card.investor?.user_id ?? null,
-      displayName: card.funder.name ?? card.headline,
+      displayName: nameOf(card),
       anonymised: card.anonymised,
       band: card.band,
       explanation: card.explanation,
       reasons: card.reasons,
       whatTheyFund: card.funder.mandate_text ?? card.headline,
+      sectors: card.funder.sectors,
+      stages: card.funder.stages,
+      ticketMinKes: card.funder.ticket_min_kes,
+      ticketMaxKes: card.funder.ticket_max_kes,
+      gaps: card.gaps,
+      riskFactors: card.risk_factors,
       trackRecord,
     };
   },

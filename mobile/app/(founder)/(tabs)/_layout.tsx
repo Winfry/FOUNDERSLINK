@@ -53,7 +53,7 @@ export default function FounderTabsLayout() {
     >
       <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, focused }) => <Handshake color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="readiness" options={{ title: 'Readiness', tabBarIcon: ({ color, focused }) => <ClipboardCheck color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
-      <Tabs.Screen name="connections" options={{ title: 'Connections', tabBarIcon: ({ color, focused }) => <UsersRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="connections" options={{ title: 'Network', tabBarIcon: ({ color, focused }) => <UsersRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="chamas" options={{ title: 'Chamas', tabBarIcon: ({ color, focused }) => <HandCoins color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, focused }) => <CircleUserRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />
