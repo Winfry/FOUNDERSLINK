@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { AuthScreen } from '../../src/components/layout/AuthScreen';
 import { Button, Input } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';

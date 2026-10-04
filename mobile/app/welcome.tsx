@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../src/components/ui/Text';
 import { Button } from '../src/components/ui';
 import { setWelcomeSeen } from '../src/lib/welcome-storage';
 import { colors, spacing } from '../src/theme/tokens';
@@ -52,15 +53,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing[3],
   },
   logo: {
-    width: 48,
-    height: 48,
-    marginBottom: spacing[2],
+    width: 180,
+    height: 40,
+    marginBottom: spacing[3],
   },
   headline: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '800',
     color: colors.text,
-    lineHeight: 32,
+    lineHeight: 38,
     marginBottom: spacing[2],
   },
   sub: {

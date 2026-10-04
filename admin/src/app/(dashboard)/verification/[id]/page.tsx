@@ -9,7 +9,7 @@ export default async function VerificationDetailPage({ params }: { params: { id:
     if (!detail) notFound();
     return (
       <div className="space-y-4">
-        <Link href="/verification" className="text-sm text-[#1D4ED8] hover:underline">
+        <Link href="/verification" className="text-sm text-[#0454DB] hover:underline">
           ← Back to verification
         </Link>
         <VerificationDetailView detail={detail} />

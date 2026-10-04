@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const statusStyle: Record<ComplianceSourceRow["status"], string> = {
-  current: "bg-[#EFF6FF] text-[#1D4ED8]",
-  due: "bg-[#DBEAFE] text-[#1E3A8A]",
-  out_of_date: "bg-[#1E3A8A] text-white",
+  current: "bg-[#EAF1FE] text-[#0454DB]",
+  due: "bg-[#DBEAFE] text-[#113373]",
+  out_of_date: "bg-[#113373] text-white",
 };
 
 export function ComplianceSourcesView({ sources: initial }: { sources: ComplianceSourceRow[] }) {

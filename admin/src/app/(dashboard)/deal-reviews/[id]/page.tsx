@@ -9,7 +9,7 @@ export default async function DealReviewDetailPage({ params }: { params: { id: s
     if (!deal) notFound();
     return (
       <div className="space-y-4">
-        <Link href="/deal-reviews" className="text-sm text-[#1D4ED8] hover:underline">
+        <Link href="/deal-reviews" className="text-sm text-[#0454DB] hover:underline">
           ← Back to deal reviews
         </Link>
         <DealReviewDetailView deal={deal} />

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, View } from 'react-native';
+import { Text } from '../ui/Text';
 import { Button } from '../ui/Button';
 import { ScreenEmpty, ScreenLoading } from '../layout/ScreenStates';
 import { notificationService } from '../../services';

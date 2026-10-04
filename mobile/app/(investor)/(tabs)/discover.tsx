@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '../../../src/components/ui/Text';
 import { Badge, Card, Input, Select } from '../../../src/components/ui';
 import { ScreenLoading, ScreenError } from '../../../src/components/layout/ScreenStates';
 import { investorService } from '../../../src/services';

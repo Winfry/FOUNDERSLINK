@@ -1,4 +1,5 @@
-import { Linking, StyleSheet, Text } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Header } from '../../src/components/layout/Header';
 import { Button } from '../../src/components/ui';
 import { useRouter } from 'expo-router';

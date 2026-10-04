@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '../../../src/components/ui/Text';
 import { Badge, Card } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading, ScreenOffline } from '../../../src/components/layout/ScreenStates';
 import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
@@ -19,8 +20,8 @@ function bandLabel(band: MatchBand) {
   return 'Not a fit';
 }
 
-function bandVariant(band: MatchBand): 'success' | 'warning' | 'default' | 'error' {
-  if (band === 'strong') return 'success';
+function bandVariant(band: MatchBand): 'success' | 'warning' | 'default' | 'error' | 'accent' {
+  if (band === 'strong') return 'accent';
   if (band === 'good') return 'default';
   if (band === 'possible') return 'warning';
   return 'error';

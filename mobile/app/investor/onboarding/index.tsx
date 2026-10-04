@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
 import { Button, Input, MultiSelect, Select, StepProgress, Textarea } from '../../../src/components/ui';
 import { useToast } from '../../../src/components/ui/Toast';

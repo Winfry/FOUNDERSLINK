@@ -83,7 +83,7 @@ export function MembersView({
             onClick={() => updateQuery({ role: r.id, page: 1 })}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium",
-              role === r.id ? "bg-[#1D4ED8] text-white" : "bg-white text-foreground hover:bg-[#EFF6FF]",
+              role === r.id ? "bg-[#0454DB] text-white" : "bg-white text-foreground hover:bg-[#EAF1FE]",
             )}
           >
             {r.label}

@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Header } from '../../src/components/layout/Header';
 import { useRouter } from 'expo-router';
 import { colors, spacing } from '../../src/theme/tokens';

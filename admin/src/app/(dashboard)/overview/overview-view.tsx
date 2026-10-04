@@ -25,9 +25,9 @@ import {
   FileBarChart,
 } from "lucide-react";
 
-const BLUE = "#1D4ED8";
-const BLUE_DARK = "#1E3A8A";
-const CHART_BLUES = ["#1D4ED8", "#2563EB", "#3B82F6", "#60A5FA", "#93C5FD"];
+const BLUE = "#0454DB";
+const BLUE_DARK = "#113373";
+const CHART_BLUES = ["#0454DB", "#2563EB", "#3B82F6", "#60A5FA", "#93C5FD"];
 
 function formatMonth(key: string) {
   const [y, m] = key.split("-");
@@ -61,33 +61,33 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Link href="/members?role=founder">
-          <StatCard title="Founders" value={String(stats.foundersCount)} icon={Users} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Founders" value={String(stats.foundersCount)} icon={Users} className="h-full hover:border-[#0454DB]" />
         </Link>
         <Link href="/members?role=investor">
-          <StatCard title="Investors" value={String(stats.investorsCount)} icon={Users} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Investors" value={String(stats.investorsCount)} icon={Users} className="h-full hover:border-[#0454DB]" />
         </Link>
         <Link href="/members?role=expert">
-          <StatCard title="Experts" value={String(stats.expertsCount)} icon={Users} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Experts" value={String(stats.expertsCount)} icon={Users} className="h-full hover:border-[#0454DB]" />
         </Link>
         <Link href="/verification">
-          <StatCard title="Verifications waiting" value={String(stats.verificationsWaiting)} icon={ShieldCheck} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Verifications waiting" value={String(stats.verificationsWaiting)} icon={ShieldCheck} className="h-full hover:border-[#0454DB]" />
         </Link>
         <Link href="/rechecks">
-          <StatCard title="Re-checks due" value={String(stats.rechecksDue)} icon={RefreshCw} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Re-checks due" value={String(stats.rechecksDue)} icon={RefreshCw} className="h-full hover:border-[#0454DB]" />
         </Link>
         <Link href="/reports">
-          <StatCard title="Open reports" value={String(stats.openReports)} icon={FileBarChart} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Open reports" value={String(stats.openReports)} icon={FileBarChart} className="h-full hover:border-[#0454DB]" />
         </Link>
         <Link href="/deal-reviews">
           <StatCard
             title="Deals in due diligence"
             value={String(stats.dealsByStage.find((d) => d.stage === "due_diligence")?.count ?? 0)}
             icon={ClipboardCheck}
-            className="h-full hover:border-[#1D4ED8]"
+            className="h-full hover:border-[#0454DB]"
           />
         </Link>
         <Link href="/chamas">
-          <StatCard title="Chamas" value={String(stats.chamasCount)} icon={UsersRound} className="h-full hover:border-[#1D4ED8]" />
+          <StatCard title="Chamas" value={String(stats.chamasCount)} icon={UsersRound} className="h-full hover:border-[#0454DB]" />
         </Link>
       </div>
 
@@ -136,13 +136,13 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
         </div>
       </div>
 
-      <div className="rounded-card border border-border bg-[#EFF6FF] p-4">
-        <h2 className="text-sm font-semibold text-[#1E3A8A]">Members by verification status</h2>
+      <div className="rounded-card border border-border bg-[#EAF1FE] p-4">
+        <h2 className="text-sm font-semibold text-[#113373]">Members by verification status</h2>
         <ul className="mt-3 flex flex-wrap gap-2">
           {stats.membersByStatus.map((s) => (
             <li key={s.status} className="rounded-md bg-white px-3 py-1.5 text-sm text-foreground">
               <span className="font-medium capitalize">{s.status.replace(/_/g, " ")}</span>
-              <span className="ml-2 text-[#1D4ED8]">{s.count}</span>
+              <span className="ml-2 text-[#0454DB]">{s.count}</span>
             </li>
           ))}
         </ul>

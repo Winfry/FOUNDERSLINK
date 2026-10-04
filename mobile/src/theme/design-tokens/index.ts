@@ -4,12 +4,20 @@
  */
 
 export const colors = {
-  primary: '#1D4ED8',
-  primaryDark: '#1E3A8A',
-  primaryLight: '#EFF6FF',
+  /** The logo's blue and navy. */
+  primary: '#0454DB',
+  primaryDark: '#113373',
+  primaryLight: '#EAF1FE',
+  /**
+   * The accent: a hot orange, opposite the logo's blue. For shapes (a
+   * badge, a dot, progress), one highlight per screen. Text on it is
+   * navy (primaryDark), never white. Buttons stay blue; red stays for errors.
+   */
+  accent: '#FF5A1F',
+  accentLight: '#FFF0EA',
   white: '#FFFFFF',
   border: '#E2E8F0',
-  text: '#0F172A',
+  text: '#0E1B3D',
   textMuted: '#64748B',
   background: '#FFFFFF',
   surface: '#FFFFFF',
@@ -26,9 +34,17 @@ export const colors = {
   grey300: '#CBD5E1',
 } as const;
 
+/**
+ * Everything is a multiple of 4.
+ *   4  icon to its label          8  label to field, lines in a card
+ *  12  inside chips and rows     16  screen sides, inside cards, between fields
+ *  24  between sections          32  above a screen's heading, before the main button
+ */
 export const spacing = {
   0: 0,
+  0.5: 4,
   1: 8,
+  1.5: 12,
   2: 16,
   3: 24,
   4: 32,
@@ -44,8 +60,22 @@ export const radius = {
   full: 9999,
 } as const;
 
+/**
+ * The type scale: seven sizes and nothing in between. Sentence case,
+ * never all caps. Body text never below 14.
+ */
+export const type = {
+  display: { fontSize: 32, lineHeight: 38, fontWeight: '800' },
+  h1: { fontSize: 24, lineHeight: 30, fontWeight: '800' },
+  h2: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
+  h3: { fontSize: 17, lineHeight: 24, fontWeight: '700' },
+  body: { fontSize: 16, lineHeight: 24, fontWeight: '500' },
+  small: { fontSize: 14, lineHeight: 20, fontWeight: '500' },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
+} as const;
+
 export const typography = {
-  fontFamily: 'Inter',
+  fontFamily: 'Plus Jakarta Sans',
   sizes: {
     xs: 12,
     sm: 14,
@@ -80,7 +110,8 @@ export const shadows = {
   },
 } as const;
 
-export const touchTargetMin = 44;
+/** Anything a finger presses is at least this tall. */
+export const touchTargetMin = 48;
 
 export type ColorToken = keyof typeof colors;
 export type SpacingToken = keyof typeof spacing;

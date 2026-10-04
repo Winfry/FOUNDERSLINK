@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { Input } from './Input';
 import { passwordStrength } from '../../lib/validation';

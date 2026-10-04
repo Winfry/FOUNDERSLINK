@@ -75,7 +75,7 @@ export function ReportsView({
             onClick={() => setTab(t)}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium capitalize",
-              tab === t ? "bg-[#1D4ED8] text-white" : "bg-white hover:bg-[#EFF6FF]",
+              tab === t ? "bg-[#0454DB] text-white" : "bg-white hover:bg-[#EAF1FE]",
             )}
           >
             {t === "messages" ? "Reported messages" : "Reported members"}
@@ -95,11 +95,11 @@ export function ReportsView({
                       <span className="font-medium">{row.reportedMemberName}</span>
                     </p>
                     {row.aiWarning ? (
-                      <span className="rounded-full bg-[#1E3A8A] px-2 py-0.5 text-xs font-semibold text-white">AI warning</span>
+                      <span className="rounded-full bg-[#113373] px-2 py-0.5 text-xs font-semibold text-white">AI warning</span>
                     ) : null}
                   </div>
                   <p className="mt-1 text-muted">{row.reason}</p>
-                  <p className="mt-2 rounded-md bg-[#EFF6FF] p-2 text-foreground">&ldquo;{row.messageText}&rdquo;</p>
+                  <p className="mt-2 rounded-md bg-[#EAF1FE] p-2 text-foreground">&ldquo;{row.messageText}&rdquo;</p>
                   <p className="mt-1 text-xs text-muted">{new Date(row.reportedAt).toLocaleString("en-KE")}</p>
                   {row.status === "open" ? (
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -114,7 +114,7 @@ export function ReportsView({
                       </Button>
                     </div>
                   ) : (
-                    <p className="mt-2 text-xs font-medium text-[#1D4ED8]">Handled</p>
+                    <p className="mt-2 text-xs font-medium text-[#0454DB]">Handled</p>
                   )}
                 </div>
               ))
@@ -126,7 +126,7 @@ export function ReportsView({
                       <span className="font-medium">{row.reportedMemberName}</span>
                     </p>
                     {row.aiWarning ? (
-                      <span className="rounded-full bg-[#1E3A8A] px-2 py-0.5 text-xs font-semibold text-white">AI warning</span>
+                      <span className="rounded-full bg-[#113373] px-2 py-0.5 text-xs font-semibold text-white">AI warning</span>
                     ) : null}
                   </div>
                   <p className="mt-1 text-muted">{row.reason}</p>
@@ -144,7 +144,7 @@ export function ReportsView({
                       </Button>
                     </div>
                   ) : (
-                    <p className="mt-2 text-xs font-medium text-[#1D4ED8]">Handled</p>
+                    <p className="mt-2 text-xs font-medium text-[#0454DB]">Handled</p>
                   )}
                 </div>
               ))}

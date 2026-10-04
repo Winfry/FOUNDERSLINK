@@ -15,7 +15,7 @@ export function RechecksView({ items }: { items: RecheckListItem[] }) {
       ) : (
         <div className="overflow-x-auto rounded-card border border-border bg-white">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-[#EFF6FF]">
+            <thead className="border-b border-border bg-[#EAF1FE]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Name</th>
                 <th className="px-4 py-3 font-semibold">Role</th>
@@ -32,7 +32,7 @@ export function RechecksView({ items }: { items: RecheckListItem[] }) {
                   <td className="px-4 py-3">{row.lastCheckedAt ? new Date(row.lastCheckedAt).toLocaleDateString("en-KE") : "—"}</td>
                   <td className="px-4 py-3 text-muted">{row.dueReason}</td>
                   <td className="px-4 py-3">
-                    <Link href={row.id.startsWith("rc-") ? `/verification/vet-${row.memberId}` : `/verification/${row.id}`} className="text-[#1D4ED8] hover:underline">
+                    <Link href={row.id.startsWith("rc-") ? `/verification/vet-${row.memberId}` : `/verification/${row.id}`} className="text-[#0454DB] hover:underline">
                       Open verification detail
                     </Link>
                   </td>

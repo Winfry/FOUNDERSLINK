@@ -66,7 +66,7 @@ export function SettingsView({ settings }: { settings: AdminSettingsState }) {
           <p className="text-muted">
             Scan this placeholder QR in your authenticator app, or enter the secret manually.
           </p>
-          <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-[#1D4ED8] bg-[#EFF6FF] text-[#1E3A8A]">
+          <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-[#0454DB] bg-[#EAF1FE] text-[#113373]">
             QR code placeholder
           </div>
           <p>
@@ -84,7 +84,7 @@ export function SettingsView({ settings }: { settings: AdminSettingsState }) {
             Turn on two-step sign-in
           </Button>
           {settings.twoFactorEnabled ? (
-            <p className="text-xs text-[#1D4ED8]">Two-step sign-in is currently enabled for sign-in.</p>
+            <p className="text-xs text-[#0454DB]">Two-step sign-in is currently enabled for sign-in.</p>
           ) : null}
         </CardContent>
       </Card>

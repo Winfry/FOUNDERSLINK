@@ -1,11 +1,10 @@
 import { forwardRef } from 'react';
 import {
   StyleSheet,
-  Text,
-  TextInput,
   View,
   type TextInputProps,
 } from 'react-native';
+import { Text, TextInput } from './Text';
 import { colors, radius, spacing, touchTargetMin } from '../../theme/tokens';
 
 interface InputProps extends TextInputProps {

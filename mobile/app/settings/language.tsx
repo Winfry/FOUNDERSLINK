@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Header } from '../../src/components/layout/Header';
 import { useRouter } from 'expo-router';
 import { colors, spacing } from '../../src/theme/tokens';

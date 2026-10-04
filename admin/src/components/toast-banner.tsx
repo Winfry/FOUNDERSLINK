@@ -21,7 +21,7 @@ export function ToastBanner({
     <div
       className={cn(
         "fixed bottom-4 right-4 z-50 max-w-sm rounded-md border px-4 py-3 text-sm shadow-md",
-        variant === "success" ? "border-[#1D4ED8]/30 bg-[#EFF6FF] text-[#1E3A8A]" : "border-destructive/30 bg-white text-destructive",
+        variant === "success" ? "border-[#0454DB]/30 bg-[#EAF1FE] text-[#113373]" : "border-destructive/30 bg-white text-destructive",
       )}
       role="status"
     >

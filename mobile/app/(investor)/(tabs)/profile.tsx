@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, spacing } from '../../../src/theme/tokens';

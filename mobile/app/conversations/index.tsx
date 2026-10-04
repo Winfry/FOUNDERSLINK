@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
+import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { ScreenEmpty, ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { conversationService } from '../../src/services';
 import { colors, spacing } from '../../src/theme/tokens';

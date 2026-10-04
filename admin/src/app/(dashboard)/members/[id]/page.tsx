@@ -9,7 +9,7 @@ export default async function MemberDetailPage({ params }: { params: { id: strin
     if (!member) notFound();
     return (
       <div className="space-y-4">
-        <Link href="/members" className="text-sm text-[#1D4ED8] hover:underline">
+        <Link href="/members" className="text-sm text-[#0454DB] hover:underline">
           ← Back to members
         </Link>
         <MemberDetailView member={member} />

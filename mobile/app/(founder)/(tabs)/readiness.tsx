@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card, Input } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { complianceService } from '../../../src/services';
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
   tabOn: { borderBottomWidth: 2, borderBottomColor: colors.primary },
   tabText: { color: colors.textMuted, fontWeight: '600' },
   tabTextOn: { color: colors.primary, fontWeight: '700' },
-  progress: { padding: spacing[2], fontWeight: '700', color: colors.text },
+  progress: { padding: spacing[2], fontSize: 20, fontWeight: '700', color: colors.text },
   list: { padding: spacing[2] },
   row: { marginBottom: spacing[2], gap: 8 },
   label: { fontWeight: '600', color: colors.text },

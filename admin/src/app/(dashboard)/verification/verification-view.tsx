@@ -78,7 +78,7 @@ export function VerificationView({
             onClick={() => updateQuery({ tab: t.id, page: 1 })}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium",
-              tab === t.id ? "bg-[#1D4ED8] text-white" : "bg-white text-foreground hover:bg-[#EFF6FF]",
+              tab === t.id ? "bg-[#0454DB] text-white" : "bg-white text-foreground hover:bg-[#EAF1FE]",
             )}
           >
             {t.label}
@@ -112,7 +112,7 @@ export function VerificationView({
       />
       <p className="text-xs text-muted">
         Queue sorted by risk level. Open a row to review details.{" "}
-        <Link href="/verification" className="text-[#1D4ED8] underline">
+        <Link href="/verification" className="text-[#0454DB] underline">
           Refresh list
         </Link>
       </p>

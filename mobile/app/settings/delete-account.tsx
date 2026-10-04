@@ -1,4 +1,5 @@
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Header } from '../../src/components/layout/Header';
 import { Button } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';

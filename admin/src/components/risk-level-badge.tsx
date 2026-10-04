@@ -2,9 +2,9 @@ import type { RiskLevel } from "@/types";
 import { cn } from "@/lib/utils";
 
 const styles: Record<RiskLevel, string> = {
-  low: "bg-[#EFF6FF] text-[#1D4ED8]",
-  medium: "bg-[#DBEAFE] text-[#1E3A8A]",
-  high: "bg-[#1E3A8A] text-white",
+  low: "bg-[#EAF1FE] text-[#0454DB]",
+  medium: "bg-[#DBEAFE] text-[#113373]",
+  high: "bg-[#113373] text-white",
 };
 
 export function RiskLevelBadge({ level }: { level: RiskLevel }) {

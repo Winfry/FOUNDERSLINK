@@ -46,7 +46,7 @@ export function Topbar({ session, onMenuClick }: TopbarProps) {
           <p className="text-sm font-medium text-foreground">{session.name}</p>
           <p className="text-xs text-muted">Admin</p>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1D4ED8] text-xs font-bold text-white">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0454DB] text-xs font-bold text-white">
           {initials(session.name)}
         </div>
         <Button type="button" variant="outline" className="min-h-9" onClick={logout}>

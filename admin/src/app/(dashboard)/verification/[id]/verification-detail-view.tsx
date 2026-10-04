@@ -116,8 +116,8 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
             ) : (
               <ul className="space-y-3">
                 {detail.riskSignals.map((s) => (
-                  <li key={s.id} className="rounded-md border border-border bg-[#EFF6FF] p-3 text-sm">
-                    <p className="font-medium text-[#1E3A8A]">{s.text}</p>
+                  <li key={s.id} className="rounded-md border border-border bg-[#EAF1FE] p-3 text-sm">
+                    <p className="font-medium text-[#113373]">{s.text}</p>
                     <p className="mt-1 text-muted">{s.explanation}</p>
                   </li>
                 ))}

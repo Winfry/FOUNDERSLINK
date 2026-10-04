@@ -78,7 +78,7 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
           </CardHeader>
           <CardContent className="text-sm">
             <p>{member.verificationSummary ?? "No verification summary."}</p>
-            <Link href={`/verification`} className="mt-2 inline-block text-[#1D4ED8] hover:underline">
+            <Link href={`/verification`} className="mt-2 inline-block text-[#0454DB] hover:underline">
               Open verification queue
             </Link>
           </CardContent>
@@ -94,7 +94,7 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
             {member.consents.map((c) => (
               <li key={c.purpose} className="flex justify-between gap-4">
                 <span>{c.label}</span>
-                <span className={c.granted ? "text-[#1D4ED8] font-medium" : "text-muted"}>{c.granted ? "Yes" : "No"}</span>
+                <span className={c.granted ? "text-[#0454DB] font-medium" : "text-muted"}>{c.granted ? "Yes" : "No"}</span>
               </li>
             ))}
           </ul>

@@ -110,7 +110,7 @@ export function DealReviewDetailView({ deal: initial }: { deal: DealReviewDetail
                 <p className="font-semibold text-foreground">{doc.fileName}</p>
                 <p className="text-sm text-muted">{doc.partyName}</p>
               </div>
-              <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold text-[#1D4ED8]">
+              <span className="rounded-full bg-[#EAF1FE] px-2 py-0.5 text-xs font-semibold text-[#0454DB]">
                 {doc.adminStatus === "confirmed"
                   ? "Confirmed by FounderLink"
                   : doc.adminStatus === "rejected"
@@ -126,7 +126,7 @@ export function DealReviewDetailView({ deal: initial }: { deal: DealReviewDetail
                 <p className="text-sm font-medium text-foreground">AI pre-checked</p>
                 <ul className="mt-2 space-y-1 text-sm">
                   {doc.precheckFlags.map((f, i) => (
-                    <li key={i} className={f.passed ? "text-[#1D4ED8]" : "text-[#1E3A8A] font-medium"}>
+                    <li key={i} className={f.passed ? "text-[#0454DB]" : "text-[#113373] font-medium"}>
                       {f.passed ? "Passed" : "Flagged"}: {f.label} — {f.detail}
                     </li>
                   ))}

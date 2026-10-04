@@ -28,11 +28,11 @@ export function DocumentViewer({
             <img src={previewUrl} alt={fileName} className="max-h-[480px] w-full object-contain" />
           </div>
         ) : (
-          <div className="flex min-h-[240px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-[#EFF6FF] p-8 text-center">
-            <FileText className="mb-3 h-10 w-10 text-[#1D4ED8]" aria-hidden />
+          <div className="flex min-h-[240px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-[#EAF1FE] p-8 text-center">
+            <FileText className="mb-3 h-10 w-10 text-[#0454DB]" aria-hidden />
             <p className="text-sm font-medium text-foreground">{fileName}</p>
             {previewUrl?.startsWith("/api/") ? (
-              <a href={previewUrl} target="_blank" rel="noreferrer" className="mt-2 text-sm font-medium text-[#1D4ED8] hover:underline">
+              <a href={previewUrl} target="_blank" rel="noreferrer" className="mt-2 text-sm font-medium text-[#0454DB] hover:underline">
                 Open document
               </a>
             ) : (

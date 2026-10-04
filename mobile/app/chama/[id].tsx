@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Button, Input } from '../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { circleService } from '../../src/services';

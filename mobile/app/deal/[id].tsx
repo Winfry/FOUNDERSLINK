@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Badge, Button } from '../../src/components/ui';
 import { ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { useToast } from '../../src/components/ui/Toast';

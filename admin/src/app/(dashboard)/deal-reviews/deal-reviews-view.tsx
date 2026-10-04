@@ -23,7 +23,7 @@ export function DealReviewsView({ deals }: { deals: DealReviewListItem[] }) {
       </div>
       <div className="overflow-x-auto rounded-card border border-border bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-border bg-[#EFF6FF]">
+          <thead className="border-b border-border bg-[#EAF1FE]">
             <tr>
               <th className="px-4 py-3 font-semibold">Deal</th>
               <th className="px-4 py-3 font-semibold">Parties</th>
@@ -36,7 +36,7 @@ export function DealReviewsView({ deals }: { deals: DealReviewListItem[] }) {
             {deals.map((d) => (
               <tr key={d.id} className="border-b border-border hover:bg-slate-50">
                 <td className="px-4 py-3">
-                  <Link href={`/deal-reviews/${d.id}`} className="font-medium text-[#1D4ED8] hover:underline">
+                  <Link href={`/deal-reviews/${d.id}`} className="font-medium text-[#0454DB] hover:underline">
                     {d.title}
                   </Link>
                 </td>

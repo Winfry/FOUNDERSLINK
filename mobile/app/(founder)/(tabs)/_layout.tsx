@@ -23,10 +23,12 @@ function NotificationBell() {
             position: 'absolute',
             top: 8,
             right: 8,
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: colors.error,
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            borderWidth: 2,
+            borderColor: colors.white,
+            backgroundColor: colors.accent,
           }}
         />
       ) : null}
@@ -46,7 +48,7 @@ export default function FounderTabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: { borderTopColor: colors.border, minHeight: 56 },
-        tabBarLabelStyle: { fontSize: 11, fontFamily: 'Inter_500Medium' },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: 'PlusJakartaSans_600SemiBold' },
       }}
     >
       <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, size }) => <Handshake color={color} size={size} /> }} />

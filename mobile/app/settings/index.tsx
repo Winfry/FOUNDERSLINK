@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../../src/components/ui/Text';
 import { Header } from '../../src/components/layout/Header';
 import { colors, spacing, touchTargetMin } from '../../src/theme/tokens';
 

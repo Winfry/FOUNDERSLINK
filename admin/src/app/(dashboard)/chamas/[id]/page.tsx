@@ -8,7 +8,7 @@ export default async function ChamaDetailPage({ params }: { params: { id: string
     if (!chama) notFound();
     return (
       <div className="space-y-6">
-        <Link href="/chamas" className="text-sm text-[#1D4ED8] hover:underline">
+        <Link href="/chamas" className="text-sm text-[#0454DB] hover:underline">
           ← Back to chamas
         </Link>
         <div>
@@ -16,7 +16,7 @@ export default async function ChamaDetailPage({ params }: { params: { id: string
           <p className="text-sm text-muted capitalize">
             {chama.type === "money" ? "Money chama" : "Learning circle"} · Organiser: {chama.organiserName}
           </p>
-          <p className="mt-2 text-sm font-medium text-[#1E3A8A]">
+          <p className="mt-2 text-sm font-medium text-[#113373]">
             FounderLink records contributions. It never holds or moves money.
           </p>
         </div>
@@ -32,13 +32,13 @@ export default async function ChamaDetailPage({ params }: { params: { id: string
           </ul>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-card border border-border bg-[#EFF6FF] p-4 text-center">
+          <div className="rounded-card border border-border bg-[#EAF1FE] p-4 text-center">
             <p className="text-xs text-muted">Contributions recorded</p>
-            <p className="text-2xl font-bold text-[#1D4ED8]">{chama.contributionCount}</p>
+            <p className="text-2xl font-bold text-[#0454DB]">{chama.contributionCount}</p>
           </div>
-          <div className="rounded-card border border-border bg-[#EFF6FF] p-4 text-center">
+          <div className="rounded-card border border-border bg-[#EAF1FE] p-4 text-center">
             <p className="text-xs text-muted">Goals tracked</p>
-            <p className="text-2xl font-bold text-[#1D4ED8]">{chama.goalCount}</p>
+            <p className="text-2xl font-bold text-[#0454DB]">{chama.goalCount}</p>
           </div>
         </div>
       </div>

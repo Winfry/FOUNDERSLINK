@@ -2,11 +2,11 @@ import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  Text,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { Text } from './Text';
 import { colors, radius, spacing, touchTargetMin } from '../../theme/tokens';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
@@ -66,6 +66,8 @@ export function Button({
         v.container,
         (disabled || loading) && styles.disabled,
         pressed && v.pressed,
+        // A slight squeeze, so a press is felt the instant it lands.
+        pressed && styles.pressed,
         style,
       ]}
       {...rest}
@@ -82,15 +84,18 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     minHeight: touchTargetMin,
-    borderRadius: radius.card,
-    paddingHorizontal: spacing[2],
+    borderRadius: 14,
+    paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  pressed: {
+    transform: [{ scale: 0.97 }],
   },
   disabled: {
     opacity: 0.5,

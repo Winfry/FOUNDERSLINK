@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card, ConfirmModal } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { useState } from 'react';

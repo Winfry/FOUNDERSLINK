@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 import { colors, radius, spacing } from '../../theme/tokens';
 
-type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'muted';
+type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'muted' | 'accent';
 
 const map: Record<BadgeVariant, { bg: string; fg: string }> = {
   default: { bg: colors.primaryLight, fg: colors.primaryDark },
@@ -9,6 +10,8 @@ const map: Record<BadgeVariant, { bg: string; fg: string }> = {
   warning: { bg: colors.warningLight, fg: colors.warning },
   error: { bg: colors.errorLight, fg: colors.error },
   muted: { bg: colors.grey100, fg: colors.textMuted },
+  // The one loud badge. Navy on orange: white would be too faint to read.
+  accent: { bg: colors.accent, fg: colors.primaryDark },
 };
 
 export function Badge({ label, variant = 'default' }: { label: string; variant?: BadgeVariant }) {
@@ -23,9 +26,9 @@ export function Badge({ label, variant = 'default' }: { label: string; variant?:
 const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing[1],
+    paddingHorizontal: spacing[1.5],
     paddingVertical: 4,
-    borderRadius: radius.sm,
+    borderRadius: radius.full,
   },
-  text: { fontSize: 12, fontWeight: '600' },
+  text: { fontSize: 12, fontWeight: '700' },
 });

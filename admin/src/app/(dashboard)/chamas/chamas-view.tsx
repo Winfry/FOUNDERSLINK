@@ -7,7 +7,7 @@ export function ChamasView({ chamas }: { chamas: ChamaListItem[] }) {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Chamas</h1>
         <p className="text-sm text-muted">Read-only list of money and learning circles.</p>
-        <p className="mt-2 text-sm font-medium text-[#1E3A8A]">
+        <p className="mt-2 text-sm font-medium text-[#113373]">
           FounderLink records contributions. It never holds or moves money.
         </p>
       </div>
@@ -16,7 +16,7 @@ export function ChamasView({ chamas }: { chamas: ChamaListItem[] }) {
       ) : (
         <div className="overflow-x-auto rounded-card border border-border bg-white">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-[#EFF6FF]">
+            <thead className="border-b border-border bg-[#EAF1FE]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Chama</th>
                 <th className="px-4 py-3 font-semibold">Type</th>
@@ -29,7 +29,7 @@ export function ChamasView({ chamas }: { chamas: ChamaListItem[] }) {
               {chamas.map((c) => (
                 <tr key={c.id} className="border-b border-border hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <Link href={`/chamas/${c.id}`} className="font-medium text-[#1D4ED8] hover:underline">
+                    <Link href={`/chamas/${c.id}`} className="font-medium text-[#0454DB] hover:underline">
                       {c.name}
                     </Link>
                   </td>

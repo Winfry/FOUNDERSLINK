@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '../ui/Text';
 import { CloudOff, RefreshCw, AlertCircle } from 'lucide-react-native';
 import { colors, spacing } from '../../theme/tokens';
 import { Button } from '../ui/Button';

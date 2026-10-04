@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Text, TextInput } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui';
 import { ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { useToast } from '../../src/components/ui/Toast';

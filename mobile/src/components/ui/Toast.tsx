@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
+import { Text } from './Text';
 import { colors, radius, spacing, shadows } from '../../theme/tokens';
 
 type ToastType = 'info' | 'success' | 'error';
