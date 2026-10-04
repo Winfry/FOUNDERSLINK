@@ -24,7 +24,7 @@ const EXAMPLES = [
   'Tunatengeneza app ya kubook clinic visits Nairobi, tunahitaji milioni moja.',
 ];
 
-const INSTRUMENTS = ['equity', 'convertible_note', 'loan'];
+const INSTRUMENTS = ['equity', 'convertible_note'];
 
 const CONSENTS = [
   ['profile_visibility', 'Show my profile', 'Verified investors and members can see your business profile.'],

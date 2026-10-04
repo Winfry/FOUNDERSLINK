@@ -58,7 +58,7 @@ const funders = ["a", "b"].map((id) => ({
   sectors: [],
   stages: [],
   counties: [],
-  instruments: ["loan"],
+  instruments: ["convertible_note"],
   ticket_min_kes: 1_000,
   ticket_max_kes: 900_000,
 }));

@@ -76,14 +76,14 @@ Ids such as `Q3-02` point to the tester (1 founder, 2 investor, 3 deal, 4 chama,
 
 ## 4. Where the product differed from what the team decided
 
-**All 13 have been dealt with: 8 were fixed in the product, 3 are settled by a dated note in the documents, and 2 still differ in a small way.**
+**All 13 have been dealt with: 8 were fixed in the product, 3 are settled by a dated note in the documents, and 2 still differ in a small way (one of them only in a detail that was not checked).**
 
 ### Still differs in a small way
 
 | # | The document says | Where it stands |
 |---|---|---|
 | 5 | **D12:** "Verify now" offered from sign-up | `8d28262`: both setups now end with the choice to verify straight away. It is still not on the sign-up screen itself. Typechecked. |
-| 6 | **D11:** no grants or loan products | `7bbcc1d`: grants are no longer offered as a way of investing. "Loan" is still in the app's list of instruments. Whether the backend still serves revenue bands and eligibility flags was not checked. |
+| 6 | **D11:** no grants or loan products | Grants were removed in `7bbcc1d` and loans in the commit after this note: equity and convertible note are the only instruments offered, in the app and the backend (backend tests). Whether the backend still serves revenue bands and eligibility flags was not checked. |
 
 ### Settled by a note in the documents, not by changing the product
 

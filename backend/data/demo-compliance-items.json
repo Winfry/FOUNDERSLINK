@@ -75,7 +75,7 @@
   {
     "id": "business_bank_account",
     "title": "Bank account in the business name",
-    "why": "Keeps business money separate from personal money, and lenders ask for it.",
+    "why": "Keeps business money separate from personal money, and investors ask for it.",
     "is_demo": true
   },
   {

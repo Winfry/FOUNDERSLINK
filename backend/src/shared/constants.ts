@@ -26,7 +26,7 @@ export const SECTORS = [
 export const STAGES = ["idea", "mvp", "early_revenue", "growth"] as const;
 
 // No grants for now (TEAM_DECISIONS D11): funding comes from investors.
-export const INSTRUMENTS = ["equity", "convertible_note", "loan"] as const;
+export const INSTRUMENTS = ["equity", "convertible_note"] as const;
 
 // Monthly revenue in KES.
 export const REVENUE_BANDS = ["under_50k", "50k_to_200k", "200k_to_1m", "over_1m"] as const;

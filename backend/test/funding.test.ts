@@ -31,7 +31,7 @@ const bankLoan: MatchFunder = {
   sectors: [],
   stages: [],
   counties: [],
-  instruments: ["loan"],
+  instruments: ["convertible_note"],
   ticket_min_kes: 100_000,
   ticket_max_kes: 5_000_000,
 };

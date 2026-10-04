@@ -126,7 +126,7 @@ test("people sign up as founder or investor, never as expert or admin", async ()
   assert.equal(await prisma.user.count({ where: { email: `e-${emails.admin}` } }), 0);
   const options = await call("GET", "/meta/options");
   assert.deepEqual(options.json.signup_roles, ["founder", "investor"]);
-  assert.deepEqual(options.json.instruments, ["equity", "convertible_note", "loan"]);
+  assert.deepEqual(options.json.instruments, ["equity", "convertible_note"]);
 });
 
 test("each role fills in its own profile, and only its own", async () => {

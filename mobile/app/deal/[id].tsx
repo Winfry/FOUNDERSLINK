@@ -17,7 +17,6 @@ import { colors, spacing, touchTargetMin } from '../../src/theme/tokens';
 const INSTRUMENT: Record<Instrument, string> = {
   equity: 'Equity',
   convertible_note: 'Convertible note',
-  loan: 'Loan',
 };
 
 const REJECTED = /^Not accepted:\s*/;
