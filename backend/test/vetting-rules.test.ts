@@ -39,8 +39,9 @@ async function call(method: string, path: string, who?: Who, body?: unknown) {
 }
 
 async function apply(who: Who, n: number) {
+  // Submitting needs a confirmed phone. The phone code has its own tests.
+  await prisma.user.update({ where: { id: ids[who] }, data: { phone: `+2547${String(run).slice(-7)}${n}`, phone_verified_at: new Date() } });
   await call("PATCH", "/vetting/application", who, {
-    phone: `07${String(run).slice(-7)}${n}`,
     organisation_name: "Health Angels",
     organisation_website: "https://example.com",
     statement: "I invest in early health startups on behalf of Health Angels.",

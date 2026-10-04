@@ -70,6 +70,11 @@ test("a wrong code is refused, the right one verifies, and it works once", async
   // Used up: there is no code waiting any more.
   assert.equal((await call("POST", "/auth/email/verify", { code }, token)).json.error.code, "CODE_EXPIRED");
   assert.equal((await call("POST", "/auth/email/code", undefined, token)).json.error.code, "ALREADY_VERIFIED");
+
+  // With the email proved, the next thing vetting asks for is the phone
+  // code. That has its own tests, so here it is marked confirmed directly.
+  assert.equal((await call("POST", "/vetting/application/submit", undefined, token)).json.error.code, "PHONE_NOT_VERIFIED");
+  await prisma.user.update({ where: { email }, data: { phone: `+2547${String(run).slice(-7)}4`, phone_verified_at: new Date() } });
   assert.equal((await call("POST", "/vetting/application/submit", undefined, token)).status, 200);
 });
 

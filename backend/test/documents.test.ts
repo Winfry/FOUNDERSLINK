@@ -136,7 +136,9 @@ test("an admin marks a document verified, or rejected with a reason", async () =
 });
 
 test("once she submits, her documents are locked", async () => {
-  await call("PATCH", "/vetting/application", "amina", { phone: `07${String(run).slice(-7)}5`, statement: "I run a clinic booking app in Nairobi." });
+  await call("PATCH", "/vetting/application", "amina", { statement: "I run a clinic booking app in Nairobi." });
+  // Submitting needs a confirmed phone. The phone code has its own tests.
+  await prisma.user.update({ where: { id: ids.amina }, data: { phone: `+2547${String(run).slice(-7)}5`, phone_verified_at: new Date() } });
   assert.equal((await call("POST", "/vetting/application/submit", "amina")).status, 200);
 
   assert.equal((await upload("amina", pdf, "late.pdf", "application/pdf")).json.error.code, "APPLICATION_LOCKED");

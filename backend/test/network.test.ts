@@ -51,7 +51,12 @@ async function signUp(who: keyof typeof emails, role: string, full_name: string)
   return res;
 }
 
+// The number each account has confirmed by code. The code has its own tests.
+const phoneOf = (who: string) => `+2547${String(run).slice(-7)}${Object.keys(emails).indexOf(who)}`;
+
 async function apply(who: string, application: object) {
+  // Submitting needs a confirmed phone on the account.
+  await prisma.user.update({ where: { id: ids[who]! }, data: { phone: phoneOf(who), phone_verified_at: new Date() } });
   assert.equal((await call("PATCH", "/vetting/application", who, application)).status, 200);
   const res = await call("POST", "/vetting/application/submit", who);
   assert.equal(res.status, 200);
@@ -170,11 +175,19 @@ test("applications are scored for risk when submitted, and lock after that", asy
   const incomplete = await call("POST", "/vetting/application/submit", "founder");
   assert.equal(incomplete.status, 400);
 
+  // A number typed on the form is not a confirmed one.
+  await call("PATCH", "/vetting/application", "founder", { phone: "0712000001", statement: "I run Afya Booking and want to meet health investors." });
+  const unconfirmed = await call("POST", "/vetting/application/submit", "founder");
+  assert.equal(unconfirmed.status, 409);
+  assert.equal(unconfirmed.json.error.code, "PHONE_NOT_VERIFIED");
+
   const founder = await apply("founder", {
     phone: "0712000001",
     statement: "I run Afya Booking and want to meet health investors.",
   });
   assert.equal(founder.risk_level, "low");
+  // The application carries the account's confirmed number, not the typed one.
+  assert.equal(founder.phone, phoneOf("founder"));
 
   const investor = await apply("investor", {
     phone: "0712000002",
@@ -184,7 +197,9 @@ test("applications are scored for risk when submitted, and lock after that", asy
   });
   assert.equal(investor.risk_level, "low");
 
-  // The same number as the investor's, typed the other way.
+  // Another account's application already names the number the fake
+  // one has confirmed.
+  await prisma.vettingApplication.update({ where: { id: applications.investor! }, data: { phone: phoneOf("fake") } });
   const fake = await apply("fake", {
     phone: "+254712000002",
     organisation_name: "Quick Capital",

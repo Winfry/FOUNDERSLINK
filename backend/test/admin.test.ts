@@ -92,7 +92,9 @@ test("the member list can be searched and filtered, and comes a page at a time",
 });
 
 test("a member's page shows her profile and her history in order", async () => {
-  await call("PATCH", "/vetting/application", "amina", { phone: "0712000077", statement: "I run a clinic booking app in Nairobi." });
+  await call("PATCH", "/vetting/application", "amina", { statement: "I run a clinic booking app in Nairobi." });
+  // Submitting needs a confirmed phone. The phone code has its own tests.
+  await prisma.user.update({ where: { id: ids.amina }, data: { phone: `+2547${String(run).slice(-7)}7`, phone_verified_at: new Date() } });
   const submitted = await call("POST", "/vetting/application/submit", "amina");
   await call("POST", `/admin/vetting/${submitted.json.application.id}/decision`, "admin", {
     decision: "approve",

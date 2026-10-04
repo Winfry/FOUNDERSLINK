@@ -181,6 +181,11 @@ const amina = await prisma.user.create({
     role: "founder",
     password_hash,
     email_verified_at: now,
+    // Submitting needs a phone confirmed by code. No code was sent to
+    // this number: it is marked confirmed here, as the email address is,
+    // because a demo account has no real phone.
+    phone: "+254700000103",
+    phone_verified_at: now,
     consents: agreed("profile_visibility", "ai_matching"),
     founder_profile: {
       create: {
@@ -220,6 +225,9 @@ const brian = await prisma.user.create({
     role: "investor",
     password_hash,
     email_verified_at: now,
+    // Marked confirmed for the same reason as Amina's: no code was sent.
+    phone: "+254700000104",
+    phone_verified_at: now,
     investor_profile: {
       create: {
         organisation_name: "Global Capital Partners",

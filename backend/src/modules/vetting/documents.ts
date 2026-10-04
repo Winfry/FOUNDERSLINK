@@ -25,6 +25,16 @@ export const DOCUMENT_TYPES = [
   "other",
 ] as const;
 
+// What each kind of document is called when a person reads about it.
+export const DOCUMENT_TITLES: Record<string, string> = {
+  business_registration: "Business registration certificate",
+  kra_pin_certificate: "KRA PIN certificate",
+  organisation_proof: "Organisation or fund documents",
+  professional_certificate: "Professional certificate",
+  track_record: "Track-record evidence",
+  other: "Other document",
+};
+
 export const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_DOCUMENTS = 10;
 const KEEP_DAYS = 30;
@@ -150,17 +160,38 @@ export async function fileForAdmin(documentId: string) {
 }
 
 export async function reviewDocument(adminId: string, documentId: string, input: z.infer<typeof reviewSchema>) {
-  const { count } = await prisma.vettingDocument.updateMany({
+  const document = await prisma.vettingDocument.findUnique({
     where: { id: documentId },
-    data: {
-      status: input.status,
-      rejection_reason: input.status === "rejected" ? input.reason : null,
-      reviewed_by: adminId,
-      reviewed_at: new Date(),
-    },
+    select: { type: true, application: { select: { user_id: true } } },
   });
-  if (count === 0) throw notFound("No such document");
-  return prisma.vettingDocument.findUniqueOrThrow({ where: { id: documentId }, select: publicFields });
+  if (!document) throw notFound("No such document");
+
+  // The decision and its line in the audit log are saved together, so
+  // there is never one without the other.
+  const confirmed = input.status === "verified";
+  const title = DOCUMENT_TITLES[document.type] ?? document.type;
+  const [saved] = await prisma.$transaction([
+    prisma.vettingDocument.update({
+      where: { id: documentId },
+      data: {
+        status: input.status,
+        rejection_reason: confirmed ? null : (input.reason ?? null),
+        reviewed_by: adminId,
+        reviewed_at: new Date(),
+      },
+      select: publicFields,
+    }),
+    prisma.adminAction.create({
+      data: {
+        admin_id: adminId,
+        action: confirmed ? "confirm_document" : "reject_document",
+        target_user_id: document.application.user_id,
+        // A confirmation needs no reason, so the log says what was confirmed.
+        reason: confirmed ? `Confirmed: ${title} in the vetting application` : input.reason!,
+      },
+    }),
+  ]);
+  return saved;
 }
 
 // Called when an application is decided: its files are kept another 30 days.

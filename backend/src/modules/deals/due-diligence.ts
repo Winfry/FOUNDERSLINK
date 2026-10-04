@@ -22,15 +22,9 @@ import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
 import { notify } from "../notifications/notifications.service.js";
-import { checkFile, fileOf, KEEP_MS, removeFile, reviewSchema, storeFile, type UploadedFile } from "../vetting/documents.js";
+import { checkFile, DOCUMENT_TITLES, fileOf, KEEP_MS, removeFile, reviewSchema, storeFile, type UploadedFile } from "../vetting/documents.js";
 
-const TITLES: Record<string, string> = {
-  business_registration: "Business registration certificate",
-  kra_pin_certificate: "KRA PIN certificate",
-  organisation_proof: "Organisation or fund documents",
-  track_record: "Track-record evidence",
-  other: "Other document",
-};
+const TITLES = DOCUMENT_TITLES;
 export const DEAL_DOCUMENT_TYPES = ["business_registration", "kra_pin_certificate", "organisation_proof", "track_record", "other"] as const;
 
 // What an investment asks each side for. Other kinds of deal ask for
@@ -58,11 +52,13 @@ export const dealUploadSchema = z.object({
 type Doc = Awaited<ReturnType<typeof prisma.dealDocument.findFirstOrThrow>>;
 
 // What a person is told about a document. "ai_pre_checked" only when
-// the AI service really read it.
-function labelOf(d: Pick<Doc, "status" | "precheck">) {
+// the AI service really read it. If it answered that it could not read
+// the file, the answer is kept for staff to see, but the document is
+// only "uploaded".
+export function labelOf(d: Pick<Doc, "status" | "precheck">) {
   if (d.status === "verified") return "confirmed";
   if (d.status === "rejected") return "rejected";
-  return d.precheck ? "ai_pre_checked" : "uploaded";
+  return (d.precheck as Precheck | null)?.readable === true ? "ai_pre_checked" : "uploaded";
 }
 
 const LABEL_TEXT: Record<string, string> = {
@@ -309,16 +305,30 @@ export async function reviewDealDocument(adminId: string, documentId: string, in
   const document = await prisma.dealDocument.findUnique({ where: { id: documentId }, include: { deal: { select: { title: true } } } });
   if (!document) throw notFound("No such document");
 
-  const saved = await prisma.dealDocument.update({
-    where: { id: documentId },
-    data: {
-      status: input.status,
-      rejection_reason: input.status === "rejected" ? (input.reason ?? null) : null,
-      reviewed_by: adminId,
-      reviewed_at: new Date(),
-    },
-  });
+  // The decision and its line in the audit log are saved together, so
+  // there is never one without the other.
+  const confirmed = input.status === "verified";
   const title = TITLES[document.type] ?? document.type;
+  const [saved] = await prisma.$transaction([
+    prisma.dealDocument.update({
+      where: { id: documentId },
+      data: {
+        status: input.status,
+        rejection_reason: confirmed ? null : (input.reason ?? null),
+        reviewed_by: adminId,
+        reviewed_at: new Date(),
+      },
+    }),
+    prisma.adminAction.create({
+      data: {
+        admin_id: adminId,
+        action: confirmed ? "confirm_document" : "reject_document",
+        target_user_id: document.user_id,
+        // A confirmation needs no reason, so the log says what was confirmed.
+        reason: confirmed ? `Confirmed: ${title} for deal "${document.deal.title}"` : input.reason!,
+      },
+    }),
+  ]);
   await notify(
     document.user_id,
     input.status === "verified"

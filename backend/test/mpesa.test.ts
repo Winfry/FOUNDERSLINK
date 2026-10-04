@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
 import bcrypt from "bcrypt";
-import { csvToRows, maskDigits, matchMember } from "../src/modules/circles/mpesa.js";
+import { csvToRows, maskDigits, matchMember, readStatementDate } from "../src/modules/circles/mpesa.js";
 
 // Reading a circle's M-Pesa payments. The statement layout and the
 // confirmation fields here are our best knowledge of Safaricom's
@@ -51,6 +51,24 @@ test("statement text is read by column name, with commas inside quotes and in am
 
 test("phone numbers are masked in anything kept about an unmatched payer", () => {
   assert.equal(maskDigits("Funds received from 254712345678 JOHN DOE"), "Funds received from *********678 JOHN DOE");
+});
+
+test("a date with the day first is read the Kenyan way, as East Africa Time", () => {
+  // 4 October, not 10 April. 13:00 in Nairobi is 10:00 UTC.
+  assert.equal(readStatementDate("04-10-2026 13:00:00")?.toISOString(), "2026-10-04T10:00:00.000Z");
+  assert.equal(readStatementDate("04/10/2026 13:00")?.toISOString(), "2026-10-04T10:00:00.000Z");
+  // A day past the 12th cannot be a month, and used to be refused.
+  assert.equal(readStatementDate("13/10/2026 13:00")?.toISOString(), "2026-10-13T10:00:00.000Z");
+  assert.equal(readStatementDate("4/1/2026")?.toISOString(), "2026-01-03T21:00:00.000Z");
+});
+
+test("a date with the year first still works, and anything unclear is refused, not guessed", () => {
+  assert.equal(readStatementDate("2026-10-04T10:00:00.000Z")?.toISOString(), "2026-10-04T10:00:00.000Z");
+  assert.equal(readStatementDate("2026-10-04 13:00:00")?.getTime(), new Date("2026-10-04 13:00:00").getTime());
+
+  for (const unreadable of ["31-02-2026 10:00", "04-13-2026 10:00", "04-10-26", "04-10-2026 25:00", "yesterday", "", null, 20261004]) {
+    assert.equal(readStatementDate(unreadable), null, String(unreadable));
+  }
 });
 
 // --- The API ---
@@ -242,4 +260,22 @@ test("a Paybill confirmation records the payment, once, behind a secret", async 
   const other = await call("POST", `/payments/mpesa/callback/${secret}`, undefined, { ...confirmation, TransID: receipt(8), BusinessShortCode: "000001" });
   assert.equal(other.json.ResultCode, 0);
   assert.equal(await prisma.paymentRecord.count({ where: { mpesa_receipt: receipt(8) } }), 0);
+});
+
+test("a statement with day-first dates is imported on the right day, and an unreadable date names its row", async () => {
+  const res = await call("POST", `/circles/${circle}/statements`, "wanjiku", {
+    csv: [
+      "Receipt No.,Completion Time,Details,Paid In",
+      `${receipt(20)},04-10-2026 13:00:00,Funds received from JANE DOE,300.00`,
+      `${receipt(21)},13/10/2026 13:00,Funds received from JANE DOE,300.00`,
+      `${receipt(22)},31-02-2026 13:00,Funds received from JANE DOE,300.00`,
+    ].join("\n"),
+  });
+  assert.equal(res.json.imported, 2);
+  assert.deepEqual(res.json.errors, [
+    { row: 3, message: 'Row 3: the date "31-02-2026 13:00" could not be read. Write it with the day first, like 04-10-2026 13:00' },
+  ]);
+
+  const saved = await prisma.paymentRecord.findMany({ where: { circle_id: circle, mpesa_receipt: { in: [receipt(20), receipt(21)] } }, orderBy: { paid_at: "asc" } });
+  assert.deepEqual(saved.map((p) => p.paid_at.toISOString()), ["2026-10-04T10:00:00.000Z", "2026-10-13T10:00:00.000Z"]);
 });

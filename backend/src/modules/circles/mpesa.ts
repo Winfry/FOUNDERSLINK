@@ -11,6 +11,10 @@
 // - The statement columns and the confirmation fields are written from
 //   memory of Safaricom's formats. Neither has been run against a real
 //   statement or the Daraja sandbox.
+// - The same goes for dates. A date written with the day first
+//   (04-10-2026 is 4 October, the Kenyan order) is read that way, as
+//   East Africa Time. That a real statement writes its dates like this
+//   has not been checked against one.
 // - A real M-Pesa statement is a password-protected PDF. This reads
 //   rows or CSV text, not that PDF.
 
@@ -20,9 +24,46 @@ import { env } from "../../config/env.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, forbidden, notFound } from "../../shared/errors.js";
 
+const DAY_FIRST = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
+const YEAR_FIRST = /^\d{4}-\d{2}-\d{2}/;
+
+// When a payment was made. Kenyans write the day before the month, so
+// 04-10-2026 is 4 October. JavaScript on its own reads that as 10 April,
+// and refuses 13/10/2026 altogether, so day-first dates are read here by
+// hand. Returns null for anything that is not clearly a date, rather
+// than guessing.
+export function readStatementDate(value: unknown): Date | null {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+
+  const dayFirst = DAY_FIRST.exec(text);
+  if (dayFirst) {
+    const [day, month, year, hour, minute, second] = dayFirst.slice(1).map((part) => Number(part ?? 0));
+    // A statement's times are East Africa Time, three hours ahead of UTC.
+    const date = new Date(Date.UTC(year!, month! - 1, day!, hour! - 3, minute, second));
+    // Refuses a day that does not exist, such as 31-02 or 04-13.
+    const back = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+    const real = back.getUTCFullYear() === year && back.getUTCMonth() === month! - 1 && back.getUTCDate() === day && hour! < 24 && minute! < 60 && second! < 60;
+    return real ? date : null;
+  }
+
+  // Year first (2026-10-04 13:00:00) cannot be read two ways.
+  if (!YEAR_FIRST.test(text)) return null;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+const UNREADABLE_DATE = "date not readable";
+
 const rowSchema = z.object({
   receipt: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{8,12}$/, "Not an M-Pesa receipt number"),
-  completed_at: z.coerce.date(),
+  completed_at: z.unknown().transform((value, ctx) => {
+    const date = readStatementDate(value);
+    if (date) return date;
+    ctx.issues.push({ code: "custom", message: UNREADABLE_DATE, input: value });
+    return z.NEVER;
+  }),
   details: z.string().trim().max(300),
   paid_in_kes: z.number().nonnegative(),
 });
@@ -161,7 +202,17 @@ export async function importStatement(userId: string, circleId: string, input: z
   for (const [index, candidate] of raw.entries()) {
     const parsed = rowSchema.safeParse(candidate);
     if (!parsed.success) {
-      summary.errors.push({ row: index + 1, message: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") });
+      const written = String((candidate as { completed_at?: unknown } | null)?.completed_at ?? "").slice(0, 40);
+      summary.errors.push({
+        row: index + 1,
+        message: parsed.error.issues
+          .map((i) =>
+            i.message === UNREADABLE_DATE
+              ? `Row ${index + 1}: the date "${written}" could not be read. Write it with the day first, like 04-10-2026 13:00`
+              : `${i.path.join(".")}: ${i.message}`,
+          )
+          .join("; "),
+      });
       continue;
     }
     const row = parsed.data;

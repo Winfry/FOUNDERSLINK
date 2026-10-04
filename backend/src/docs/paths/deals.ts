@@ -42,10 +42,10 @@ const precheck = described(
       fields: described({ type: "object", additionalProperties: nullable(str) }, "What the AI service read, e.g. `business_name`, `registration_number`, `kra_pin`, `issued_on`."),
       checks: arr(obj({ check: str, passed: bool, note: nullable(str) }, ["note"])),
       concerns: arr(str),
-      readable: bool,
+      readable: described(bool, "False when the AI service answered that it could not read the file. The answer is kept so staff can see that, and the document's `check` stays `uploaded`."),
     }),
   ),
-  "Null when the AI service did not read the document: it was down, or the type is not one it reads. Never show \"AI pre-checked\" when this is null.",
+  "Null when the AI service did not read the document: it was down, or the type is not one it reads. Never show \"AI pre-checked\" when this is null or when `readable` is false: use `check`.",
 );
 
 const dealDocument = obj({
@@ -58,7 +58,7 @@ const dealDocument = obj({
   mime_type: oneOf(["application/pdf", "image/jpeg", "image/png"]),
   size_bytes: int,
   status: oneOf(["uploaded", "verified", "rejected"]),
-  check: described(oneOf(["uploaded", "ai_pre_checked", "confirmed", "rejected"]), "What to show. `ai_pre_checked` only when the AI service really read it; `confirmed` only once an admin has."),
+  check: described(oneOf(["uploaded", "ai_pre_checked", "confirmed", "rejected"]), "What to show. `ai_pre_checked` only when the AI service really read it (`precheck.readable` is true); `confirmed` only once an admin has."),
   check_label: described(str, '"Uploaded", "AI pre-checked", "Confirmed by FoundersLink" or "Not accepted".'),
   precheck,
   rejection_reason: nullable(str),
@@ -435,7 +435,7 @@ export const ops: Op[] = [
     method: "patch",
     path: "/admin/deal-documents/:id",
     summary: "Confirm or reject a deal document",
-    description: "`verified` makes it \"Confirmed by FoundersLink\". `rejected` needs a `reason`, which she is sent, and the document no longer counts towards being deal-ready.",
+    description: "`verified` makes it \"Confirmed by FoundersLink\". `rejected` needs a `reason`, which she is sent, and the document no longer counts towards being deal-ready. Written to the audit log as `confirm_document` or `reject_document`, against the member who shared it.",
     access: "admin",
     params: { id: described(uuid, "The document id.") },
     body: reviewSchema,

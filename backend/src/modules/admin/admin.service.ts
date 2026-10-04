@@ -173,7 +173,7 @@ const MONTHS = 6;
 export async function getStats(now = new Date()) {
   const since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (MONTHS - 1), 1));
 
-  const [byRole, byStatus, waiting, recent, deals, circles, messageReports, userReports, rechecks] = await Promise.all([
+  const [byRole, byStatus, waiting, recent, deals, circles, messageReports, userReports, rechecks, dealsWaiting] = await Promise.all([
     prisma.user.groupBy({ by: ["role"], where: { role: { not: "admin" } }, _count: true }),
     prisma.user.groupBy({ by: ["approval_status"], where: { role: { not: "admin" } }, _count: true }),
     prisma.user.count({ where: { approval_status: { in: ["submitted", "in_review"] } } }),
@@ -183,7 +183,15 @@ export async function getStats(now = new Date()) {
     prisma.messageReport.count(),
     prisma.userReport.count(),
     prisma.vettingApplication.count({ where: { recheck_due_at: { lte: now }, user: { approval_status: "approved" } } }),
+    // Deals, not documents: three documents waiting in one deal is one
+    // deal to open. The same documents the review list shows.
+    prisma.deal.count({ where: { documents: { some: { status: "uploaded", storage_key: { not: null } } } } }),
   ]);
+
+  // A chama is a money circle. A learning circle is not one, so each has
+  // its own number, and zero is written as 0 rather than left out.
+  const ofType = (type: string) => circles.find((c) => c.type === type)?._count ?? 0;
+  const chamas = ofType("money");
 
   const count = <K extends string>(rows: ({ _count: number } & Record<K, string>)[], key: K) =>
     Object.fromEntries(rows.map((r) => [r[key], r._count]));
@@ -207,7 +215,14 @@ export async function getStats(now = new Date()) {
     rechecks_due: rechecks,
     reports: { messages: messageReports, members: userReports },
     deals: { total: deals.reduce((t, d) => t + d._count, 0), by_stage: count(deals, "stage") },
-    circles: { total: circles.reduce((t, c) => t + c._count, 0), by_type: count(circles, "type") },
+    deals_with_documents_waiting: dealsWaiting,
+    chamas,
+    circles: {
+      total: circles.reduce((t, c) => t + c._count, 0),
+      by_type: count(circles, "type"),
+      chamas,
+      learning_circles: ofType("learning"),
+    },
     registrations,
   };
 }

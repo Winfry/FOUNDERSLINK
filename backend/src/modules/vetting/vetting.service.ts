@@ -56,6 +56,19 @@ async function statusOf(userId: string) {
   return user;
 }
 
+// Why she is suspended, in the admin's words. The application's
+// decision_reason is the earlier approval note, which is the wrong thing
+// to show her. Null when she was reinstated since, or when reports from
+// members suspended her and no admin has written a reason yet.
+async function suspensionReason(userId: string) {
+  const last = await prisma.adminAction.findFirst({
+    where: { target_user_id: userId, action: { in: ["suspend", "reinstate"] } },
+    orderBy: { created_at: "desc" },
+    select: { action: true, reason: true },
+  });
+  return last?.action === "suspend" ? last.reason : null;
+}
+
 export async function getApplication(userId: string) {
   const [user, application] = await Promise.all([
     statusOf(userId),
@@ -63,6 +76,7 @@ export async function getApplication(userId: string) {
   ]);
   return {
     approval_status: user.approval_status,
+    suspension_reason: user.approval_status === "suspended" ? await suspensionReason(userId) : null,
     application,
     documents: application ? await listDocuments(application.id) : [],
     identity_check: "For this demo, identity is reviewed by an admin by hand. No ID number or document is stored.",
@@ -106,12 +120,20 @@ export async function submitApplication(userId: string) {
     throw conflict("EMAIL_NOT_VERIFIED", "Verify your email address before submitting your application");
   }
   const application = user.vetting_application;
-  if (!application?.statement || !application.phone) {
-    throw new AppError(400, "APPLICATION_INCOMPLETE", "Add your phone number and a short statement before submitting");
+  if (!application?.statement) {
+    throw new AppError(400, "APPLICATION_INCOMPLETE", "Add a short statement before submitting");
   }
   if (user.role === "investor" && !application.organisation_name) {
     throw new AppError(400, "APPLICATION_INCOMPLETE", "Investors must say which organisation they invest for");
   }
+  // Level 2 (TEAM_DECISIONS D12) needs a phone she has proved is hers,
+  // with the code sent to it. A number only typed on the form is not that.
+  if (!user.phone || !user.phone_verified_at) {
+    throw conflict("PHONE_NOT_VERIFIED", "Confirm your phone number with the code before submitting");
+  }
+  // The application carries the account's confirmed number, so there are
+  // never two different numbers for one person.
+  const phone = user.phone;
 
   const ai = await vettingRiskSignals({
     role: user.role,
@@ -126,7 +148,7 @@ export async function submitApplication(userId: string) {
   let level = ai.risk_level;
   const signals = [...ai.signals];
   const samePhone = await prisma.vettingApplication.count({
-    where: { phone: application.phone, user_id: { not: userId } },
+    where: { phone, user_id: { not: userId } },
   });
   if (samePhone > 0) {
     signals.push("The same phone number is used on another account");
@@ -136,7 +158,7 @@ export async function submitApplication(userId: string) {
   const [saved] = await prisma.$transaction([
     prisma.vettingApplication.update({
       where: { id: application.id },
-      data: { risk_level: level, risk_signals: signals, submitted_at: new Date() },
+      data: { phone, risk_level: level, risk_signals: signals, submitted_at: new Date() },
     }),
     prisma.user.update({ where: { id: userId }, data: { approval_status: "submitted" } }),
   ]);
@@ -309,6 +331,15 @@ export async function setSuspended(adminId: string, userId: string, suspend: boo
   // A suspended member stops receiving live chat at once, and a
   // reinstated one starts again.
   setApproved(userId, !suspend);
+
+  // She is told, with the admin's reason, so the status screen is not
+  // the first place she finds out.
+  await notify(
+    userId,
+    suspend
+      ? { type: "account_suspended", title: "Your account is paused", body: reason, link: "/vetting/application" }
+      : { type: "account_reinstated", title: "Your account is active again", body: "You can see and connect with other members again.", link: "/vetting/application" },
+  );
 
   return { user_id: userId, approval_status: to };
 }
