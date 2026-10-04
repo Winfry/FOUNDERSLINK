@@ -35,6 +35,31 @@ LABELS = {
     },
 }
 
+LABELS["skill"] = {
+    "en": {
+        "software_engineering": "software engineering", "mobile_development": "mobile apps",
+        "data_science_ml": "data science and machine learning", "product_design": "product design",
+        "product_management": "product management", "sales": "sales", "marketing": "marketing",
+        "finance": "finance", "operations": "operations", "legal": "legal", "hardware_engineering": "hardware",
+        "fundraising": "fundraising",
+    },
+    "sw": {
+        "software_engineering": "uhandisi wa programu", "mobile_development": "app za simu",
+        "data_science_ml": "sayansi ya data na AI", "product_design": "ubunifu wa bidhaa",
+        "product_management": "usimamizi wa bidhaa", "sales": "mauzo", "marketing": "masoko",
+        "finance": "fedha", "operations": "uendeshaji", "legal": "sheria", "hardware_engineering": "vifaa",
+        "fundraising": "kutafuta ufadhili",
+    },
+}
+LABELS["commitment"] = {
+    "en": {"full_time": "full-time", "part_time": "part-time"},
+    "sw": {"full_time": "muda wote", "part_time": "muda wa sehemu"},
+}
+LABELS["profession"] = {
+    "en": {"lawyer": "a lawyer", "accountant": "an accountant", "mentor": "a mentor", "other": "an expert"},
+    "sw": {"lawyer": "wakili", "accountant": "mhasibu", "mentor": "mshauri", "other": "mtaalamu"},
+}
+
 AND = {"en": "and", "sw": "na"}
 
 
@@ -95,6 +120,31 @@ MESSAGES = {
         "en": "What you described matches what they say they fund",
         "sw": "Ulichoeleza kinalingana na wanachosema wanafadhili",
     },
+    # People matching: co-founders and experts
+    "skills.fit": {"en": "Has the skills you need: {skills}", "sw": "Ana ujuzi unaohitaji: {skills}"},
+    "skills.miss": {"en": "Doesn't list the skills you need ({skills})", "sw": "Hana ujuzi unaohitaji ({skills})"},
+    "skills.unknown": {
+        "en": "You haven't said which skills you need in a co-founder",
+        "sw": "Hujataja ujuzi unaohitaji kwa mwanzilishi mwenzako",
+    },
+    "same_skills.miss": {"en": "Has the same skills as you, not new ones", "sw": "Ana ujuzi ule ule ulio nao"},
+    "open.miss": {"en": "Not looking to co-found right now", "sw": "Hatafuti kuwa mwanzilishi mwenza kwa sasa"},
+    "sector_interest.fit": {"en": "Also works in {sector}", "sw": "Pia anafanya kazi katika {sector}"},
+    "sector_interest.miss": {"en": "Works in {theirs}, not {sector}", "sw": "Anafanya kazi katika {theirs}, si {sector}"},
+    "location.fit": {"en": "Based in {county}, like you", "sw": "Yuko {county}, kama wewe"},
+    "location.covers": {"en": "Works with founders in {county}", "sw": "Anafanya kazi na waanzilishi wa {county}"},
+    "location.miss": {
+        "en": "Based in {theirs}, not {county}: you would work remotely",
+        "sw": "Yuko {theirs}, si {county}: mngefanya kazi kwa mbali",
+    },
+    "commitment.fit": {"en": "Can commit {commitment}", "sw": "Anaweza kujitolea {commitment}"},
+    "commitment.miss": {"en": "Can only commit {commitment}", "sw": "Anaweza kujitolea {commitment} tu"},
+    "profession.fit": {"en": "Profession: {profession}, the kind of expert you need", "sw": "Ni {profession}, unayemhitaji"},
+    "profession.miss": {"en": "Profession: {theirs}, but you need: {profession}", "sw": "Ni {theirs}; unahitaji {profession}"},
+    "services.fit": {"en": "Offers: {services}", "sw": "Anatoa: {services}"},
+    "availability.fit": {"en": "Has {count} free {sessions} this month", "sw": "Ana nafasi {count} mwezi huu"},
+    "availability.miss": {"en": "No free sessions left this month", "sw": "Hana nafasi iliyobaki mwezi huu"},
+    "meaning.fit": {"en": "What you described matches their background", "sw": "Ulichoeleza kinalingana na uzoefu wake"},
     # Band summaries, the first reason on a profile page
     "band.strong": {"en": "A strong fit: everything we checked lines up.", "sw": "Inafaa sana: kila tulichokagua kinalingana."},
     "band.good": {"en": "A good fit, with one thing to check.", "sw": "Inafaa, ila kuna jambo moja la kuangalia."},
@@ -153,6 +203,7 @@ PLURALS = {
     "of": {"en": ("", ""), "sw": ("ya", "za")},
     "times": {"en": ("time", "times"), "sw": ("", "")},
     "deals": {"en": ("deal", "deals"), "sw": ("mkataba", "mikataba")},
+    "sessions": {"en": ("session", "sessions"), "sw": ("", "")},
 }
 
 

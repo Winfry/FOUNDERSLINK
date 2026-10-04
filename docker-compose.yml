@@ -1,0 +1,58 @@
+# The whole FoundersLink backend on one machine:
+#   docker compose up --build
+# API on http://localhost:8000, AI service on http://localhost:8001.
+# Point the mobile app at http://<this machine's LAN IP>:8000.
+# Demo-only secrets below: change them before putting this on a server.
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: founderslink
+      POSTGRES_PASSWORD: founderslink
+      POSTGRES_DB: founderslink
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U founderslink"]
+      interval: 3s
+      retries: 20
+
+  ai:
+    build:
+      context: .
+      dockerfile: ai/Dockerfile
+    environment:
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-demo-key-2026}
+      HF_HUB_OFFLINE: "1"
+      # Optional: an OpenAI-compatible LLM for fuller Ask Compliance answers.
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+    ports:
+      - "8001:8001"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      ai:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://founderslink:founderslink@db:5432/founderslink
+      JWT_SECRET: ${JWT_SECRET:-demo-jwt-secret-change-me-2026}
+      AI_SERVICE_URL: http://ai:8001
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-demo-key-2026}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-DemoPass2026}
+      CORS_ORIGIN: http://localhost:8081,http://localhost:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/backend/uploads
+
+volumes:
+  db:
+  uploads:

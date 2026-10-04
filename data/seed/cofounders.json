@@ -1,0 +1,23 @@
+[
+  {"id": "c01", "name": "Brian Kiprop", "sector": "health", "county": "Nairobi", "commitment": "full_time", "open_to_cofound": true,
+   "skills": ["software_engineering", "mobile_development"],
+   "description": "Android and backend developer, built an appointment booking app for clinics. Wants to build health tech for mothers and families."},
+  {"id": "c02", "name": "Mercy Wambui", "sector": "fintech", "county": "Nairobi", "commitment": "part_time", "open_to_cofound": true,
+   "skills": ["software_engineering", "data_science_ml"],
+   "description": "Data engineer at a bank working on credit scoring with M-Pesa data. Can give evenings and weekends."},
+  {"id": "c03", "name": "Hassan Abdi", "sector": "logistics", "county": "Mombasa", "commitment": "full_time", "open_to_cofound": true,
+   "skills": ["operations", "sales"],
+   "description": "Ran operations for a boda delivery fleet in Mombasa. Strong at sales to shops and managing riders."},
+  {"id": "c04", "name": "Grace Achieng", "sector": "health", "county": "Kisumu", "commitment": "full_time", "open_to_cofound": true,
+   "skills": ["product_design", "product_management"],
+   "description": "Product designer who designed a maternal health SMS service used by community health workers in western Kenya."},
+  {"id": "c05", "name": "Daniel Mutua", "sector": "health", "county": "Nairobi", "commitment": "full_time", "open_to_cofound": false,
+   "skills": ["software_engineering"],
+   "description": "Senior engineer at a hospital software company. Happy to advise but not looking to co-found right now."},
+  {"id": "c06", "name": "Amina Yusuf", "sector": "health", "county": "Nairobi", "commitment": "full_time", "open_to_cofound": true,
+   "skills": ["marketing", "sales"],
+   "description": "Health marketing lead who grew a pharmacy chain's customer base through community health promoters."},
+  {"id": "c07", "name": "Peter Kamau", "sector": "agri", "county": "Nakuru", "commitment": "full_time", "open_to_cofound": true,
+   "skills": ["finance", "fundraising"],
+   "description": "Former bank relationship manager for agribusiness, has raised money from angels before."}
+]
