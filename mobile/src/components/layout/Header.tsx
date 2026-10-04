@@ -25,7 +25,7 @@ export function Header({
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
         ) : (
-          <View style={styles.backPlaceholder} />
+          null
         )}
         <View style={styles.titles}>
           <Text style={styles.title} numberOfLines={1}>

@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Rocket, TrendingUp } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
-import { AuthScreen } from '../../src/components/layout/AuthScreen';
-import { Button, Input, PasswordInput, Select } from '../../src/components/ui';
-import { useToast } from '../../src/components/ui/Toast';
+import { AuthShell } from '../../src/components/auth/AuthShell';
+import { Checkbox, ChoiceCards, FormError, PasswordRules, TextLink, type Choice } from '../../src/components/auth/parts';
+import { Button, Input, PasswordInput } from '../../src/components/ui';
 import { signupSchema } from '../../src/lib/auth-schemas';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing } from '../../src/theme/tokens';
@@ -13,16 +15,15 @@ import type { z } from 'zod';
 
 type Form = z.infer<typeof signupSchema>;
 
-const ROLES = [
-  { label: 'Founder', value: 'founder' },
-  { label: 'Investor', value: 'investor' },
-  { label: 'Expert', value: 'expert' },
+const ROLES: Choice[] = [
+  { value: 'founder', title: 'Founder', line: 'I am raising money for my business.', icon: Rocket },
+  { value: 'investor', title: 'Investor', line: 'I am looking for businesses to back.', icon: TrendingUp },
 ];
 
 export default function SignupScreen() {
   const router = useRouter();
-  const { show } = useToast();
   const signup = useAuthStore((s) => s.signup);
+  const [refused, setRefused] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -36,6 +37,7 @@ export default function SignupScreen() {
   const password = watch('password');
 
   const onSubmit = async (data: Form) => {
+    setRefused(null);
     try {
       await signup({
         fullName: data.fullName,
@@ -46,31 +48,45 @@ export default function SignupScreen() {
       });
       router.replace('/auth/verify-email');
     } catch (e: unknown) {
-      show((e as { message?: string })?.message ?? 'Sign up failed', 'error');
+      setRefused((e as { message?: string })?.message ?? 'We could not create your account. Please try again.');
     }
   };
 
   return (
-    <AuthScreen title="Create account" subtitle="Join in about two minutes" onBack={() => router.back()}>
+    <AuthShell
+      title="Create your account"
+      helper="It takes about two minutes."
+    >
+      <Controller
+        control={control}
+        name="role"
+        render={({ field: { onChange, value } }) => (
+          <ChoiceCards label="I am joining as" choices={ROLES} value={value} onChange={onChange} />
+        )}
+      />
       <Controller
         control={control}
         name="fullName"
         render={({ field: { onChange, onBlur, value } }) => (
-          <Input label="Full name" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.fullName?.message} />
+          <Input label="Full name" autoComplete="name" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.fullName?.message} />
         )}
       />
       <Controller
         control={control}
         name="email"
         render={({ field: { onChange, onBlur, value } }) => (
-          <Input label="Email" autoCapitalize="none" keyboardType="email-address" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.email?.message} />
-        )}
-      />
-      <Controller
-        control={control}
-        name="role"
-        render={({ field: { onChange, value } }) => (
-          <Select label="Role" options={ROLES} value={value} onChange={onChange} />
+          <Input
+            label="Email"
+            placeholder="you@example.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            keyboardType="email-address"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            error={errors.email?.message}
+          />
         )}
       />
       <Controller
@@ -80,42 +96,37 @@ export default function SignupScreen() {
           <PasswordInput label="Password" showStrength onBlur={onBlur} onChangeText={onChange} value={value} error={errors.password?.message} />
         )}
       />
+      <PasswordRules password={password} />
       <Controller
         control={control}
         name="confirmPassword"
         render={({ field: { onChange, onBlur, value } }) => (
-          <PasswordInput label="Confirm password" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.confirmPassword?.message} />
+          <PasswordInput label="Type the password again" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.confirmPassword?.message} />
         )}
       />
-      {password.length > 0 ? <Text style={styles.hint}>Use at least 8 characters with letters and numbers.</Text> : null}
       <Controller
         control={control}
         name="acceptTerms"
         render={({ field: { onChange, value } }) => (
-          <Pressable style={styles.checkRow} onPress={() => onChange(!value)}>
-            <View style={[styles.box, value && styles.boxOn]} />
-            <Text style={styles.checkText}>I accept the Terms and Privacy Policy</Text>
-          </Pressable>
+          <Checkbox checked={value} onChange={onChange} error={errors.acceptTerms?.message}>
+            I accept the Terms and Privacy Policy
+          </Checkbox>
         )}
       />
-      {errors.acceptTerms ? <Text style={styles.error}>{errors.acceptTerms.message}</Text> : null}
-      <Button title="Create account" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
-      <Link href="/auth/login" asChild>
-        <Pressable style={styles.link}>
-          <Text style={styles.linkText}>Already have an account? Log in</Text>
-        </Pressable>
-      </Link>
-    </AuthScreen>
+      <View style={styles.action}>
+        <FormError message={refused} />
+        <Button title="Create account" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+      </View>
+      <View style={styles.switch}>
+        <Text style={styles.switchText}>Already have an account?</Text>
+        <TextLink title="Log in" onPress={() => router.push('/auth/login')} />
+      </View>
+    </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
-  hint: { fontSize: 12, color: colors.textMuted, marginBottom: spacing[2] },
-  checkRow: { flexDirection: 'row', gap: spacing[1], marginVertical: spacing[2], alignItems: 'flex-start' },
-  box: { width: 22, height: 22, borderWidth: 1, borderColor: colors.border, borderRadius: 4, marginTop: 2 },
-  boxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 },
-  error: { color: colors.error, fontSize: 12, marginBottom: spacing[1] },
-  link: { marginTop: spacing[3], minHeight: 44, justifyContent: 'center' },
-  linkText: { textAlign: 'center', color: colors.primary, fontWeight: '600' },
+  action: { marginTop: spacing[3] },
+  switch: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', columnGap: spacing[1], marginTop: spacing[2] },
+  switchText: { fontSize: 16, color: colors.textMuted },
 });

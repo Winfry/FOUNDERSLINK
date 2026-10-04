@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { colors, radius, spacing } from '../../theme/tokens';
 
@@ -21,7 +21,8 @@ export function BottomSheet({
       <View style={styles.sheet}>
         <View style={styles.handle} />
         {title ? <Text style={styles.title}>{title}</Text> : null}
-        {children}
+        {/* A long list, such as the 47 counties, scrolls inside the sheet. */}
+        <ScrollView style={{ flexGrow: 0 }}>{children}</ScrollView>
       </View>
     </Modal>
   );
@@ -35,6 +36,7 @@ const styles = StyleSheet.create({
   sheet: {
     width: '100%',
     maxWidth: 480,
+    maxHeight: '70%',
     alignSelf: 'center',
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,

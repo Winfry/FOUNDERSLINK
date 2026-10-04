@@ -52,6 +52,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '500', color: colors.text, marginBottom: spacing[1] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1] },
   chip: {
+    // A long label wraps inside its chip instead of running off the screen.
+    maxWidth: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -66,7 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     borderColor: colors.primary,
   },
-  chipText: { fontSize: 14, color: colors.text },
+  chipText: { fontSize: 14, color: colors.text, flexShrink: 1 },
   chipTextActive: { color: colors.primaryDark, fontWeight: '600' },
   error: { color: colors.error, fontSize: 13, marginTop: 4 },
 });
