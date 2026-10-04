@@ -10,7 +10,9 @@ RUN npm ci
 
 COPY backend ./
 COPY data/seed /app/data/seed
-RUN npx prisma generate
+# prisma.config.ts requires DATABASE_URL even to generate the client, which
+# never connects. The real address comes from the environment at run time.
+RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npx prisma generate
 
 EXPOSE 8000
 # Apply migrations, load the demo funders and compliance items, create the

@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';
+import { BANK_ACCOUNT_ITEM, BankOptions } from './BankOptions';
 import type { ComplianceItem } from '../../types';
 import { colors, shadows, spacing } from '../../theme/tokens';
 
@@ -47,6 +48,7 @@ export function ChecklistItemCard({ item, saving, onMarkDone }: Props) {
           </View>
         ) : null}
       </View>
+      {item.id === BANK_ACCOUNT_ITEM && !done ? <BankOptions /> : null}
       {!done ? (
         <Button
           title="Mark as done"
