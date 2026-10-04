@@ -48,7 +48,7 @@ export default function FounderTabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: { borderTopColor: colors.border, minHeight: 64, paddingTop: 6 },
-        tabBarLabelStyle: { fontSize: 12, fontFamily: 'PlusJakartaSans_600SemiBold' },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: 'PlusJakartaSans_600SemiBold' },
       }}
     >
       <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, focused }) => <Handshake color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />

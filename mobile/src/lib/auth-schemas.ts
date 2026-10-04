@@ -12,7 +12,7 @@ export const signupSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
-    role: z.enum(['founder', 'investor', 'expert']),
+    role: z.enum(['founder', 'investor']),
     acceptTerms: z.boolean().refine((v) => v === true, {
       message: 'You must accept the Terms and Privacy Policy',
     }),

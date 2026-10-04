@@ -1,87 +1,86 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { Text } from '../../../src/components/ui/Text';
-import { Badge, Button, Card, Input } from '../../../src/components/ui';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { useToast } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
+import { AskCompliance } from '../../../src/components/readiness/AskCompliance';
+import { ChecklistItemCard } from '../../../src/components/readiness/ChecklistItemCard';
+import { ProgressHero } from '../../../src/components/readiness/ProgressHero';
+import { SegmentedControl } from '../../../src/components/readiness/SegmentedControl';
 import { complianceService } from '../../../src/services';
 import { colors, spacing } from '../../../src/theme/tokens';
 
+type Tab = 'checklist' | 'ask';
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'checklist', label: 'Checklist' },
+  { value: 'ask', label: 'Ask Compliance' },
+];
+
 export default function ReadinessScreen() {
-  const [tab, setTab] = useState<'checklist' | 'ask'>('checklist');
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('checklist');
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const qc = useQueryClient();
+  const toast = useToast();
   const q = useQuery({ queryKey: ['compliance'], queryFn: () => complianceService.listItems() });
-
-  if (q.isLoading) return <ScreenLoading />;
-  if (q.isError) return <ScreenError message="Could not load compliance items." onRetry={() => q.refetch()} />;
 
   const items = q.data ?? [];
   const done = items.filter((i) => i.status === 'complete').length;
+  // Still to do first, done at the bottom; the backend's order is kept within each group.
+  const sorted = [...items.filter((i) => i.status !== 'complete'), ...items.filter((i) => i.status === 'complete')];
 
-  const ask = async () => {
-    let res;
+  const markDone = async (id: string, label: string) => {
+    setSavingId(id);
     try {
-      res = await complianceService.ask(question);
+      await complianceService.updateItemStatus(id, 'complete');
+      await q.refetch();
+      // Closing an item can move an investor from "fix this first" to "pitch".
+      void qc.invalidateQueries({ queryKey: ['funding-matches'] });
+      toast.show(`${label} marked as done`, 'success');
     } catch (e) {
-      // For example, a question too short to answer.
-      setAnswer((e as { message?: string })?.message ?? 'Could not get an answer. Try again.');
-      return;
+      toast.show((e as { message?: string })?.message ?? 'Could not save that. Try again.', 'error');
+    } finally {
+      setSavingId(null);
     }
-    if (res.cannotConfirm) {
-      setAnswer("We can't confirm this. Contact a verified expert.");
-      return;
-    }
-    const cites = res.citations.map((c) => `${c.title}: ${c.url}`).join('\n');
-    setAnswer(`${res.body}\n\nSources:\n${cites}`);
   };
 
   return (
     <View style={styles.flex}>
-      <View style={styles.tabs}>
-        <Pressable style={[styles.tab, tab === 'checklist' && styles.tabOn]} onPress={() => setTab('checklist')}>
-          <Text style={tab === 'checklist' ? styles.tabTextOn : styles.tabText}>Checklist</Text>
-        </Pressable>
-        <Pressable style={[styles.tab, tab === 'ask' && styles.tabOn]} onPress={() => setTab('ask')}>
-          <Text style={tab === 'ask' ? styles.tabTextOn : styles.tabText}>Ask Compliance</Text>
-        </Pressable>
+      <View style={styles.switch}>
+        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
       </View>
-      {tab === 'checklist' ? (
-        <>
-          <Text style={styles.progress}>{done} of {items.length} done</Text>
-          <FlatList
-            data={items}
-            keyExtractor={(i) => i.id}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={<ScreenEmpty title="No compliance items" />}
-            renderItem={({ item }) => (
-              <Card style={styles.row}>
-                <Text style={styles.label}>{item.label}</Text>
-                {item.description ? <Text style={styles.deadline}>{item.description}</Text> : null}
-                <Badge label={item.status.replace('_', ' ')} variant={item.status === 'complete' ? 'success' : 'warning'} />
-                {item.deadline ? <Text style={styles.deadline}>Deadline: {item.deadline}</Text> : null}
-                {item.status !== 'complete' ? (
-                  <Button title="Mark complete" variant="secondary" onPress={() =>
-                      complianceService.updateItemStatus(item.id, 'complete').then(() => {
-                        void q.refetch();
-                        // Closing an item can move an investor from "fix this first" to "pitch".
-                        void qc.invalidateQueries({ queryKey: ['funding-matches'] });
-                      })
-                    } />
-                ) : null}
-              </Card>
-            )}
-          />
-        </>
+      {/* Kept mounted, so her earlier questions are still there when she comes back. */}
+      <View style={tab === 'ask' ? styles.flex : styles.hidden}>
+        <AskCompliance />
+      </View>
+      {tab === 'ask' ? null : q.isLoading ? (
+        <ScreenLoading />
+      ) : q.isError ? (
+        <ScreenError message="We could not load your checklist. Check your connection and try again." onRetry={() => q.refetch()} />
       ) : (
-        <View style={styles.askWrap}>
-          <Text style={styles.disclaimer}>Not legal advice. Answers cite official sources when available.</Text>
-          <Input label="Your question" value={question} onChangeText={setQuestion} />
-          <Button title="Ask" onPress={() => void ask()} />
-          {answer ? <Text style={styles.answer}>{answer}</Text> : null}
-        </View>
+        <FlatList
+          data={sorted}
+          keyExtractor={(i) => i.id}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={items.length > 0 ? <ProgressHero done={done} total={items.length} /> : null}
+          ListHeaderComponentStyle={styles.hero}
+          ListEmptyComponent={
+            <ScreenEmpty
+              title="No checklist yet"
+              description="Your checklist is built from your business profile. In the meantime you can ask a compliance question."
+              actionLabel="Ask Compliance"
+              onAction={() => setTab('ask')}
+            />
+          }
+          renderItem={({ item }) => (
+            <ChecklistItemCard
+              item={item}
+              saving={savingId === item.id}
+              onMarkDone={() => void markDone(item.id, item.label)}
+            />
+          )}
+        />
       )}
     </View>
   );
@@ -89,17 +88,8 @@ export default function ReadinessScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.white },
-  tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border },
-  tab: { flex: 1, paddingVertical: 14, alignItems: 'center' },
-  tabOn: { borderBottomWidth: 2, borderBottomColor: colors.primary },
-  tabText: { color: colors.textMuted, fontWeight: '600' },
-  tabTextOn: { color: colors.primary, fontWeight: '700' },
-  progress: { padding: spacing[2], fontSize: 20, fontWeight: '700', color: colors.text },
-  list: { padding: spacing[2] },
-  row: { marginBottom: spacing[2], gap: 8 },
-  label: { fontWeight: '600', color: colors.text },
-  deadline: { fontSize: 12, color: colors.textMuted },
-  askWrap: { padding: spacing[2], gap: spacing[2] },
-  disclaimer: { fontSize: 12, color: colors.textMuted },
-  answer: { color: colors.text, lineHeight: 20 },
+  hidden: { display: 'none' },
+  switch: { paddingHorizontal: spacing[2], paddingTop: spacing[0.5], paddingBottom: spacing[1.5] },
+  list: { paddingHorizontal: spacing[2], paddingBottom: spacing[3], gap: spacing[1.5] },
+  hero: { marginBottom: spacing[1.5] },
 });
