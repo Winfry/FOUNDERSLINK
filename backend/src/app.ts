@@ -21,6 +21,19 @@ import * as options from "./shared/constants.js";
 
 export const app = express();
 
+// One line per request while developing: what was asked, from where,
+// and how it ended. Never the body, so no password or token is logged.
+if (env.NODE_ENV === "development") {
+  app.use((req, res, next) => {
+    const started = Date.now();
+    res.on("finish", () => {
+      const from = req.headers.origin ?? req.headers["user-agent"]?.slice(0, 40) ?? "unknown";
+      console.log(`${new Date().toISOString().slice(11, 19)} ${req.method} ${req.path} ${res.statusCode} ${Date.now() - started}ms ${req.ip} ${from}`);
+    });
+    next();
+  });
+}
+
 app.use(cors({ origin: env.CORS_ORIGIN.split(",") }));
 // A statement upload carries a whole statement as text, so it alone may
 // be larger than an ordinary request.
