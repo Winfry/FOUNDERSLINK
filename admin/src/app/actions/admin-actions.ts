@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { addRecheckAudit } from "@/services/admin-mock-store";
 import { confirmDocument, rejectDocument } from "@/services/deal-reviews.service";
 import { reviewComplianceSource } from "@/services/compliance-sources.service";
-import { reinstateMemberAction, suspendMemberAction } from "@/services/members.service";
+import { exportMembersCsv, reinstateMemberAction, suspendMemberAction } from "@/services/members.service";
+import type { MemberRole } from "@/types";
 import { actOnMemberReport, actOnMessageReport } from "@/services/reports.service";
 import { decideVerification } from "@/services/verification.service";
+import { recordRecheck } from "@/services/rechecks.service";
 import { changePassword, enableTwoFactor } from "@/services/settings.service";
 
 export async function verificationDecisionAction(
@@ -38,6 +40,11 @@ export async function reinstateMemberFormAction(id: string, reason: string) {
   revalidatePath(`/members/${id}`);
   revalidatePath("/audit-log");
   return result;
+}
+
+// Runs on the server, where the admin's session is.
+export async function exportMembersCsvAction(role: MemberRole) {
+  return exportMembersCsv(role);
 }
 
 export async function confirmDocumentAction(dealId: string, documentId: string) {
@@ -88,6 +95,14 @@ export async function recheckRecordedAction(memberName: string, reason: string) 
   addRecheckAudit(memberName, reason);
   revalidatePath("/audit-log");
   revalidatePath("/rechecks");
+}
+
+export async function recheckDecisionAction(id: string, memberName: string, outcome: "confirm" | "suspend", reason: string) {
+  const result = await recordRecheck(id, memberName, outcome, reason);
+  revalidatePath("/audit-log");
+  revalidatePath("/rechecks");
+  revalidatePath("/members");
+  return result;
 }
 
 export async function enableTwoFactorAction(code: string) {

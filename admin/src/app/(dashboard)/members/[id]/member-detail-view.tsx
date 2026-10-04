@@ -28,6 +28,13 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
         setToast(dialog === "suspend" ? "Member suspended." : "Member reinstated.");
         setReason("");
         setDialog(null);
+      } else {
+        setToast(
+          dialog === "suspend"
+            ? "Could not suspend: only an approved member can be suspended."
+            : "Could not reinstate: only a suspended member can be reinstated.",
+        );
+        setDialog(null);
       }
     });
   }

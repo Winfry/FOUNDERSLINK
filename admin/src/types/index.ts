@@ -104,7 +104,7 @@ export interface MemberListItem {
 }
 
 export interface ConsentRecord {
-  purpose: "profile_visibility" | "ai_matching" | "contact" | "document_processing";
+  purpose: "profile_visibility" | "ai_matching" | "eligibility_attributes" | "contact" | "document_processing";
   label: string;
   granted: boolean;
   updatedAt: string | null;

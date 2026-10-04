@@ -1,8 +1,11 @@
 import type { AuditEntry, PaginatedParams, PaginatedResult } from "@/types";
 import { listAuditLog } from "./admin-mock-store";
+import { live } from "@/lib/api";
+import * as http from "./audit.http";
 import { delay, paginate } from "./pagination";
 
 export async function fetchAuditLog(params: PaginatedParams = {}): Promise<PaginatedResult<AuditEntry>> {
+  if (live) return http.fetchAuditLog(params);
   await delay();
   const items = listAuditLog();
   return paginate(items, params, (entry, search, actionType) => {

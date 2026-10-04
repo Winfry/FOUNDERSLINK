@@ -7,7 +7,7 @@ import type { MemberListItem, MemberRole } from "@/types";
 import { DataTable } from "@/components/data-table";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { exportMembersCsv } from "@/services/members.service";
+import { exportMembersCsvAction } from "@/app/actions/admin-actions";
 
 const ROLES: { id: MemberRole; label: string }[] = [
   { id: "founder", label: "Founders" },
@@ -38,7 +38,7 @@ export function MembersView({
   }
 
   async function downloadCsv() {
-    const csv = await exportMembersCsv(role);
+    const csv = await exportMembersCsvAction(role);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

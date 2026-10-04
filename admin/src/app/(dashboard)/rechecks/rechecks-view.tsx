@@ -29,10 +29,10 @@ export function RechecksView({ items }: { items: RecheckListItem[] }) {
                 <tr key={row.id} className="border-b border-border">
                   <td className="px-4 py-3 font-medium">{row.fullName}</td>
                   <td className="px-4 py-3 capitalize">{row.role}</td>
-                  <td className="px-4 py-3">{new Date(row.lastCheckedAt).toLocaleDateString("en-KE")}</td>
+                  <td className="px-4 py-3">{row.lastCheckedAt ? new Date(row.lastCheckedAt).toLocaleDateString("en-KE") : "—"}</td>
                   <td className="px-4 py-3 text-muted">{row.dueReason}</td>
                   <td className="px-4 py-3">
-                    <Link href={`/verification/vet-${row.memberId}`} className="text-[#1D4ED8] hover:underline">
+                    <Link href={row.id.startsWith("rc-") ? `/verification/vet-${row.memberId}` : `/verification/${row.id}`} className="text-[#1D4ED8] hover:underline">
                       Open verification detail
                     </Link>
                   </td>

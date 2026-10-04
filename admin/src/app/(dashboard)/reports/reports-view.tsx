@@ -36,11 +36,20 @@ export function ReportsView({
     if (needsReason && reason.trim().length < 8) return;
     startTransition(async () => {
       const r = needsReason ? reason.trim() : "Dismissed — no further action.";
+      const result =
+        pendingAction.kind === "messages"
+          ? await reportMessageAction(pendingAction.id, pendingAction.action, r)
+          : await reportMemberAction(pendingAction.id, pendingAction.action, r);
+      // The backend says so when it could not do what was asked.
+      if (result && "ok" in result && !result.ok) {
+        setToast(result.error ?? "The report was not changed.");
+        setPendingAction(null);
+        setReason("");
+        return;
+      }
       if (pendingAction.kind === "messages") {
-        await reportMessageAction(pendingAction.id, pendingAction.action, r);
         setMessages((list) => list.map((x) => (x.id === pendingAction.id ? { ...x, status: "handled" as const } : x)));
       } else {
-        await reportMemberAction(pendingAction.id, pendingAction.action, r);
         setMembers((list) => list.map((x) => (x.id === pendingAction.id ? { ...x, status: "handled" as const } : x)));
       }
       setToast("Report marked as handled.");

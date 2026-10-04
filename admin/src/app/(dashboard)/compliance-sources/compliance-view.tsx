@@ -30,6 +30,9 @@ export function ComplianceSourcesView({ sources: initial }: { sources: Complianc
         setToast("Source marked as reviewed.");
         setActiveId(null);
         setNote("");
+      } else {
+        setToast("Review not saved: the backend cannot record this yet.");
+        setActiveId(null);
       }
     });
   }
@@ -57,7 +60,7 @@ export function ComplianceSourcesView({ sources: initial }: { sources: Complianc
                 </span>
               </div>
               <p className="mt-2 text-xs text-muted">
-                Last updated: {new Date(s.lastUpdatedAt).toLocaleDateString("en-KE")}
+                Last updated: {s.lastUpdatedAt ? new Date(s.lastUpdatedAt).toLocaleDateString("en-KE") : "never"}
                 {s.lastReviewedAt ? ` · Last reviewed: ${new Date(s.lastReviewedAt).toLocaleDateString("en-KE")}` : ""}
               </p>
               {s.reviewNote ? <p className="mt-1 text-muted">Note: {s.reviewNote}</p> : null}

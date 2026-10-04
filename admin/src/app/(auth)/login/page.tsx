@@ -42,7 +42,7 @@ function LoginFlow() {
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "admin@founderlink.co.ke", password: "admin123" },
+    defaultValues: { email: "", password: "" },
   });
 
   const verifyForm = useForm<VerifyForm>({
