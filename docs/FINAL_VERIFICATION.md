@@ -35,57 +35,76 @@ Ids such as `Q3-02` point to the tester (1 founder, 2 investor, 3 deal, 4 chama,
 
 ---
 
-## 3. Bugs: things that are built and behave wrongly
+## 3. Bugs: things that were built and behaved wrongly
 
-Ordered by how much they hurt. **Updated at about 09:55:** 23 of the 25 are now fixed; numbers 14 and 24 are left open on purpose. The State column gives the commit and says how each fix was checked. "Seen" means someone opened the screen afterwards and saw it; "typechecked" means the code compiles and nobody walked through it; "backend test" means an automated test covers it (183 backend tests pass; there were 178 at the time of the run). The testers did not re-run after the fixes. "Size" is a rough guess at the fix: S under 15 minutes, M up to an hour, L more.
+**23 of 25 are fixed. 2 are still open, both on purpose.** The testers did not re-run after the fixes, so each fixed row says how the fix was checked: seen in the app, covered by a backend test, or only typechecked.
 
-| # | What | Found by | Owner | Size | State |
-|---|---|---|---|---|---|
-| 1 | **An investor is dropped into the founder's app.** After submitting verification, "Keep exploring" and "See your matches" open the founder's Matches ("Your account cannot do this"). Tapping "You are approved" or "Connection accepted", or reloading on Profile or Notifications, shows founder screens and tabs. Founder routes are not refused for investors. | Q2-01, Q2-02, Q3-03 | Mobile | M | **Fixed** in `806813e` (checked in the app) |
-| 2 | **Verification cannot be resumed.** Once the phone is confirmed, leaving and returning restarts at the phone step, and the same number is refused as "already verified", with no way forward. Only a different number gets through. Both roles. | Q1-01, Q2-04 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
-| 3 | **Skipping the email code cannot be undone.** "Continue exploring" skips it; nothing offers it again; verification then refuses at the last step with no link. | Q1-02 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
-| 4 | **Search reveals hidden business names to an unverified investor.** Cards are anonymised, but searching "Afya Booking" narrows five cards to one. | Q2-03 | Backend | S | **Fixed** in `b4263a1` (checked against the backend) |
-| 5 | **A list of every investor, with names, is open to any signed-in member** (`GET /funders`), including unverified ones. | Q6-13 | Backend | S | **Fixed** in `b4263a1` (checked against the backend) |
-| 6 | **Signed-out links do not go to the login screen.** They show "We couldn't load this. Sign in to continue" with no button. `/profile` shows an empty profile; `/settings` opens fully. No data leaks. | Q1-08, Q2-12, Q3-24, Q4-24 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
-| 7 | **Password reset shows no demo code,** unlike sign-up and phone, so it cannot be finished from the screens. | Q1-03 | Mobile | S | **Fixed** in `806813e` (request succeeds; the alert itself was not read back, and still has not been) |
-| 8 | **"Report a member" in Settings sends nothing.** It shows "Report received" and stops; staff never see it. (Reporting a message from a chat does reach staff.) | Q5-09, Q3-10 | Mobile | S | **Fixed** in `806813e` (still not sent for real) |
-| 9 | **The deal screen and the Requests list never refresh.** After the other party or staff act, the screen is stale until reload; Withdraw on an already accepted request then fails silently. Chat is live; these are not. | Q3-13, Q3-20, Q2-10, Q4-23 | Mobile | S | **Fixed** in `806813e` (by reading the code only; still not seen while the other party acts) |
-| 10 | **Search boxes in the dashboard do nothing** (Verification, Members, Audit log). | Q5-04 | Admin | S | **Fixed** in `8255aa7` (checked in the dashboard) |
-| 11 | **A suspended member is shown the wrong reason:** his status screen quotes the admin's earlier approval note, and he gets no notification. Suspended and rejected members are also told to "Start verification". | Q5-10, Q5-11 | Backend + Mobile | M | **Fixed** in `f27226d` (backend) and `eb10e86` (app). The backend now sends the reason and a notification on suspension and on reinstatement. The reason and the notification in the app were only typechecked, not seen. |
-| 12 | **Checks staff type are recorded wrongly.** "BRS lookup" is saved as an identity check; any unrecognised text silently becomes "Identity". | Q5-05 | Admin | S | **Fixed** in `dde76e9`. Checks are chosen from the kinds the backend keeps and saved as chosen. The review page was seen loading; recording a check was not walked through. |
-| 13 | **A "fix this first" investor's page says "Good fit, 6 of 6 match"** with no mention of the gap that put it there, and no demo-record note. | Q1-10 | Mobile | S | **Fixed** in `eb10e86`. The page says "Fix this first" with what to fix and a way to the checklist. Typechecked and read in the code; the page was not opened for such an investor. |
-| 14 | **A false money warning in chama chat.** "Contributions are due, Paybill 522533" is flagged; "Please send me 5000 by M-Pesa to my number urgently" is not. | Q4-16 | Backend rules / AI | M | **Open**, on purpose. The warning rules belong to the AI rules. |
-| 15 | **M-Pesa statement dates are read the wrong way round:** `04-10-2026` is imported as 10 April. | Q4-17 | Backend | S | **Fixed** in `f27226d` (backend tests: day-first dates are read the Kenyan way, and an unclear date is refused) |
-| 16 | **A document the AI could not read would still be labelled "AI pre-checked"** once the new AI service runs. | Q6-12 | Backend | S | **Fixed** in `f27226d`. Not seen: the document pre-check on the new AI code was not tried. |
-| 17 | **"Replace" on a deal document adds a duplicate** instead of replacing; the rejected row stays with "share a corrected copy". | Q3-16 | Mobile | S | **Fixed** in `eb10e86` (typechecked only; replacing a document was not walked through) |
-| 18 | **Decision history is lost on resubmission,** and a re-check cannot be decided: the page refuses with a false "server did not answer". | Q5-13, Q5-01 | Admin | M | **Fixed** in `dde76e9` (earlier decisions listed on the review page; the page was seen loading with the applicant's profile) and `0ecbe68` (deciding a re-check). The re-check dialog was only typechecked: no re-check is due in the demo data. |
-| 19 | **Deal document decisions are not in the audit log,** though the dashboard says every decision is recorded. The log also has no "who" column. | Q5-02, Q5-03, Q3-12 | Backend + Admin | M | **Fixed** in `f27226d` (backend) and `0ecbe68` (dashboard). The "By" column and document actions in words were seen in the audit log. |
-| 20 | **Vetting can be submitted without the phone being confirmed by code.** The phone typed on the application and the account's phone are two separate fields. | Q5-15, Q4-36, Q3-28 | Backend | S | **Fixed** in `f27226d` (backend tests). The application carries the confirmed number. |
-| 21 | **Changing a consent means redoing onboarding from blank.** The link reopens the form with nothing filled in. | Q1-05 | Mobile | M | **Fixed** in `eb10e86` and `8d28262`. The "edit my business" screen was seen opening pre-filled, and the consents page was seen loading. Changing a consent was not walked through. |
-| 22 | The phone field refuses `07…` numbers and insists on `+254`. | Q1-13 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
-| 23 | An amount of 0 is accepted on a join request; a repeated request shows the backend's sentence twice. | Q2-19 | Mobile | S | **Fixed** in `eb10e86` (typechecked only) |
-| 24 | Outside production, "Forgot password" returns the working reset code for any account, the admin's included. It is how the demo shows codes; a judge may ask. | Q6-14 | Backend | S | **Open**, on purpose. A deliberate demo decision: it is how the demo shows codes. |
-| 25 | "Open reports" and its badge count every report ever made; "Chamas" on the overview counts learning circles; "Deals in due diligence 3" links to a list of 2. | Q5-19, Q4-15 | Admin | S | **Fixed** in `f27226d` (backend counts) and `0ecbe68` (dashboard). The overview's counts were seen on screen. |
+### Still open
 
-## 4. Where the product differs from what the team decided
+| # | What | Found by | Why it is open |
+|---|---|---|---|
+| 14 | **A false money warning in chama chat.** "Contributions are due, Paybill 522533" is flagged; "Please send me 5000 by M-Pesa to my number urgently" is not. | Q4-16 | The warning rules belong to the AI rules. |
+| 24 | Outside production, "Forgot password" returns the working reset code for any account, the admin's included. It is how the demo shows codes; a judge may ask. | Q6-14 | A deliberate demo decision: it is how the demo shows codes. |
 
-These needed a decision, not only a fix: change the product, or change the document. **Updated at about 09:55:** the State column says which was done. Nine rows were changed in the product, one was changed in part, and three were settled by a dated note in the documents, with the product left as it is.
+### Fixed since the run
 
-| # | The document says | The product did, at the time of the run | Found by | State |
-|---|---|---|---|---|
-| 1 | **D13:** accepting a join request creates a connection only; the app then offers "Start an investment deal with these terms?" | Accept opened a deal at once, titled "Investment deal", with "equity" filled in that nobody chose. Decline sent the fixed reason "Not the right time". | Q3-01, Q6-07 | **Fixed in the product** in `27edbb4`. Accepting connects; the app then offers the deal with the amount the investor proposed, and she chooses the instrument. Declining asks for a reason in her own words, or none. Typechecked only; accepting followed by the offer was not walked through. |
-| 2 | **D13:** investors are not chama members | Investors had a Chamas tab and could start and join one, in the app and the backend. | Q4-13, Q2-08, Q6-08 | **Fixed in the product** in `27edbb4` (app) and `7bbcc1d` (backend, with a test). Seen: an investor who opens the chamas address is sent to Discover. |
-| 3 | **D12:** every party's documents *and checks* before terms; a person decides | Terms could be agreed once documents were uploaded, before staff had looked at them. A deal closed with its checklist at 0 of 6. | Q3-04, Q6-11 | **Fixed in the product** in `7bbcc1d`. Terms are refused until staff have confirmed every document; the refusal says what is still to be shared and what is waiting to be confirmed. Covered by a backend test, not walked in the app. The deal checklist is still not ticked from any screen (section 5). |
-| 4 | **D12 level 2:** organisation *and website* for investors; phone confirmed by code | The app never asked an investor for a website, so every investor was flagged for having none. The phone need not be confirmed. | Q2-05, Q6-10 | **Fixed in the product**: the website in `8d28262` (typechecked), the confirmed phone in `f27226d` (backend tests). |
-| 5 | **D12:** "Verify now" offered from sign-up | Offered after onboarding (Matches banner, Profile), not at sign-up. | Q1 step 7 | **Changed in the product** in `8d28262`: both setups now end with the choice to verify straight away. It is still not on the sign-up screen itself. Typechecked. |
-| 6 | **D11:** no grants or loan products | "Loan" and "Grant" were offered under "How you invest"; the backend still served grant, revenue bands and eligibility flags. | Q2-13, Q6-21 | **Fixed in part** in `7bbcc1d`: grants are no longer offered as a way of investing. "Loan" is still in the app's list of instruments. Whether the backend still serves revenue bands and eligibility flags was not checked. |
-| 7 | **PRODUCT, D1, D11:** experts are members | The app offered Founder and Investor only. The backend still accepted experts. No decision recorded the cut. | Q6-15 | **Fixed in the product** in `7bbcc1d`: the backend now refuses an expert at sign-up too (backend test). `89cd1ba` added a dated note to `PRODUCT.md` that the app offers founders and investors only. |
-| 8 | **PRODUCT section 5:** four consents, export, delete | The app asked a founder three, an investor none, and never the documents one. There was no screen to change a consent or export data. The privacy page says each can be withdrawn at any time. | Q1-06, Q1-07, Q2-06, Q6-18 | **Fixed in the product** in `8d28262`. A member can see and change each consent in Settings, and an investor's setup has a third step, "What is shared" (both seen loading). She can download her data from the same page (typechecked; the download was not tried). Whether the documents consent is among those listed was not checked. |
-| 9 | **D7:** documents are encrypted; judges were told object storage | Files are on the server's local disk, not encrypted. The app's privacy page says so honestly. | Q6-16 | **Settled in the documents**, not the product, in `89cd1ba`: a note dated 4 October under D7 says files are on local disk and not encrypted in the demo. The files are still not encrypted. |
-| 10 | **D7:** admins have two-step sign-in; investors need two admins | Two-step is off for the demo admin and cannot be turned on from the dashboard. One admin approves an investor, and nothing said the demo uses one. | Q5-07, Q5-08 | **Settled in the documents**, not the product: a dated note under D7 (`89cd1ba`), and the dashboard's Settings now says the same (`0ecbe68`, seen on screen). The demo still runs with one approval and two-step sign-in off. |
-| 11 | **D11:** the deal says money moves through the parties' bank | The backend sent the notice; the deal screen showed the sentence only once closed. Terms were not labelled "self-reported, not a legal document". | Q2-11, Q3-08 | **Fixed in the product** in `eb10e86`: the deal screen shows, at every stage, that the money moves through the parties' bank and that the terms are their own record. Typechecked; the deal screen was not among those opened afterwards. |
-| 12 | The rejection reason is "saved in the audit log" | It was also sent word for word to the applicant, with the risk signals. A scammer was told which rule caught him. | Q5-14 | **Fixed in the product** in `7bbcc1d`: the applicant is no longer sent the risk level or the signals (backend test). The written reason still goes to the applicant, and the review page now says so (`dde76e9`). |
-| 13 | One name | "FounderLink" remained in the docs (64 lines), the AI service's on-screen strings, the READMEs and the browser tab title. | Q6-17 | **Settled in the documents** in `89cd1ba`: the name is FoundersLink throughout `docs/`. One line in `ai/README.md` still says "FounderLink". The AI service's on-screen strings were not checked again. |
+| # | What it was | Owner | Fixed, and how it was checked |
+|---|---|---|---|
+| 1 | An investor is dropped into the founder's app | Mobile | In `806813e` (checked in the app) |
+| 2 | Verification cannot be resumed | Mobile | In `806813e` (checked in the app) |
+| 3 | Skipping the email code cannot be undone | Mobile | In `806813e` (checked in the app) |
+| 4 | Search reveals hidden business names to an unverified investor | Backend | In `b4263a1` (checked against the backend) |
+| 5 | A list of every investor, with names, is open to any signed-in member | Backend | In `b4263a1` (checked against the backend) |
+| 6 | Signed-out links do not go to the login screen | Mobile | In `806813e` (checked in the app) |
+| 7 | Password reset shows no demo code | Mobile | In `806813e` (request succeeds; the alert itself was not read back, and still has not been) |
+| 8 | "Report a member" in Settings sends nothing | Mobile | In `806813e` (still not sent for real) |
+| 9 | The deal screen and the Requests list never refresh | Mobile | In `806813e` (by reading the code only; still not seen while the other party acts) |
+| 10 | Search boxes in the dashboard do nothing | Admin | In `8255aa7` (checked in the dashboard) |
+| 11 | A suspended member is shown the wrong reason | Backend + Mobile | In `f27226d` (backend) and `eb10e86` (app). The backend now sends the reason and a notification on suspension and on reinstatement. The reason and the notification in the app were only typechecked, not seen. |
+| 12 | Checks staff type are recorded wrongly | Admin | In `dde76e9`. Checks are chosen from the kinds the backend keeps and saved as chosen. The review page was seen loading; recording a check was not walked through. |
+| 13 | A "fix this first" investor's page says "Good fit, 6 of 6 match" | Mobile | In `eb10e86`. The page says "Fix this first" with what to fix and a way to the checklist. Typechecked and read in the code; the page was not opened for such an investor. |
+| 15 | M-Pesa statement dates are read the wrong way round | Backend | In `f27226d` (backend tests: day-first dates are read the Kenyan way, and an unclear date is refused) |
+| 16 | A document the AI could not read would still be labelled "AI pre-checked" | Backend | In `f27226d`. Not seen: the document pre-check on the new AI code was not tried. |
+| 17 | "Replace" on a deal document adds a duplicate | Mobile | In `eb10e86` (typechecked only; replacing a document was not walked through) |
+| 18 | Decision history is lost on resubmission | Admin | In `dde76e9` (earlier decisions listed on the review page; the page was seen loading with the applicant's profile) and `0ecbe68` (deciding a re-check). The re-check dialog was only typechecked: no re-check is due in the demo data. |
+| 19 | Deal document decisions are not in the audit log | Backend + Admin | In `f27226d` (backend) and `0ecbe68` (dashboard). The "By" column and document actions in words were seen in the audit log. |
+| 20 | Vetting can be submitted without the phone being confirmed by code | Backend | In `f27226d` (backend tests). The application carries the confirmed number. |
+| 21 | Changing a consent means redoing onboarding from blank | Mobile | In `eb10e86` and `8d28262`. The "edit my business" screen was seen opening pre-filled, and the consents page was seen loading. Changing a consent was not walked through. |
+| 22 | The phone field refuses `07…` numbers and insists on `+254` | Mobile | In `806813e` (checked in the app) |
+| 23 | An amount of 0 is accepted on a join request; a repeated request shows the backend's sentence twice | Mobile | In `eb10e86` (typechecked only) |
+| 25 | "Open reports" and its badge count every report ever made; "Chamas" on the overview counts learning circles; "Deals in due diligence 3" links to a list of 2 | Admin | In `f27226d` (backend counts) and `0ecbe68` (dashboard). The overview's counts were seen on screen. |
+
+## 4. Where the product differed from what the team decided
+
+**All 13 have been dealt with: 8 were fixed in the product, 3 are settled by a dated note in the documents, and 2 still differ in a small way.**
+
+### Still differs in a small way
+
+| # | The document says | Where it stands |
+|---|---|---|
+| 5 | **D12:** "Verify now" offered from sign-up | `8d28262`: both setups now end with the choice to verify straight away. It is still not on the sign-up screen itself. Typechecked. |
+| 6 | **D11:** no grants or loan products | `7bbcc1d`: grants are no longer offered as a way of investing. "Loan" is still in the app's list of instruments. Whether the backend still serves revenue bands and eligibility flags was not checked. |
+
+### Settled by a note in the documents, not by changing the product
+
+| # | The document said | What the note now says |
+|---|---|---|
+| 9 | **D7:** documents are encrypted; judges were told object storage | `89cd1ba`: a note dated 4 October under D7 says files are on local disk and not encrypted in the demo. The files are still not encrypted. |
+| 10 | **D7:** admins have two-step sign-in; investors need two admins | : a dated note under D7 (`89cd1ba`), and the dashboard's Settings now says the same (`0ecbe68`, seen on screen). The demo still runs with one approval and two-step sign-in off. |
+| 13 | One name | `89cd1ba`: the name is FoundersLink throughout `docs/`. One line in `ai/README.md` still says "FounderLink". The AI service's on-screen strings were not checked again. |
+
+### Fixed in the product
+
+| # | The document says | What the product did | Fixed, and how it was checked |
+|---|---|---|---|
+| 1 | **D13:** accepting a join request creates a connection only; the app then offers "Start an investment deal with these terms?" | Accept opened a deal at once, titled "Investment deal", with "equity" filled in that nobody chose. Decline sent the fixed reason "Not the right time". | `27edbb4`. Accepting connects; the app then offers the deal with the amount the investor proposed, and she chooses the instrument. Declining asks for a reason in her own words, or none. Typechecked only; accepting followed by the offer was not walked through. |
+| 2 | **D13:** investors are not chama members | Investors had a Chamas tab and could start and join one, in the app and the backend. | `27edbb4` (app) and `7bbcc1d` (backend, with a test). Seen: an investor who opens the chamas address is sent to Discover. |
+| 3 | **D12:** every party's documents *and checks* before terms; a person decides | Terms could be agreed once documents were uploaded, before staff had looked at them. A deal closed with its checklist at 0 of 6. | `7bbcc1d`. Terms are refused until staff have confirmed every document; the refusal says what is still to be shared and what is waiting to be confirmed. Covered by a backend test, not walked in the app. The deal checklist is still not ticked from any screen (section 5). |
+| 4 | **D12 level 2:** organisation *and website* for investors; phone confirmed by code | The app never asked an investor for a website, so every investor was flagged for having none. The phone need not be confirmed. | The website in `8d28262` (typechecked), the confirmed phone in `f27226d` (backend tests). |
+| 7 | **PRODUCT, D1, D11:** experts are members | The app offered Founder and Investor only. The backend still accepted experts. No decision recorded the cut. | `7bbcc1d`: the backend now refuses an expert at sign-up too (backend test). `89cd1ba` added a dated note to `PRODUCT.md` that the app offers founders and investors only. |
+| 8 | **PRODUCT section 5:** four consents, export, delete | The app asked a founder three, an investor none, and never the documents one. There was no screen to change a consent or export data. The privacy page says each can be withdrawn at any time. | `8d28262`. A member can see and change each consent in Settings, and an investor's setup has a third step, "What is shared" (both seen loading). She can download her data from the same page (typechecked; the download was not tried). Whether the documents consent is among those listed was not checked. |
+| 11 | **D11:** the deal says money moves through the parties' bank | The backend sent the notice; the deal screen showed the sentence only once closed. Terms were not labelled "self-reported, not a legal document". | `eb10e86`: the deal screen shows, at every stage, that the money moves through the parties' bank and that the terms are their own record. Typechecked; the deal screen was not among those opened afterwards. |
+| 12 | The rejection reason is "saved in the audit log" | It was also sent word for word to the applicant, with the risk signals. A scammer was told which rule caught him. | `7bbcc1d`: the applicant is no longer sent the risk level or the signals (backend test). The written reason still goes to the applicant, and the review page now says so (`dde76e9`). |
 
 ## 5. Promised in the documents, with no screen for it
 
