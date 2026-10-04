@@ -1,7 +1,6 @@
 import { Tabs, useRouter } from 'expo-router';
 import { Bell, CircleUserRound, ClipboardCheck, HandCoins, Handshake, UsersRound } from 'lucide-react-native';
 import { Image, Pressable, View } from 'react-native';
-import type { ReactNode } from 'react';
 import { Text } from '../../../src/components/ui/Text';
 import { useQuery } from '@tanstack/react-query';
 import { notificationService } from '../../../src/services';
@@ -50,16 +49,6 @@ function Brand() {
   );
 }
 
-// The tab she is on is marked by an orange bar above its icon.
-function TabIcon({ focused, children }: { focused: boolean; children: ReactNode }) {
-  return (
-    <View style={{ alignItems: 'center', gap: 4 }}>
-      <View style={{ width: 24, height: 3, borderRadius: 2, backgroundColor: focused ? colors.accent : 'transparent' }} />
-      {children}
-    </View>
-  );
-}
-
 export default function FounderTabsLayout() {
   return (
     <Tabs
@@ -73,17 +62,18 @@ export default function FounderTabsLayout() {
         // Every tab sits on white. Without this, a screen that sets no
         // background of its own shows the navigator's grey.
         sceneStyle: { backgroundColor: colors.white, paddingTop: 12 },
-        tabBarActiveTintColor: colors.primaryDark,
+        // The tab she is on is orange: icon and label.
+        tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { borderTopColor: colors.border, minHeight: 68, paddingTop: 2 },
-        tabBarLabelStyle: { fontSize: 11, fontFamily: 'PlusJakartaSans_600SemiBold' },
+        tabBarStyle: { borderTopColor: colors.border, minHeight: 64, paddingTop: 6 },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold' },
       }}
     >
-      <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, focused }) => <TabIcon focused={focused}><Handshake color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /></TabIcon> }} />
-      <Tabs.Screen name="readiness" options={{ title: 'Readiness', tabBarIcon: ({ color, focused }) => <TabIcon focused={focused}><ClipboardCheck color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /></TabIcon> }} />
-      <Tabs.Screen name="connections" options={{ title: 'Network', tabBarIcon: ({ color, focused }) => <TabIcon focused={focused}><UsersRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /></TabIcon> }} />
-      <Tabs.Screen name="chamas" options={{ title: 'Chamas', tabBarIcon: ({ color, focused }) => <TabIcon focused={focused}><HandCoins color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /></TabIcon> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, focused }) => <TabIcon focused={focused}><CircleUserRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /></TabIcon> }} />
+      <Tabs.Screen name="matches" options={{ title: 'Matches', tabBarIcon: ({ color, focused }) => <Handshake color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="readiness" options={{ title: 'Readiness', tabBarIcon: ({ color, focused }) => <ClipboardCheck color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="connections" options={{ title: 'Network', tabBarIcon: ({ color, focused }) => <UsersRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="chamas" options={{ title: 'Chamas', tabBarIcon: ({ color, focused }) => <HandCoins color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, focused }) => <CircleUserRound color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} /> }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
   );
