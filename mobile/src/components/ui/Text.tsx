@@ -69,6 +69,9 @@ export function Text({ style, ...props }: TextProps) {
 export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, ...props }, ref) {
   // An input keeps the height its screen gave it, so only the font and size are set.
   const { lineHeight: _lineHeight, ...text } = scaled(style);
-  return <RNTextInput ref={ref} placeholderTextColor={colors.textMuted} {...props} style={text} />;
+  // In a browser, a focused field gets the browser's own outline, which
+  // is black. Wherever a field does not draw its own, it is brand blue.
+  const focusRing = { outlineColor: colors.primary } as object;
+  return <RNTextInput ref={ref} placeholderTextColor={colors.textMuted} {...props} style={[focusRing, text]} />;
 });
 export type TextInput = RNTextInput;
