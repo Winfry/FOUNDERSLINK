@@ -217,6 +217,8 @@ export interface CircleSummary {
   id: string;
   name: string;
   type: 'money' | 'learning';
+  /** The signed-in member's role in this circle, when known. */
+  myRole?: CircleRole;
   memberCount: number;
   paybillNumber?: string | null;
   unreadChatCount: number;

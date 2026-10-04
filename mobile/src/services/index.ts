@@ -38,6 +38,7 @@ import { httpConsentService } from './http/consent.http';
 import { httpVettingService } from './http/vetting.http';
 import { httpConnectionService } from './http/connection.http';
 import { httpDealService } from './http/deal.http';
+import { httpCircleService } from './http/circle.http';
 import { httpConversationService } from './http/conversation.http';
 import { httpComplianceService } from './http/compliance.http';
 import { httpNotificationService } from './http/notifications.http';
@@ -59,7 +60,7 @@ export const connectionService: ConnectionService = live('connection') ? httpCon
 export const vettingService: VettingService = live('vetting') ? httpVettingService : mockVettingService;
 export const consentService: ConsentService = live('consent') ? httpConsentService : mockConsentService;
 export const dealService: DealService = live('deal') ? httpDealService : mockDealService;
-export const circleService: CircleService = mockCircleService;
+export const circleService: CircleService = live('circle') ? httpCircleService : mockCircleService;
 export const conversationService: ConversationService = live('conversation') ? httpConversationService : mockConversationService;
 export const notificationService: NotificationService = live('notification') ? httpNotificationService : mockNotificationService;
 export const referenceDataService: ReferenceDataService = live('reference') ? httpReferenceDataService : mockReferenceDataService;

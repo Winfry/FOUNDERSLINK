@@ -85,7 +85,13 @@ export interface DealService {
 export interface CircleService {
   list(): Promise<CircleSummary[]>;
   get(circleId: string): Promise<CircleDetail>;
-  recordContribution(circleId: string, payload: { memberUserId: string; amountKes: number; goalId?: string }): Promise<CircleContribution>;
+  /** Records a payment already made to the circle's own account. No money moves through FounderLink. */
+  recordContribution(
+    circleId: string,
+    payload: { memberUserId: string; amountKes: number; goalId?: string; mpesaReceipt?: string },
+  ): Promise<CircleContribution>;
+  /** The creator becomes the organiser. */
+  create(payload: { name: string; type: 'money' | 'learning' }): Promise<CircleDetail>;
 }
 
 export interface ConversationService {

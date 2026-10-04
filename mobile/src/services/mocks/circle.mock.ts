@@ -1,13 +1,15 @@
 import type { CircleService } from '../types/api';
+import type { CircleDetail } from '../../types';
 import { mockDelay } from './delay';
 
 const DISCLAIMER = 'FounderLink records contributions. It never holds or moves your money.';
 
-const circles = [
+const circles: CircleDetail[] = [
   {
     id: 'circle-1',
     name: 'Nairobi Health Founders Chama',
     type: 'money' as const,
+    myRole: 'organiser' as const,
     memberCount: 3,
     paybillNumber: '303030',
     unreadChatCount: 1,
@@ -51,13 +53,33 @@ export const mockCircleService: CircleService = {
     if (!c) throw { code: 'NOT_FOUND', message: 'Chama not found.' };
     const row = {
       id: `c-${Date.now()}`,
-      memberName: payload.memberUserId,
+      memberName: c.members.find((m) => m.userId === payload.memberUserId)?.name ?? payload.memberUserId,
       amountKes: payload.amountKes,
       goalLabel: payload.goalId ? 'Goal' : 'General',
       recordedAt: new Date().toISOString(),
-      reference: 'MPESA-NEW',
+      reference: payload.mpesaReceipt ?? '',
     };
     c.contributions.push(row);
     return row;
+  },
+
+  async create(payload) {
+    await mockDelay();
+    const c = {
+      id: `circle-${Date.now()}`,
+      name: payload.name,
+      type: payload.type,
+      myRole: 'organiser' as const,
+      memberCount: 1,
+      paybillNumber: null,
+      unreadChatCount: 0,
+      members: [{ userId: 'u-amina', name: 'Amina Wanjiru', role: 'organiser' as const, joinedAt: new Date().toISOString() }],
+      contributions: [],
+      owes: [],
+      goals: [],
+      moneyDisclaimer: payload.type === 'money' ? DISCLAIMER : '',
+    };
+    circles.push(c);
+    return c;
   },
 };

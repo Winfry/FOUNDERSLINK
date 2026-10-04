@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { Badge, Card } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenLoading } from '../../../src/components/layout/ScreenStates';
-import { groupService } from '../../../src/services';
+import { circleService } from '../../../src/services';
 import { formatKes } from '../../../src/services/mocks/kenya-data';
 import { colors, spacing } from '../../../src/theme/tokens';
 
 export default function InvestorGroupsTab() {
   const router = useRouter();
-  const q = useQuery({ queryKey: ['groups'], queryFn: () => groupService.listGroups() });
+  const q = useQuery({ queryKey: ['groups'], queryFn: () => circleService.list() });
 
   if (q.isLoading) return <ScreenLoading />;
   if (!q.data?.length) return <ScreenEmpty title="No groups" description="Joined groups appear after founder approval." />;
