@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AuthProgress } from "@/components/auth/auth-progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -87,10 +86,9 @@ function LoginFlow() {
 
   return (
     <div>
-      <AuthProgress current={step === "login" ? "login" : "verify"} />
       {step === "login" ? (
         <>
-          <h1 className="text-2xl font-extrabold text-foreground">Sign in to FoundersLink admin</h1>
+          <h1 className="text-2xl font-extrabold text-foreground">Sign in</h1>
           <p className="mt-1 text-base text-muted">Use your staff email and password.</p>
           <form className="mt-8 space-y-5" noValidate onSubmit={loginForm.handleSubmit(onLogin)}>
             <Input
