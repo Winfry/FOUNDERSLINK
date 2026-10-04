@@ -30,19 +30,34 @@ import { mockReferenceDataService } from './mocks/reference.mock';
 import { mockInvestorStub } from './mocks/investor-stub.mock';
 import { mockGroupAlias } from './mocks/group-alias.mock';
 import { mockChatAdapter } from './mocks/chat-adapter.mock';
+import { API_URL } from './http/client';
+import { httpAuthService } from './http/auth.http';
+import { httpFounderService } from './http/founder.http';
+import { httpFundingService } from './http/funding.http';
+import { httpConsentService } from './http/consent.http';
+import { httpVettingService } from './http/vetting.http';
+import { httpReferenceDataService } from './http/reference.http';
 
-export const authService: AuthService = mockAuthService;
-export const founderService: FounderService = mockFounderService;
-export const fundingService: FundingService = mockFundingService;
+/**
+ * Each service uses the backend when EXPO_PUBLIC_API_URL is set, and its
+ * mock otherwise. To fall back to a mock for one service on the day, name
+ * it in EXPO_PUBLIC_MOCK_SERVICES, e.g. "deal,circle".
+ */
+const mocked = new Set((process.env.EXPO_PUBLIC_MOCK_SERVICES ?? '').split(',').map((name) => name.trim()));
+const live = (name: string) => API_URL !== '' && !mocked.has(name);
+
+export const authService: AuthService = live('auth') ? httpAuthService : mockAuthService;
+export const founderService: FounderService = live('founder') ? httpFounderService : mockFounderService;
+export const fundingService: FundingService = live('funding') ? httpFundingService : mockFundingService;
 export const complianceService: ComplianceService = mockComplianceService;
 export const connectionService: ConnectionService = mockConnectionService;
-export const vettingService: VettingService = mockVettingService;
-export const consentService: ConsentService = mockConsentService;
+export const vettingService: VettingService = live('vetting') ? httpVettingService : mockVettingService;
+export const consentService: ConsentService = live('consent') ? httpConsentService : mockConsentService;
 export const dealService: DealService = mockDealService;
 export const circleService: CircleService = mockCircleService;
 export const conversationService: ConversationService = mockConversationService;
 export const notificationService: NotificationService = mockNotificationService;
-export const referenceDataService: ReferenceDataService = mockReferenceDataService;
+export const referenceDataService: ReferenceDataService = live('reference') ? httpReferenceDataService : mockReferenceDataService;
 
 /** Legacy alias — chamas replace project groups */
 export const groupService = mockGroupAlias;

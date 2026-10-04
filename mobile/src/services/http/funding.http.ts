@@ -1,0 +1,87 @@
+import type { FundingService } from '../types/api';
+import type { FundingMatches, InvestorMatchCard, MatchBand, MatchReason } from '../../types';
+import { get } from './client';
+
+/** One card of `GET /funding/matches`. Only the fields used here. */
+interface ApiCard {
+  funder: { id: string; name: string | null; mandate_text: string | null };
+  anonymised: boolean;
+  headline: string;
+  investor: { user_id: string; full_name: string; organisation_name: string | null } | null;
+  band: MatchBand | null;
+  explanation: string;
+  reasons: MatchReason[];
+  gaps: { kind: 'requirement' | 'unanswered'; ref: string; title: string }[];
+  risk_factors: { code: string; text: string }[];
+}
+
+interface ApiMatches {
+  apply_now: ApiCard[];
+  apply_after: ApiCard[];
+  not_for_you: ApiCard[];
+}
+
+// A match is a funder record. Some have a person behind them and some
+// are built from public information, so a card is known by the record's
+// id, which is always there. Below level 2 a member's record has no
+// name, and its headline ("Angel investor · health · KSh …") stands in.
+function toCard(card: ApiCard): InvestorMatchCard {
+  return {
+    investorUserId: card.funder.id,
+    displayName: card.funder.name ?? card.headline,
+    band: card.band ?? 'not_a_fit',
+    reasons: card.reasons,
+    gaps: card.gaps.map((gap) => ({
+      kind: gap.kind,
+      text: gap.title,
+      complianceItemId: gap.kind === 'requirement' ? gap.ref : undefined,
+    })),
+    riskFactors: card.risk_factors.map((risk) => ({ text: risk.text })),
+    organisationName: card.investor?.organisation_name ?? undefined,
+    anonymised: card.anonymised,
+  };
+}
+
+const SOURCE_TEXT = (entry: { company_name: string | null; sector: string; stage: string | null; year: number | null }) =>
+  [entry.company_name ?? `A ${entry.sector} business`, entry.stage?.replace(/_/g, ' '), entry.year].filter(Boolean).join(', ');
+
+export const httpFundingService: FundingService = {
+  async getMatches(): Promise<FundingMatches> {
+    const matches = await get<ApiMatches>('/funding/matches');
+    return {
+      applyNow: matches.apply_now.map(toCard),
+      applyAfter: matches.apply_after.map(toCard),
+      notForYou: matches.not_for_you.map(toCard),
+    };
+  },
+
+  // `investorUserId` is the id of the match card (the funder record).
+  async getInvestorProfile(investorUserId) {
+    const matches = await get<ApiMatches>('/funding/matches');
+    const card = [...matches.apply_now, ...matches.apply_after, ...matches.not_for_you].find((c) => c.funder.id === investorUserId);
+    if (!card) throw { code: 'NOT_FOUND', message: 'This match is no longer available.' };
+
+    // The person behind the record, and her track record, are shown
+    // only to a verified founder. The backend decides; we just ask.
+    let trackRecord: { label: string; source: string }[] = [];
+    if (card.investor) {
+      const profile = await get<{
+        track_record?: { company_name: string | null; sector: string; stage: string | null; year: number | null; source: string }[];
+      }>(`/profiles/${card.investor.user_id}`).catch(() => null);
+      trackRecord = (profile?.track_record ?? []).map((entry) => ({ label: SOURCE_TEXT(entry), source: entry.source }));
+    }
+
+    return {
+      investorUserId,
+      // Who to send a connection request to, when there is a person.
+      connectUserId: card.investor?.user_id ?? null,
+      displayName: card.funder.name ?? card.headline,
+      anonymised: card.anonymised,
+      band: card.band,
+      explanation: card.explanation,
+      reasons: card.reasons,
+      whatTheyFund: card.funder.mandate_text ?? card.headline,
+      trackRecord,
+    };
+  },
+};
