@@ -1,6 +1,6 @@
 # FoundersLink: demo script
 
-**Written 4 October, 09:45.** This script uses only what `docs/FINAL_VERIFICATION.md` section 2 found to work, in the order that works. It follows the demo story in `docs/PRODUCT.md` section 11 with three changes: Amina verifies before she opens the investor's profile, step 7 shows a deal that is already on Grace's track record, and the chama is left out.
+**Written 4 October, 09:45. Corrected at about 09:55 for what changed afterwards (steps 1, 2 and 7).** This script uses only what `docs/FINAL_VERIFICATION.md` section 2 found to work, in the order that works. It follows the demo story in `docs/PRODUCT.md` section 11 with three changes: Amina verifies before she opens the investor's profile, step 7 shows a deal that is already on Grace's track record, and the chama is left out.
 
 ## Before you start
 
@@ -21,22 +21,22 @@
 
 | # | App | What you do | The one sentence to say |
 |---|---|---|---|
-| 1 | Mobile | Show the sign-up and onboarding screens. Type a clear English sentence about the business in the description box and let it fill the fields it can; fill the rest by hand. Then sign in as Amina. | "A founder joins in about two minutes and describes her business in her own words." |
-| 2 | Mobile, Amina | Open Matches. Show the three lists: an investor under Pitch (shown without its name, as "Good fit"), one held back by the missing KRA PIN, and a VC under Don't pitch. | "She sees at once who fits her, who she could pitch after fixing one thing, and who not to spend time on, each with plain reasons." |
+| 1 | Mobile | Show the sign-up and onboarding screens. Type a sentence about the business in the description box, turn on "Let AI read this to fill in my form", then press "Suggest fields"; fill the rest by hand. Then sign in as Amina. | "A founder joins in about two minutes and describes her business in her own words." |
+| 2 | Mobile, Amina | Open Matches. Show the one list: the investors who fit her today, with Savanna Angels as "Strong fit". | "She sees at once which investors fit her, each with plain reasons." |
 | 3 | Mobile, Amina | Press Connect on the investor under Pitch. The app asks her to verify. Show the verification screen and her status. | "Before anyone can contact anyone, they are checked." |
 | 4 | Admin dashboard | Sign in as the admin. Show the queue sorted by risk. Approve Amina with a written reason. Reject Brian with a written reason. | "A person decides, with a reason, and the risk check puts the applications that need the closest look at the top." |
 | 5 | Mobile, Amina | Go back to the app without reloading: it has unlocked. Open Savanna Angels' profile. Show the name, the fit breakdown and the track record entries with their labels. | "Now that she is verified she sees who the investor is, why they fit, and where each line of their track record comes from." |
 | 6 | Mobile, both | Connect Amina and Grace. In the chat, send a normal message, then send "tuma processing fee" from one side and show the warning on the other side. | "Chat is live, and a message that asks for money carries a warning for the person who receives it." |
-| 7 | Mobile, both, then dashboard | Open the deal. Upload a PDF or a photo on each side. In the dashboard, review a document. Back in the app, both agree the terms. | "Both sides share their documents in one place, and our staff review them." |
+| 7 | Mobile, both, then dashboard (a second visit) | Accept the request, which connects the two, then take the app's offer to start the deal. Upload each document the deal asks for, on each side. Go to the admin dashboard a second time and confirm every one of the deal's documents. Back in the app, both agree the terms. | "Both sides share their documents in one place, and terms can be agreed only after our staff have confirmed them." |
 | 8 | Mobile, both | Both confirm closing. Read the bank sentence on the closed deal. | "The money moves through the bank; FoundersLink records the deal." |
 | 9 | Mobile | Open Grace's track record and point to her earlier deal with Wanjiru, labelled "Verified on FoundersLink". | "A deal closed here can appear on the investor's track record as verified, like this earlier one." |
 
 Notes on the steps:
 
-- **Step 1.** The Sheng sentence from the story fills only the sector. A clear English sentence fills two fields. Do not say "the form fills itself in".
-- **Step 2.** Every match shows as "Good fit". Do not say "Strong fit". The investor has no name until she is verified; that is by design, so say so.
+- **Step 1.** Turn on "Let AI read this to fill in my form" before pressing "Suggest fields". With it on and the AI service running, the Sheng sentence from the story fills the sector, the county and the amount (checked through the backend; the switch itself was not walked through on a new sign-up, so rehearse it). With it off, or with the AI service down, the Sheng sentence fills only the sector and a clear English one fills two fields.
+- **Step 2.** There is one list, the matched investors. "Fix first" and "Don't pitch" are no longer shown on her home, so do not promise three lists. Savanna Angels reads "Strong fit" when the AI service is running. If the investor shows without a name before she is verified, that is by design, so say so.
 - **Step 5.** The summary sentence ("Has backed 2 health businesses...") is not shown. Read the entries instead.
-- **Step 7.** Documents read "Uploaded", not "AI pre-checked". The due-diligence pack is not on the screen, so do not mention it. A message can only be sent by an approved, connected member.
+- **Step 7.** Terms are refused until staff have confirmed every document the deal asks for, so do not skip the second visit to the dashboard; the refusal names what is still to be shared or confirmed. This order is covered by the backend's tests and was not walked through in the app, so rehearse it. Accepting a request no longer opens a deal by itself: the app offers it afterwards. Documents read "Uploaded", not "AI pre-checked". The due-diligence pack is not on the screen, so do not mention it. A message can only be sent by an approved, connected member.
 - **Step 9.** The deal you just closed does not appear on the track record. Do not say it does.
 
 ## Not in this demo
