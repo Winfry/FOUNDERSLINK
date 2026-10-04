@@ -18,7 +18,7 @@ const MIN_REASON = 8;
 
 function formatKes(amount: number | null) {
   if (amount == null) return null;
-  return `KES ${amount.toLocaleString("en-KE")}`;
+  return `KSh ${amount.toLocaleString("en-KE")}`;
 }
 
 const notSet = <span className="text-muted">Not set</span>;
