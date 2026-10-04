@@ -41,7 +41,7 @@ FounderLink answers three questions:
 3. **Works on readiness:** her compliance checklist (KRA PIN, registration…) and Ask Compliance. Fixing a gap moves an investor from "Pitch after" to "Pitch".
 4. **Presses Connect** on an investor: if she isn't verified yet, she does **level 2** now (phone code, short statement, an admin approves). Then she sees names, profiles, the fit breakdown and the investor's track record.
 5. **Chats** with the investor in the app. A message that asks for money carries a warning.
-6. **Opens a deal** when they decide to work together. The deal moves through stages: exploring → due diligence → terms agreed → documents and compliance → closed → active.
+6. **Opens a deal** when they decide to work together. If an investor sent her a join request with an amount, accepting it connects them and the app offers **"Start an investment deal with these terms?"**, pre-filled; one tap opens the deal (D13). The deal moves through stages: exploring → due diligence → terms agreed → documents and compliance → closed → active.
 7. **At due diligence (level 3)** both sides upload documents. The AI pre-checks them and compiles a **due-diligence pack**; an admin confirms.
 8. **Terms agreed and closed** need every party to confirm. **The money moves between them through a bank, never through FounderLink.** The closed deal becomes a verified entry on the investor's track record. Check-ins follow at 30, 90 and 180 days.
 
@@ -66,7 +66,7 @@ Joins → profession, register, services, office hours per month → verifies ag
 | **Deals** (D4) | Stages, confirmations by every party, terms, timeline, milestones, deal checklist | Backend built; frontend screen to build |
 | **Due-diligence pack** (D12) | AI document pre-checks and a per-party summary of verified, self-reported and missing items | **Not built.** Owners: AI/ML 1 and backend |
 | **Compliance** (D3) | Startup checklist chosen by rules, progress as "3 of 7 done", deadlines, Ask Compliance with cited answers, freshness report for admins | Backend built; AI chatbot in progress (AI/ML 2); frontend to build; real official sources still to collect |
-| **Circles** | Founders saving together: money circles by invite only, learning circles; contributions, who still owes, M-Pesa statement matching, votes, minutes, chat | Backend built; group funding switched off (D11); frontend to rebuild without the wallet |
+| **Chamas** (money circles, D13) | Founders come together and pool money into the chama's own account; a forum (chat, notes and minutes, votes); and tracking (contributions per member, goals, who still owes, M-Pesa statement matching). Joined by invite only. Learning circles also exist, for founders who want peers without money | Backend built; group funding switched off (D11); frontend group screens to move onto it, without the wallet |
 | **Experts and office hours** | Directory, sessions per month, "helped N founders" | Backend built; frontend to build |
 | **Notifications** | In the app and live; SMS once a provider is set up | Backend built |
 | **Consents and her own data** | Four consents, export, delete account | Backend built; frontend screen to build |
@@ -126,13 +126,13 @@ Joins → profession, register, services, office hours per month → verifies ag
 | **Level 1 / 2 / 3** | Joined / Verified member / Deal-ready | `approval_status` (level 2 = `approved`); level 3 on the deal | KYC, onboarding (for verification) |
 | **Verification** | The level 2 check by an admin | `/vetting/application`, `approval_status`: `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`, `banned` | Application before an account, reference number, User ID |
 | **Connection** | Two members linked after one asks and the other accepts | `connection`, `status`: `pending`, `accepted`, `declined` | Follow, friend |
-| **Join request** | An investor's connection request to a founder, with a pitch and an offer | `POST /connections` with `pitch`, `vision`, `offer`, `proposed_amount_kes` | Application |
+| **Join request** | An investor's connection request to a founder, with a pitch and an offer. Accepting it creates a connection, then the app offers a pre-filled deal (D13) | `POST /connections` with `pitch`, `vision`, `offer`, `proposed_amount_kes` | Application |
 | **Conversation** | A chat | `conversation`, `type`: `direct`, `circle`, `deal` | Group chat (as a type) |
 | **Deal** | A working relationship from first serious talk to the result | `deal`, `type`: `cofounder_partnership`, `investment`, `expert_engagement`, `joint_venture` | Group, project, investment (as the container) |
 | **Stage** | Where a deal is | `stage`: `exploring`, `due_diligence`, `terms_agreed`, `documents_compliance`, `closed`, `active` | Status |
 | **Terms** | What the parties recorded, not a legal document | `terms`: `amount_kes`, `instrument`, `equity_percent`, `roles`, `notes` | Contract |
 | **Due-diligence pack** | The AI-compiled summary at level 3 | `/deals/due-diligence-pack` (to build) | Report |
-| **Circle** | Founders saving or learning together (a chama) | `circle`, `type`: `money`, `learning`; roles `organiser`, `treasurer`, `member` | Group, wallet, project group |
+| **Chama** (on screen) / **circle** (in code) | Founders who pool money into their own account, talk, and track contributions (D13). A learning circle is the same without money | `circle`, `type`: `money` (a chama), `learning`; roles `organiser`, `treasurer`, `member` | Wallet, project group, investor group |
 | **Contribution** | A payment a member made into the circle's own account, recorded | `contribution` / `payment_record` | Deposit, transaction, balance |
 | **Compliance item** | One requirement, e.g. KRA PIN | `compliance item`, `status`: `not_started`, `in_progress`, `complete` | Document, KYC |
 | **Ask Compliance** | The chatbot for compliance questions | `POST /compliance/ask` | Legal advice |
@@ -165,6 +165,8 @@ Admin dashboard (the FounderLink team) ────┼── REST + WebSocket �
 
 ## 11. The demo story
 
+**Both apps are shown (D13):** the mobile app carries the journey, and the admin dashboard appears once, in step 4, for vetting. A recorded backup of the whole demo is made the night before.
+
 1. **Amina**, a health-tech founder in Nairobi, joins in two minutes and types: *"Tunatengeneza app ya kubook clinic visits, tunahitaji milioni moja."* The form fills itself in.
 2. She sees her **investor matches**: Savanna Angels under "Pitch" (Strong fit, with reasons), another under "Pitch after you fix this" (a missing KRA PIN), a VC under "Don't pitch" (their minimum is KSh 10M).
 3. She opens Savanna's profile: fit breakdown, and a track record showing *"Has backed 2 health businesses at the MVP stage (1 verified on FounderLink)"*.
@@ -172,6 +174,7 @@ Admin dashboard (the FounderLink team) ────┼── REST + WebSocket �
 5. They chat. A message from someone else saying *"tuma processing fee"* carries a warning.
 6. They open a **deal**, reach due diligence, upload documents, and see the **AI pre-checks** and the **due-diligence pack**.
 7. Both confirm terms; the deal closes. *"The money moves through the bank; FounderLink records the deal."* The deal appears as **Verified on FounderLink** on the investor's track record.
+8. *(If time allows)* Amina's **chama**: three founders pooling money into their own Paybill. An uploaded M-Pesa statement shows who has paid and who still owes, and they vote on how to use the pool, without FounderLink ever holding a shilling.
 
 ## 12. What we say, and what we never claim
 

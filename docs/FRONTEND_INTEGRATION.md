@@ -41,7 +41,7 @@ In the tables below:
 
 - **Ready** means the backend has it today.
 - **Coming** means the backend owner is adding it. Build against the shape shown and it will work when it lands.
-- **Blocked** means a team decision is needed first (section 9).
+- **Blocked** means a team decision is needed first (section 9). Since 4 October there are none.
 
 ---
 
@@ -177,7 +177,7 @@ Nothing is agreed by default. Until she agrees, a founder is invisible to invest
 | `getDocuments()` | `GET /vetting/application` → `documents`, each with `status` (`uploaded`, `verified`, `rejected`) and `rejection_reason` | Ready |
 | `getDashboard()` | Compose from `GET /me`, `GET /funding/matches`, `GET /compliance` and `GET /connections` | Ready |
 | `getInvestorRequests()` | `GET /connections`, the ones with `direction: "received"` and `status: "pending"`. Each has `with.full_name`, `with.organisation_name`, `with.focus_areas`, `pitch`, `vision`, `offer` and `proposed_amount_kes` | Ready |
-| `respondToInvestorRequest(id, approve, reason)` | `PATCH /connections/:id` with `{ status: "accepted" | "declined", reason? }`. The reason is shown to the investor | Ready |
+| `respondToInvestorRequest(id, approve, reason)` | `PATCH /connections/:id` with `{ status: "accepted" | "declined", reason? }`. The reason is shown to the investor. **Accepting creates a connection only** (section 9). Then offer **"Start an investment deal with these terms?"**: one tap calls `POST /deals` with `{ type: "investment", title, with_user_id }` and then `PATCH /deals/:id/terms` with `{ amount_kes: <the request's proposed_amount_kes> }`. Ignoring it leaves them connected | Ready |
 
 Founder profile fields:
 
@@ -295,9 +295,26 @@ Each has `title`, `body` and a `link` to open.
 
 ### GroupService
 
-`getTransactions`, `deposit`, `submitWithdrawal`, `getWithdrawal` and `approveWithdrawal`: **remove** (team decision 1, section 4).
+**A group is a money circle (decided, section 9):** founders who come together, pool money into the group's own account, talk in a group chat and track what each member has paid. In code and the API it is a `circle` with `type: "money"`. **On screen it is called a "Chama".** Members are founders; investors work with founders through deals, not chamas.
 
-The rest of the group screens are **blocked** on one open question: whether a group becomes a circle or a deal (section 9). Section 4 lists the circle endpoints that replace the money screens.
+| Method | Backend | Status |
+|---|---|---|
+| `listGroups()` | `GET /circles` | Ready |
+| `getGroup(id)` | `GET /circles/:id`: members and roles, who has paid this period, goals with progress, the chama's own `paybill_number` | Ready |
+| `getMembers(id)` | Members are in `GET /circles/:id` | Ready |
+| `removeMember(groupId, memberId)` | `DELETE /circles/:id/members/:userId` (organiser, or the member herself to leave) | Ready |
+| Create a chama | `POST /circles` with `{ name, type: "money" }`. The creator becomes organiser | Ready |
+| Invite | `POST /circles/:id/invites` → a single-use link; joining: `GET /circles/invites/:token`, then `POST /circles/join` `{ token }` | Ready |
+| Contributions (replaces "transactions") | `GET /circles/:id/contributions`; the organiser or treasurer records one with `POST /circles/:id/contributions` | Ready |
+| Who still owes | `GET /circles/:id/reconciliation` | Ready |
+| M-Pesa statement | `POST /circles/:id/statements` (organiser or treasurer) | Ready |
+| Goals | `POST /circles/:id/goals`, `PATCH /circles/:id/goals/:goalId` | Ready |
+| Forum: chat | The conversation with `type: "circle"` in `GET /conversations` | Ready |
+| Forum: notes and minutes, votes | `/circles/:id/notes`, `/circles/:id/decisions`, `POST /circles/:id/decisions/:decisionId/vote` | Ready |
+| `getDocuments(id)` | Use notes and minutes. No file uploads in a chama | |
+| `getTransactions`, `deposit`, `submitWithdrawal`, `getWithdrawal`, `approveWithdrawal` | **Remove** (team decision 1, section 4) | |
+
+Every chama screen carries: "FounderLink records contributions. It never holds or moves your money."
 
 ---
 
@@ -396,7 +413,7 @@ For screen 1, show the label on every funder that has `is_demo: true` or a `risk
 | Admin users | `GET /admin/admins` lists them. `POST /admin/admins` with `{ email, full_name, password }` creates one. The password needs 12 or more characters | Ready |
 | Dashboard numbers and charts | `GET /admin/stats`: members by role and status, applications waiting, re-checks due, reports, deals by stage, circles, and `registrations` for the last six months. There are no transaction volumes: the backend records no money moving | Ready |
 | Withdrawals, transactions | | Removed (team decision 1, section 4) |
-| Groups | `GET /circles` and `/deals` lists, once section 9 question 1 is decided | Blocked, section 9 |
+| Groups (chamas) | `GET /admin/stats` counts circles. There is no admin list of circles yet: ask the backend owner if the dashboard needs one | Coming if needed |
 
 Changes to the application pages:
 
@@ -411,19 +428,16 @@ Two pages the backend has and the dashboard does not: the compliance freshness r
 
 ---
 
-## 9. Decisions the team still has to make
+## 9. Decisions on groups, join requests and the demo
 
-**Decided on 4 October:** how "the bank holds the money" works. It doesn't: there are no deposits, withdrawals or releases at all (team decision 1, section 4).
+All decided on 4 October (`docs/TEAM_DECISIONS.md` D13). Nothing is blocked any more.
 
-Still open. These block the group screens on both sides:
-
-| # | Question | Recommendation |
+| # | Question | Decision |
 |---|---|---|
-| 1 | **What a group is.** In the app a group is one founder plus the investors she approved. The backend has a **circle** (peers saving together, with contributions, votes and a chat) and a **deal** (a founder and one or more investors, with stages, terms and a room). Which one do the group screens sit on? | **Split it.** Founders saving together are a circle. A founder working with investors is a deal. Move each group screen to the one it belongs to |
-| 2 | **What accepting a join request creates:** a connection only, or a deal as well | **A connection only.** The two chat, and either opens a deal when they decide to work together |
-| 3 | **Which app is shown in the demo:** mobile, admin or both | **Both:** mobile for the founder and investor journeys, admin for vetting (the fake-investor rejection) |
-
-When the team decides, write the answer here and in `docs/TEAM_DECISIONS.md` D10, and remove the "Blocked" marks above.
+| 1 | How "the bank holds the money" works | It doesn't: no deposits, withdrawals or releases at all. Members pay into the chama's own account (section 4) |
+| 2 | What a group is | **A money circle, shown on screen as a "Chama".** Founders come together, pool money into the chama's own Paybill, Till or bank account, talk in its chat, notes and votes, and track contributions and who still owes. Investors are not chama members: they work with founders through deals. Mapping: GroupService, section 3 |
+| 3 | What accepting a join request creates | **A connection, then a one-tap pre-filled deal.** Accepting connects them. The app then offers "Start an investment deal with these terms?", pre-filled from the request's proposed amount. Ignoring it leaves them connected. No backend change |
+| 4 | Which app is shown in the demo | **Both.** Mobile carries the journey (about four minutes); the admin dashboard shows vetting, with the AI flagging a fake investor (under a minute). Mobile is connected to the real backend first; a recorded backup of the full demo is made the night before |
 
 ---
 

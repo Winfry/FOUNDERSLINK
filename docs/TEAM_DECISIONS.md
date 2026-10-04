@@ -18,6 +18,7 @@
 | **D10** | **Frontend and backend aligned** | **One document for frontend development (`docs/FRONTEND_INTEGRATION.md`).** No wallet or escrow, no ID collection, the apps run on the real backend, and new screens for funding matches, profile fit, compliance and deals. |
 | **D11** | **Core scope: founders, investors, experts** | **Funding comes from investors only.** Grants, government funds, bank loans, SACCOs and the SME path are out of scope for now. Money from a deal moves through a bank, never through FounderLink. |
 | **D12** | **Verification in levels, with AI document pre-checks** | **Join in two minutes; verify when you want to make contact; share documents when a deal reaches due diligence.** The AI reads and pre-checks documents and compiles the due-diligence pack; a person always confirms. |
+| D13 | Groups, join requests and the demo | A group is a money circle, shown as a "Chama". Accepting a join request connects the two, then offers a pre-filled deal. The demo shows both apps. |
 
 ---
 
@@ -475,7 +476,7 @@ Most teams will show an AI that recommends people. These six things make Founder
 
 **The one document:** `docs/FRONTEND_INTEGRATION.md`. Both the frontend and the backend owner work from it. It holds the rules (the backend is the source of truth, one change updates the docs, field names mapped only in the service layer, values from `/meta/options`), these decisions, the standard values, and every frontend service method mapped to the backend. `backend/README.md` is for looking up one endpoint's details.
 
-**Still open:** what a "group" becomes (recommended: circles for founders saving together, deals for founders working with investors), what accepting a join request creates (recommended: a connection only), and which app the demo shows (recommended: both). See `docs/FRONTEND_INTEGRATION.md` section 9.
+**The three questions left open here were decided in D13.**
 
 ---
 
@@ -571,3 +572,31 @@ POST /deals/due-diligence-pack
 | AI/ML 1 | Build `/documents/precheck` and `/deals/due-diligence-pack` with sample documents and tests |
 | AI/ML 2 | Vetting risk signals stay as they are, now feeding level 2 |
 | Team lead | New pitch line (D9). Demo: join in two minutes, "Verify to connect", a deal at due diligence with its AI-compiled pack |
+
+---
+
+## D13. Groups, join requests and the demo
+
+**Agreed on 4 October.**
+
+### 1. A group is a money circle, shown as a "Chama"
+Founders come together, pool money, talk, and track their money. That is the backend's money circle (`circle`, `type: "money"`):
+
+| The team wants | Built as |
+|---|---|
+| Founders come together | A circle joined by single-use invite only, with organiser, treasurer and member roles |
+| Pool funds | Members pay into **the chama's own** Paybill, Till or bank account. FounderLink never holds the pool |
+| A forum to communicate | The chama's group chat, notes and meeting minutes, and votes |
+| Track their money | Contributions per member, goals with progress, who has paid and who still owes, M-Pesa statement matching |
+
+In code and the API it is a **circle**. On screen it is a **"Chama"**. Investors are not chama members: they work with founders through deals.
+
+### 2. Accepting a join request: a connection, then a one-tap deal
+Accepting connects the two, so they can chat. The app then offers **"Start an investment deal with these terms?"**, pre-filled from the investor's proposed amount. One tap opens the deal (`POST /deals`, then the amount in the terms); ignoring it leaves them connected. Most conversations never become deals, so the deals list stays honest and closed deals stay a clean learning signal for the AI. No backend change.
+
+### 3. The demo shows both apps
+- **Mobile (about four minutes):** join and describe the startup in Swahili → investor matches with reasons → profile and fit → Connect, which asks her to verify.
+- **Admin (under a minute):** her verification is approved, while a fake investor flagged high-risk by the AI is rejected with a reason.
+- **Back to mobile:** chat (a scam message carries a warning) → deal → due diligence with the AI pre-check → closed; the money moves through the bank.
+
+Mobile is connected to the real backend first, since it carries most of the story. A recorded backup of the full demo is made the night before.
