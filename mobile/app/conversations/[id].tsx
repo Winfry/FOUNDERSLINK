@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../../src/components/ui';
 import { ScreenLoading } from '../../src/components/layout/ScreenStates';
+import { useToast } from '../../src/components/ui/Toast';
 import { conversationService } from '../../src/services';
 import { colors, spacing } from '../../src/theme/tokens';
 import { useState } from 'react';
@@ -10,14 +11,25 @@ import { useState } from 'react';
 export default function ConversationThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [body, setBody] = useState('');
-  const q = useQuery({ queryKey: ['messages', id], queryFn: () => conversationService.getMessages(String(id)) });
+  // Asked again every few seconds, so a reply shows without leaving the screen.
+  const q = useQuery({
+    queryKey: ['messages', id],
+    queryFn: () => conversationService.getMessages(String(id)),
+    refetchInterval: 3000,
+  });
+
+  const { show } = useToast();
 
   if (q.isLoading) return <ScreenLoading />;
 
   const send = async () => {
     if (!body.trim()) return;
-    await conversationService.sendMessage(String(id), body.trim());
-    setBody('');
+    try {
+      await conversationService.sendMessage(String(id), body.trim());
+      setBody('');
+    } catch (e) {
+      show((e as { message?: string })?.message ?? 'Could not send the message', 'error');
+    }
     q.refetch();
   };
 
@@ -33,7 +45,12 @@ export default function ConversationThreadScreen() {
             {item.kind === 'system' ? null : <Text style={styles.sender}>{item.senderName}</Text>}
             <Text style={styles.body}>{item.body}</Text>
             {item.kind !== 'system' ? (
-              <Button title="Report" variant="ghost" onPress={() => conversationService.reportMessage(item.id, 'Asks for money')} />
+              <Button title="Report" variant="ghost" onPress={() =>
+                  conversationService
+                    .reportMessage(item.id, 'Asks for money')
+                    .then(() => show('Reported to FounderLink', 'success'))
+                    .catch((e: { message?: string }) => show(e?.message ?? 'Could not report', 'error'))
+                } />
             ) : null}
           </View>
         )}

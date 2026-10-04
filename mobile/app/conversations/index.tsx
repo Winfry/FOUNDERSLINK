@@ -7,7 +7,7 @@ import { colors, spacing } from '../../src/theme/tokens';
 
 export default function ConversationsScreen() {
   const router = useRouter();
-  const q = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list() });
+  const q = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list(), refetchInterval: 5000 });
 
   if (q.isLoading) return <ScreenLoading />;
   if (!q.data?.length) return <ScreenEmpty title="No conversations" description="Chat appears after you connect with a member." />;
