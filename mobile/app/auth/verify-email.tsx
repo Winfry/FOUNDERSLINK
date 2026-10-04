@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { AuthScreen } from '../../src/components/layout/AuthScreen';
 import { Button, Input } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';
@@ -14,50 +14,59 @@ import type { z } from 'zod';
 type Form = z.infer<typeof otpSchema>;
 
 export default function VerifyEmailScreen() {
-  const { email } = useLocalSearchParams<{ email: string }>();
   const router = useRouter();
   const { show } = useToast();
-  const setSession = useAuthStore((s) => s.setSession);
-  const { control, handleSubmit, formState: { isSubmitting } } = useForm<Form>({
-    resolver: zodResolver(otpSchema),
-    defaultValues: { otp: '' },
-  });
+  const user = useAuthStore((s) => s.user);
+  const markEmailVerified = useAuthStore((s) => s.markEmailVerified);
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<Form>({ resolver: zodResolver(otpSchema), defaultValues: { otp: '' } });
 
   const onSubmit = async (data: Form) => {
     try {
-      await authService.verifyEmailOtp(String(email), data.otp);
-      await setSession({
-        user: {
-          id: 'u-founder-new',
-          role: 'founder',
-          email: String(email),
-          fullName: 'New Founder',
-          founderOnboardingComplete: false,
-        },
-        tokens: {
-          accessToken: 'mock',
-          refreshToken: 'mock',
-          expiresAt: Date.now() + 3600000,
-        },
-      });
+      await authService.verifyEmailOtp(data.otp);
+      await markEmailVerified();
       show('Email verified', 'success');
       router.replace('/');
     } catch {
-      show('Invalid code. Use 123456 in demo.', 'error');
+      show('That code is not right. Demo code: 123456', 'error');
+    }
+  };
+
+  const resend = async () => {
+    try {
+      await authService.resendEmailCode();
+      show('Code sent again', 'success');
+    } catch {
+      show('Could not resend code', 'error');
     }
   };
 
   return (
-    <AuthScreen title="Verify email" subtitle={`Code sent to ${email}`} onBack={() => router.back()}>
-      <Text style={styles.hint}>Enter the 6-digit OTP (demo: 123456)</Text>
-      <Controller control={control} name="otp" render={({ field, fieldState }) => (
-        <Input label="Verification code" keyboardType="number-pad" maxLength={6} {...field} onChangeText={field.onChange} error={fieldState.error?.message} />
-      )} />
-      <Button title="Verify" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+    <AuthScreen title="Verify email" subtitle={`Code sent to ${user?.email ?? 'your email'}`}>
+      <Text style={styles.hint}>You can keep exploring the app. Verification to connect needs a verified email.</Text>
+      <Controller
+        control={control}
+        name="otp"
+        render={({ field, fieldState }) => (
+          <Input label="Verification code" keyboardType="number-pad" maxLength={6} value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} />
+        )}
+      />
+      <Button title="Verify email" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+      <Pressable onPress={() => void resend()} style={styles.link}>
+        <Text style={styles.linkText}>Resend code</Text>
+      </Pressable>
+      <Pressable onPress={() => router.replace('/')} style={styles.link}>
+        <Text style={styles.linkText}>Continue exploring</Text>
+      </Pressable>
     </AuthScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  hint: { color: colors.textMuted, marginBottom: spacing[2] },
+  hint: { color: colors.textMuted, marginBottom: spacing[2], lineHeight: 20 },
+  link: { marginTop: spacing[2], minHeight: 44, justifyContent: 'center' },
+  linkText: { textAlign: 'center', color: colors.primary, fontWeight: '600' },
 });

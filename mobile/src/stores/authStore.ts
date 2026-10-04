@@ -1,9 +1,10 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../lib/secure-storage';
 import { create } from 'zustand';
-import type { AuthTokens, SessionUser } from '../types';
+import type { AuthTokens, SessionUser, SignupInput } from '../types';
 import { authService } from '../services';
+import { setMockSessionUserId } from '../services/mocks/mock-session';
 
-const SESSION_KEY = 'founderlink_session';
+const SESSION_KEY = 'founderlink_session_v2';
 
 interface StoredSession {
   user: SessionUser;
@@ -15,12 +16,14 @@ interface AuthState {
   tokens: AuthTokens | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  login: (identifier: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (input: SignupInput) => Promise<void>;
   logout: () => Promise<void>;
   setSession: (session: StoredSession) => Promise<void>;
-  clearMustChangePassword: () => Promise<void>;
+  patchUser: (patch: Partial<SessionUser>) => Promise<void>;
   markFounderOnboardingComplete: () => Promise<void>;
   markInvestorOnboardingComplete: () => Promise<void>;
+  markEmailVerified: () => Promise<void>;
   checkTokenExpiry: () => Promise<boolean>;
 }
 
@@ -44,51 +47,61 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const parsed = JSON.parse(raw) as StoredSession;
         if (parsed.tokens.expiresAt < Date.now()) {
           await persistSession(null);
+          setMockSessionUserId(null);
           set({ user: null, tokens: null, hydrated: true });
           return;
         }
+        setMockSessionUserId(parsed.user.id);
         set({ user: parsed.user, tokens: parsed.tokens, hydrated: true });
         return;
       }
     } catch {
       /* ignore corrupt session */
     }
+    setMockSessionUserId(null);
     set({ hydrated: true });
   },
 
   async setSession(session) {
+    setMockSessionUserId(session.user.id);
     await persistSession(session);
     set({ user: session.user, tokens: session.tokens });
   },
 
-  async login(identifier, password) {
-    const { user, tokens } = await authService.login({ identifier, password });
+  async login(email, password) {
+    const { user, tokens } = await authService.login({ email, password });
+    await get().setSession({ user, tokens });
+  },
+
+  async signup(input) {
+    const { user, tokens } = await authService.signup(input);
     await get().setSession({ user, tokens });
   },
 
   async logout() {
     await authService.logout();
     await persistSession(null);
+    setMockSessionUserId(null);
     set({ user: null, tokens: null });
   },
 
-  async clearMustChangePassword() {
+  async patchUser(patch) {
     const { user, tokens } = get();
     if (!user || !tokens) return;
-    const updated = { ...user, mustChangePassword: false };
+    const updated = { ...user, ...patch };
     await get().setSession({ user: updated, tokens });
   },
 
   async markFounderOnboardingComplete() {
-    const { user, tokens } = get();
-    if (!user || !tokens) return;
-    await get().setSession({ user: { ...user, founderOnboardingComplete: true }, tokens });
+    await get().patchUser({ founderOnboardingComplete: true });
   },
 
   async markInvestorOnboardingComplete() {
-    const { user, tokens } = get();
-    if (!user || !tokens) return;
-    await get().setSession({ user: { ...user, investorOnboardingComplete: true }, tokens });
+    await get().patchUser({ investorOnboardingComplete: true });
+  },
+
+  async markEmailVerified() {
+    await get().patchUser({ emailVerified: true });
   },
 
   async checkTokenExpiry() {

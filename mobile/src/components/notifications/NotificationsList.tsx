@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { SectionList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Badge } from '../ui/Badge';
+import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Button } from '../ui/Button';
 import { ScreenEmpty, ScreenLoading } from '../layout/ScreenStates';
 import { notificationService } from '../../services';
 import type { AppNotification } from '../../types';
@@ -23,38 +23,47 @@ export function NotificationsList() {
   const q = useQuery({ queryKey: ['notifications'], queryFn: () => notificationService.list() });
 
   if (q.isLoading) return <ScreenLoading />;
-  if (!q.data?.length) return <ScreenEmpty title="No notifications" description="Alerts for requests, finance, and messages appear here." />;
+  const notifications = q.data?.notifications ?? [];
+  if (!notifications.length) {
+    return <ScreenEmpty title="No notifications" description="Alerts for join requests, verification, and messages appear here." />;
+  }
 
-  const sections = groupNotifications(q.data);
+  const sections = groupNotifications(notifications);
 
   const open = async (n: AppNotification) => {
     await notificationService.markRead(n.id);
     qc.invalidateQueries({ queryKey: ['notifications'] });
-    if (n.route) router.push(n.route as never);
+    qc.invalidateQueries({ queryKey: ['notifications-badge'] });
+    if (n.link) router.push(n.link as never);
   };
 
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(n) => n.id}
-      contentContainerStyle={styles.list}
-      renderSectionHeader={({ section }) => <Text style={styles.section}>{section.title}</Text>}
-      renderItem={({ item }) => (
-        <Pressable style={styles.row} onPress={() => open(item)}>
-          {!item.read ? <View style={styles.dot} /> : null}
-          <View style={styles.body}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.sub}>{item.body}</Text>
-            <Badge label={item.category.replace(/_/g, ' ')} variant="muted" />
-          </View>
-        </Pressable>
-      )}
-    />
+    <>
+      <View style={styles.toolbar}>
+        <Button title="Mark all read" variant="ghost" onPress={() => notificationService.markAllRead().then(() => qc.invalidateQueries({ queryKey: ['notifications'] }))} />
+      </View>
+      <SectionList
+        sections={sections}
+        keyExtractor={(n) => n.id}
+        contentContainerStyle={styles.list}
+        renderSectionHeader={({ section }) => <Text style={styles.section}>{section.title}</Text>}
+        renderItem={({ item }) => (
+          <Pressable style={styles.row} onPress={() => void open(item)}>
+            {!item.read ? <View style={styles.dot} /> : null}
+            <View style={styles.body}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.sub}>{item.body}</Text>
+            </View>
+          </Pressable>
+        )}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing[2], paddingTop: spacing[6] },
+  toolbar: { paddingHorizontal: spacing[2], paddingTop: spacing[2] },
+  list: { padding: spacing[2], paddingBottom: spacing[6] },
   section: { fontWeight: '700', color: colors.text, marginVertical: spacing[1] },
   row: { flexDirection: 'row', gap: spacing[2], paddingVertical: spacing[2], borderBottomWidth: 1, borderBottomColor: colors.border },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 6 },

@@ -1,15 +1,18 @@
 "use client";
 
 import * as React from "react";
+import type { AdminNavCounts } from "@/types";
 import type { AdminSession } from "@/lib/auth/session";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 
 export function DashboardShell({
   session,
+  navCounts,
   children,
 }: {
   session: AdminSession;
+  navCounts: AdminNavCounts;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -17,7 +20,7 @@ export function DashboardShell({
   return (
     <div className="flex min-h-screen bg-white">
       <div className="hidden shrink-0 lg:block">
-        <Sidebar role={session.role} />
+        <Sidebar navCounts={navCounts} />
       </div>
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -28,7 +31,7 @@ export function DashboardShell({
             onClick={() => setMobileOpen(false)}
           />
           <div className="relative z-10 h-full w-64 shadow-lg">
-            <Sidebar role={session.role} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar navCounts={navCounts} onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>
       ) : null}

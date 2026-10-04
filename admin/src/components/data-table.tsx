@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { flexRender, type RowData } from "@tanstack/react-table";
 import {
   getCoreRowModel,
@@ -23,6 +24,7 @@ interface DataTableProps<T extends RowData> {
   onPageChange?: (page: number) => void;
   emptyMessage?: string;
   className?: string;
+  getRowHref?: (row: T) => string;
 }
 
 export function DataTable<T extends RowData>({
@@ -37,7 +39,9 @@ export function DataTable<T extends RowData>({
   onPageChange,
   emptyMessage = "No results found.",
   className,
+  getRowHref,
 }: DataTableProps<T>) {
+  const router = useRouter();
   const [search, setSearch] = React.useState("");
   const table = useLegacyTable({
     data,
@@ -97,15 +101,33 @@ export function DataTable<T extends RowData>({
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b border-border last:border-0 hover:bg-slate-50/80">
+              table.getRowModel().rows.map((row) => {
+                const href = getRowHref?.(row.original);
+                return (
+                <tr
+                  key={row.id}
+                  className={cn(
+                    "border-b border-border last:border-0 hover:bg-slate-50/80",
+                    href && "cursor-pointer",
+                  )}
+                  onClick={
+                    href
+                      ? (e) => {
+                          const target = e.target as HTMLElement;
+                          if (target.closest("a, button")) return;
+                          router.push(href);
+                        }
+                      : undefined
+                  }
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 text-foreground">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
                 </tr>
-              ))
+              );
+              })
             )}
           </tbody>
         </table>

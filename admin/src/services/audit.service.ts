@@ -1,14 +1,21 @@
 import type { AuditEntry, PaginatedParams, PaginatedResult } from "@/types";
-import { auditLog } from "./mock-data";
+import { listAuditLog } from "./admin-mock-store";
 import { delay, paginate } from "./pagination";
 
-function filterAudit(e: AuditEntry, search: string): boolean {
-  const haystack = `${e.actor} ${e.action} ${e.resource}`.toLowerCase();
-  if (search && !haystack.includes(search)) return false;
-  return true;
-}
-
-export async function listAuditLog(params: PaginatedParams = {}): Promise<PaginatedResult<AuditEntry>> {
+export async function fetchAuditLog(params: PaginatedParams = {}): Promise<PaginatedResult<AuditEntry>> {
   await delay();
-  return paginate(auditLog, params, (e, s) => filterAudit(e, s));
+  const items = listAuditLog();
+  return paginate(items, params, (entry, search, actionType) => {
+    if (actionType && actionType !== "all" && !entry.action.toLowerCase().includes(actionType.toLowerCase())) {
+      return false;
+    }
+    const from = params.dateFrom ? new Date(params.dateFrom).getTime() : null;
+    const to = params.dateTo ? new Date(params.dateTo).getTime() : null;
+    const at = new Date(entry.createdAt).getTime();
+    if (from && at < from) return false;
+    if (to && at > to) return false;
+    if (!search) return true;
+    const hay = `${entry.action} ${entry.targetMember} ${entry.reason}`.toLowerCase();
+    return hay.includes(search);
+  });
 }

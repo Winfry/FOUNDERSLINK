@@ -1,14 +1,15 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "ghost" | "destructive";
+type Variant = "primary" | "secondary" | "ghost" | "destructive" | "success";
 
 const variants: Record<Variant, string> = {
   primary: "bg-primary text-white hover:bg-primary-dark disabled:opacity-50",
   secondary:
     "bg-white text-foreground border border-border hover:bg-primary-light disabled:opacity-50",
   ghost: "bg-transparent text-primary hover:bg-primary-light",
-  destructive: "bg-destructive text-white hover:opacity-90",
+  destructive: "bg-destructive text-white hover:opacity-90 disabled:opacity-50",
+  success: "bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50",
 };
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

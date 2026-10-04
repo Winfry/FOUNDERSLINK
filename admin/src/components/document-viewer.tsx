@@ -4,25 +4,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface DocumentViewerProps {
   title?: string;
   fileName?: string;
+  mimeType?: string;
+  previewUrl?: string;
 }
 
 export function DocumentViewer({
   title = "Document preview",
   fileName = "document.pdf",
+  mimeType,
+  previewUrl,
 }: DocumentViewerProps) {
+  const isImage = mimeType?.startsWith("image/") ?? false;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex min-h-[240px] flex-col items-center justify-center rounded-card border border-dashed border-border bg-slate-50 p-8 text-center">
-          <FileText className="mb-3 h-10 w-10 text-muted" aria-hidden />
-          <p className="text-sm font-medium text-foreground">{fileName}</p>
-          <p className="mt-2 max-w-xs text-xs text-muted">
-            Preview placeholder — connect storage/CDN in production to render PDFs and images.
-          </p>
-        </div>
+        {isImage && previewUrl ? (
+          <div className="overflow-hidden rounded-md border border-border bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewUrl} alt={fileName} className="max-h-[480px] w-full object-contain" />
+          </div>
+        ) : (
+          <div className="flex min-h-[240px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-[#EFF6FF] p-8 text-center">
+            <FileText className="mb-3 h-10 w-10 text-[#1D4ED8]" aria-hidden />
+            <p className="text-sm font-medium text-foreground">{fileName}</p>
+            <p className="mt-2 max-w-xs text-xs text-muted">
+              PDF preview placeholder{previewUrl ? ` — ${previewUrl}` : ""}.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

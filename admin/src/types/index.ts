@@ -1,133 +1,127 @@
-export type AdminRole = "super_admin" | "reviewer" | "support";
+export type MemberRole = "founder" | "investor" | "expert";
 
-export type ApplicationStatus = "pending" | "under_review" | "approved" | "rejected";
-export type DocumentStatus = "pending" | "verified" | "rejected";
-export type WithdrawalStatus = "pending" | "processing" | "completed" | "failed";
-export type FounderStatus = "active" | "suspended" | "pending_kyc";
-export type InvestorStatus = "active" | "suspended" | "pending_verification";
-export type GroupStatus = "active" | "closed" | "forming";
+export type ApprovalStatus =
+  | "draft"
+  | "submitted"
+  | "in_review"
+  | "needs_info"
+  | "approved"
+  | "rejected"
+  | "suspended";
 
-export interface AdminUser {
+export type RiskLevel = "low" | "medium" | "high";
+
+export type DealStage =
+  | "exploring"
+  | "due_diligence"
+  | "terms_agreed"
+  | "documents_compliance"
+  | "closed"
+  | "active";
+
+export type DealType =
+  | "cofounder_partnership"
+  | "investment"
+  | "expert_engagement"
+  | "joint_venture";
+
+export type ChamaType = "money" | "learning";
+
+export type ComplianceSourceStatus = "current" | "due" | "out_of_date";
+
+export type DocumentAdminStatus = "uploaded" | "confirmed" | "rejected";
+
+export interface RiskSignal {
   id: string;
-  name: string;
-  email: string;
-  role: AdminRole;
-  lastLogin: string | null;
-  status: "active" | "disabled";
+  text: string;
+  explanation: string;
 }
 
-export interface Founder {
+export interface VettingCheck {
   id: string;
+  checkType: string;
+  result: "passed" | "failed";
+  method: "manual" | "provider";
+  recordedAt: string;
+}
+
+export interface VettingDecisionRecord {
+  id: string;
+  decision: "approved" | "rejected" | "needs_info" | "suspended" | "reinstated";
+  reason: string;
+  decidedAt: string;
+  checks?: VettingCheck[];
+}
+
+export interface VerificationReference {
   name: string;
-  email: string;
+  relationship: string;
   phone: string;
-  county: string;
-  businessName: string;
-  sector: string;
-  status: FounderStatus;
+}
+
+export interface VerificationQueueItem {
+  id: string;
+  memberId: string;
+  fullName: string;
+  email: string;
+  role: MemberRole;
+  riskLevel: RiskLevel;
+  topRiskSignal: string | null;
+  submittedAt: string;
+  approvalStatus: ApprovalStatus;
+}
+
+export interface VerificationDetail {
+  id: string;
+  memberId: string;
+  fullName: string;
+  email: string;
+  role: MemberRole;
+  phone: string | null;
+  statement: string | null;
+  organisationName: string | null;
+  website: string | null;
+  references: VerificationReference[];
+  professionalRegister: string | null;
+  registerNumber: string | null;
+  riskLevel: RiskLevel;
+  riskSignals: RiskSignal[];
+  approvalStatus: ApprovalStatus;
+  submittedAt: string;
+  decisions: VettingDecisionRecord[];
+  checks: VettingCheck[];
+}
+
+export interface MemberListItem {
+  id: string;
+  fullName: string;
+  email: string;
+  role: MemberRole;
+  organisationOrBusiness: string | null;
+  memberStatus: "active" | "suspended";
   joinedAt: string;
-  groupsCount: number;
+  approvalStatus: ApprovalStatus;
 }
 
-export interface ApplicationDocument {
+export interface ConsentRecord {
+  purpose: "profile_visibility" | "ai_matching" | "contact" | "document_processing";
+  label: string;
+  granted: boolean;
+  updatedAt: string | null;
+}
+
+export interface MemberReportSummary {
   id: string;
-  name: string;
-  mimeType?: string;
-  status?: DocumentStatus;
+  reason: string;
+  reportedAt: string;
+  status: "open" | "handled";
 }
 
-export interface InvestorApplication {
+export interface MemberTimelineEvent {
   id: string;
-  applicantName: string;
-  email: string;
-  phone: string;
-  county: string;
-  organization: string;
-  ticketSizeKes: number;
-  status: ApplicationStatus;
-  submittedAt: string;
-  rejectionReason?: string;
-  payload: Record<string, unknown>;
-  documents: ApplicationDocument[];
-}
-
-export interface FounderApplication {
-  id: string;
-  applicantName: string;
-  email: string;
-  phone: string;
-  businessName: string;
-  sector: string;
-  county: string;
-  stage: string;
-  fundingTargetKes: number;
-  status: ApplicationStatus;
-  submittedAt: string;
-  rejectionReason?: string;
-  payload: Record<string, unknown>;
-  documents: ApplicationDocument[];
-}
-
-export interface Investor {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  county: string;
-  organization: string;
-  status: InvestorStatus;
-  totalInvestedKes: number;
-  activeDeals: number;
-  verifiedAt: string;
-}
-
-export interface InvestmentGroup {
-  id: string;
-  name: string;
-  founderName: string;
-  county: string;
-  targetKes: number;
-  raisedKes: number;
-  memberCount: number;
-  status: GroupStatus;
-  createdAt: string;
-}
-
-export interface Withdrawal {
-  id: string;
-  founderName: string;
-  amountKes: number;
-  mpesaNumber: string;
-  status: WithdrawalStatus;
-  requestedAt: string;
-  reference: string;
-}
-
-export interface PlatformTransaction {
-  id: string;
-  groupName: string;
-  type: "deposit" | "withdrawal";
-  memberName: string;
-  amountKes: number;
-  reference: string;
-  completedAt: string;
-}
-
-export interface AuditEntry {
-  id: string;
-  actor: string;
-  action: string;
-  resource: string;
-  ipAddress: string;
-  createdAt: string;
-}
-
-export interface DashboardStats {
-  totalFounders: number;
-  pendingApplications: number;
-  activeInvestors: number;
-  pendingWithdrawals: number;
-  monthlyVolumeKes: number;
+  title: string;
+  description?: string;
+  at: string;
 }
 
 export interface TimelineEvent {
@@ -138,11 +132,179 @@ export interface TimelineEvent {
   actor?: string;
 }
 
+export interface MemberDetail {
+  id: string;
+  fullName: string;
+  email: string;
+  role: MemberRole;
+  phone: string | null;
+  county: string | null;
+  organisationOrBusiness: string | null;
+  memberStatus: "active" | "suspended";
+  joinedAt: string;
+  approvalStatus: ApprovalStatus;
+  verificationSummary: string | null;
+  consents: ConsentRecord[];
+  reportsAgainst: MemberReportSummary[];
+  timeline: MemberTimelineEvent[];
+}
+
+export interface PrecheckFlag {
+  label: string;
+  passed: boolean;
+  detail: string;
+}
+
+export interface DealDocumentItem {
+  id: string;
+  partyMemberId: string;
+  partyName: string;
+  fileName: string;
+  mimeType: string;
+  previewUrl: string;
+  aiPrechecked: boolean;
+  precheckFlags: PrecheckFlag[];
+  adminStatus: DocumentAdminStatus;
+  rejectionReason: string | null;
+}
+
+export interface DueDiligencePartySummary {
+  memberId: string;
+  name: string;
+  role: MemberRole;
+  verifiedCount: number;
+  selfReportedCount: number;
+  missingCount: number;
+}
+
+export interface DealReviewListItem {
+  id: string;
+  title: string;
+  dealType: DealType;
+  stage: DealStage;
+  parties: string[];
+  documentsWaiting: number;
+}
+
+export interface DealReviewDetail {
+  id: string;
+  title: string;
+  dealType: DealType;
+  stage: DealStage;
+  terms: {
+    amountKes: number | null;
+    instrument: string | null;
+    equityPercent: number | null;
+    notes: string | null;
+  };
+  documents: DealDocumentItem[];
+  partySummaries: DueDiligencePartySummary[];
+}
+
+export interface ReportedMessageRow {
+  id: string;
+  reporterName: string;
+  reportedMemberName: string;
+  reason: string;
+  reportedAt: string;
+  messageText: string;
+  aiWarning: boolean;
+  status: "open" | "handled";
+}
+
+export interface ReportedMemberRow {
+  id: string;
+  reporterName: string;
+  reportedMemberName: string;
+  reportedMemberId: string;
+  reason: string;
+  reportedAt: string;
+  aiWarning: boolean;
+  status: "open" | "handled";
+}
+
+export interface RecheckListItem {
+  id: string;
+  memberId: string;
+  fullName: string;
+  role: MemberRole;
+  lastCheckedAt: string;
+  dueReason: string;
+}
+
+export interface ComplianceSourceRow {
+  id: string;
+  name: string;
+  covers: string;
+  lastUpdatedAt: string;
+  status: ComplianceSourceStatus;
+  lastReviewedAt: string | null;
+  reviewNote: string | null;
+}
+
+export interface ChamaListItem {
+  id: string;
+  name: string;
+  type: ChamaType;
+  memberCount: number;
+  organiserName: string;
+  createdAt: string;
+}
+
+export interface ChamaMemberRow {
+  memberId: string;
+  name: string;
+  role: "organiser" | "treasurer" | "member";
+}
+
+export interface ChamaDetail {
+  id: string;
+  name: string;
+  type: ChamaType;
+  organiserName: string;
+  createdAt: string;
+  members: ChamaMemberRow[];
+  contributionCount: number;
+  goalCount: number;
+}
+
+export interface AuditEntry {
+  id: string;
+  createdAt: string;
+  action: string;
+  targetMember: string;
+  reason: string;
+}
+
+export interface AdminNavCounts {
+  verificationWaiting: number;
+  dealReviews: number;
+  openReports: number;
+  rechecksDue: number;
+}
+
+export interface AdminStats {
+  foundersCount: number;
+  investorsCount: number;
+  expertsCount: number;
+  membersByStatus: { status: ApprovalStatus; count: number }[];
+  verificationsWaiting: number;
+  rechecksDue: number;
+  openReports: number;
+  dealsByStage: { stage: DealStage; count: number }[];
+  chamasCount: number;
+  registrationsByMonth: { month: string; count: number }[];
+}
+
 export interface PaginatedParams {
   page?: number;
   pageSize?: number;
   search?: string;
   status?: string;
+  role?: string;
+  actionType?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -150,4 +312,9 @@ export interface PaginatedResult<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface AdminSettingsState {
+  twoFactorEnabled: boolean;
+  twoFactorSecret: string;
 }

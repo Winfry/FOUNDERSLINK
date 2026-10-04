@@ -1,135 +1,93 @@
-import type { AuthService, LoginCredentials, FounderSignupInput } from '../types/api';
-import { normalizeEmail, resolveLogin } from '../../lib/application-store';
+import type { AuthService } from '../types/api';
+import type { SessionUser, SignupInput } from '../../types';
 import { mockDelay } from './delay';
-
-const DEMO_FOUNDER = {
-  id: 'u-founder-1',
-  role: 'founder' as const,
-  email: 'wanjiku@maziwafresh.co.ke',
-  fullName: 'Wanjiku Mwangi',
-  phone: '+254712345678',
-  userId: 'FL-FND-10001',
-  founderOnboardingComplete: true,
-};
-
-const DEMO_INVESTOR = {
-  id: 'u-investor-1',
-  role: 'investor' as const,
-  email: 'james.kariuki@example.com',
-  fullName: 'James Kariuki',
-  userId: 'FL-INV-20482',
-  mustChangePassword: false,
-  investorOnboardingComplete: true,
-};
+import { getMemberByEmail, upsertMember, type MockMemberState } from './mock-store';
 
 function tokensFor(userId: string) {
   return {
-    accessToken: `mock-access-${userId}`,
-    refreshToken: `mock-refresh-${userId}`,
-    expiresAt: Date.now() + 60 * 60 * 1000,
+    accessToken: `mock-${userId}`,
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
   };
 }
 
+function sessionFrom(state: MockMemberState): SessionUser {
+  return { ...state.user };
+}
+
+let pendingEmailCodeFor: string | null = null;
+
 export const mockAuthService: AuthService = {
-  async login({ identifier, password }: LoginCredentials) {
+  async login({ email, password }) {
     await mockDelay();
-    const id = identifier.toLowerCase().trim();
-    if (password.length < 6) {
-      throw { code: 'INVALID_CREDENTIALS', message: 'Invalid email, User ID, or password.' };
+    const member = getMemberByEmail(email);
+    if (!member || password.length < 8 || member.password !== password) {
+      throw { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' };
     }
-
-    const fromStore = resolveLogin(identifier, password);
-    if (fromStore) {
-      const onboardingDone = !fromStore.mustChangePassword;
-      return {
-        user: {
-          id: `u-${fromStore.role}-${fromStore.userId}`,
-          role: fromStore.role,
-          email: fromStore.email,
-          fullName: fromStore.fullName,
-          userId: fromStore.userId,
-          mustChangePassword: fromStore.mustChangePassword,
-          founderOnboardingComplete: fromStore.role === 'founder' ? onboardingDone : undefined,
-          investorOnboardingComplete: fromStore.role === 'investor' ? onboardingDone : undefined,
-        },
-        tokens: tokensFor(fromStore.userId),
-      };
-    }
-
-    if (id === 'fl-inv-20482' || id === 'fl-inv-20481' || (id.includes('investor') && !id.includes('@'))) {
-      const mustChange = password === 'TempPass2026!';
-      return {
-        user: { ...DEMO_INVESTOR, mustChangePassword: mustChange },
-        tokens: tokensFor(DEMO_INVESTOR.id),
-      };
-    }
-    if (id.includes('founder') || id === demoEmail(DEMO_FOUNDER.email)) {
-      if (password === 'TempPass2026!') {
-        return {
-          user: { ...DEMO_FOUNDER, mustChangePassword: true, founderOnboardingComplete: false },
-          tokens: tokensFor(DEMO_FOUNDER.userId),
-        };
-      }
-      return { user: DEMO_FOUNDER, tokens: tokensFor(DEMO_FOUNDER.id) };
-    }
-    if (id.includes('@')) {
-      return { user: DEMO_FOUNDER, tokens: tokensFor(DEMO_FOUNDER.id) };
-    }
-    throw { code: 'INVALID_CREDENTIALS', message: 'Invalid email, User ID, or password.' };
+    return { user: sessionFrom(member), tokens: tokensFor(member.user.id) };
   },
 
-  async signupFounder(input: FounderSignupInput) {
+  async signup(input: SignupInput) {
     await mockDelay(600);
-    throw {
-      code: 'USE_APPLICATION',
-      message: 'Founders must apply via the founder application. Approval is required before login.',
+    if (!input.acceptTerms) {
+      throw { code: 'VALIDATION_ERROR', message: 'Accept the Terms and Privacy Policy.' };
+    }
+    if (getMemberByEmail(input.email)) {
+      throw { code: 'EMAIL_IN_USE', message: 'An account already exists for this email.' };
+    }
+    const user: SessionUser = {
+      id: `u-${Date.now()}`,
+      role: input.role,
+      email: input.email.trim().toLowerCase(),
+      fullName: input.fullName,
+      emailVerified: false,
+      approvalStatus: 'draft',
+      preferredLanguage: 'en',
+      founderOnboardingComplete: false,
+      investorOnboardingComplete: input.role !== 'founder',
     };
-  },
-
-  async verifyEmailOtp(_email, otp) {
-    await mockDelay();
-    if (otp !== '123456') throw { code: 'OTP', message: 'Invalid verification code.' };
-  },
-
-  async requestPasswordReset() {
-    await mockDelay();
-  },
-
-  async verifyResetOtp() {
-    await mockDelay();
-  },
-
-  async resetPassword() {
-    await mockDelay();
-  },
-
-  async setNewPassword(_userId, tempPassword, newPassword) {
-    await mockDelay();
-    if (newPassword === tempPassword) {
-      throw { code: 'PASSWORD_REUSE', message: 'Cannot reuse your temporary password.' };
-    }
-    if (newPassword.length < 8) {
-      throw { code: 'WEAK_PASSWORD', message: 'Password does not meet requirements.' };
-    }
-  },
-
-  async refreshSession(refreshToken) {
-    await mockDelay(200);
-    return {
-      user: DEMO_FOUNDER,
-      tokens: {
-        accessToken: refreshToken.replace('refresh', 'access'),
-        refreshToken,
-        expiresAt: Date.now() + 60 * 60 * 1000,
+    const state: MockMemberState = {
+      user,
+      password: input.password,
+      founderProfile: null,
+      consents: { profile_visibility: false, ai_matching: false, contact: false },
+      vetting: { approvalStatus: 'draft' },
+      matches: {
+        applyNow: [],
+        applyAfter: [],
+        notForYou: [],
       },
+      deals: [],
     };
+    upsertMember(state);
+    pendingEmailCodeFor = user.email;
+    return { user, tokens: tokensFor(user.id) };
+  },
+
+  async verifyEmailOtp(code) {
+    await mockDelay();
+    if (code !== '123456') throw { code: 'WRONG_CODE', message: 'That code is not right.' };
+    pendingEmailCodeFor = null;
+  },
+
+  async resendEmailCode() {
+    await mockDelay(300);
+  },
+
+  async requestPasswordReset(email) {
+    await mockDelay();
+    void email;
+  },
+
+  async resetPassword(email, code, newPassword) {
+    await mockDelay();
+    if (code !== '123456') throw { code: 'WRONG_CODE', message: 'That code is not right.' };
+    const member = getMemberByEmail(email);
+    if (!member) throw { code: 'NOT_FOUND', message: 'No account for this email.' };
+    member.password = newPassword;
+    upsertMember(member);
   },
 
   async logout() {
     await mockDelay(100);
   },
 };
-
-function demoEmail(email: string) {
-  return normalizeEmail(email);
-}

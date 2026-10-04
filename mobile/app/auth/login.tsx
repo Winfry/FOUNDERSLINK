@@ -6,7 +6,7 @@ import { AuthScreen } from '../../src/components/layout/AuthScreen';
 import { Button, Input, PasswordInput } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';
 import { loginSchema } from '../../src/lib/auth-schemas';
-import { MOBILE_TEST_CREDENTIALS } from '../../src/services/mocks/demo-seed';
+import { listDemoAccounts, DEMO_PASSWORD } from '../../src/services/mocks/mock-store';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing } from '../../src/theme/tokens';
 import type { z } from 'zod';
@@ -21,61 +21,46 @@ export default function LoginScreen() {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<Form>({ resolver: zodResolver(loginSchema), defaultValues: { identifier: '', password: '' } });
+  } = useForm<Form>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } });
 
   const onSubmit = async (data: Form) => {
     try {
-      await login(data.identifier, data.password);
+      await login(data.email, data.password);
       router.replace('/');
     } catch (e: unknown) {
-      const msg = (e as { message?: string })?.message ?? 'Login failed';
-      show(msg, 'error');
+      show((e as { message?: string })?.message ?? 'Login failed', 'error');
     }
   };
 
   return (
-    <AuthScreen title="Log in" subtitle="Use email or Investor User ID" onBack={() => router.back()}>
+    <AuthScreen title="Log in" subtitle="Email and password" onBack={() => router.back()}>
       <Controller
         control={control}
-        name="identifier"
+        name="email"
         render={({ field: { onChange, onBlur, value } }) => (
-          <Input
-            label="Email or User ID"
-            autoCapitalize="none"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={errors.identifier?.message}
-          />
+          <Input label="Email" autoCapitalize="none" keyboardType="email-address" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.email?.message} />
         )}
       />
       <Controller
         control={control}
         name="password"
         render={({ field: { onChange, onBlur, value } }) => (
-          <PasswordInput
-            label="Password"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={errors.password?.message}
-          />
+          <PasswordInput label="Password" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.password?.message} />
         )}
       />
       <Pressable onPress={() => router.push('/auth/forgot-password')} style={styles.forgot}>
         <Text style={styles.forgotText}>Forgot password?</Text>
       </Pressable>
       <Button title="Log in" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
-      <Text style={styles.hint}>
-        First login after approval: use your User ID and temporary password, then set a new password.
-      </Text>
-      <Text style={styles.hint}>
-        QA — Founder: {MOBILE_TEST_CREDENTIALS.founder.identifier} / {MOBILE_TEST_CREDENTIALS.founder.password}. Investor:{' '}
-        {MOBILE_TEST_CREDENTIALS.investor.identifier} / {MOBILE_TEST_CREDENTIALS.investor.password}.
-      </Text>
-      <Link href="/founder-application" asChild>
+      <Text style={styles.hint}>Demo password for all QA accounts: {DEMO_PASSWORD}</Text>
+      {listDemoAccounts().map((a) => (
+        <Text key={a.email} style={styles.hint}>
+          {a.label}: {a.email}
+        </Text>
+      ))}
+      <Link href="/auth/signup" asChild>
         <Pressable style={styles.link}>
-          <Text style={styles.linkText}>Founder? Apply to join</Text>
+          <Text style={styles.linkText}>Create account</Text>
         </Pressable>
       </Link>
     </AuthScreen>
@@ -85,8 +70,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   forgot: { alignSelf: 'flex-end', marginBottom: spacing[2], minHeight: 44, justifyContent: 'center' },
   forgotText: { color: colors.primary, fontWeight: '600' },
-  hint: { marginTop: spacing[2], fontSize: 12, color: colors.textMuted, lineHeight: 18 },
-  bold: { fontWeight: '700', color: colors.text },
+  hint: { marginTop: spacing[1], fontSize: 12, color: colors.textMuted, lineHeight: 18 },
   link: { marginTop: spacing[3], minHeight: 44, justifyContent: 'center' },
   linkText: { textAlign: 'center', color: colors.primary, fontWeight: '600' },
 });

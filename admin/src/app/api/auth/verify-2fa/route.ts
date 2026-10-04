@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   MOCK_2FA_CODE,
-  MOCK_ADMIN_ACCOUNTS,
+  MOCK_ADMIN_ACCOUNT,
   PENDING_2FA_COOKIE,
   SESSION_COOKIE,
 } from "@/lib/auth/config";
@@ -27,20 +27,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid verification code" }, { status: 401 });
   }
 
-  const account = MOCK_ADMIN_ACCOUNTS.find((a) => a.id === pending.userId);
-  if (!account) {
+  if (pending.userId !== MOCK_ADMIN_ACCOUNT.id) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   const session: AdminSession = {
-    userId: account.id,
-    email: account.email,
-    name: account.name,
-    role: account.role,
+    userId: MOCK_ADMIN_ACCOUNT.id,
+    email: MOCK_ADMIN_ACCOUNT.email,
+    name: MOCK_ADMIN_ACCOUNT.name,
     mfaVerified: true,
   };
 
-  const res = NextResponse.json({ ok: true, role: account.role });
+  const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, JSON.stringify(session), {
     httpOnly: true,
     sameSite: "lax",

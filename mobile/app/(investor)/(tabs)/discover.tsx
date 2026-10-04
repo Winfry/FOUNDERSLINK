@@ -40,7 +40,7 @@ export default function DiscoverScreen() {
             <Card style={styles.card}>
               <Text style={styles.name}>{item.businessName}</Text>
               <Text style={styles.meta}>{item.sector} · {item.stage} · {item.county}</Text>
-              <Text style={styles.ask}>Ask: {formatKes(item.fundingAskKes)} · {item.percentRaised}% raised</Text>
+              <Text style={styles.ask}>Ask: {formatKes(item.fundingAskKes)}</Text>
               {item.verifiedDocumentsBadge ? <Badge label="Verified documents" variant="success" /> : null}
               {item.matchReasons.map((r) => (
                 <Text key={r} style={styles.reason}>• {r}</Text>

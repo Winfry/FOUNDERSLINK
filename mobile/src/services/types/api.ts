@@ -1,124 +1,106 @@
 import type {
-  AuthTokens,
-  DiscoverFounderCard,
-  DocumentRecord,
-  FounderProfile,
-  GroupMember,
-  GroupTransaction,
-  InvestorApplicationStatus,
-  InvestorProfile,
-  InvestorRequest,
-  PlatformFounderPeer,
-  PlatformInvestorCard,
-  JoinRequest,
-  Paginated,
-  ProjectGroup,
-  SessionUser,
-  WithdrawalRequest,
-  ChatMessage,
   AppNotification,
+  AuthTokens,
+  ChatMessage,
+  CircleContribution,
+  CircleDetail,
+  CircleSummary,
+  ComplianceAskAnswer,
+  ComplianceItem,
+  ConnectionJoinRequest,
+  ConsentRecord,
+  ConversationSummary,
+  Deal,
+  FounderProfile,
+  FundingMatches,
+  Paginated,
+  SessionUser,
+  VettingApplication,
+  SignupInput,
 } from '../../types';
 
 export interface LoginCredentials {
-  identifier: string;
-  password: string;
-}
-
-export interface FounderSignupInput {
-  fullName: string;
   email: string;
-  phone: string;
   password: string;
-  acceptTerms: boolean;
 }
 
 export interface AuthService {
   login(credentials: LoginCredentials): Promise<{ user: SessionUser; tokens: AuthTokens }>;
-  signupFounder(input: FounderSignupInput): Promise<{ userId: string }>;
-  verifyEmailOtp(email: string, otp: string): Promise<void>;
-  requestPasswordReset(identifier: string): Promise<void>;
-  verifyResetOtp(identifier: string, otp: string): Promise<void>;
-  resetPassword(identifier: string, otp: string, newPassword: string): Promise<void>;
-  setNewPassword(userId: string, tempPassword: string, newPassword: string): Promise<void>;
-  refreshSession(refreshToken: string): Promise<{ user: SessionUser; tokens: AuthTokens }>;
+  signup(input: SignupInput): Promise<{ user: SessionUser; tokens: AuthTokens }>;
+  verifyEmailOtp(code: string): Promise<void>;
+  resendEmailCode(): Promise<void>;
+  requestPasswordReset(email: string): Promise<void>;
+  resetPassword(email: string, code: string, newPassword: string): Promise<void>;
   logout(): Promise<void>;
 }
 
 export interface FounderService {
-  getProfile(): Promise<FounderProfile>;
-  saveOnboardingStep(step: number, data: Record<string, unknown>): Promise<FounderProfile>;
-  getDocuments(): Promise<DocumentRecord[]>;
-  getDashboard(): Promise<{
-    profile: FounderProfile;
-    pendingInvestorRequests: number;
-    documents: DocumentRecord[];
-    platformInvestors: PlatformInvestorCard[];
-    platformFounders: PlatformFounderPeer[];
-  }>;
-  getInvestorRequests(): Promise<InvestorRequest[]>;
-  getPlatformInvestors(): Promise<PlatformInvestorCard[]>;
-  respondToInvestorRequest(id: string, approve: boolean, reason?: string): Promise<void>;
+  getProfile(): Promise<FounderProfile | null>;
+  extractProfileFromText(text: string, language: string): Promise<Partial<FounderProfile>>;
+  saveProfile(profile: FounderProfile): Promise<FounderProfile>;
 }
 
-export interface InvestorService {
-  getProfile(): Promise<InvestorProfile>;
-  saveMatchingQuestionnaire(data: Record<string, unknown>): Promise<InvestorProfile>;
-  discover(params: {
-    search?: string;
-    sector?: string;
-    stage?: string;
-    county?: string;
-    projectType?: string;
-    sort?: string;
-  }): Promise<DiscoverFounderCard[]>;
-  getFounderPublicProfile(founderId: string): Promise<Record<string, unknown>>;
-  submitJoinRequest(founderId: string, payload: Record<string, unknown>): Promise<{ id: string }>;
-  getJoinRequests(): Promise<JoinRequest[]>;
-  withdrawJoinRequest(id: string): Promise<void>;
+export interface FundingService {
+  getMatches(): Promise<FundingMatches>;
+  getInvestorProfile(investorUserId: string): Promise<Record<string, unknown>>;
 }
 
-export interface InvestorApplicationService {
-  saveDraft(step: number, data: Record<string, unknown>): Promise<{ draftId: string }>;
-  submit(data: Record<string, unknown>): Promise<{ referenceNumber: string }>;
-  checkStatus(email: string, referenceNumber: string): Promise<{
-    status: InvestorApplicationStatus;
-    reason?: string;
-    message?: string;
-  }>;
+export interface ComplianceService {
+  listItems(): Promise<ComplianceItem[]>;
+  updateItemStatus(itemId: string, status: ComplianceItem['status']): Promise<ComplianceItem>;
+  ask(question: string): Promise<ComplianceAskAnswer>;
 }
 
-export interface GroupService {
-  listGroups(): Promise<ProjectGroup[]>;
-  getGroup(groupId: string): Promise<ProjectGroup & { recentActivity: string[] }>;
-  getMembers(groupId: string): Promise<GroupMember[]>;
-  removeMember(groupId: string, memberId: string): Promise<void>;
-  getTransactions(groupId: string, filters?: Record<string, string>): Promise<GroupTransaction[]>;
-  deposit(groupId: string, amountKes: number): Promise<GroupTransaction>;
-  submitWithdrawal(groupId: string, payload: Record<string, unknown>): Promise<WithdrawalRequest>;
-  getWithdrawal(groupId: string, withdrawalId: string): Promise<WithdrawalRequest>;
-  approveWithdrawal(withdrawalId: string, approve: boolean, reason?: string): Promise<void>;
-  getDocuments(groupId: string): Promise<DocumentRecord[]>;
+export interface ConnectionService {
+  list(): Promise<ConnectionJoinRequest[]>;
+  respond(id: string, accept: boolean, reason?: string): Promise<{ connectionId: string; proposedAmountKes?: number }>;
+  withdraw(id: string): Promise<void>;
 }
 
-export interface ChatService {
-  connect(groupId: string): Promise<void>;
-  disconnect(): Promise<void>;
-  getMessages(groupId: string, cursor?: string): Promise<Paginated<ChatMessage>>;
-  sendMessage(groupId: string, payload: Partial<ChatMessage>): Promise<ChatMessage>;
-  markRead(groupId: string, messageIds: string[]): Promise<void>;
-  onMessage(callback: (msg: ChatMessage) => void): () => void;
-  onTyping(callback: (userId: string, isTyping: boolean) => void): () => void;
-  setTyping(groupId: string, isTyping: boolean): Promise<void>;
+export interface VettingService {
+  getApplication(): Promise<VettingApplication>;
+  saveDraft(data: Partial<VettingApplication>): Promise<VettingApplication>;
+  submit(): Promise<VettingApplication>;
+  verifyPhoneSend(phone: string): Promise<void>;
+  verifyPhoneConfirm(code: string): Promise<void>;
+}
+
+export interface ConsentService {
+  list(): Promise<ConsentRecord[]>;
+  set(purpose: ConsentRecord['purpose'], granted: boolean): Promise<void>;
+}
+
+export interface DealService {
+  list(): Promise<Deal[]>;
+  get(dealId: string): Promise<Deal>;
+  createInvestment(withUserId: string, title: string): Promise<Deal>;
+  updateTerms(dealId: string, terms: Deal['terms']): Promise<Deal>;
+  confirmTerms(dealId: string): Promise<Deal>;
+  advanceStage(dealId: string): Promise<Deal>;
+  uploadDocument(dealId: string, name: string): Promise<Deal>;
+}
+
+export interface CircleService {
+  list(): Promise<CircleSummary[]>;
+  get(circleId: string): Promise<CircleDetail>;
+  recordContribution(circleId: string, payload: { memberUserId: string; amountKes: number; goalId?: string }): Promise<CircleContribution>;
+}
+
+export interface ConversationService {
+  list(): Promise<ConversationSummary[]>;
+  getMessages(conversationId: string, cursor?: string): Promise<Paginated<ChatMessage>>;
+  sendMessage(conversationId: string, body: string): Promise<ChatMessage>;
+  markRead(conversationId: string): Promise<void>;
+  reportMessage(messageId: string, reason: string): Promise<void>;
+  blockMember(userId: string): Promise<void>;
 }
 
 export interface NotificationService {
-  list(): Promise<AppNotification[]>;
+  list(): Promise<{ unreadCount: number; notifications: AppNotification[] }>;
   markRead(id: string): Promise<void>;
   markAllRead(): Promise<void>;
 }
 
 export interface ReferenceDataService {
-  getCounties(): Promise<{ code: string; name: string }[]>;
-  getSectors(): Promise<{ id: string; label: string }[]>;
-  getProjectTypes(): Promise<string[]>;
+  getMetaOptions(): Promise<Record<string, unknown>>;
 }

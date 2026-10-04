@@ -23,21 +23,14 @@ export default function Index() {
     return <Redirect href="/splash" />;
   }
 
-  if (user.mustChangePassword) {
-    return <Redirect href="/auth/set-new-password" />;
-  }
-
   if (user.role === 'founder') {
     if (!user.founderOnboardingComplete) {
       return <Redirect href="/founder/onboarding" />;
     }
-    return <Redirect href="/(founder)/(tabs)/home" />;
+    return <Redirect href="/(founder)/(tabs)/matches" />;
   }
 
   if (user.role === 'investor') {
-    if (!user.investorOnboardingComplete) {
-      return <Redirect href="/investor/onboarding" />;
-    }
     return <Redirect href="/(investor)/(tabs)/discover" />;
   }
 

@@ -1,30 +1,73 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../src/components/ui';
+import { setWelcomeSeen } from '../src/lib/welcome-storage';
 import { colors, spacing } from '../src/theme/tokens';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+
+  const continueToSignup = async () => {
+    await setWelcomeSeen();
+    router.push('/auth/signup');
+  };
+
+  const goLogin = async () => {
+    await setWelcomeSeen();
+    router.push('/auth/login');
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
-      <Text style={styles.title}>Welcome to FounderLink</Text>
-      <Text style={styles.subtitle}>
-        Founders and investors apply, get vetted, then access matching, groups, and finance tools.
+      <Image
+        source={require('../assets/images/handshake.png')}
+        style={styles.hero}
+        resizeMode="cover"
+        accessibilityLabel="Handshake closing a deal"
+      />
+      <Image source={require('../assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
+      <Text style={styles.headline}>Meet investors who fit. Close deals you can trust.</Text>
+      <Text style={styles.sub}>
+        Everyone you talk to has been checked. FounderLink never holds your money.
       </Text>
       <View style={styles.actions}>
-        <Button title="Founder? Apply to join" onPress={() => router.push('/founder-application')} />
-        <Button title="Investor? Apply to join" variant="secondary" onPress={() => router.push('/investor-application')} />
-        <Button title="Log in" variant="ghost" onPress={() => router.push('/auth/login')} />
-        <Button title="Check founder application status" variant="ghost" onPress={() => router.push('/founder-application/status')} />
-        <Button title="Check investor application status" variant="ghost" onPress={() => router.push('/investor-application/status')} />
+        <Button title="Get started" onPress={() => void continueToSignup()} />
+        <Button title="Log in" variant="secondary" onPress={() => void goLogin()} />
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { flexGrow: 1, padding: spacing[3], justifyContent: 'center', backgroundColor: colors.white },
-  title: { fontSize: 28, fontWeight: '700', color: colors.text, marginBottom: spacing[2] },
-  subtitle: { fontSize: 16, color: colors.textMuted, lineHeight: 24, marginBottom: spacing[4] },
+  wrap: {
+    flexGrow: 1,
+    padding: spacing[3],
+    paddingBottom: spacing[6],
+    backgroundColor: colors.white,
+  },
+  hero: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    marginBottom: spacing[3],
+  },
+  logo: {
+    width: 48,
+    height: 48,
+    marginBottom: spacing[2],
+  },
+  headline: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: colors.text,
+    lineHeight: 32,
+    marginBottom: spacing[2],
+  },
+  sub: {
+    fontSize: 16,
+    color: colors.textMuted,
+    lineHeight: 24,
+    marginBottom: spacing[4],
+  },
   actions: { gap: spacing[2] },
 });

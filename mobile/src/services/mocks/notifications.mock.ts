@@ -5,28 +5,27 @@ import { mockDelay } from './delay';
 let notifications: AppNotification[] = [
   {
     id: 'n1',
-    category: 'investor_request',
-    title: 'New investor request',
-    body: 'James Kariuki requested to join your project.',
+    title: 'New join request',
+    body: 'Savanna Angels sent a join request with a proposed amount of KES 1,000,000.',
     read: false,
     createdAt: new Date().toISOString(),
-    route: '/founder/investor-request/ir-1',
+    link: '/(founder)/(tabs)/connections',
   },
   {
     id: 'n2',
-    category: 'withdrawal',
-    title: 'Withdrawal approval needed',
-    body: 'Wanjiku Mwangi requested KES 200,000 — your review is required.',
+    title: 'Verification update',
+    body: 'We are checking your details. You can keep exploring.',
     read: false,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
-    route: '/group/g1/withdrawal/w1',
+    link: '/founder/verify/status',
   },
 ];
 
 export const mockNotificationService: NotificationService = {
   async list() {
     await mockDelay();
-    return [...notifications];
+    const unreadCount = notifications.filter((n) => !n.read).length;
+    return { unreadCount, notifications: [...notifications] };
   },
   async markRead(id) {
     notifications = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));

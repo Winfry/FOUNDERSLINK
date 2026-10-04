@@ -20,10 +20,10 @@ export default function InvestorGroupsTab() {
       data={q.data}
       keyExtractor={(g) => g.id}
       renderItem={({ item }) => (
-        <Pressable onPress={() => router.push(`/group/${item.id}/(tabs)/overview`)}>
+        <Pressable onPress={() => router.push(`/chama/${item.id}`)}>
           <Card>
             <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.meta}>{formatKes(item.balanceKes)}</Text>
+            <Text style={styles.meta}>{item.memberCount} members</Text>
             {item.unreadChatCount > 0 ? <Badge label={`${item.unreadChatCount} unread messages`} variant="warning" /> : null}
           </Card>
         </Pressable>

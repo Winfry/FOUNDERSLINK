@@ -14,8 +14,8 @@ test.describe("Admin application review", () => {
   test("investor application detail shows documents and footer actions", async ({ page }) => {
     await page.goto("/investor-applications");
     await page.getByRole("link", { name: /Michael Njenga|Capital Partners/i }).first().click();
-    await expect(page.getByText("Uploaded documents")).toBeVisible();
-    await expect(page.getByText("Application answers")).toBeVisible();
+    await expect(page.getByText("Documents attached")).toBeVisible();
+    await expect(page.getByText("Investment profile")).toBeVisible();
     await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Reject" })).toBeVisible();
   });
@@ -23,7 +23,7 @@ test.describe("Admin application review", () => {
   test("founder applications queue opens detail", async ({ page }) => {
     await page.goto("/founder-applications");
     await page.getByRole("link", { name: /Nairobi Last-Mile|Brian/i }).first().click();
-    await expect(page.getByText("Business details")).toBeVisible();
+    await expect(page.getByText("Business details (as submitted)")).toBeVisible();
     await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
   });
 });

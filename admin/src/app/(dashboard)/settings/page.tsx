@@ -1,11 +1,15 @@
-import { SettingsForm } from "./settings-form";
-import { PageHeader } from "@/components/page-header";
+import { SettingsView } from "./settings-view";
+import { fetchAdminSettings } from "@/services/settings.service";
 
-export default function SettingsPage() {
-  return (
-    <div>
-      <PageHeader title="Settings" description="Platform configuration (mock — changes are not persisted)." />
-      <SettingsForm />
-    </div>
-  );
+export default async function SettingsPage() {
+  try {
+    const settings = await fetchAdminSettings();
+    return <SettingsView settings={settings} />;
+  } catch {
+    return (
+      <div className="rounded-card border border-destructive/30 bg-white p-8 text-center text-sm text-destructive">
+        Could not load settings.
+      </div>
+    );
+  }
 }

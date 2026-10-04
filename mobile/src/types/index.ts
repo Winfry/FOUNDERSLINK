@@ -1,225 +1,272 @@
-export type UserRole = 'founder' | 'investor' | 'admin';
+/** Domain types — camelCase in the app; maps from snake_case in the service layer. */
 
-export type DocumentStatus =
-  | 'not_uploaded'
-  | 'uploaded'
-  | 'under_review'
-  | 'verified'
-  | 'rejected';
+export type UserRole = 'founder' | 'investor' | 'expert' | 'admin';
 
-export type RequestStatus = 'pending' | 'approved' | 'declined' | 'withdrawn';
-
-export type InvestorApplicationStatus =
-  | 'pending'
-  | 'more_info_requested'
-  | 'approved'
-  | 'rejected';
-
-export type WithdrawalStatus =
-  | 'pending_approvals'
+export type ApprovalStatus =
+  | 'draft'
+  | 'submitted'
+  | 'in_review'
+  | 'needs_info'
   | 'approved'
   | 'rejected'
-  | 'completed'
-  | 'cancelled';
+  | 'suspended'
+  | 'banned';
 
-export type TransactionType = 'deposit' | 'withdrawal';
+export type MatchBand = 'strong' | 'good' | 'possible' | 'not_a_fit';
 
-export type TransactionStatus = 'pending' | 'completed' | 'failed';
+export type ConnectionStatus = 'pending' | 'accepted' | 'declined';
+
+export type DealStage =
+  | 'exploring'
+  | 'due_diligence'
+  | 'terms_agreed'
+  | 'documents_compliance'
+  | 'closed'
+  | 'active';
+
+export type DealType =
+  | 'cofounder_partnership'
+  | 'investment'
+  | 'expert_engagement'
+  | 'joint_venture';
+
+export type ComplianceItemStatus = 'not_started' | 'in_progress' | 'complete';
+
+export type ConsentPurpose = 'profile_visibility' | 'ai_matching' | 'contact';
+
+export type ConversationType = 'direct' | 'circle' | 'deal';
+
+export type TrackRecordSource = 'platform_deal' | 'public' | 'self_reported';
+
+export type BusinessStatus =
+  | 'idea'
+  | 'informal'
+  | 'registered_business_name'
+  | 'limited_company';
+
+export type Instrument = 'equity' | 'convertible_note' | 'loan';
+
+export type FounderStage = 'idea' | 'mvp' | 'early_revenue' | 'growth';
 
 export interface SessionUser {
   id: string;
   role: UserRole;
   email: string;
   fullName: string;
-  phone?: string;
-  userId?: string;
-  mustChangePassword?: boolean;
+  phone?: string | null;
+  emailVerified: boolean;
+  approvalStatus: ApprovalStatus;
+  preferredLanguage: 'en' | 'sw';
+  founderOnboardingComplete: boolean;
+  investorOnboardingComplete: boolean;
   avatarUrl?: string;
-  founderOnboardingComplete?: boolean;
-  investorOnboardingComplete?: boolean;
 }
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
   expiresAt: number;
 }
 
-export interface KenyanCounty {
-  code: string;
-  name: string;
-}
-
-export interface BusinessSector {
-  id: string;
-  label: string;
-}
-
 export interface FounderProfile {
-  id: string;
-  userId: string;
   businessName: string;
-  sectorId: string;
-  stage: 'idea' | 'mvp' | 'early_revenue' | 'growth';
+  sector: string;
+  stage: FounderStage;
   county: string;
-  yearStarted: number;
   description: string;
-  website?: string;
-  socialLinks?: string[];
+  fundingAmountKes: number;
+  journeyType: 'startup';
+  businessStatus: BusinessStatus;
+  instruments: Instrument[];
+  hasEmployees: boolean;
+  handlesPersonalData: boolean;
+  alreadyHave: string[];
   profileCompleteness: number;
-  fundsRaisedKes: number;
-  fundingTargetKes: number;
-  verifiedDocumentsCount: number;
-  totalDocumentsCount: number;
-  onboardingStep: number;
-  onboardingComplete: boolean;
+  yearStarted?: number;
+  website?: string;
 }
 
-export interface InvestorProfile {
-  id: string;
-  userId: string;
-  bio: string;
-  ticketMinKes: number;
-  ticketMaxKes: number;
-  preferredSectors: string[];
-  preferredStages: string[];
-  preferredCounties: string[];
-  projectTypes: string[];
-  onboardingComplete: boolean;
+export interface MatchReason {
+  signal: string;
+  fits: boolean;
+  text: string;
 }
 
-export interface DocumentRecord {
+export interface MatchGap {
+  kind: 'requirement' | 'unanswered';
+  text: string;
+  complianceItemId?: string;
+}
+
+export interface RiskFactor {
+  text: string;
+}
+
+export interface InvestorMatchCard {
+  investorUserId: string;
+  displayName: string;
+  band: MatchBand;
+  reasons: MatchReason[];
+  gaps: MatchGap[];
+  riskFactors: RiskFactor[];
+  organisationName?: string;
+  anonymised: boolean;
+}
+
+export interface FundingMatches {
+  applyNow: InvestorMatchCard[];
+  applyAfter: InvestorMatchCard[];
+  notForYou: InvestorMatchCard[];
+}
+
+export interface ComplianceItem {
   id: string;
-  type: string;
   label: string;
-  status: DocumentStatus;
-  fileName?: string;
-  fileSizeBytes?: number;
-  rejectionReason?: string;
-  waivedNote?: string;
+  status: ComplianceItemStatus;
+  deadline?: string | null;
+  description?: string;
 }
 
-export interface InvestorRequest {
+export interface ComplianceAskAnswer {
+  body: string;
+  citations: { title: string; url: string }[];
+  cannotConfirm?: boolean;
+  expertSuggestions?: string[];
+}
+
+export interface ConnectionJoinRequest {
   id: string;
-  investorId: string;
-  investorName: string;
+  direction: 'received' | 'sent';
+  status: ConnectionStatus;
+  withUserId: string;
+  withFullName: string;
+  withOrganisationName?: string;
   focusAreas: string[];
-  pitchPreview: string;
-  fullPitch: string;
+  pitch: string;
   vision: string;
-  status: RequestStatus;
-  createdAt: string;
-}
-
-export interface PlatformInvestorCard {
-  id: string;
-  name: string;
-  focusAreas: string[];
-  ticketRangeLabel: string;
-  county: string;
-  relationship: 'in_your_group' | 'on_platform' | 'pending_request';
-}
-
-export interface PlatformFounderPeer {
-  id: string;
-  businessName: string;
-  sector: string;
-  county: string;
-  stage: string;
-}
-
-export interface DiscoverFounderCard {
-  id: string;
-  businessName: string;
-  sector: string;
-  stage: string;
-  county: string;
-  fundingAskKes: number;
-  percentRaised: number;
-  verifiedDocumentsBadge: boolean;
-  matchReasons: string[];
-  projectTypes: string[];
-}
-
-export interface JoinRequest {
-  id: string;
-  founderId: string;
-  founderBusinessName: string;
-  status: RequestStatus;
+  offer: string;
   proposedAmountKes: number;
-  submittedAt: string;
-}
-
-export interface ProjectGroup {
-  id: string;
-  name: string;
-  founderId: string;
-  balanceKes: number;
-  targetKes: number;
-  memberCount: number;
-  unreadChatCount: number;
-  lastMessagePreview?: string;
-}
-
-export interface GroupMember {
-  id: string;
-  name: string;
-  role: 'founder' | 'investor';
-  joinedAt: string;
-  contributionKes: number;
-}
-
-export interface GroupTransaction {
-  id: string;
-  type: TransactionType;
-  amountKes: number;
-  memberName: string;
-  reference: string;
-  status: TransactionStatus;
   createdAt: string;
+  declineReason?: string;
 }
 
-export interface WithdrawalRequest {
+export interface ConversationSummary {
   id: string;
-  groupId: string;
-  requesterName: string;
-  requesterEmail: string;
-  amountKes: number;
-  reason: string;
-  status: WithdrawalStatus;
-  approvals: WithdrawalApproval[];
-  rejectionReason?: string;
-}
-
-export interface WithdrawalApproval {
-  approverId: string;
-  approverName: string;
-  status: 'pending' | 'approved' | 'rejected';
+  type: ConversationType;
+  title: string;
+  unreadCount: number;
+  lastMessagePreview?: string;
+  updatedAt: string;
 }
 
 export interface ChatMessage {
   id: string;
-  groupId: string;
-  senderId: string;
-  senderName: string;
-  senderAvatarUrl?: string;
+  conversationId: string;
+  kind: 'user' | 'system';
+  senderId?: string;
+  senderName?: string;
   body: string;
   createdAt: string;
-  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
-  replyToId?: string;
-  attachmentUrl?: string;
-  attachmentType?: 'image' | 'document';
+  warningText?: string;
+}
+
+export interface DealTerms {
+  amountKes: number;
+  instrument: Instrument;
+  equityPercent?: number | null;
+  roles?: string;
+  notes?: string;
+}
+
+export interface DealPartyConfirmation {
+  userId: string;
+  name: string;
+  confirmed: boolean;
+}
+
+export interface DealDocument {
+  id: string;
+  name: string;
+  precheckStatus: 'pending' | 'ai_pre_checked' | 'confirmed_by_founderlink';
+  summary?: string;
+}
+
+export interface Deal {
+  id: string;
+  type: DealType;
+  title: string;
+  stage: DealStage;
+  withUserId: string;
+  withName: string;
+  terms: DealTerms;
+  confirmations: DealPartyConfirmation[];
+  checklist: { id: string; label: string; done: boolean }[];
+  timeline: { id: string; title: string; at: string }[];
+  documents: DealDocument[];
+  dueDiligenceSummary?: {
+    verified: string[];
+    selfReported: string[];
+    missing: string[];
+  };
+}
+
+export type CircleRole = 'organiser' | 'treasurer' | 'member';
+
+export interface CircleSummary {
+  id: string;
+  name: string;
+  type: 'money' | 'learning';
+  memberCount: number;
+  paybillNumber?: string | null;
+  unreadChatCount: number;
+}
+
+export interface CircleContribution {
+  id: string;
+  memberName: string;
+  amountKes: number;
+  goalLabel?: string;
+  recordedAt: string;
+  reference?: string;
+}
+
+export interface CircleMember {
+  userId: string;
+  name: string;
+  role: CircleRole;
+  joinedAt: string;
+}
+
+export interface CircleDetail extends CircleSummary {
+  members: CircleMember[];
+  contributions: CircleContribution[];
+  owes: { memberName: string; amountKes: number }[];
+  goals: { id: string; label: string; targetKes: number; recordedKes: number }[];
+  moneyDisclaimer: string;
+}
+
+export interface VettingApplication {
+  approvalStatus: ApprovalStatus;
+  phone?: string;
+  statement?: string;
+  organisationName?: string;
+  organisationWebsite?: string;
+  decisionReason?: string | null;
+}
+
+export interface ConsentRecord {
+  purpose: ConsentPurpose;
+  granted: boolean;
+  label: string;
+  description: string;
 }
 
 export interface AppNotification {
   id: string;
-  category: string;
   title: string;
   body: string;
   read: boolean;
   createdAt: string;
-  route?: string;
-  metadata?: Record<string, string>;
+  link?: string;
 }
 
 export interface ApiError {
@@ -232,4 +279,12 @@ export interface Paginated<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface SignupInput {
+  fullName: string;
+  email: string;
+  password: string;
+  role: 'founder' | 'investor' | 'expert';
+  acceptTerms: boolean;
 }

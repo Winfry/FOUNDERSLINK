@@ -1,20 +1,49 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../src/theme/tokens';
+import { Image, StyleSheet, View } from 'react-native';
+import { getWelcomeSeen } from '../src/lib/welcome-storage';
+import { useAuthStore } from '../src/stores/authStore';
+import { colors } from '../src/theme/tokens';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    const t = setTimeout(() => router.replace('/intro'), 1200);
-    return () => clearTimeout(t);
-  }, [router]);
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        await hydrate();
+      } catch {
+        /* session restore failed — continue */
+      } finally {
+        if (cancelled) return;
+        const sessionUser = useAuthStore.getState().user;
+        setTimeout(async () => {
+          if (cancelled) return;
+          if (sessionUser) {
+            router.replace('/');
+            return;
+          }
+          const seen = await getWelcomeSeen();
+          router.replace(seen ? '/auth/login' : '/welcome');
+        }, 1500);
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrate, router]);
+
+  void user;
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.logo}>FounderLink</Text>
-      <Text style={styles.tagline}>Connecting Kenyan founders with vetted investors</Text>
+      <Image source={require('../assets/images/logo.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="FounderLink" />
     </View>
   );
 }
@@ -22,22 +51,12 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing[4],
   },
   logo: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.white,
-    fontFamily: 'Inter_700Bold',
-  },
-  tagline: {
-    marginTop: spacing[2],
-    fontSize: 15,
-    color: colors.primaryLight,
-    textAlign: 'center',
-    fontFamily: 'Inter_400Regular',
+    width: 120,
+    height: 120,
   },
 });

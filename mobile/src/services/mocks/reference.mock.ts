@@ -1,18 +1,16 @@
 import type { ReferenceDataService } from '../types/api';
-import { BUSINESS_SECTORS, KENYAN_COUNTIES, PROJECT_TYPES } from './kenya-data';
 import { mockDelay } from './delay';
 
 export const mockReferenceDataService: ReferenceDataService = {
-  async getCounties() {
-    await mockDelay(200);
-    return KENYAN_COUNTIES;
-  },
-  async getSectors() {
-    await mockDelay(200);
-    return BUSINESS_SECTORS;
-  },
-  async getProjectTypes() {
-    await mockDelay(200);
-    return PROJECT_TYPES;
+  async getMetaOptions() {
+    await mockDelay();
+    return {
+      sectors: ['health', 'agri', 'fintech', 'climate', 'retail', 'education', 'logistics', 'other'],
+      stages: ['idea', 'mvp', 'early_revenue', 'growth'],
+      counties: ['Nairobi', 'Mombasa', 'Kisumu', 'Kiambu', 'Nakuru'],
+      instruments: ['equity', 'convertible_note', 'loan'],
+      businessStatuses: ['idea', 'informal', 'registered_business_name', 'limited_company'],
+      complianceItems: ['kra_pin', 'brs', 'cr12', 'tax_compliance', 'data_protection', 'single_business_permit'],
+    };
   },
 };

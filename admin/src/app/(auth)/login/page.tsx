@@ -42,7 +42,7 @@ function LoginFlow() {
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "super@founderlink.co.ke", password: "admin123" },
+    defaultValues: { email: "admin@founderlink.co.ke", password: "admin123" },
   });
 
   const verifyForm = useForm<VerifyForm>({
@@ -60,8 +60,14 @@ function LoginFlow() {
       loginForm.setError("root", { message: "Invalid email or password" });
       return;
     }
-    setStep("verify");
-    router.replace(next ? `/login?step=verify&next=${encodeURIComponent(next)}` : "/login?step=verify");
+    const data = (await res.json()) as { twoFactorRequired?: boolean };
+    if (data.twoFactorRequired) {
+      setStep("verify");
+      router.replace(next ? `/login?step=verify&next=${encodeURIComponent(next)}` : "/login?step=verify");
+      return;
+    }
+    router.push(next && next.startsWith("/") ? next : "/overview");
+    router.refresh();
   }
 
   async function onVerify(values: VerifyForm) {
@@ -74,7 +80,7 @@ function LoginFlow() {
       verifyForm.setError("root", { message: "Invalid verification code" });
       return;
     }
-    router.push(next && next.startsWith("/") ? next : "/dashboard");
+    router.push(next && next.startsWith("/") ? next : "/overview");
     router.refresh();
   }
 
@@ -111,7 +117,7 @@ function LoginFlow() {
       ) : (
         <>
           <h1 className="text-2xl font-bold text-foreground">Verification code</h1>
-          <p className="mt-1 text-sm text-muted">Enter the 6-digit code sent to your device.</p>
+          <p className="mt-1 text-sm text-muted">Enter the 6-digit code from your authenticator app.</p>
           <form className="mt-8 space-y-4" onSubmit={verifyForm.handleSubmit(onVerify)}>
             <Input
               label="Verification code"

@@ -8,9 +8,9 @@
     "userInterfaceStyle": "light",
     "scheme": "founderlink",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1D4ED8"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,

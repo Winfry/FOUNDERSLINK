@@ -1,19 +1,14 @@
-import { AuthCarousel } from "@/components/auth/auth-carousel";
-
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col lg:flex-row">
-      {/* Desktop: left half carousel */}
-      <div className="hidden lg:block lg:w-1/2 lg:shrink-0">
-        <AuthCarousel className="min-h-screen" />
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      <div className="hidden flex-col justify-center bg-[#1D4ED8] p-10 text-white lg:flex lg:w-1/2">
+        <p className="text-sm font-semibold uppercase tracking-wide text-white/80">FounderLink</p>
+        <h2 className="mt-4 text-3xl font-bold leading-tight">Admin dashboard</h2>
+        <p className="mt-3 max-w-md text-white/90">
+          Review verification, deal documents, and reports. Risk signals guide you — you decide.
+        </p>
       </div>
-      {/* Mobile: carousel as background */}
-      <div className="pointer-events-none absolute inset-0 lg:hidden">
-        <AuthCarousel className="min-h-screen opacity-90" />
-        <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px]" />
-      </div>
-      {/* Form: right half (desktop) / on top (mobile) */}
-      <div className="relative z-10 flex w-full flex-1 items-center justify-center p-4 sm:p-8 lg:w-1/2 lg:bg-white">
+      <div className="flex w-full flex-1 items-center justify-center bg-white p-4 sm:p-8 lg:w-1/2">
         <div className="w-full max-w-md">{children}</div>
       </div>
     </div>

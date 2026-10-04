@@ -1,45 +1,34 @@
-import type { AdminRole } from "@/types";
+import type { AdminNavCounts } from "@/types";
 import type { LucideIcon } from "lucide-react";
 import {
-  ClipboardList,
+  ClipboardCheck,
   FileBarChart,
+  FileText,
   LayoutDashboard,
-  UserCheck,
-  UserCircle,
+  RefreshCw,
+  Scale,
+  Settings,
+  ShieldCheck,
   Users,
   UsersRound,
-  ArrowLeftRight,
 } from "lucide-react";
 
 export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  roles: AdminRole[] | "all";
+  countKey?: keyof AdminNavCounts;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: "all" },
-  { href: "/founders", label: "Founders", icon: Users, roles: "all" },
-  {
-    href: "/founder-applications",
-    label: "Founder applications",
-    icon: ClipboardList,
-    roles: ["super_admin", "reviewer"],
-  },
-  {
-    href: "/investor-applications",
-    label: "Investor applications",
-    icon: ClipboardList,
-    roles: ["super_admin", "reviewer"],
-  },
-  { href: "/investors", label: "Investors", icon: UserCheck, roles: "all" },
-  { href: "/groups", label: "Groups", icon: UsersRound, roles: ["super_admin", "reviewer"] },
-  { href: "/withdrawals", label: "Transactions", icon: ArrowLeftRight, roles: "all" },
-  { href: "/reports", label: "Reports", icon: FileBarChart, roles: ["super_admin", "reviewer"] },
-  { href: "/profile", label: "Admin profile", icon: UserCircle, roles: "all" },
+  { href: "/overview", label: "Overview", icon: LayoutDashboard },
+  { href: "/verification", label: "Verification", icon: ShieldCheck, countKey: "verificationWaiting" },
+  { href: "/members", label: "Members", icon: Users },
+  { href: "/deal-reviews", label: "Deal reviews", icon: ClipboardCheck, countKey: "dealReviews" },
+  { href: "/reports", label: "Reports", icon: FileBarChart, countKey: "openReports" },
+  { href: "/rechecks", label: "Re-checks", icon: RefreshCw, countKey: "rechecksDue" },
+  { href: "/compliance-sources", label: "Compliance sources", icon: Scale },
+  { href: "/chamas", label: "Chamas", icon: UsersRound },
+  { href: "/audit-log", label: "Audit log", icon: FileText },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
-
-export function navForRole(role: AdminRole): NavItem[] {
-  return NAV_ITEMS.filter((item) => item.roles === "all" || item.roles.includes(role));
-}

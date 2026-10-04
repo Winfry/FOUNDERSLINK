@@ -10,7 +10,7 @@ export default function InvestorProfileTab() {
   return (
     <View style={styles.wrap}>
       <Text style={styles.name}>{user?.fullName}</Text>
-      <Text style={styles.meta}>User ID: {user?.userId}</Text>
+      <Text style={styles.meta}>{user?.email}</Text>
       <Button title="Matching preferences" variant="secondary" onPress={() => router.push('/investor/onboarding')} />
       <Button title="Account settings" variant="secondary" onPress={() => router.push('/settings')} />
       <Button title="Change password" variant="ghost" onPress={() => router.push('/auth/reset-password')} />
