@@ -320,10 +320,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[0.5],
     borderRadius: 10,
   },
-  // Orange says "you are here". The label on it is navy, to stay readable.
-  segmentOn: { backgroundColor: colors.accent },
+  // A white pill on the chosen side, its label in orange: "you are here".
+  segmentOn: {
+    backgroundColor: colors.white,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
   segmentText: { fontSize: 14, fontWeight: '600', color: colors.textMuted, flexShrink: 1 },
-  segmentTextOn: { color: colors.primaryDark, fontWeight: '700' },
+  segmentTextOn: { color: colors.accent, fontWeight: '800' },
   count: {
     minWidth: 22,
     height: 22,
@@ -333,9 +340,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countOn: { backgroundColor: colors.primaryDark },
+  countOn: { backgroundColor: colors.accent },
   countText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  countTextOn: { color: colors.white },
+  countTextOn: { color: colors.primaryDark },
   hint: { fontSize: 14, fontWeight: '500', color: colors.textMuted, marginTop: spacing[1.5] },
 
   card: { marginHorizontal: spacing[2], marginBottom: spacing[2], borderRadius: 16, gap: spacing[1.5] },

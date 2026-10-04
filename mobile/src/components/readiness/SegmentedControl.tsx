@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../ui/Text';
-import { colors, radius } from '../../theme/tokens';
+import { colors, radius, shadows } from '../../theme/tokens';
 
 interface Props<T extends string> {
   options: { value: T; label: string }[];
@@ -8,9 +8,8 @@ interface Props<T extends string> {
   onChange: (value: T) => void;
 }
 
-// A rounded track with a filled pill on the chosen side. The pill is
-// orange, the colour that says "you are here"; its label is navy,
-// because white or orange text on it would be too faint to read.
+// A rounded track with a white pill on the chosen side, its label in
+// orange, the colour that says "you are here".
 export function SegmentedControl<T extends string>({ options, value, onChange }: Props<T>) {
   return (
     <View style={styles.track} accessibilityRole="tablist">
@@ -47,7 +46,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  segmentOn: { backgroundColor: colors.accent },
+  segmentOn: { backgroundColor: colors.white, ...shadows.md },
   label: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-  labelOn: { fontWeight: '700', color: colors.primaryDark },
+  labelOn: { fontWeight: '800', color: colors.accent },
 });
