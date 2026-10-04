@@ -57,14 +57,14 @@ Joins → profession, register, services, office hours per month → verifies ag
 
 | Feature | What it does | Status |
 |---|---|---|
-| **Verification in levels** (D7, D12) | Level 1 join; level 2 before contact (admin approves, AI sorts the queue); level 3 at due diligence (documents, identity via a provider) | Backend: vetting built; the levels and anonymised profiles are to change (D12 list) |
+| **Verification in levels** (D7, D12) | Level 1 join; level 2 before contact (admin approves, AI sorts the queue); level 3 at due diligence (documents, identity via a provider) | Backend built: the three levels and anonymised profiles are in. Identity through a provider is not built; frontend to build |
 | **Investor matches** | Investors that fit a founder, in Pitch / Pitch after / Don't pitch, with bands, reasons, gaps and risk factors | Backend and AI built; frontend screen to build |
 | **Profiles and fit** (D6) | A member's page, with the fit breakdown, reasons, and track record labelled verified / public / self-reported | Backend and AI built; frontend screen to build |
 | **Founder ↔ founder and founder ↔ expert matching** | Co-founder and adviser recommendations, explained | **Not built.** Owners: AI/ML 1 and backend |
 | **Connections and join requests** | Request (with pitch, vision, offer, amount), accept, decline, withdraw | Backend built; frontend to connect |
 | **Messaging** (D2) | Direct chats, deal rooms, circle chats; live; money-request warnings; report and block | Backend built; frontend to connect |
 | **Deals** (D4) | Stages, confirmations by every party, terms, timeline, milestones, deal checklist | Backend built; frontend screen to build |
-| **Due-diligence pack** (D12) | AI document pre-checks and a per-party summary of verified, self-reported and missing items | **Not built.** Owners: AI/ML 1 and backend |
+| **Due-diligence pack** (D12) | AI document pre-checks and a per-party summary of verified, self-reported and missing items | Backend built: document sharing, admin confirmation, the gate before terms, and a rule-based pack. **AI not built:** `/documents/precheck` and `/deals/due-diligence-pack` (AI/ML 1), so nothing is labelled AI pre-checked yet; frontend to build |
 | **Compliance** (D3) | Startup checklist chosen by rules, progress as "3 of 7 done", deadlines, Ask Compliance with cited answers, freshness report for admins | Backend built; AI chatbot in progress (AI/ML 2); frontend to build; real official sources still to collect |
 | **Chamas** (money circles, D13) | Founders come together and pool money into the chama's own account; a forum (chat, notes and minutes, votes); and tracking (contributions per member, goals, who still owes, M-Pesa statement matching). Joined by invite only. Learning circles also exist, for founders who want peers without money | Backend built; group funding switched off (D11); frontend group screens to move onto it, without the wallet |
 | **Experts and office hours** | Directory, sessions per month, "helped N founders" | Backend built; frontend to build |

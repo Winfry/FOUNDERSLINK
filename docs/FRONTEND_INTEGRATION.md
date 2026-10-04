@@ -125,7 +125,29 @@ Why: people give up when asked for documents before they see any value, and scam
 
 A call she is not yet allowed to make returns `403` with code `APPROVAL_REQUIRED`: show the "Verify to connect" step, not an error. While an admin reviews her (`submitted` or `in_review`), show "We're checking your details. You can keep exploring."
 
-*Backend status:* today the backend still checks approval on more endpoints than level 2 needs, and does not yet anonymise profiles or require level 3 before terms. Those are on the backend owner's D12 change list (`docs/TEAM_DECISIONS.md`).
+*Backend status:* built. The approval check sits on contact actions only, members below level 2 get anonymised cards, and an investment deal needs every party's documents before terms.
+
+**Anonymised cards (level 1).** Check `anonymised` on each card and, when it is true, show `headline` where the name would go, with no link to a profile:
+
+| Screen | Call | When `anonymised` is true |
+|---|---|---|
+| A founder's investor matches | `GET /funding/matches` | Only for a record an investor maintains herself. `funder.name`, `mandate_text`, `how_to_apply_url` and `source_url` are null and `investor` is null. `headline` reads like "Angel investor · health, fintech · KSh 500,000 to KSh 5,000,000". The band, reasons and gaps are still there. Records from public information always show their name |
+| An investor's founder matches | `GET /investor/matches` | Every card, until she is approved. Each has only `headline` ("Health startup, Nairobi, mvp, seeking KSh 1,000,000"), `sector`, `stage`, `county`, `funding_amount_kes`, `band` and `ready`. There is no `user_id`, so nothing to open |
+
+Put "Verify to see who they are and connect" on these cards.
+
+**Due diligence (level 3).** The deal room needs a due-diligence step, for `investment` deals:
+
+| Step | Call |
+|---|---|
+| Show the step | `GET /deals/:id/due-diligence` → `deal_ready`, `summary`, and for each party `required` (each with `provided`), `documents`, and the pack's three lists: `verified`, `self_reported`, `missing` |
+| Share a document | `POST /deals/:id/documents`, as `multipart/form-data`: `file` (PDF, JPEG or PNG, up to 5 MB) and `type`. A founder shares `business_registration` and `kra_pin_certificate`; an investor shares `organisation_proof` |
+| Open the other party's document | `GET /deals/:id/documents/:doc_id/file` |
+| Take one back before it is reviewed | `DELETE /deals/:id/documents/:doc_id` |
+
+Until `deal_ready` is true, moving to `terms_agreed` returns `409` with code `NOT_DEAL_READY`, and the message names what is missing and from whom: show it as is.
+
+Show each document's `check_label`, which is one of "Uploaded", "AI pre-checked", "Confirmed by FounderLink" or "Not accepted" (with `rejection_reason`). Take the label from the backend and do not write "AI pre-checked" yourself: the AI service cannot read documents yet, so today every document says "Uploaded". Likewise the pack has `engine`: call it AI-compiled only when that is `ai_service`. Today it is `stand_in`.
 
 `approval_status` on the user is one of `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`. It replaces `InvestorApplicationStatus`:
 
@@ -147,6 +169,7 @@ Nothing is agreed by default. Until she agrees, a founder is invisible to invest
 | `ai_matching` | "Use my business details for AI matching" | Her details may be sent to the AI service |
 | `eligibility_attributes` | *Don't ask for now (D11).* It was for grants and government funds | She may set women-, youth- or PWD-owned |
 | `contact` | "Contact me by SMS or WhatsApp" | SMS notifications |
+| `document_processing` | "Let an AI model read the documents I share in a deal". Ask at the due-diligence step, not at onboarding | Without it her documents are checked by a person only |
 
 `GET /me/consents` lists them. `POST /me/consents` with `{ purpose, granted }` sets one.
 
@@ -424,7 +447,9 @@ Changes to the application pages:
 - **An investor may need two admins.** The first approval then returns `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`. Show "waiting for a second admin".
 - **Re-checks:** `GET /admin/vetting/rechecks` lists approved members due to be looked at again.
 
-Two pages the backend has and the dashboard does not: the compliance freshness report (`GET /admin/compliance/sources`) and the re-check list.
+Three pages the backend has and the dashboard does not: the compliance freshness report (`GET /admin/compliance/sources`), the re-check list, and **deal documents**: `GET /admin/deal-documents` lists the ones waiting, `GET /admin/deal-documents/:id/file` downloads one, and `PATCH /admin/deal-documents/:id` with `{ status: "verified" | "rejected", reason? }` confirms or rejects it (a reason is required to reject).
+
+For rehearsals, `npm run db:demo -- <password>` in `backend/` loads the people in the demo story; the accounts are listed in `backend/README.md` under "Demo accounts".
 
 ---
 
