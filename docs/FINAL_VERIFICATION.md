@@ -1,6 +1,6 @@
 # FoundersLink: final verification
 
-**Run on 4 October 2026, 07:45 to 08:25, against commit `b9e721b`.**
+**Run on 4 October 2026, 07:45 to 08:25, against commit `b9e721b`. Updated at 08:50 with what was fixed afterwards (up to commit `8255aa7`).**
 
 Six testers went through the product. Five used the real screens as a person with a goal (a new founder, a new investor, a founder and investor doing a deal, three founders running a chama, a new staff member). One compared every claim in the team's documents with the code. None of them changed any code. Each created its own accounts, and all of that test data has since been removed.
 
@@ -13,7 +13,7 @@ Ids such as `Q3-02` point to the tester (1 founder, 2 investor, 3 deal, 4 chama,
 ## 1. The verdict
 
 - **A founder can go from sign-up to a closed deal through the screens.** Sign-up, onboarding, matches, readiness, verification, staff approval, connecting, chat, the deal room, real document uploads, staff review of documents, agreeing terms and closing all work on the clean path.
-- **An investor can too,** but several shared screens drop him into the founder's app (section 3, item 1).
+- **An investor can too.** At the time of the run several shared screens dropped him into the founder's app; that is fixed (section 3, item 1).
 - **Staff can do their core job:** sign in, work the risk-sorted queue, decide with a written reason, review deal documents, suspend and reinstate.
 - **Access control held everywhere it was tried:** strangers, unverified and signed-out people saw nothing of a deal, a chat or a document.
 - **Nothing on screen claims what the product does not do:** no wallet, deposit, escrow, KYC, "AI-verified" or score wording in either app.
@@ -36,35 +36,35 @@ Ids such as `Q3-02` point to the tester (1 founder, 2 investor, 3 deal, 4 chama,
 
 ## 3. Bugs: things that are built and behave wrongly
 
-Ordered by how much they hurt. "Size" is a rough guess at the fix: S under 15 minutes, M up to an hour, L more.
+Ordered by how much they hurt. **Updated at 08:50:** the first ten, and number 22, were fixed after the run; the State column says how each fix was checked. The testers did not re-run after the fixes. "Size" is a rough guess at the fix: S under 15 minutes, M up to an hour, L more.
 
-| # | What | Found by | Owner | Size |
-|---|---|---|---|---|
-| 1 | **An investor is dropped into the founder's app.** After submitting verification, "Keep exploring" and "See your matches" open the founder's Matches ("Your account cannot do this"). Tapping "You are approved" or "Connection accepted", or reloading on Profile or Notifications, shows founder screens and tabs. Founder routes are not refused for investors. | Q2-01, Q2-02, Q3-03 | Mobile | M |
-| 2 | **Verification cannot be resumed.** Once the phone is confirmed, leaving and returning restarts at the phone step, and the same number is refused as "already verified", with no way forward. Only a different number gets through. Both roles. | Q1-01, Q2-04 | Mobile | S |
-| 3 | **Skipping the email code cannot be undone.** "Continue exploring" skips it; nothing offers it again; verification then refuses at the last step with no link. | Q1-02 | Mobile | S |
-| 4 | **Search reveals hidden business names to an unverified investor.** Cards are anonymised, but searching "Afya Booking" narrows five cards to one. | Q2-03 | Backend | S |
-| 5 | **A list of every investor, with names, is open to any signed-in member** (`GET /funders`), including unverified ones. | Q6-13 | Backend | S |
-| 6 | **Signed-out links do not go to the login screen.** They show "We couldn't load this. Sign in to continue" with no button. `/profile` shows an empty profile; `/settings` opens fully. No data leaks. | Q1-08, Q2-12, Q3-24, Q4-24 | Mobile | S |
-| 7 | **Password reset shows no demo code,** unlike sign-up and phone, so it cannot be finished from the screens. | Q1-03 | Mobile | S |
-| 8 | **"Report a member" in Settings sends nothing.** It shows "Report received" and stops; staff never see it. (Reporting a message from a chat does reach staff.) | Q5-09, Q3-10 | Mobile | S |
-| 9 | **The deal screen and the Requests list never refresh.** After the other party or staff act, the screen is stale until reload; Withdraw on an already accepted request then fails silently. Chat is live; these are not. | Q3-13, Q3-20, Q2-10, Q4-23 | Mobile | S |
-| 10 | **Search boxes in the dashboard do nothing** (Verification, Members, Audit log). | Q5-04 | Admin | S |
-| 11 | **A suspended member is shown the wrong reason:** his status screen quotes the admin's earlier approval note, and he gets no notification. Suspended and rejected members are also told to "Start verification". | Q5-10, Q5-11 | Backend + Mobile | M |
-| 12 | **Checks staff type are recorded wrongly.** "BRS lookup" is saved as an identity check; any unrecognised text silently becomes "Identity". | Q5-05 | Admin | S |
-| 13 | **A "fix this first" investor's page says "Good fit, 6 of 6 match"** with no mention of the gap that put it there, and no demo-record note. | Q1-10 | Mobile | S |
-| 14 | **A false money warning in chama chat.** "Contributions are due, Paybill 522533" is flagged; "Please send me 5000 by M-Pesa to my number urgently" is not. | Q4-16 | Backend rules / AI | M |
-| 15 | **M-Pesa statement dates are read the wrong way round:** `04-10-2026` is imported as 10 April. | Q4-17 | Backend | S |
-| 16 | **A document the AI could not read would still be labelled "AI pre-checked"** once the new AI service runs. | Q6-12 | Backend | S |
-| 17 | **"Replace" on a deal document adds a duplicate** instead of replacing; the rejected row stays with "share a corrected copy". | Q3-16 | Mobile | S |
-| 18 | **Decision history is lost on resubmission,** and a re-check cannot be decided: the page refuses with a false "server did not answer". | Q5-13, Q5-01 | Admin | M |
-| 19 | **Deal document decisions are not in the audit log,** though the dashboard says every decision is recorded. The log also has no "who" column. | Q5-02, Q5-03, Q3-12 | Backend + Admin | M |
-| 20 | **Vetting can be submitted without the phone being confirmed by code.** The phone typed on the application and the account's phone are two separate fields. | Q5-15, Q4-36, Q3-28 | Backend | S |
-| 21 | **Changing a consent means redoing onboarding from blank.** The link reopens the form with nothing filled in. | Q1-05 | Mobile | M |
-| 22 | The phone field refuses `07…` numbers and insists on `+254`. | Q1-13 | Mobile | S |
-| 23 | An amount of 0 is accepted on a join request; a repeated request shows the backend's sentence twice. | Q2-19 | Mobile | S |
-| 24 | Outside production, "Forgot password" returns the working reset code for any account, the admin's included. It is how the demo shows codes; a judge may ask. | Q6-14 | Backend | S |
-| 25 | "Open reports" and its badge count every report ever made; "Chamas" on the overview counts learning circles; "Deals in due diligence 3" links to a list of 2. | Q5-19, Q4-15 | Admin | S |
+| # | What | Found by | Owner | Size | State |
+|---|---|---|---|---|---|
+| 1 | **An investor is dropped into the founder's app.** After submitting verification, "Keep exploring" and "See your matches" open the founder's Matches ("Your account cannot do this"). Tapping "You are approved" or "Connection accepted", or reloading on Profile or Notifications, shows founder screens and tabs. Founder routes are not refused for investors. | Q2-01, Q2-02, Q3-03 | Mobile | M | **Fixed** in `806813e` (checked in the app) |
+| 2 | **Verification cannot be resumed.** Once the phone is confirmed, leaving and returning restarts at the phone step, and the same number is refused as "already verified", with no way forward. Only a different number gets through. Both roles. | Q1-01, Q2-04 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
+| 3 | **Skipping the email code cannot be undone.** "Continue exploring" skips it; nothing offers it again; verification then refuses at the last step with no link. | Q1-02 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
+| 4 | **Search reveals hidden business names to an unverified investor.** Cards are anonymised, but searching "Afya Booking" narrows five cards to one. | Q2-03 | Backend | S | **Fixed** in `b4263a1` (checked against the backend) |
+| 5 | **A list of every investor, with names, is open to any signed-in member** (`GET /funders`), including unverified ones. | Q6-13 | Backend | S | **Fixed** in `b4263a1` (checked against the backend) |
+| 6 | **Signed-out links do not go to the login screen.** They show "We couldn't load this. Sign in to continue" with no button. `/profile` shows an empty profile; `/settings` opens fully. No data leaks. | Q1-08, Q2-12, Q3-24, Q4-24 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
+| 7 | **Password reset shows no demo code,** unlike sign-up and phone, so it cannot be finished from the screens. | Q1-03 | Mobile | S | **Fixed** in `806813e` (request succeeds; the alert itself was not read back) |
+| 8 | **"Report a member" in Settings sends nothing.** It shows "Report received" and stops; staff never see it. (Reporting a message from a chat does reach staff.) | Q5-09, Q3-10 | Mobile | S | **Fixed** in `806813e` (not sent for real) |
+| 9 | **The deal screen and the Requests list never refresh.** After the other party or staff act, the screen is stale until reload; Withdraw on an already accepted request then fails silently. Chat is live; these are not. | Q3-13, Q3-20, Q2-10, Q4-23 | Mobile | S | **Fixed** in `806813e` (by reading the code only) |
+| 10 | **Search boxes in the dashboard do nothing** (Verification, Members, Audit log). | Q5-04 | Admin | S | **Fixed** in `8255aa7` (checked in the dashboard) |
+| 11 | **A suspended member is shown the wrong reason:** his status screen quotes the admin's earlier approval note, and he gets no notification. Suspended and rejected members are also told to "Start verification". | Q5-10, Q5-11 | Backend + Mobile | M | Open |
+| 12 | **Checks staff type are recorded wrongly.** "BRS lookup" is saved as an identity check; any unrecognised text silently becomes "Identity". | Q5-05 | Admin | S | Open |
+| 13 | **A "fix this first" investor's page says "Good fit, 6 of 6 match"** with no mention of the gap that put it there, and no demo-record note. | Q1-10 | Mobile | S | Open |
+| 14 | **A false money warning in chama chat.** "Contributions are due, Paybill 522533" is flagged; "Please send me 5000 by M-Pesa to my number urgently" is not. | Q4-16 | Backend rules / AI | M | Open |
+| 15 | **M-Pesa statement dates are read the wrong way round:** `04-10-2026` is imported as 10 April. | Q4-17 | Backend | S | Open |
+| 16 | **A document the AI could not read would still be labelled "AI pre-checked"** once the new AI service runs. | Q6-12 | Backend | S | Open |
+| 17 | **"Replace" on a deal document adds a duplicate** instead of replacing; the rejected row stays with "share a corrected copy". | Q3-16 | Mobile | S | Open |
+| 18 | **Decision history is lost on resubmission,** and a re-check cannot be decided: the page refuses with a false "server did not answer". | Q5-13, Q5-01 | Admin | M | Open |
+| 19 | **Deal document decisions are not in the audit log,** though the dashboard says every decision is recorded. The log also has no "who" column. | Q5-02, Q5-03, Q3-12 | Backend + Admin | M | Open |
+| 20 | **Vetting can be submitted without the phone being confirmed by code.** The phone typed on the application and the account's phone are two separate fields. | Q5-15, Q4-36, Q3-28 | Backend | S | Open |
+| 21 | **Changing a consent means redoing onboarding from blank.** The link reopens the form with nothing filled in. | Q1-05 | Mobile | M | Open |
+| 22 | The phone field refuses `07…` numbers and insists on `+254`. | Q1-13 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
+| 23 | An amount of 0 is accepted on a join request; a repeated request shows the backend's sentence twice. | Q2-19 | Mobile | S | Open |
+| 24 | Outside production, "Forgot password" returns the working reset code for any account, the admin's included. It is how the demo shows codes; a judge may ask. | Q6-14 | Backend | S | Open |
+| 25 | "Open reports" and its badge count every report ever made; "Chamas" on the overview counts learning circles; "Deals in due diligence 3" links to a list of 2. | Q5-19, Q4-15 | Admin | S | Open |
 
 ## 4. Where the product differs from what the team decided
 
@@ -166,6 +166,8 @@ All nine endpoints the backend calls now exist in the code, and their request an
 - **The API documentation** covers every route.
 
 ## 10. Not tried
+
+- A re-run of the six journeys after the fixes in section 3. Three of those fixes were not seen working end to end: the reset code alert (7), sending a "report someone" for real (8), and a deal updating while the other party acts (9).
 
 - Anything on a physical phone, or below a tablet width in the dashboard.
 - Any AI feature on the new AI service build.
