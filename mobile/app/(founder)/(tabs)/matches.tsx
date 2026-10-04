@@ -60,6 +60,17 @@ export default function MatchesScreen() {
   if (matchesQ.isLoading || consentQ.isLoading) return <ScreenLoading />;
   if (matchesQ.isError) {
     const err = matchesQ.error as { message?: string; code?: string } | null;
+    // No profile yet (setup was left half way): send her to finish it.
+    if (err?.code === 'PROFILE_REQUIRED') {
+      return (
+        <ScreenEmpty
+          title="Finish setting up your profile"
+          description="Tell us about your business and we will show the investors who fit."
+          actionLabel="Set up my profile"
+          onAction={() => router.push('/founder/onboarding')}
+        />
+      );
+    }
     return (
       <ScreenError
         message={err?.message ?? 'Your investor matches did not load. Check your connection and try again.'}
