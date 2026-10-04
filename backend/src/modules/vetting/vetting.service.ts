@@ -69,6 +69,14 @@ async function suspensionReason(userId: string) {
   return last?.action === "suspend" ? last.reason : null;
 }
 
+// The risk level and its signals are for staff: they sort the admin
+// queue. Showing them to the applicant would teach a scammer which
+// rules caught her, so every answer to the applicant leaves them out.
+function forApplicant<T extends { risk_level: unknown; risk_signals: unknown }>(application: T) {
+  const { risk_level: _level, risk_signals: _signals, ...rest } = application;
+  return rest;
+}
+
 export async function getApplication(userId: string) {
   const [user, application] = await Promise.all([
     statusOf(userId),
@@ -77,7 +85,7 @@ export async function getApplication(userId: string) {
   return {
     approval_status: user.approval_status,
     suspension_reason: user.approval_status === "suspended" ? await suspensionReason(userId) : null,
-    application,
+    application: application ? forApplicant(application) : null,
     documents: application ? await listDocuments(application.id) : [],
     identity_check: "For this demo, identity is reviewed by an admin by hand. No ID number or document is stored.",
   };
@@ -97,11 +105,12 @@ export async function saveApplication(userId: string, input: z.infer<typeof appl
     if (funder.claimed_by_user_id) throw conflict("FUNDER_CLAIMED", "Someone already maintains this record");
   }
 
-  return prisma.vettingApplication.upsert({
+  const saved = await prisma.vettingApplication.upsert({
     where: { user_id: userId },
     create: { ...input, user_id: userId },
     update: input,
   });
+  return forApplicant(saved);
 }
 
 const rank: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -163,7 +172,7 @@ export async function submitApplication(userId: string) {
     prisma.user.update({ where: { id: userId }, data: { approval_status: "submitted" } }),
   ]);
 
-  return { approval_status: "submitted", application: saved };
+  return { approval_status: "submitted", application: forApplicant(saved) };
 }
 
 const applicant = {

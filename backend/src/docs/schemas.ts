@@ -478,6 +478,9 @@ export const components: Record<string, Schema> = {
 
   VettingApplication: obj(vettingApplicationFields),
 
+  // What the applicant herself is sent: no risk level or signals.
+  MyVettingApplication: obj(Object.fromEntries(Object.entries(vettingApplicationFields).filter(([field]) => !field.startsWith("risk_")))),
+
   VettingDocument: obj({
     id: uuid,
     type: oneOf(DOCUMENT_TYPES),

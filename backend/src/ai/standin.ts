@@ -338,9 +338,23 @@ export function dueDiligencePack(parties: PackPartyInput[]): Pack {
   });
 
   const missing = packed.reduce((sum, p) => sum + p.missing.length, 0);
+  // Shared is not enough: terms wait for an admin to confirm each
+  // required document (TEAM_DECISIONS D12).
+  const waiting = parties.reduce(
+    (sum, party) =>
+      sum +
+      party.required.filter((r) => {
+        const sent = party.documents.filter((d) => d.type === r.type && d.status !== "rejected");
+        return sent.length > 0 && !sent.some((d) => d.status === "verified");
+      }).length,
+    0,
+  );
+  const count = (n: number) => `${n} ${n === 1 ? "document is" : "documents are"}`;
   const summary =
-    missing === 0
-      ? "Every party has shared the documents this deal asks for."
-      : `${missing} ${missing === 1 ? "document is" : "documents are"} still missing before terms can be agreed.`;
+    missing > 0
+      ? `${count(missing)} still missing before terms can be agreed.`
+      : waiting > 0
+        ? `Every party has shared the documents this deal asks for. ${count(waiting)} waiting for FoundersLink to confirm before terms can be agreed.`
+        : "FoundersLink has confirmed every document this deal asks for.";
   return { parties: packed, summary };
 }

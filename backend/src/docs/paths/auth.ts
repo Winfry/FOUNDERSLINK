@@ -18,7 +18,7 @@ export const ops: Op[] = [
     path: "/auth/register",
     summary: "Create an account",
     description:
-      "Creates a founder, investor or expert account and signs it in. `admin` cannot be chosen here. The account starts with `approval_status: \"draft\"`.\n\nA six-digit code is emailed to prove the address. Email goes through Resend; until a sending domain is verified there, it reaches only the address that owns the Resend account. When the email cannot be sent, `email_verification.dev_code` carries the code outside production.",
+      "Creates a founder or investor account and signs it in. `admin` and `expert` cannot be chosen here: experts are cut from sign-up for now, and `role: \"expert\"` is refused with `400 VALIDATION_ERROR`. The account starts with `approval_status: \"draft\"`.\n\nA six-digit code is emailed to prove the address. Email goes through Resend; until a sending domain is verified there, it reaches only the address that owns the Resend account. When the email cannot be sent, `email_verification.dev_code` carries the code outside production.",
     access: "public",
     body: registerSchema,
     ok: {

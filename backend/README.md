@@ -1,4 +1,4 @@
-# FounderLink backend
+# FoundersLink backend
 
 Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging, circles, experts and notifications. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
@@ -51,14 +51,14 @@ The tables below are the short version, kept by hand.
 
 A guide for the web and mobile apps. Each screen uses the real API; no mock data. Full details of every endpoint are in the tables after this section.
 
-> **Agreed by the team (4 October):** the apps show no wallet, balance, deposit, withdrawal or escrow, and no FounderLink bank account or Paybill. FounderLink never holds or moves money. The apps collect no ID number and no ID or passport document: identity is checked by an admin, and the backend stores only the result.
+> **Agreed by the team (4 October):** the apps show no wallet, balance, deposit, withdrawal or escrow, and no FoundersLink bank account or Paybill. FoundersLink never holds or moves money. The apps collect no ID number and no ID or passport document: identity is checked by an admin, and the backend stores only the result.
 
 ### 1. Sign up, onboarding and approval
 
 | Step | Call |
 |---|---|
 | Option lists for every form (sectors, stages, counties…) | `GET /meta/options` |
-| Create the account, choosing founder, investor or expert | `POST /auth/register` `{ email, password, full_name, role }` |
+| Create the account, choosing founder or investor (experts cannot sign up for now) | `POST /auth/register` `{ email, password, full_name, role }` |
 | Consents, one switch each, nothing ticked by default | `GET /me/consents`, `POST /me/consents` `{ purpose, granted }` |
 | Founder: describe the business in her own words, then confirm the suggested fields | `POST /me/profile/extract` `{ text, language }` → `{ fields, unsure, engine }`; then `PUT /me/profile` |
 | Investor: the person, then what she funds | `PUT /me/investor-profile`, then `PUT /me/funder` |
@@ -67,7 +67,7 @@ A guide for the web and mobile apps. Each screen uses the real API; no mock data
 | The application for approval | `GET /vetting/application`, `PATCH /vetting/application`, `POST /vetting/application/submit` |
 | Where am I? | `GET /me` → `approval_status`: `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`, `banned` |
 
-The application takes `phone`, `organisation_name`, `organisation_website`, `statement`, `references` and, for an investor taking over an existing funder record, `claims_funder_id`. **There is no ID number or document field.** Show "Your identity is checked by the FounderLink team" in their place.
+The application takes `phone`, `organisation_name`, `organisation_website`, `statement`, `references` and, for an investor taking over an existing funder record, `claims_funder_id`. **There is no ID number or document field.** Show "Your identity is checked by the FoundersLink team" in their place.
 
 ### 2. Funding matches
 
@@ -88,7 +88,7 @@ For an investor viewed by a founder, the response has `fit`: `{ band, components
 - `band` and the first line of `reasons` go at the top ("A good fit, with one thing to check.").
 - `components` are the fit breakdown: one row per signal with a tick or cross and its `text`.
 - The other `reasons` are the "Why it fits", "Check:" and "Add … to your profile" lines.
-- `track_record_highlights` sit above `track_record`. Each entry has a `source_label` badge: "Verified on FounderLink", "Public source" or "Self-reported".
+- `track_record_highlights` sit above `track_record`. Each entry has a `source_label` badge: "Verified on FoundersLink", "Public source" or "Self-reported".
 
 `contact` (email, phone, WhatsApp link) is present only once both have accepted the connection. Never show a profile's contact details any other way. A founder's page has `founder` and `track_record` (her past ventures); an expert's has `expert`.
 
@@ -115,7 +115,7 @@ Show progress as the `progress.text` sentence, never as a score or percentage. I
 | Move it on | `POST /deals/:id/stage` `{ to_stage }`; another party confirms with `POST /deals/:id/stage/confirm` |
 | Pause, resume, decline | `POST /deals/:id/status` `{ status, reason }` |
 | Terms | `PATCH /deals/:id/terms` `{ amount_kes?, instrument?, equity_percent?, roles?, notes? }` |
-| Due diligence step | `GET /deals/:id/due-diligence` → `deal_ready`, and per party `required`, `documents`, `verified`, `self_reported`, `missing`. Share a file with `POST /deals/:id/documents` (multipart: `file`, `type`) |
+| Due diligence step | `GET /deals/:id/due-diligence` → `deal_ready`, and per party `required`, `documents`, `verified`, `self_reported`, `missing`, `waiting_for_confirmation`. Share a file with `POST /deals/:id/documents` (multipart: `file`, `type`) |
 | Timeline | `GET /deals/:id/timeline`: each event has a ready sentence in `text` |
 | Deal checklist | `GET /deals/:id/compliance`, `PATCH /deals/:id/compliance/:item_id` |
 | Milestones | `POST /deals/:id/milestones`, `PATCH /deals/:id/milestones/:mid` |
@@ -137,7 +137,7 @@ Show stages as a stepper: `exploring` → `due_diligence` → `terms_agreed` →
 | Goals, notes and minutes, votes | `/circles/:id/goals`, `/circles/:id/notes`, `/circles/:id/decisions` |
 | ~~Group funding the circle could apply for~~ | Out of scope for now (`docs/TEAM_DECISIONS.md` D11): don't build a screen |
 
-The finance tab shows **contributions and who still owes**, never a balance. Money goes from members straight to the circle's own Paybill, Till or bank account, and the screen says so: "FounderLink records contributions. It never holds or moves your money."
+The finance tab shows **contributions and who still owes**, never a balance. Money goes from members straight to the circle's own Paybill, Till or bank account, and the screen says so: "FoundersLink records contributions. It never holds or moves your money."
 
 ### 7. Messages and notifications
 
@@ -163,7 +163,7 @@ A message with `warning` shows `warning.text` above it in a warning colour. The 
 | Audit log | `GET /admin/actions` |
 | Compliance source freshness | `GET /admin/compliance/sources` |
 
-There is no admin withdrawals or transactions screen: no money passes through FounderLink.
+There is no admin withdrawals or transactions screen: no money passes through FoundersLink.
 
 ## Endpoints
 
@@ -171,7 +171,7 @@ There is no admin withdrawals or transactions screen: no money passes through Fo
 |---|---|---|---|
 | GET | `/health` | no | Liveness check |
 | GET | `/meta/options` | no | Option lists for forms (sectors, stages and so on), each also under `labels` as `{ id, label }` pairs |
-| POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, expires_at, user, email_verification }`. `role` is `founder` (default), `investor` or `expert` |
+| POST | `/auth/register` | no | `{ email, password, full_name, role? }` → `{ token, expires_at, user, email_verification }`. `role` is `founder` (default) or `investor`. `expert` is refused with `400 VALIDATION_ERROR`: experts are cut from sign-up for now |
 | POST | `/auth/login` | no | `{ email, password }` → `{ token, expires_at, user }`, or `{ two_factor_required, pending_token }` for an admin with two-step sign-in |
 | POST | `/auth/email/code` | yes | Sends a new code to her address |
 | POST | `/auth/email/verify` | yes | `{ code }`. Sign-up already sent the first code |
@@ -276,7 +276,7 @@ All of these need an approved account. Inside a deal, the caller must also be on
 | PATCH | `/admin/deal-documents/:id` | Admin: `{ status: verified / rejected, reason? }` |
 | GET | `/admin/deals/:id/due-diligence` | Admin: the same view the parties see |
 
-**Due diligence (level 3, D12).** An `investment` deal cannot move to `terms_agreed` until each party has shared what it asks of her: a founder her `business_registration` and `kra_pin_certificate`, an investor her `organisation_proof`. Until then `/stage` and `/stage/confirm` return `409 NOT_DEAL_READY`, with the missing documents named in the message. Other kinds of deal ask for nothing.
+**Due diligence (level 3, D12).** An `investment` deal cannot move to `terms_agreed` until each party has shared what it asks of her and an admin has confirmed it: a founder her `business_registration` and `kra_pin_certificate`, an investor her `organisation_proof`. Until then `/stage` and `/stage/confirm` return `409 NOT_DEAL_READY`, and the message names the documents still to share and the ones waiting for FoundersLink to confirm. Other kinds of deal ask for nothing.
 
 Each document has a `check` to show:
 
@@ -284,13 +284,13 @@ Each document has a `check` to show:
 |---|---|---|
 | `uploaded` | Uploaded | Stored. The AI service did not read it |
 | `ai_pre_checked` | AI pre-checked | The AI service read it; `precheck` has what it found (`fields`, `checks`, `concerns`, `readable`) |
-| `confirmed` | Confirmed by FounderLink | An admin confirmed it |
+| `confirmed` | Confirmed by FoundersLink | An admin confirmed it |
 | `rejected` | Not accepted | An admin rejected it, with `rejection_reason`. She needs to share another |
 
 What is true today, so nobody over-claims:
 
-- The AI service does not have `/documents/precheck` or `/deals/due-diligence-pack` yet. Until it does, every document is `uploaded` (never `ai_pre_checked`) and the pack says `engine: "stand_in"`: the backend sorts the same facts into the three lists by rule. Do not call that pack AI-compiled.
-- Being deal-ready means the documents are **in and not rejected**. It does not wait for an admin to confirm each one; confirmation changes the label and moves the document from `self_reported` to `verified` in the pack.
+- The AI service now has code for `/documents/precheck` and `/deals/due-diligence-pack`, but the build that runs in the demo does not include it (see the AI service section). Until it does, every document is `uploaded` (never `ai_pre_checked`) and the pack says `engine: "stand_in"`: the backend sorts the same facts into the three lists by rule. Do not call that pack AI-compiled.
+- Being deal-ready means an admin has **confirmed** every required document (status `verified`). A document that is shared but not yet confirmed holds the deal back, and is listed per party in `waiting_for_confirmation`; one not shared, or rejected, is in `missing`. Confirmation also changes the label and moves the document from `self_reported` to `verified` in the pack. The AI pre-check never counts as confirmation: a person decides.
 - Identity is not checked. There is no provider integration.
 - Files are on the server's disk, not encrypted, and deleted 30 days after the deal closes or is declined.
 
@@ -442,7 +442,14 @@ The response also has `engine`: `ai_service` when the AI service answered, `stan
 
 ## AI service
 
-Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls `/extract-profile`, `/recommend`, `/explain-fit`, `/vetting/risk-signals`, `/compliance/applicable`, `/compliance/answer` and `/moderation/check-message` on it (shapes in `docs/FUNDING_FLOW.md` section 4). If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
+Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API_KEY` to the shared key, which is sent as `X-Internal-Api-Key`. The backend calls nine endpoints on it: `/extract-profile`, `/recommend`, `/explain-fit`, `/documents/precheck`, `/deals/due-diligence-pack`, `/vetting/risk-signals`, `/compliance/applicable`, `/compliance/answer` and `/moderation/check-message`. The shapes are in `src/ai/client.ts`; `docs/FUNDING_FLOW.md` section 4 has the earlier ones. If the variable is empty, or a call fails, times out or returns something invalid, the backend falls back to the rule-based stand-in in `src/ai/standin.ts`.
+
+What answers today (4 October, from `docs/FINAL_VERIFICATION.md` section 6):
+
+- **Answered by the AI service:** `/extract-profile`, `/recommend` and `/explain-fit`. These three are in the build that runs on the demo laptop.
+- **Answered by the backend's rules:** `/documents/precheck`, `/deals/due-diligence-pack`, `/vetting/risk-signals`, `/compliance/applicable`, `/compliance/answer` and `/moderation/check-message`. The code for all six is in `ai/service/routes/`, but that build has not been run with the backend in the demo.
+- The document pre-check would fail on a PDF until `pypdf` is installed, and it cannot read photos or scans.
+- Ask Compliance cannot cite on any machine yet: the sources must be fetched, the index built and an LLM key set. Until then every question gets "No official source for this yet".
 
 Emails and phone numbers are removed from the description before it is sent, and the eligibility flags are never sent.
 
@@ -455,7 +462,7 @@ Emails and phone numbers are removed from the description before it is sent, and
 | Sign in as | Who | State |
 |---|---|---|
 | `admin@founderlink.example` | Demo Admin | Admin, for the review queue |
-| `grace@founderlink.example` | Grace Otieno, Savanna Angels Network | Approved investor. Maintains the Savanna Angels record. Her track record has two health businesses at MVP, one of them "Verified on FounderLink" |
+| `grace@founderlink.example` | Grace Otieno, Savanna Angels Network | Approved investor. Maintains the Savanna Angels record. Her track record has two health businesses at MVP, one of them "Verified on FoundersLink" |
 | `wanjiru@founderlink.example` | Wanjiru Kamau, Daktari Mkononi | Approved founder, the other party to Grace's closed deal |
 | `amina@founderlink.example` | Amina Njeri, Afya Booking | Founder in the queue, low risk. Has registered the business, has no KRA PIN |
 | `brian@founderlink.example` | Brian Mwangi, Global Capital Partners | Investor in the queue, flagged high risk |

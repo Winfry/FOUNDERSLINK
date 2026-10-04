@@ -76,9 +76,9 @@ test("stand-in returns a verdict and reasons for every funder", () => {
 test("soft misses lower the band but do not rule a funder out", () => {
   const band = (changes: Partial<MatchProfile>) => matchFunders({ ...salon, ...changes }, [bankLoan])[0]!.band;
 
-  assert.equal(band({ instruments: ["grant"] }), "good");
+  assert.equal(band({ instruments: ["equity"] }), "good");
   assert.equal(band({ funding_amount_kes: null }), "good");
-  assert.equal(band({ instruments: ["grant"], funding_amount_kes: null }), "possible");
+  assert.equal(band({ instruments: ["equity"], funding_amount_kes: null }), "possible");
 });
 
 test("a missing requirement moves a fitting funder to apply_after", () => {

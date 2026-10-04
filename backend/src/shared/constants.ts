@@ -25,7 +25,8 @@ export const SECTORS = [
 
 export const STAGES = ["idea", "mvp", "early_revenue", "growth"] as const;
 
-export const INSTRUMENTS = ["equity", "convertible_note", "loan", "grant"] as const;
+// No grants for now (TEAM_DECISIONS D11): funding comes from investors.
+export const INSTRUMENTS = ["equity", "convertible_note", "loan"] as const;
 
 // Monthly revenue in KES.
 export const REVENUE_BANDS = ["under_50k", "50k_to_200k", "200k_to_1m", "over_1m"] as const;
@@ -46,7 +47,9 @@ export const COUNTIES = [
 ] as const;
 
 // Roles a person can sign up as. `admin` is never available at sign-up.
-export const SIGNUP_ROLES = ["founder", "investor", "expert"] as const;
+// Experts are cut from sign-up for now; expert accounts made before
+// still work.
+export const SIGNUP_ROLES = ["founder", "investor"] as const;
 
 export const PROFESSIONS = ["lawyer", "accountant", "mentor", "other"] as const;
 

@@ -65,7 +65,8 @@ export function fromZod(schema: z.ZodType): Schema {
 //   user      requireAuth
 //   approved  requireAuth + requireApproved
 //   a role    requireAuth + requireRole(role)
-export type Access = "public" | "user" | "approved" | "founder" | "investor" | "expert" | "admin";
+//   approved_founder  requireAuth + requireApproved + requireRole("founder")
+export type Access = "public" | "user" | "approved" | "approved_founder" | "founder" | "investor" | "expert" | "admin";
 
 export type Method = "get" | "post" | "put" | "patch" | "delete";
 
@@ -101,11 +102,15 @@ export interface Parameter {
 }
 
 const ROLES = ["founder", "investor", "expert", "admin"];
+// Some routes need both an approved account and a role.
+const needsApproval = (access: Access) => access === "approved" || access === "approved_founder";
+const roleOf = (access: Access) => (access === "approved_founder" ? "founder" : ROLES.includes(access) ? access : null);
 
 const ACCESS_TEXT: Record<Access, string> = {
   public: "No token needed.",
   user: "Bearer token. Any signed-in account, approved or not.",
   approved: "Bearer token, and the account must be approved.",
+  approved_founder: "Bearer token, `founder` role, and the account must be approved.",
   founder: "Bearer token, `founder` role. Approval is not needed.",
   investor: "Bearer token, `investor` role. Approval is not needed.",
   expert: "Bearer token, `expert` role. Approval is not needed.",
@@ -143,8 +148,9 @@ function sharedErrors(op: Op, parameters: Parameter[]): ErrorCase[] {
   if (validated) errors.push([400, "VALIDATION_ERROR", "A field is missing or invalid. `fields` says which."]);
   if (op.body) errors.push([400, "INVALID_JSON", "The body is not valid JSON."]);
   if (op.access !== "public") errors.push([401, "UNAUTHORIZED", "No bearer token, or the session has expired."]);
-  if (op.access === "approved") errors.push([403, "APPROVAL_REQUIRED", "The account is not approved (or has been suspended)."]);
-  if (ROLES.includes(op.access)) errors.push([403, "FORBIDDEN", `The account does not have the \`${op.access}\` role.`]);
+  if (needsApproval(op.access)) errors.push([403, "APPROVAL_REQUIRED", "The account is not approved (or has been suspended)."]);
+  const role = roleOf(op.access);
+  if (role) errors.push([403, "FORBIDDEN", `The account does not have the \`${role}\` role.`]);
   if (op.access === "admin") {
     errors.push([403, "TWO_FACTOR_REQUIRED", "`ADMIN_2FA_REQUIRED` is on and this session was not signed into with an authenticator code."]);
   }
@@ -180,8 +186,8 @@ export function toOperation(op: Op, tag: string) {
     // An empty list means "no security", overriding nothing: there is no global default.
     security: op.access === "public" ? [] : [{ bearerAuth: [] }],
     "x-access": {
-      role: ROLES.includes(op.access) ? op.access : null,
-      approved: op.access === "approved",
+      role: roleOf(op.access),
+      approved: needsApproval(op.access),
     },
     ...(parameters.length > 0 ? { parameters } : {}),
     ...(op.body ? { requestBody: { required: true, content: json(fromZod(op.body)) } } : {}),

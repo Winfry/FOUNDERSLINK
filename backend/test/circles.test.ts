@@ -17,6 +17,8 @@ const people = {
   mumbi: { full_name: "Mumbi Friend", approved: true },
   stranger: { full_name: "Otieno Stranger", approved: true },
   newcomer: { full_name: "Not Yet Approved", approved: false },
+  // Investors are not chama members (TEAM_DECISIONS D13).
+  investor: { full_name: "Njeri Investor", approved: true, role: "investor" },
 } as const;
 type Who = keyof typeof people;
 
@@ -53,9 +55,9 @@ before(async () => {
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {
     const email = `circle-${who}-${run}@example.com`;
-    const { full_name, approved } = people[who];
+    const { full_name, approved, role = "founder" } = people[who] as { full_name: string; approved: boolean; role?: "investor" };
     const user = await prisma.user.create({
-      data: { email, full_name, role: "founder", password_hash, approval_status: approved ? "approved" : "draft" },
+      data: { email, full_name, role, password_hash, approval_status: approved ? "approved" : "draft" },
     });
     ids[who] = user.id;
     tokens[who] = (await call("POST", "/auth/login", undefined, { email, password })).json.token;
@@ -68,6 +70,22 @@ before(async () => {
     county: "Mombasa",
     stage: "idea",
   });
+});
+
+test("an approved investor cannot create, see or join a circle", async () => {
+  const anyId = "00000000-0000-4000-8000-000000000000";
+  const refused = [
+    await call("POST", "/circles", "investor", { name: `Investor circle ${run}`, type: "learning" }),
+    await call("GET", "/circles", "investor"),
+    await call("GET", "/circles/suggested", "investor"),
+    await call("POST", "/circles/join", "investor", { token: "any-token" }),
+    await call("POST", `/circles/${anyId}/join`, "investor"),
+  ];
+  for (const res of refused) {
+    assert.equal(res.status, 403);
+    assert.equal(res.json.error.code, "FORBIDDEN");
+  }
+  assert.equal(await prisma.circle.count({ where: { created_by: ids.investor } }), 0);
 });
 
 after(async () => {

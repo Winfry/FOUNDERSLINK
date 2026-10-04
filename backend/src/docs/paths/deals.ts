@@ -27,7 +27,7 @@ const NOT_OPEN: ErrorCase = [409, "DEAL_NOT_OPEN", "The deal is paused or declin
 const NOT_READY: ErrorCase = [
   409,
   "NOT_DEAL_READY",
-  "The move is to `terms_agreed` and a party to an investment deal has not shared a required document. The message lists what is missing and from whom.",
+  "The move is to `terms_agreed` and a required document of a party to an investment deal has not been confirmed by an admin. The message lists, with whose each is, the documents still to share and the ones waiting for FoundersLink to confirm.",
 ];
 const NO_DOCUMENT: ErrorCase = [404, "NOT_FOUND", "No such deal for the caller, or no such document on it."];
 const FILE_DELETED: ErrorCase = [410, "FILE_DELETED", "The file was deleted after the retention period. Its record remains."];
@@ -73,18 +73,19 @@ const dueDiligence = obj({
   type: oneOf(DEAL_TYPES),
   stage: str,
   terms: described({ type: "object" }, "The terms as recorded so far: `amount_kes`, `instrument`, `equity_percent`, `roles`, `notes`, each optional."),
-  deal_ready: described(bool, "Every party has shared what this deal asks of her, so it may move to `terms_agreed`."),
+  deal_ready: described(bool, "An admin has confirmed every document this deal asks of every party, so it may move to `terms_agreed`. Sharing a document is not enough."),
   parties: arr(
     obj({
       user_id: uuid,
       full_name: str,
       role: ROLE,
-      ready: bool,
+      ready: described(bool, "Every document asked of her is confirmed: `missing` and `waiting_for_confirmation` are both empty."),
       required: arr(obj({ type: str, title: str, provided: bool })),
       documents: arr(dealDocument),
       verified: described(arr(str), "What FoundersLink has confirmed about her."),
       self_reported: described(arr(str), "What she says herself, including documents not yet confirmed."),
       missing: described(arr(str), "Required documents not shared yet, or rejected."),
+      waiting_for_confirmation: described(arr(str), "Titles of required documents she has shared that an admin has not confirmed yet. They hold the deal back until then."),
     }),
   ),
   summary: str,
@@ -348,7 +349,7 @@ export const ops: Op[] = [
     path: "/deals/:id/due-diligence",
     summary: "Due diligence: documents and the pack",
     description:
-      "Level 3 (TEAM_DECISIONS D12). For each party: the documents this deal asks of her, the ones she has shared, and the pack's three lists (`verified`, `self_reported`, `missing`).\n\nAn `investment` deal asks a founder for `business_registration` and `kra_pin_certificate`, and an investor for `organisation_proof`. Other kinds of deal ask for nothing. A rejected document does not count.\n\nA document is **confirmed** only when an admin confirms it. The AI pre-check is a reading of the document, not proof it is genuine. Identity is not checked.",
+      "Level 3 (TEAM_DECISIONS D12). For each party: the documents this deal asks of her, the ones she has shared, and the pack's three lists (`verified`, `self_reported`, `missing`), and `waiting_for_confirmation`.\n\nAn `investment` deal asks a founder for `business_registration` and `kra_pin_certificate`, and an investor for `organisation_proof`. Other kinds of deal ask for nothing. A rejected document does not count.\n\nA document is **confirmed** only when an admin confirms it, and the deal is `deal_ready` only when every required document is confirmed. The AI pre-check is a reading of the document, not proof it is genuine. Identity is not checked.",
     access: "approved",
     params: dealId,
     ok: { description: "The due-diligence view.", schema: dueDiligence },

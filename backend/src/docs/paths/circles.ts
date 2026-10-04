@@ -17,7 +17,7 @@ import { person } from "../schemas.js";
 export const tag = {
   name: "Circles",
   description:
-    "Founder circles. A money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
+    "Founder circles, for founders only: investors are not chama members (TEAM_DECISIONS D13), so every route here answers `403 FORBIDDEN` to any other role. A money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
 };
 
 const NO_CIRCLE: ErrorCase = [404, "NOT_FOUND", "No such circle, or the caller is not a member."];
@@ -44,7 +44,7 @@ export const ops: Op[] = [
     summary: "Create a circle",
     description:
       "The creator becomes its organiser, and a group chat is created for it. Two rules are checked in code and are not in the schema below: a `money` circle cannot be `discoverable`, and a `learning` circle cannot have `contribution_amount_kes`.",
-    access: "approved",
+    access: "approved_founder",
     body: createSchema,
     ok: { status: 201, description: "The circle.", schema: ref("Circle") },
   },
@@ -52,7 +52,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/circles",
     summary: "My circles",
-    access: "approved",
+    access: "approved_founder",
     ok: {
       description: "Circles the caller belongs to, most recently joined first.",
       schema: arr(
@@ -72,7 +72,7 @@ export const ops: Op[] = [
     path: "/circles/suggested",
     summary: "Learning circles I could join",
     description: "Discoverable learning circles the caller is not in, those nearest her sector and county first. Money circles are never suggested to anyone.",
-    access: "approved",
+    access: "approved_founder",
     ok: {
       description: "Suggestions.",
       schema: arr(
@@ -85,7 +85,7 @@ export const ops: Op[] = [
     path: "/circles/invites/:token",
     summary: "Preview an invite",
     description: "What someone holding an invite link sees before she joins.",
-    access: "approved",
+    access: "approved_founder",
     params: { token: described(str, "The invite token.") },
     ok: {
       description: "The circle behind the invite.",
@@ -97,7 +97,7 @@ export const ops: Op[] = [
     method: "post",
     path: "/circles/join",
     summary: "Join with an invite",
-    access: "approved",
+    access: "approved_founder",
     body: joinSchema,
     ok: { description: "The circle, now joined.", schema: ref("Circle") },
     errors: [
@@ -110,7 +110,7 @@ export const ops: Op[] = [
     path: "/circles/:id",
     summary: "One circle",
     description: "Members and their roles, who has paid this week or month, and goals with progress. Only payments matched to a member are counted.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: { description: "The circle.", schema: ref("Circle") },
     errors: [NO_CIRCLE],
@@ -120,7 +120,7 @@ export const ops: Op[] = [
     path: "/circles/:id",
     summary: "Update a circle",
     description: "Organiser only. `paybill_number` is the circle's own Paybill or Till number, used to match Paybill confirmations to this circle.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     body: updateSchema,
     ok: { description: "The circle.", schema: ref("Circle") },
@@ -136,7 +136,7 @@ export const ops: Op[] = [
     path: "/circles/:id/join",
     summary: "Join a learning circle",
     description: "Without an invite. Only a learning circle that chose to be discoverable.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: { description: "The circle, now joined.", schema: ref("Circle") },
     errors: [
@@ -149,7 +149,7 @@ export const ops: Op[] = [
     path: "/circles/:id/invites",
     summary: "Create an invite link",
     description: "Organiser only. Valid for 7 days. For a money circle each link lets in one person; a learning circle's link works for anyone until it expires.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: {
       status: 201,
@@ -163,7 +163,7 @@ export const ops: Op[] = [
     path: "/circles/:id/members/:userId",
     summary: "Remove a member, or leave",
     description: "The organiser removes someone, or a member removes herself. She also leaves the circle's group chat.",
-    access: "approved",
+    access: "approved_founder",
     params: { ...circleId, userId: described(uuid, "The member to remove. The caller's own id to leave.") },
     ok: { description: "Removed.", schema: obj({ circle_id: uuid, removed: uuid }) },
     errors: [
@@ -177,7 +177,7 @@ export const ops: Op[] = [
     path: "/circles/:id/members/:userId",
     summary: "Change a member's role",
     description: "Organiser only. The organiser's own role cannot be changed.",
-    access: "approved",
+    access: "approved_founder",
     params: { ...circleId, userId: described(uuid, "The member's user id.") },
     body: roleSchema,
     ok: { description: "The circle.", schema: ref("Circle") },
@@ -188,7 +188,7 @@ export const ops: Op[] = [
     path: "/circles/:id/goals",
     summary: "Add a goal",
     description: "Organiser only.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     body: goalSchema,
     ok: { status: 201, description: "The goal.", schema: ref("CircleGoal") },
@@ -199,7 +199,7 @@ export const ops: Op[] = [
     path: "/circles/:id/goals/:goalId",
     summary: "Edit a goal",
     description: "Organiser only.",
-    access: "approved",
+    access: "approved_founder",
     params: { ...circleId, goalId: described(uuid, "The goal id.") },
     body: goalPatchSchema,
     ok: { description: "The goal.", schema: ref("CircleGoal") },
@@ -211,7 +211,7 @@ export const ops: Op[] = [
     summary: "Record a contribution",
     description:
       "The organiser or treasurer writes down a payment a member made to the circle's own account. This is a record only: FoundersLink does not receive or move the money, and nothing checks that the payment happened. `mpesa_receipt` is uppercased before it is checked, so lowercase is accepted.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     body: contributionSchema,
     ok: { status: 201, description: "The payment record.", schema: ref("PaymentRecord") },
@@ -230,7 +230,7 @@ export const ops: Op[] = [
     path: "/circles/:id/contributions",
     summary: "Contribution history",
     description: "Every matched payment, newest first: who paid, when, and who wrote it down. Unmatched payments are in the reconciliation.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: {
       description: "The history.",
@@ -257,7 +257,7 @@ export const ops: Op[] = [
     path: "/circles/:id/notes",
     summary: "Add a note or meeting minutes",
     description: "Any member. With `held_at` it is the minutes of a meeting.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     body: noteSchema,
     ok: { status: 201, description: "The note.", schema: obj(note) },
@@ -267,7 +267,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/circles/:id/notes",
     summary: "Notes and minutes",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: { description: "Newest first.", schema: arr(obj({ ...note, author: person })) },
     errors: [NO_CIRCLE],
@@ -277,7 +277,7 @@ export const ops: Op[] = [
     path: "/circles/:id/decisions",
     summary: "Put a question to a vote",
     description: "Any member.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     body: decisionSchema,
     ok: { status: 201, description: "The decision, open for votes.", schema: obj({ id: uuid, question: str, status: oneOf(["open"]) }) },
@@ -287,7 +287,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/circles/:id/decisions",
     summary: "Decisions and their votes",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: { description: "Newest first.", schema: arr(ref("CircleDecision")) },
     errors: [NO_CIRCLE],
@@ -297,7 +297,7 @@ export const ops: Op[] = [
     path: "/circles/:id/decisions/:decisionId/vote",
     summary: "Vote on a decision",
     description: "One vote each. It can be changed while the decision is open.",
-    access: "approved",
+    access: "approved_founder",
     params: { ...circleId, decisionId: described(uuid, "The decision id.") },
     body: voteSchema,
     ok: { description: "The decision with the new tally.", schema: ref("CircleDecision") },
@@ -311,7 +311,7 @@ export const ops: Op[] = [
     path: "/circles/:id/decisions/:decisionId/close",
     summary: "Close a decision",
     description: "Organiser only.",
-    access: "approved",
+    access: "approved_founder",
     params: { ...circleId, decisionId: described(uuid, "The decision id.") },
     ok: { description: "The closed decision.", schema: ref("CircleDecision") },
     errors: [ORGANISER, [404, "NOT_FOUND", "No such circle for the caller, or no open decision with this id."]],
@@ -321,7 +321,7 @@ export const ops: Op[] = [
     path: "/circles/:id/statements",
     summary: "Import an M-Pesa statement",
     description: `Organiser or treasurer. Reads payments in from the rows of a statement, matches each to a member, and returns a summary. Send exactly one of \`rows\` or \`csv\`; that rule is checked in code and is not in the schema below. The upload itself is not stored. This request may be up to 1 MB, where others are limited to 100 kB.\n\n${UNTESTED} A real M-Pesa statement is a password-protected PDF, which this does not read: it takes rows or CSV text.\n\nA row is \`{ receipt, completed_at, details, paid_in_kes }\`. CSV needs a header line with columns for the receipt number, completion time, details and amount paid in. A payment is matched by a member's verified phone number appearing in \`details\` (whole, or masked in the middle), otherwise by every word of her name. If two members could fit, it is left unmatched. Rows with nothing paid in, repeated receipts and invalid rows are counted and skipped.\n\n\`completed_at\` may be written year first (\`2026-10-04 13:00:00\`) or day first, the Kenyan order (\`04-10-2026 13:00:00\` or \`04/10/2026 13:00\`, both 4 October), read as East Africa Time. A date that cannot be read is not guessed at: the row is skipped and listed in \`errors\` with its row number.`,
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     body: statementSchema,
     ok: {
@@ -343,7 +343,7 @@ export const ops: Op[] = [
     path: "/circles/:id/reconciliation",
     summary: "Who has paid this period",
     description: "For the current week or month: who has paid, who still owes, and payments nobody has been matched to. Any member can read it; the details of unmatched payments go to the organiser and treasurer only.",
-    access: "approved",
+    access: "approved_founder",
     params: circleId,
     ok: {
       description: "The reconciliation.",
@@ -380,7 +380,7 @@ export const ops: Op[] = [
     path: "/circles/:id/payments/:paymentId",
     summary: "Resolve an unmatched payment",
     description: "Organiser or treasurer. `{ member_id }` assigns the payment to a member; `{ ignore: true }` sets it aside as not a contribution. Send exactly one; that rule is checked in code and is not in the schema below.",
-    access: "approved",
+    access: "approved_founder",
     params: { ...circleId, paymentId: described(uuid, "The payment record id.") },
     body: resolveSchema,
     ok: {

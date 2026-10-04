@@ -20,7 +20,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/vetting/application",
     summary: "My application",
-    description: "Her approval status, her application (null until she first saves it) and her documents.",
+    description: "Her approval status, her application (null until she first saves it) and her documents. The application's `risk_level` and `risk_signals` are for staff and are never sent to the applicant.",
     access: "user",
     ok: {
       description: "The application.",
@@ -30,7 +30,7 @@ export const ops: Op[] = [
           nullable(str),
           "Only while she is `suspended`: the reason the admin gave when suspending her. Show this, not the application's `decision_reason`, which is the earlier approval note. Null in every other status, and null when reports from members suspended her and no admin has written a reason.",
         ),
-        application: nullable({ allOf: [ref("VettingApplication"), obj({ checks: arr(ref("VettingCheck")) })] }),
+        application: nullable({ allOf: [ref("MyVettingApplication"), obj({ checks: arr(ref("VettingCheck")) })] }),
         documents: arr(ref("VettingDocument")),
         identity_check: described(str, "A fixed sentence: identity is reviewed by an admin by hand, and no ID number or document is stored."),
       }),
@@ -43,7 +43,7 @@ export const ops: Op[] = [
     description: "Creates the application or updates the fields sent. An investor may set `claims_funder_id` to ask to take over an existing funder record; it becomes hers on approval.",
     access: "user",
     body: applicationSchema,
-    ok: { description: "The saved application.", schema: ref("VettingApplication") },
+    ok: { description: "The saved application, without the staff-only `risk_level` and `risk_signals`.", schema: ref("MyVettingApplication") },
     errors: [
       [403, "FORBIDDEN", "`claims_funder_id` was sent by an account that is not an investor."],
       [404, "NOT_FOUND", "`claims_funder_id` is not a funder record."],
@@ -61,7 +61,7 @@ export const ops: Op[] = [
     access: "user",
     ok: {
       description: "Submitted.",
-      schema: obj({ approval_status: oneOf(["submitted"]), application: ref("VettingApplication") }),
+      schema: obj({ approval_status: oneOf(["submitted"]), application: ref("MyVettingApplication") }),
     },
     errors: [
       [400, "APPLICATION_INCOMPLETE", "The statement is missing, or an investor has not named her organisation."],

@@ -61,7 +61,11 @@ async function apply(who: string, application: object) {
   const res = await call("POST", "/vetting/application/submit", who);
   assert.equal(res.status, 200);
   applications[who] = res.json.application.id;
-  return res.json.application;
+  // The applicant is never sent the risk level or its signals.
+  assert.equal("risk_level" in res.json.application, false);
+  assert.equal("risk_signals" in res.json.application, false);
+  // What staff see: the stored row.
+  return prisma.vettingApplication.findUniqueOrThrow({ where: { id: res.json.application.id } });
 }
 
 const decide = (who: string, decision: string, reason: string, checks?: object[]) =>
@@ -93,7 +97,7 @@ after(async () => {
   server.close();
 });
 
-test("people sign up as founder, investor or expert, never as admin", async () => {
+test("people sign up as founder or investor, never as expert or admin", async () => {
   const founder = await signUp("founder", "founder", "Amina Founder");
   assert.equal(founder.json.user.approval_status, "draft");
 
@@ -109,6 +113,20 @@ test("people sign up as founder, investor or expert, never as admin", async () =
     role: "admin",
   });
   assert.equal(admin.status, 400);
+
+  // Experts are cut from sign-up (TEAM_DECISIONS D11).
+  const expert = await call("POST", "/auth/register", undefined, {
+    email: `e-${emails.admin}`,
+    password,
+    full_name: "Wanjiru Lawyer",
+    role: "expert",
+  });
+  assert.equal(expert.status, 400);
+  assert.equal(expert.json.error.code, "VALIDATION_ERROR");
+  assert.equal(await prisma.user.count({ where: { email: `e-${emails.admin}` } }), 0);
+  const options = await call("GET", "/meta/options");
+  assert.deepEqual(options.json.signup_roles, ["founder", "investor"]);
+  assert.deepEqual(options.json.instruments, ["equity", "convertible_note", "loan"]);
 });
 
 test("each role fills in its own profile, and only its own", async () => {
@@ -212,6 +230,20 @@ test("applications are scored for risk when submitted, and lock after that", asy
 
   const edit = await call("PATCH", "/vetting/application", "founder", { statement: "Changed after submitting it." });
   assert.equal(edit.status, 409);
+});
+
+test("the applicant is not shown the risk level or the signals that flagged her", async () => {
+  const mine = await call("GET", "/vetting/application", "fake");
+  assert.equal(mine.status, 200);
+  assert.equal(mine.json.application.id, applications.fake);
+  assert.equal("risk_level" in mine.json.application, false);
+  assert.equal("risk_signals" in mine.json.application, false);
+  assert.doesNotMatch(JSON.stringify(mine.json), /disposable email|Mentions a fee/);
+
+  // Staff still see both.
+  const review = await call("GET", `/admin/vetting/${applications.fake}`, "admin");
+  assert.equal(review.json.risk_level, "high");
+  assert.ok(review.json.risk_signals.includes("Mentions a fee that people must pay"));
 });
 
 test("only admins see the queue, and the riskiest application comes first", async () => {

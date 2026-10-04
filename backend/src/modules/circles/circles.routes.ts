@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { requireApproved, requireAuth } from "../../middlewares/auth.js";
+import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
 import { syncCircleRoom } from "../messaging/messaging.service.js";
 import {
   checkSecret,
@@ -50,7 +50,9 @@ export const circlesRouter = Router();
 
 // Circles are between members, so every route needs an approved account.
 // The service then checks the caller's membership and role in the circle.
-const approved = [requireAuth, requireApproved] as const;
+// Circles are for founders only: investors are not chama members
+// (TEAM_DECISIONS D13).
+const approved = [requireAuth, requireApproved, requireRole("founder")] as const;
 const id = (value: unknown) => z.uuid().parse(value);
 
 circlesRouter.post("/circles", ...approved, async (req, res) => {
