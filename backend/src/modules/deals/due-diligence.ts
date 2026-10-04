@@ -258,7 +258,9 @@ async function build(dealId: string) {
   return {
     deal_id: deal.id,
     title: deal.title,
+    type: deal.type,
     stage: deal.stage,
+    terms: deal.terms,
     // Whether the deal may move to terms agreed.
     deal_ready: parties.every((p) => p.missing.length === 0),
     parties: parties.map(({ party, required, documents, missing }, i) => ({

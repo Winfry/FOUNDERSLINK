@@ -70,7 +70,9 @@ const dealDocument = obj({
 const dueDiligence = obj({
   deal_id: uuid,
   title: str,
+  type: oneOf(DEAL_TYPES),
   stage: str,
+  terms: described({ type: "object" }, "The terms as recorded so far: `amount_kes`, `instrument`, `equity_percent`, `roles`, `notes`, each optional."),
   deal_ready: described(bool, "Every party has shared what this deal asks of her, so it may move to `terms_agreed`."),
   parties: arr(
     obj({
