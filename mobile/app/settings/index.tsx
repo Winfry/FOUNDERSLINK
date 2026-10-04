@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Bell, FileText, Flag, Languages, LifeBuoy, Lock, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react-native';
+import { Bell, FileText, Flag, LifeBuoy, Lock, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react-native';
 import { Header } from '../../src/components/layout/Header';
 import { MenuGroup, MenuRow } from '../../src/components/profile/MenuRow';
 import { colors, spacing } from '../../src/theme/tokens';
@@ -11,7 +11,6 @@ const SECTIONS: { title: string; rows: { label: string; href: string; icon: Luci
     rows: [
       { label: 'Notifications', href: '/settings/notifications', icon: Bell },
       { label: 'Security', href: '/settings/security', icon: Lock },
-      { label: 'Language', href: '/settings/language', icon: Languages },
     ],
   },
   {

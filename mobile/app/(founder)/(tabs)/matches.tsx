@@ -320,16 +320,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[0.5],
     borderRadius: 10,
   },
-  segmentOn: {
-    backgroundColor: colors.white,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
+  // Orange says "you are here". The label on it is navy, to stay readable.
+  segmentOn: { backgroundColor: colors.accent },
   segmentText: { fontSize: 14, fontWeight: '600', color: colors.textMuted, flexShrink: 1 },
-  segmentTextOn: { color: colors.text, fontWeight: '700' },
+  segmentTextOn: { color: colors.primaryDark, fontWeight: '700' },
   count: {
     minWidth: 22,
     height: 22,
@@ -339,7 +333,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countOn: { backgroundColor: colors.primary },
+  countOn: { backgroundColor: colors.primaryDark },
   countText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
   countTextOn: { color: colors.white },
   hint: { fontSize: 14, fontWeight: '500', color: colors.textMuted, marginTop: spacing[1.5] },
