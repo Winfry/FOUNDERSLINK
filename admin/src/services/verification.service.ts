@@ -5,11 +5,14 @@ import {
   submitVerificationDecision,
 } from "./admin-mock-store";
 import { delay, paginate } from "./pagination";
+import { live } from "@/lib/api";
+import * as http from "./verification.http";
 
 export async function fetchVerificationQueue(
   tab: string,
   params: PaginatedParams = {},
 ): Promise<PaginatedResult<VerificationQueueItem>> {
+  if (live) return http.fetchVerificationQueue(tab, params);
   await delay();
   const items = listVerificationQueue(tab);
   return paginate(items, params, (item, search, status) => {
@@ -21,6 +24,7 @@ export async function fetchVerificationQueue(
 }
 
 export async function fetchVerificationDetail(id: string): Promise<VerificationDetail | null> {
+  if (live) return http.fetchVerificationDetail(id);
   await delay();
   return getVerificationDetail(id);
 }
@@ -31,6 +35,7 @@ export async function decideVerification(
   reason: string,
   checks: { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" }[],
 ) {
+  if (live) return http.decideVerification(id, decision, reason, checks);
   await delay();
   return submitVerificationDecision(id, decision, reason, checks);
 }

@@ -3,6 +3,8 @@ export interface AdminSession {
   email: string;
   name: string;
   mfaVerified: boolean;
+  /** The backend session, when the dashboard runs against the backend. */
+  token?: string;
 }
 
 export function parseSession(raw: string | undefined): AdminSession | null {
