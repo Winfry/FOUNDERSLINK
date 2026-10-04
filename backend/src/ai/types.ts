@@ -129,3 +129,34 @@ export interface ModerationResult {
   flagged: boolean;
   reasons: string[];
 }
+
+// --- Level 3: documents shared in a deal (TEAM_DECISIONS D12) ---
+
+export interface Precheck {
+  fields: Record<string, string | null>;
+  checks: { check: string; passed: boolean; note?: string | null | undefined }[];
+  concerns: string[];
+  readable: boolean;
+}
+
+export interface PackPartyInput {
+  role: string;
+  profile: Record<string, unknown>;
+  // What FounderLink has already confirmed about her, in plain words.
+  checks: string[];
+  // The documents this kind of deal asks her for.
+  required: { type: string; title: string }[];
+  documents: { type: string; title: string; status: string; precheck: Precheck | null }[];
+}
+
+export interface PackParty {
+  role: string;
+  verified: string[];
+  self_reported: string[];
+  missing: string[];
+}
+
+export interface Pack {
+  parties: PackParty[];
+  summary: string;
+}

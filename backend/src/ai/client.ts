@@ -19,6 +19,9 @@ import {
   type MatchProfile,
   type MatchResult,
   type ModerationResult,
+  type Pack,
+  type PackPartyInput,
+  type Precheck,
   type RiskAssessment,
   type RiskInput,
   type TrackRecordItem,
@@ -207,4 +210,47 @@ export async function checkMessage(text: string): Promise<ModerationResult & { e
   const answer = await post("/moderation/check-message", { text: redact(text) }, moderationSchema);
   if (answer) return { ...answer, engine: "ai_service" };
   return { ...standin.checkMessage(text), engine: "stand_in" };
+}
+
+// --- Level 3: documents shared in a deal (TEAM_DECISIONS D12) ---
+
+const precheckSchema = z.object({
+  fields: z.record(z.string(), z.string().nullable()).default({}),
+  checks: z.array(z.object({ check: z.string(), passed: z.boolean(), note: z.string().nullish() })).default([]),
+  concerns: z.array(z.string()).default([]),
+  readable: z.boolean(),
+});
+
+// Asks the AI service to read a document and check it against the
+// profile. There is no stand-in: rules cannot read a file, so when the
+// service does not answer the document is simply not pre-checked.
+// `external_model_allowed` carries her `document_processing` consent:
+// without it the service must not pass the file to an outside model.
+export async function precheckDocument(input: {
+  document_type: string;
+  file: Buffer;
+  mime_type: string;
+  profile: { business_name: string | null; county: string | null };
+  external_model_allowed: boolean;
+}): Promise<Precheck | null> {
+  const { file, ...rest } = input;
+  return post("/documents/precheck", { ...rest, file_base64: file.toString("base64") }, precheckSchema);
+}
+
+const packSchema = z.object({
+  parties: z.array(
+    z.object({ role: z.string(), verified: z.array(z.string()), self_reported: z.array(z.string()), missing: z.array(z.string()) }),
+  ),
+  summary: z.string(),
+});
+
+export async function dueDiligencePack(
+  deal: { type: string; stage: string; terms: unknown },
+  parties: PackPartyInput[],
+  language = "en",
+): Promise<Pack & { engine: Engine }> {
+  const answer = await post("/deals/due-diligence-pack", { deal, parties, language }, packSchema);
+  // One entry per party, in the order sent, or the answer cannot be shown.
+  if (answer && answer.parties.length === parties.length) return { ...answer, engine: "ai_service" };
+  return { ...standin.dueDiligencePack(parties), engine: "stand_in" };
 }

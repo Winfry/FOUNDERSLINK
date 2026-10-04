@@ -213,3 +213,50 @@ test("without consent nothing is sent to the AI service, and the stand-in answer
   assert.equal((await client.applicableItems(profile, [], "business", null, noAi)).engine, "stand_in");
   assert.equal(calls, 0);
 });
+
+test("documents/precheck: sends the file and the profile, and there is no stand-in for reading a file", async () => {
+  const input = {
+    document_type: "kra_pin_certificate",
+    file: Buffer.from("%PDF-1.4 demo"),
+    mime_type: "application/pdf",
+    profile: { business_name: "Afya Booking", county: "Nairobi" },
+    external_model_allowed: false,
+  };
+  reply = () => ({
+    json: {
+      fields: { business_name: "Afya Booking Ltd", kra_pin: "P051234567X" },
+      checks: [{ check: "name_matches_profile", passed: true, note: "Close match" }],
+      concerns: [],
+      readable: true,
+    },
+  });
+  const read = await client.precheckDocument(input);
+  assert.equal(seen.path, "/documents/precheck");
+  assert.equal(seen.body.file_base64, input.file.toString("base64"));
+  assert.equal(seen.body.external_model_allowed, false);
+  assert.equal(read?.fields.kra_pin, "P051234567X");
+
+  reply = () => ({ status: 404, json: {} });
+  assert.equal(await client.precheckDocument(input), null);
+});
+
+test("deals/due-diligence-pack: an answer that does not cover every party is not used", async () => {
+  const party = {
+    role: "founder",
+    profile: {},
+    checks: ["Verified member, approved by FounderLink"],
+    required: [{ type: "kra_pin_certificate", title: "KRA PIN certificate" }],
+    documents: [],
+  };
+  const deal = { type: "investment", stage: "due_diligence", terms: {} };
+
+  reply = () => ({ json: { parties: [{ role: "founder", verified: ["Verified member"], self_reported: [], missing: ["KRA PIN certificate"] }], summary: "One document missing." } });
+  const pack = await client.dueDiligencePack(deal, [party]);
+  assert.equal(pack.engine, "ai_service");
+  assert.equal(pack.summary, "One document missing.");
+
+  reply = () => ({ json: { parties: [], summary: "Nothing." } });
+  const fallback = await client.dueDiligencePack(deal, [party]);
+  assert.equal(fallback.engine, "stand_in");
+  assert.deepEqual(fallback.parties[0]!.missing, ["KRA PIN certificate"]);
+});

@@ -6,6 +6,8 @@
 // to a timeline that every party can see.
 
 import { z } from "zod";
+import { KEEP_MS } from "../vetting/documents.js";
+import { mustBeDealReady, scheduleDealDocumentDeletion } from "./due-diligence.js";
 import { INSTRUMENTS } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
@@ -234,6 +236,11 @@ async function arrive(tx: Tx, deal: LoadedDeal, toStage: string, actorId: string
       })),
     });
     await recordTrackRecord(tx, deal);
+    // The shared documents have done their job: they go in 30 days.
+    await tx.dealDocument.updateMany({
+      where: { deal_id: deal.id, storage_key: { not: null } },
+      data: { delete_after: new Date(Date.now() + KEEP_MS) },
+    });
   }
 }
 
@@ -275,6 +282,9 @@ export async function proposeStage(userId: string, dealId: string, input: z.infe
     throw conflict("WRONG_STAGE", `The next stage after ${STAGE_LABEL[deal.stage]} is ${STAGE_LABEL[nextStage(deal.stage) ?? ""] ?? "none"}`);
   }
   if (deal.pending_stage) throw conflict("ALREADY_PROPOSED", "This move is already waiting for the other parties to confirm");
+  // Level 3 (TEAM_DECISIONS D12): terms are agreed only between parties
+  // who have shared their documents.
+  if (input.to_stage === "terms_agreed") await mustBeDealReady(dealId);
 
   await prisma.$transaction(async (tx) => {
     if (!NEEDS_EVERYONE.has(input.to_stage)) return arrive(tx, deal, input.to_stage, userId, input.note);
@@ -298,6 +308,8 @@ export async function confirmStage(userId: string, dealId: string) {
   mustBeOpen(deal);
   const pending = deal.pending_stage;
   if (!pending) throw conflict("NOTHING_TO_CONFIRM", "No stage change is waiting to be confirmed");
+  // Checked again: a document may have been rejected since the proposal.
+  if (pending === "terms_agreed") await mustBeDealReady(dealId);
 
   await prisma.$transaction(async (tx) => {
     await tx.dealParty.update({
@@ -325,6 +337,7 @@ export async function setDealStatus(userId: string, dealId: string, input: z.inf
     prisma.dealParty.updateMany({ where: { deal_id: dealId }, data: { confirmed_stage: null } }),
     prisma.dealEvent.create({ data: { deal_id: dealId, actor_id: userId, event: input.status === "open" ? "resumed" : input.status, note: input.reason } }),
   ]);
+  if (input.status === "declined") await scheduleDealDocumentDeletion(dealId);
   await announce(dealId);
   return getDeal(userId, dealId);
 }

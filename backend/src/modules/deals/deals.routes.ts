@@ -1,6 +1,19 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
 import { z } from "zod";
-import { requireApproved, requireAuth } from "../../middlewares/auth.js";
+import multer from "multer";
+import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
+import { MAX_BYTES, reviewSchema } from "../vetting/documents.js";
+import {
+  dealFileForAdmin,
+  dealFileForParty,
+  dealUploadSchema,
+  getDueDiligence,
+  getDueDiligenceForAdmin,
+  listDealDocumentsForReview,
+  removeDealDocument,
+  reviewDealDocument,
+  uploadDealDocument,
+} from "./due-diligence.js";
 import { listConnections, requestConnection, requestSchema, respond, respondSchema, withdraw } from "../network/connections.js";
 import {
   addMilestone,
@@ -109,4 +122,52 @@ dealsRouter.get("/deals/:id/compliance", ...member, async (req, res) => {
 dealsRouter.patch("/deals/:id/compliance/:item_id", ...member, async (req, res) => {
   const input = checklistSchema.parse(req.body);
   res.json(await updateDealChecklist(req.user!.id, id(req.params.id), String(req.params.item_id), input));
+});
+
+// --- Due diligence: the documents each party shares (level 3) ---
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_BYTES, files: 1 } });
+const isAdmin = requireRole("admin");
+
+// Sent as a download, and the browser is told not to guess its type.
+function sendFile(res: Response, file: { path: string; mime_type: string; file_name: string }) {
+  res.setHeader("Content-Type", file.mime_type);
+  res.setHeader("Content-Disposition", `attachment; filename="${file.file_name.replace(/[^\w. -]/g, "_")}"`);
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.sendFile(file.path);
+}
+
+dealsRouter.get("/deals/:id/due-diligence", ...member, async (req, res) => {
+  res.json(await getDueDiligence(req.user!.id, id(req.params.id)));
+});
+
+dealsRouter.post("/deals/:id/documents", ...member, upload.single("file"), async (req, res) => {
+  const input = dealUploadSchema.parse(req.body);
+  res.status(201).json(await uploadDealDocument(req.user!.id, id(req.params.id), req.file, input));
+});
+
+dealsRouter.delete("/deals/:id/documents/:doc_id", ...member, async (req, res) => {
+  res.json(await removeDealDocument(req.user!.id, id(req.params.id), id(req.params.doc_id)));
+});
+
+dealsRouter.get("/deals/:id/documents/:doc_id/file", ...member, async (req, res) => {
+  sendFile(res, await dealFileForParty(req.user!.id, id(req.params.id), id(req.params.doc_id)));
+});
+
+// An admin confirms a document, or says why not. Until then it is at
+// most "AI pre-checked".
+dealsRouter.get("/admin/deal-documents", requireAuth, isAdmin, async (_req, res) => {
+  res.json(await listDealDocumentsForReview());
+});
+
+dealsRouter.get("/admin/deal-documents/:id/file", requireAuth, isAdmin, async (req, res) => {
+  sendFile(res, await dealFileForAdmin(id(req.params.id)));
+});
+
+dealsRouter.patch("/admin/deal-documents/:id", requireAuth, isAdmin, async (req, res) => {
+  res.json(await reviewDealDocument(req.user!.id, id(req.params.id), reviewSchema.parse(req.body)));
+});
+
+dealsRouter.get("/admin/deals/:id/due-diligence", requireAuth, isAdmin, async (req, res) => {
+  res.json(await getDueDiligenceForAdmin(id(req.params.id)));
 });

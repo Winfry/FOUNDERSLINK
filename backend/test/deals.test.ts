@@ -19,6 +19,7 @@ const people = {
   founder: { role: "founder", full_name: "Amina Founder", approved: true },
   investor: { role: "investor", full_name: "Grace Investor", approved: true },
   lawyer: { role: "expert", full_name: "Wanjiru Lawyer", approved: true },
+  admin: { role: "admin", full_name: "Deal Admin", approved: true },
   outsider: { role: "founder", full_name: "Otieno Outsider", approved: true },
   newcomer: { role: "founder", full_name: "Not Yet Approved", approved: false },
 } as const;
@@ -48,6 +49,20 @@ async function connect(from: Who, to: Who) {
   assert.equal(asked.status, 201);
   const answered = await call("PATCH", `/connections/${asked.json.id}`, to, { status: "accepted" });
   assert.equal(answered.json.status, "accepted");
+}
+
+const PDF = Buffer.from("%PDF-1.4 a demo document, not a real certificate");
+
+async function share(who: Who, type: string, bytes = PDF, mime = "application/pdf") {
+  const form = new FormData();
+  form.append("type", type);
+  form.append("file", new Blob([new Uint8Array(bytes)], { type: mime }), `${type}.pdf`);
+  const res = await fetch(`${base}/deals/${dealId}/documents`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${tokens[who]}` },
+    body: form,
+  });
+  return { status: res.status, json: (await res.json()) as any };
 }
 
 const stage = (who: Who, to_stage: string) => call("POST", `/deals/${dealId}/stage`, who, { to_stage });
@@ -145,6 +160,76 @@ test("stages go one step at a time, and an ordinary step needs only one party", 
   assert.equal(moved.json.pending, null);
 });
 
+test("documents are shared only by the parties, and only once the deal reaches due diligence", async () => {
+  const early = await call("POST", "/deals", "outsider", { type: "investment", title: `Too early ${run}`, with_user_id: ids.investor });
+  assert.equal(early.json.error.code, "NOT_CONNECTED");
+
+  assert.equal((await share("outsider", "business_registration")).status, 404);
+  assert.equal((await share("founder", "passport")).status, 400);
+  assert.equal((await share("founder", "business_registration", Buffer.from("MZ not a pdf"))).json.error.code, "UNSUPPORTED_FILE");
+  assert.equal((await call("GET", `/deals/${dealId}/due-diligence`, "outsider")).status, 404);
+
+  const before = await call("GET", `/deals/${dealId}/due-diligence`, "founder");
+  assert.equal(before.json.deal_ready, false);
+  assert.deepEqual(
+    before.json.parties.map((p: any) => [p.role, p.ready, p.missing]),
+    [
+      ["founder", false, ["Business registration certificate", "KRA PIN certificate"]],
+      ["investor", false, ["Organisation or fund documents"]],
+    ],
+  );
+  assert.match(before.json.summary, /3 documents are still missing/);
+});
+
+test("terms cannot be agreed until every party has shared her documents", async () => {
+  const blocked = await stage("founder", "terms_agreed");
+  assert.equal(blocked.status, 409);
+  assert.equal(blocked.json.error.code, "NOT_DEAL_READY");
+  assert.match(blocked.json.error.message, /KRA PIN certificate \(Amina Founder\)/);
+
+  const registration = await share("founder", "business_registration");
+  assert.equal(registration.status, 201);
+  // The AI service is off in these tests, so nothing claims a pre-check.
+  assert.equal(registration.json.precheck, null);
+  assert.equal(registration.json.check, "uploaded");
+  const pin = await share("founder", "kra_pin_certificate");
+  await share("investor", "organisation_proof");
+
+  // Each party can open the other's documents. Nobody else can.
+  const file = await fetch(`${base}/deals/${dealId}/documents/${pin.json.id}/file`, { headers: { authorization: `Bearer ${tokens.investor}` } });
+  assert.equal(file.status, 200);
+  assert.equal(Buffer.from(await file.arrayBuffer()).toString(), PDF.toString());
+  const stranger = await fetch(`${base}/deals/${dealId}/documents/${pin.json.id}/file`, { headers: { authorization: `Bearer ${tokens.outsider}` } });
+  assert.equal(stranger.status, 404);
+
+  // An admin rejects one, with a reason: the deal is held back again.
+  assert.equal((await call("GET", "/admin/deal-documents", "founder")).status, 403);
+  const queue = await call("GET", "/admin/deal-documents", "admin");
+  assert.ok(queue.json.some((d: any) => d.id === pin.json.id && d.uploaded_by.full_name === "Amina Founder"));
+  assert.equal((await call("PATCH", `/admin/deal-documents/${pin.json.id}`, "admin", { status: "rejected" })).status, 400);
+  await call("PATCH", `/admin/deal-documents/${pin.json.id}`, "admin", { status: "rejected", reason: "The page is cut off" });
+  assert.equal((await stage("founder", "terms_agreed")).json.error.code, "NOT_DEAL_READY");
+  assert.equal((await call("DELETE", `/deals/${dealId}/documents/${pin.json.id}`, "founder")).json.error.code, "ALREADY_REVIEWED");
+  const told = await call("GET", "/notifications", "founder");
+  assert.ok(JSON.stringify(told.json).includes("The page is cut off"));
+
+  // She shares another, and the admin confirms the registration.
+  await share("founder", "kra_pin_certificate");
+  const confirmed = await call("PATCH", `/admin/deal-documents/${registration.json.id}`, "admin", { status: "verified" });
+  assert.equal(confirmed.json.check_label, "Confirmed by FounderLink");
+
+  const pack = await call("GET", `/deals/${dealId}/due-diligence`, "investor");
+  assert.equal(pack.json.deal_ready, true);
+  // Compiled by the backend's rules here, and it says so.
+  assert.equal(pack.json.engine, "stand_in");
+  const [founder, investor] = pack.json.parties;
+  assert.ok(founder.verified.includes("Business registration certificate: confirmed by FounderLink"));
+  assert.ok(founder.self_reported.includes("KRA PIN certificate: uploaded, not yet confirmed"));
+  assert.deepEqual(founder.missing, []);
+  assert.deepEqual(investor.missing, []);
+  assert.equal((await call("GET", `/admin/deals/${dealId}/due-diligence`, "admin")).json.deal_ready, true);
+});
+
 test("terms are agreed only when every party has confirmed the same terms", async () => {
   await call("PATCH", `/deals/${dealId}/terms`, "founder", { amount_kes: 1_000_000, instrument: "equity", equity_percent: 10 });
   assert.equal((await call("PATCH", `/deals/${dealId}/terms`, "founder", { valuation: "huge" })).status, 400);
@@ -208,6 +293,10 @@ test("closing needs every party, and sets up the check-ins", async () => {
   assert.equal(closed.json.stage, "closed");
   assert.ok(closed.json.closed_at);
   assert.deepEqual(closed.json.milestones.map((m: any) => m.title), ["30-day check-in", "90-day check-in", "180-day check-in"]);
+
+  // The shared files are kept 30 more days, then deleted.
+  const kept = await prisma.dealDocument.findMany({ where: { deal_id: dealId } });
+  assert.ok(kept.length >= 3 && kept.every((d) => d.delete_after && d.delete_after > new Date()));
 
   const active = await stage("founder", "active");
   assert.equal(active.json.stage, "active");

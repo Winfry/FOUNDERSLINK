@@ -85,6 +85,7 @@ model User {
   connections_sent     Connection[]         @relation("requester")
   connections_received Connection[]         @relation("addressee")
   deal_parties         DealParty[]
+  deal_documents       DealDocument[]
   deal_events          DealEvent[]
   conversations        ConversationMember[]
   messages             Message[]
@@ -471,6 +472,7 @@ model Deal {
   parties      DealParty[]
   events       DealEvent[]
   milestones   DealMilestone[]
+  documents    DealDocument[]
   conversation Conversation?
 
   @@map("deals")
@@ -888,4 +890,36 @@ model VettingDocument {
   application VettingApplication @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@map("vetting_documents")
+}
+
+// A document one party shares with the others when a deal reaches due
+// diligence (TEAM_DECISIONS D12, level 3). The file follows the same
+// rules as a vetting document: on our disk under our own name, and
+// deleted 30 days after the deal closes or is declined.
+model DealDocument {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  deal_id          String    @db.Uuid
+  user_id          String    @db.Uuid
+  type             String
+  label            String?
+  file_name        String
+  mime_type        String
+  size_bytes       Int
+  storage_key      String?
+  status           String    @default("uploaded") // uploaded | verified | rejected
+  rejection_reason String?
+  // What the AI service read and checked. Null when it did not run: a
+  // document is never called "AI pre-checked" unless this is set.
+  precheck         Json?
+  uploaded_at      DateTime  @default(now())
+  reviewed_by      String?   @db.Uuid
+  reviewed_at      DateTime?
+  delete_after     DateTime?
+  deleted_at       DateTime?
+
+  deal Deal @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([deal_id])
+  @@map("deal_documents")
 }

@@ -47,7 +47,7 @@ export const reviewSchema = z
   .object({ status: z.enum(["verified", "rejected"]), reason: z.string().trim().min(5).max(500).optional() })
   .refine((r) => r.status === "verified" || r.reason, "Say why the document is rejected");
 
-const fileOf = (key: string) => path.join(env.UPLOAD_DIR, key);
+export const fileOf = (key: string) => path.join(env.UPLOAD_DIR, key);
 
 const publicFields = {
   id: true,
@@ -74,12 +74,28 @@ export interface UploadedFile {
   buffer: Buffer;
 }
 
-export async function uploadDocument(userId: string, file: UploadedFile | undefined, input: z.infer<typeof uploadSchema>) {
+// Refuses anything that is not really a PDF, JPEG or PNG.
+export function checkFile(file: UploadedFile | undefined): asserts file is UploadedFile {
   if (!file) throw new AppError(400, "NO_FILE", "Attach a file");
   const signature = SIGNATURES[file.mimetype];
   if (!signature || !signature.every((byte, i) => file.buffer[i] === byte)) {
     throw new AppError(400, "UNSUPPORTED_FILE", "Upload a PDF, JPEG or PNG");
   }
+}
+
+// Writes the file under a name of ours and returns that name. Her file
+// name is kept only to show it, and is never used as a path.
+export async function storeFile(buffer: Buffer) {
+  const key = randomUUID();
+  await mkdir(env.UPLOAD_DIR, { recursive: true });
+  await writeFile(fileOf(key), buffer);
+  return key;
+}
+
+export const KEEP_MS = KEEP_DAYS * 24 * 60 * 60 * 1000;
+
+export async function uploadDocument(userId: string, file: UploadedFile | undefined, input: z.infer<typeof uploadSchema>) {
+  checkFile(file);
 
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { approval_status: true } });
   if (!EDITABLE.includes(user.approval_status)) {
@@ -91,11 +107,7 @@ export async function uploadDocument(userId: string, file: UploadedFile | undefi
     throw conflict("TOO_MANY_DOCUMENTS", `An application can have at most ${MAX_DOCUMENTS} documents`);
   }
 
-  // The name on disk is ours. Her file name is kept only to show it, and
-  // is never used as a path.
-  const key = randomUUID();
-  await mkdir(env.UPLOAD_DIR, { recursive: true });
-  await writeFile(fileOf(key), file.buffer);
+  const key = await storeFile(file.buffer);
 
   return prisma.vettingDocument.create({
     data: {
@@ -111,7 +123,7 @@ export async function uploadDocument(userId: string, file: UploadedFile | undefi
   });
 }
 
-async function removeFile(key: string | null) {
+export async function removeFile(key: string | null) {
   if (key) await unlink(fileOf(key)).catch(() => undefined);
 }
 
@@ -155,7 +167,7 @@ export async function reviewDocument(adminId: string, documentId: string, input:
 export function scheduleDeletion(applicationId: string, now = new Date()) {
   return prisma.vettingDocument.updateMany({
     where: { application_id: applicationId, storage_key: { not: null } },
-    data: { delete_after: new Date(now.getTime() + KEEP_DAYS * 24 * 60 * 60 * 1000) },
+    data: { delete_after: new Date(now.getTime() + KEEP_MS) },
   });
 }
 
@@ -166,11 +178,18 @@ export async function purgeExpired(now = new Date()) {
     await removeFile(document.storage_key);
     await prisma.vettingDocument.update({ where: { id: document.id }, data: { storage_key: null, deleted_at: now } });
   }
-  return { deleted: due.length };
+  // Documents shared in a deal follow the same rule.
+  const dealDue = await prisma.dealDocument.findMany({ where: { delete_after: { lte: now }, storage_key: { not: null } } });
+  for (const document of dealDue) {
+    await removeFile(document.storage_key);
+    await prisma.dealDocument.update({ where: { id: document.id }, data: { storage_key: null, deleted_at: now } });
+  }
+  return { deleted: due.length + dealDue.length };
 }
 
 // Called before an account is deleted, so no file outlives its owner.
 export async function removeFilesOf(userId: string) {
   const documents = await prisma.vettingDocument.findMany({ where: { application: { user_id: userId } }, select: { storage_key: true } });
-  await Promise.all(documents.map((d) => removeFile(d.storage_key)));
+  const shared = await prisma.dealDocument.findMany({ where: { user_id: userId }, select: { storage_key: true } });
+  await Promise.all([...documents, ...shared].map((d) => removeFile(d.storage_key)));
 }

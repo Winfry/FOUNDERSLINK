@@ -15,6 +15,8 @@ import type {
   MatchProfile,
   MatchResult,
   ModerationResult,
+  Pack,
+  PackPartyInput,
   Reason,
   RiskAssessment,
   RiskInput,
@@ -313,4 +315,32 @@ export function checkMessage(text: string): ModerationResult {
   }
 
   return { flagged: reasons.length > 0, reasons };
+}
+
+// The due-diligence pack without the AI: the same facts, sorted into
+// what FounderLink confirmed, what the party says herself, and what is
+// still missing. A document counts as verified only once an admin has
+// confirmed it.
+export function dueDiligencePack(parties: PackPartyInput[]): Pack {
+  const packed = parties.map((party) => {
+    const usable = party.documents.filter((d) => d.status !== "rejected");
+    const confirmed = usable.filter((d) => d.status === "verified");
+    const waiting = usable.filter((d) => d.status !== "verified");
+    return {
+      role: party.role,
+      verified: [...party.checks, ...confirmed.map((d) => `${d.title}: confirmed by FounderLink`)],
+      self_reported: [
+        "Profile details",
+        ...waiting.map((d) => `${d.title}: uploaded${d.precheck ? ", AI pre-checked" : ""}, not yet confirmed`),
+      ],
+      missing: party.required.filter((r) => !usable.some((d) => d.type === r.type)).map((r) => r.title),
+    };
+  });
+
+  const missing = packed.reduce((sum, p) => sum + p.missing.length, 0);
+  const summary =
+    missing === 0
+      ? "Every party has shared the documents this deal asks for."
+      : `${missing} ${missing === 1 ? "document is" : "documents are"} still missing before terms can be agreed.`;
+  return { parties: packed, summary };
 }

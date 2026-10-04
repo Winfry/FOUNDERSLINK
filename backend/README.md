@@ -115,6 +115,7 @@ Show progress as the `progress.text` sentence, never as a score or percentage. I
 | Move it on | `POST /deals/:id/stage` `{ to_stage }`; another party confirms with `POST /deals/:id/stage/confirm` |
 | Pause, resume, decline | `POST /deals/:id/status` `{ status, reason }` |
 | Terms | `PATCH /deals/:id/terms` `{ amount_kes?, instrument?, equity_percent?, roles?, notes? }` |
+| Due diligence step | `GET /deals/:id/due-diligence` → `deal_ready`, and per party `required`, `documents`, `verified`, `self_reported`, `missing`. Share a file with `POST /deals/:id/documents` (multipart: `file`, `type`) |
 | Timeline | `GET /deals/:id/timeline`: each event has a ready sentence in `text` |
 | Deal checklist | `GET /deals/:id/compliance`, `PATCH /deals/:id/compliance/:item_id` |
 | Milestones | `POST /deals/:id/milestones`, `PATCH /deals/:id/milestones/:mid` |
@@ -266,6 +267,32 @@ All of these need an approved account. Inside a deal, the caller must also be on
 | GET | `/deals/:id/compliance` | The checklist for this deal type |
 | PATCH | `/deals/:id/compliance/:item_id` | `{ status, note? }` |
 | PATCH | `/deals/:id/sharing` | `{ share }`. Whether this party lets the closed deal show on track records |
+| GET | `/deals/:id/due-diligence` | Each party's required and shared documents, and the due-diligence pack |
+| POST | `/deals/:id/documents` | Multipart `file` (PDF, JPEG or PNG, up to 5 MB), `type`, `label?`. From `due_diligence` until the deal closes |
+| DELETE | `/deals/:id/documents/:doc_id` | Takes back her own document, before an admin reviews it |
+| GET | `/deals/:id/documents/:doc_id/file` | Downloads a document. Any party to the deal |
+| GET | `/admin/deal-documents` | Admin: documents waiting to be confirmed |
+| GET | `/admin/deal-documents/:id/file` | Admin: downloads one |
+| PATCH | `/admin/deal-documents/:id` | Admin: `{ status: verified / rejected, reason? }` |
+| GET | `/admin/deals/:id/due-diligence` | Admin: the same view the parties see |
+
+**Due diligence (level 3, D12).** An `investment` deal cannot move to `terms_agreed` until each party has shared what it asks of her: a founder her `business_registration` and `kra_pin_certificate`, an investor her `organisation_proof`. Until then `/stage` and `/stage/confirm` return `409 NOT_DEAL_READY`, with the missing documents named in the message. Other kinds of deal ask for nothing.
+
+Each document has a `check` to show:
+
+| `check` | Show | When |
+|---|---|---|
+| `uploaded` | Uploaded | Stored. The AI service did not read it |
+| `ai_pre_checked` | AI pre-checked | The AI service read it; `precheck` has what it found (`fields`, `checks`, `concerns`, `readable`) |
+| `confirmed` | Confirmed by FounderLink | An admin confirmed it |
+| `rejected` | Not accepted | An admin rejected it, with `rejection_reason`. She needs to share another |
+
+What is true today, so nobody over-claims:
+
+- The AI service does not have `/documents/precheck` or `/deals/due-diligence-pack` yet. Until it does, every document is `uploaded` (never `ai_pre_checked`) and the pack says `engine: "stand_in"`: the backend sorts the same facts into the three lists by rule. Do not call that pack AI-compiled.
+- Being deal-ready means the documents are **in and not rejected**. It does not wait for an admin to confirm each one; confirmation changes the label and moves the document from `self_reported` to `verified` in the pack.
+- Identity is not checked. There is no provider integration.
+- Files are on the server's disk, not encrypted, and deleted 30 days after the deal closes or is declined.
 
 Stages run `exploring` → `due_diligence` → `terms_agreed` → `documents_compliance` → `closed` → `active`. Moving to `terms_agreed` or `closed` needs every party: the first call to `/stage` proposes it, and the deal's `pending.waiting_for` lists who has yet to confirm.
 
