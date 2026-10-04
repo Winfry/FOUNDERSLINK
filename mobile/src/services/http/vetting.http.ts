@@ -2,6 +2,7 @@ import type { VettingService } from '../types/api';
 import type { VettingApplication } from '../../types';
 import { get, patch, post } from './client';
 import { showDemoCode } from './demo-code';
+import { syncSessionUser } from './session-sync';
 
 interface ApiVetting {
   approval_status: VettingApplication['approvalStatus'];
@@ -16,6 +17,8 @@ interface ApiVetting {
 
 async function load(): Promise<VettingApplication> {
   const { approval_status, application } = await get<ApiVetting>('/vetting/application');
+  // An admin may have decided since she signed in.
+  await syncSessionUser({ approvalStatus: approval_status });
   return {
     approvalStatus: approval_status,
     phone: application?.phone ?? undefined,
@@ -52,6 +55,7 @@ export const httpVettingService: VettingService = {
   },
 
   async verifyPhoneConfirm(code) {
-    await post('/me/phone/verify', { code });
+    const saved = await post<{ phone?: string }>('/me/phone/verify', { code });
+    if (saved?.phone) await syncSessionUser({ phone: saved.phone });
   },
 };

@@ -43,7 +43,7 @@ import { httpReferenceDataService } from './http/reference.http';
  * mock otherwise. To fall back to a mock for one service on the day, name
  * it in EXPO_PUBLIC_MOCK_SERVICES, e.g. "deal,circle".
  */
-const mocked = new Set((process.env.EXPO_PUBLIC_MOCK_SERVICES ?? '').split(',').map((name) => name.trim()));
+const mocked = new Set((process.env.EXPO_PUBLIC_MOCK_SERVICES ?? '').split(',').map((name: string) => name.trim()));
 const live = (name: string) => API_URL !== '' && !mocked.has(name);
 
 export const authService: AuthService = live('auth') ? httpAuthService : mockAuthService;

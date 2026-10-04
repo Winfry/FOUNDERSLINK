@@ -14,7 +14,8 @@ export default function VerificationStatusScreen() {
 
   if (q.isLoading) return <ScreenLoading />;
 
-  const status = user?.approvalStatus ?? q.data?.approvalStatus ?? 'draft';
+  // What the backend says now comes before what was saved at sign-in.
+  const status = q.data?.approvalStatus ?? user?.approvalStatus ?? 'draft';
   let message = 'Complete verification to connect with investors.';
   if (status === 'submitted' || status === 'in_review') {
     message = "We're checking your details. You can keep exploring.";

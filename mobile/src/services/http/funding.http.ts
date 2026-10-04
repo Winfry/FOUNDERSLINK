@@ -1,6 +1,7 @@
 import type { FundingService } from '../types/api';
-import type { FundingMatches, InvestorMatchCard, MatchBand, MatchReason } from '../../types';
+import type { ApprovalStatus, FundingMatches, InvestorMatchCard, MatchBand, MatchReason } from '../../types';
 import { get } from './client';
+import { syncSessionUser } from './session-sync';
 
 /** One card of `GET /funding/matches`. Only the fields used here. */
 interface ApiCard {
@@ -16,6 +17,7 @@ interface ApiCard {
 }
 
 interface ApiMatches {
+  approval_status: ApprovalStatus;
   apply_now: ApiCard[];
   apply_after: ApiCard[];
   not_for_you: ApiCard[];
@@ -48,6 +50,9 @@ const SOURCE_TEXT = (entry: { company_name: string | null; sector: string; stage
 export const httpFundingService: FundingService = {
   async getMatches(): Promise<FundingMatches> {
     const matches = await get<ApiMatches>('/funding/matches');
+    // The matches screen is where she lands, so this is also where the
+    // app learns that an admin has approved her.
+    await syncSessionUser({ approvalStatus: matches.approval_status });
     return {
       applyNow: matches.apply_now.map(toCard),
       applyAfter: matches.apply_after.map(toCard),

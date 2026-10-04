@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 /**
  * Outside production, when the backend could not send a code by email
@@ -8,5 +8,8 @@ import { Alert } from 'react-native';
  */
 export function showDemoCode(answer: { dev_code?: string } | null | undefined, sentBy: 'email' | 'SMS') {
   if (!answer?.dev_code) return;
-  Alert?.alert?.('Demo code', `This demo cannot send the ${sentBy}. Your code is ${answer.dev_code}`);
+  const message = `This demo cannot send the ${sentBy}. Your code is ${answer.dev_code}`;
+  // In a browser, React Native's Alert does nothing.
+  if (Platform.OS === 'web') globalThis.alert?.(`Demo code. ${message}`);
+  else Alert.alert('Demo code', message);
 }
