@@ -262,7 +262,8 @@ export const httpInvestorService: InvestorService = {
       }[]
     >('/connections');
     return rows
-      .filter((c) => c.direction === 'sent' && c.status !== 'withdrawn')
+      // What she asked for, and anyone she is connected with, whoever asked first.
+      .filter((c) => (c.direction === 'sent' && c.status !== 'withdrawn') || c.status === 'accepted')
       .map((c) => ({
         id: c.id,
         founderId: c.with.id,

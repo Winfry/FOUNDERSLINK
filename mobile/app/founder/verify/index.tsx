@@ -7,7 +7,8 @@ import { Header } from '../../../src/components/layout/Header';
 import { CodeInput, Steps, TextLink } from '../../../src/components/auth/parts';
 import { Button, Input, Textarea } from '../../../src/components/ui';
 import { phoneKenyaSchema } from '../../../src/lib/validation';
-import { vettingService } from '../../../src/services';
+import { investorService, vettingService } from '../../../src/services';
+import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
 
 const STEP_NAMES = ['Phone', 'Code', 'Statement'];
@@ -16,6 +17,9 @@ const messageOf = (e: unknown, fallback: string) => (e as { message?: string })?
 
 export default function VerifyToConnectScreen() {
   const router = useRouter();
+  const isInvestor = useAuthStore((s) => s.user?.role) === 'investor';
+  // An investor has to say what she funds before she can be checked.
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [phone, setPhone] = useState('+254');
   const [code, setCode] = useState('');
   const [statement, setStatement] = useState('');
@@ -68,9 +72,20 @@ export default function VerifyToConnectScreen() {
       return;
     }
     setError(null);
+    setNeedsSetup(false);
     setLoading(true);
     try {
-      await vettingService.saveDraft({ statement });
+      // The reviewer checks an investor against the organisation she invests for.
+      let organisationName: string | undefined;
+      if (isInvestor) {
+        organisationName = (await investorService.getSetup())?.organisationName;
+        if (!organisationName) {
+          setNeedsSetup(true);
+          setError('First tell us which organisation you invest for, then come back here to verify.');
+          return;
+        }
+      }
+      await vettingService.saveDraft({ statement, organisationName });
       await vettingService.submit();
       router.replace('/founder/verify/status');
     } catch (e) {
@@ -96,7 +111,7 @@ export default function VerifyToConnectScreen() {
           <>
             <Text style={styles.heading}>What is your phone number?</Text>
             <Text style={styles.helper}>
-              Investors want to know there is a real person behind every profile. We send one code to check the number is yours.
+              {isInvestor ? 'Founders' : 'Investors'} want to know there is a real person behind every profile. We send one code to check the number is yours.
             </Text>
             <View style={styles.field}>
               <Input
@@ -151,7 +166,7 @@ export default function VerifyToConnectScreen() {
 
         {step === 'statement' ? (
           <>
-            <Text style={styles.heading}>Say what your business does</Text>
+            <Text style={styles.heading}>{isInvestor ? 'Say who you invest for' : 'Say what your business does'}</Text>
             <Text style={styles.helper}>
               A person on our team reads this before approving you. Two or three honest sentences are enough.
             </Text>
@@ -174,19 +189,26 @@ export default function VerifyToConnectScreen() {
               <View style={styles.example}>
                 <Text style={styles.exampleTitle}>For example</Text>
                 <Text style={styles.exampleText}>
-                  I run Afya Booking, an app that lets patients book visits at small clinics in Nairobi. We started in 2024 and 12 clinics use it today.
+                  {isInvestor
+                    ? 'I am a partner at Savanna Angels, a group of angel investors in Nairobi. We have backed six early health and fintech startups since 2021.'
+                    : 'I run Afya Booking, an app that lets patients book visits at small clinics in Nairobi. We started in 2024 and 12 clinics use it today.'}
                 </Text>
               </View>
             </View>
             <View style={styles.actions}>
               <Button title="Submit for review" loading={loading} onPress={() => void submit()} />
+              {needsSetup ? (
+                <Button title="Say what I fund" variant="secondary" onPress={() => router.push('/investor/onboarding')} />
+              ) : null}
             </View>
           </>
         ) : null}
 
         <View style={styles.note}>
           <FileText size={20} color={colors.textMuted} />
-          <Text style={styles.noteText}>No documents are needed here. Business documents come later, at due diligence on a deal.</Text>
+          <Text style={styles.noteText}>{isInvestor
+              ? 'No documents are needed here. Documents are shared later, at due diligence on a deal.'
+              : 'No documents are needed here. Business documents come later, at due diligence on a deal.'}</Text>
         </View>
       </ScrollView>
     </View>
@@ -201,7 +223,7 @@ const styles = StyleSheet.create({
   helper: { fontSize: 16, color: colors.textMuted, marginTop: spacing[1] },
   strong: { fontSize: 16, fontWeight: '700', color: colors.text },
   field: { marginTop: spacing[3] },
-  actions: { marginTop: spacing[2] },
+  actions: { marginTop: spacing[2], gap: spacing[1] },
   // The Textarea leaves 16 below itself; the count belongs right under it.
   count: { fontSize: 14, color: colors.textMuted, marginTop: -spacing[1] },
   countMet: { color: colors.success },

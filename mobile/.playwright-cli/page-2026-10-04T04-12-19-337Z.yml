@@ -1,0 +1,67 @@
+- generic [ref=e51]:
+  - generic [ref=e54]:
+    - generic:
+      - generic:
+        - generic:
+          - generic: FoundersLink
+          - generic:
+            - heading [level=1]
+          - generic "Notifications" [ref=e61] [cursor=pointer]
+    - generic [ref=e68]:
+      - generic [ref=e70]:
+        - generic [ref=e71]: Founders for you
+        - generic [ref=e72]: 2 businesses match your fund.
+        - textbox "Search founders" [ref=e77]:
+          - /placeholder: Search by business or sector
+        - generic [ref=e79]:
+          - button "All sectors" [ref=e80] [cursor=pointer]
+          - button "Health" [ref=e82] [cursor=pointer]
+          - button "Agriculture" [ref=e84] [cursor=pointer]
+          - button "Fintech" [ref=e86] [cursor=pointer]
+          - button "Climate" [ref=e88] [cursor=pointer]
+          - button "Retail" [ref=e90] [cursor=pointer]
+          - button "Education" [ref=e92] [cursor=pointer]
+          - button "Logistics" [ref=e94] [cursor=pointer]
+          - button "Other" [ref=e96] [cursor=pointer]
+      - button "Afya Booking, Good fit. Open her page" [ref=e100] [cursor=pointer]:
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - generic [ref=e103]: Afya Booking
+            - generic [ref=e104]: Amina Njeri
+          - generic [ref=e105]: Good fit
+        - generic [ref=e107]:
+          - generic [ref=e108]: Health
+          - generic [ref=e110]: MVP
+          - generic [ref=e112]: Nairobi
+        - generic [ref=e114]:
+          - generic [ref=e115]: Looking for
+          - generic [ref=e116]: KSh 1,000,000
+        - generic [ref=e117]: Ready to raise
+        - generic [ref=e120]:
+          - 'generic "Fits: In a sector you fund: health" [ref=e121]': "In a sector you fund: health"
+          - 'generic "Fits: At a stage you fund: mvp" [ref=e126]': "At a stage you fund: mvp"
+          - 'generic "Fits: Based in Nairobi; you fund nationwide" [ref=e131]': Based in Nairobi; you fund nationwide
+        - generic [ref=e136]: See her business
+      - button "Daktari Mkononi, Good fit. Open her page" [ref=e142] [cursor=pointer]:
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - generic [ref=e145]: Daktari Mkononi
+            - generic [ref=e146]: Wanjiru Kamau
+          - generic [ref=e147]: Good fit
+        - generic [ref=e149]:
+          - generic [ref=e150]: Health
+          - generic [ref=e152]: MVP
+          - generic [ref=e154]: Kiambu
+        - generic [ref=e156]:
+          - generic [ref=e157]: Looking for
+          - generic [ref=e158]: KSh 2,000,000
+        - generic [ref=e159]:
+          - 'generic "Fits: In a sector you fund: health" [ref=e160]': "In a sector you fund: health"
+          - 'generic "Fits: At a stage you fund: mvp" [ref=e165]': "At a stage you fund: mvp"
+          - 'generic "Fits: Based in Kiambu; you fund nationwide" [ref=e170]': Based in Kiambu; you fund nationwide
+        - generic [ref=e175]: See her business
+  - tablist [ref=e180]:
+    - tab "Discover" [selected] [ref=e182] [cursor=pointer]
+    - tab "Requests" [ref=e194] [cursor=pointer]
+    - tab "Chamas" [ref=e206] [cursor=pointer]
+    - tab "Profile" [ref=e224] [cursor=pointer]

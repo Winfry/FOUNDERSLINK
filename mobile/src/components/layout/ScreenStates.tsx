@@ -27,6 +27,7 @@ export function ScreenLoading({ rows = 3 }: { rows?: number }) {
 export function ScreenError({ message, code, onRetry }: { message: string; code?: string; onRetry?: () => void }) {
   const router = useRouter();
   const status = useAuthStore((s) => s.user?.approvalStatus);
+  const investor = useAuthStore((s) => s.user?.role === 'investor');
 
   if (code === 'APPROVAL_REQUIRED' || /must be approved/i.test(message)) {
     const waiting = status === 'submitted' || status === 'in_review';
@@ -38,7 +39,7 @@ export function ScreenError({ message, code, onRetry }: { message: string; code?
         <Text style={styles.title}>{waiting ? "We're checking your details" : 'Verify to open this'}</Text>
         <Text style={styles.desc}>
           {waiting
-            ? 'This opens as soon as FoundersLink approves you. You can keep exploring your matches and readiness.'
+            ? `This opens as soon as FoundersLink approves you. You can keep exploring ${investor ? 'Discover' : 'your matches and readiness'}.`
             : 'Everyone you meet here has been checked. Verify once, and chamas, connections and chat open for you.'}
         </Text>
         <Button
