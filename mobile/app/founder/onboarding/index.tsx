@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { KeyboardScroll } from '../../../src/components/ui/KeyboardScroll';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Switch } from '../../../src/components/ui/Switch';
 import { Sparkles } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
@@ -53,7 +54,7 @@ export default function FounderOnboardingScreen() {
   const markComplete = useAuthStore((s) => s.markFounderOnboardingComplete);
   const queryClient = useQueryClient();
   const { step: startAt } = useLocalSearchParams<{ step?: string }>();
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<KeyboardScroll>(null);
   const [step, setStepState] = useState(1);
   // True once her saved profile has been found: this is then the screen
   // where she edits it, not where she sets it up.
@@ -247,7 +248,7 @@ export default function FounderOnboardingScreen() {
           {editing ? <Steps names={EDIT_STEP_NAMES} current={step - 1} /> : <Steps names={STEP_NAMES} current={step} />}
         </View>
       )}
-      <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardScroll ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {!checking && step === 1 ? (
           <>
             <Text style={styles.heading}>Tell us about your business</Text>
@@ -422,7 +423,7 @@ export default function FounderOnboardingScreen() {
             </View>
           </>
         ) : null}
-      </ScrollView>
+      </KeyboardScroll>
     </View>
   );
 }

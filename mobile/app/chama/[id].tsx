@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { KeyboardScroll } from '../../src/components/ui/KeyboardScroll';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Info } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
 import { Avatar, Badge, Button, Card, Input, useToast } from '../../src/components/ui';
@@ -62,7 +63,7 @@ export default function ChamaDetailScreen() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardScroll style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.head}>
         <Text style={styles.title}>{c.name}</Text>
         <View style={styles.badges}>
@@ -233,7 +234,7 @@ export default function ChamaDetailScreen() {
           />
         ))}
       </Section>
-    </ScrollView>
+    </KeyboardScroll>
   );
 }
 

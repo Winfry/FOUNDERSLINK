@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardScroll } from '../ui/KeyboardScroll';
+import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../ui/Text';
@@ -22,8 +23,8 @@ export function AuthShell({
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
+    <KeyboardAvoidingView style={styles.flex}>
+      <KeyboardScroll
         contentContainerStyle={[
           styles.content,
           { paddingTop: insets.top + spacing[1], paddingBottom: insets.bottom + spacing[4] },
@@ -48,7 +49,7 @@ export function AuthShell({
         </Text>
         {helper ? <Text style={styles.helper}>{helper}</Text> : null}
         <View style={styles.form}>{children}</View>
-      </ScrollView>
+      </KeyboardScroll>
     </KeyboardAvoidingView>
   );
 }

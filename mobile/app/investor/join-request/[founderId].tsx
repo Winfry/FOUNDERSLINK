@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { KeyboardScroll } from '../../../src/components/ui/KeyboardScroll';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Info } from 'lucide-react-native';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Button, Textarea } from '../../../src/components/ui';
 import { AmountField, FormError } from '../../../src/components/auth/parts';
@@ -76,7 +77,7 @@ export default function JoinRequestScreen() {
   return (
     <View style={styles.screen}>
       <Header title="Ask to join" onBack={back} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardScroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.heading}>{who ? `Ask to join ${who}` : 'Ask to join'}</Text>
 
         <View style={styles.infoBox}>
@@ -120,7 +121,7 @@ export default function JoinRequestScreen() {
           <FormError message={refusal} />
           <Button title="Send request" loading={loading} onPress={() => void submit()} />
         </View>
-      </ScrollView>
+      </KeyboardScroll>
     </View>
   );
 }

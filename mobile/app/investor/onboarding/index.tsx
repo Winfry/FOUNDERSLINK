@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
+import { KeyboardScroll } from '../../../src/components/ui/KeyboardScroll';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Building2, Rocket, User, X } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../../src/components/ui/Text';
@@ -42,7 +43,7 @@ export default function InvestorOnboardingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { show } = useToast();
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<KeyboardScroll>(null);
   // Arriving from her profile leaves history; being sent here for a first setup does not.
   const [cameFromApp] = useState(() => router.canGoBack());
 
@@ -212,7 +213,7 @@ export default function InvestorOnboardingScreen() {
       {!ready ? (
         <ScreenLoading />
       ) : (
-        <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <KeyboardScroll ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {step === 1 ? (
             <>
               <Text style={styles.heading}>Who you invest for</Text>
@@ -404,7 +405,7 @@ export default function InvestorOnboardingScreen() {
               </View>
             </>
           )}
-        </ScrollView>
+        </KeyboardScroll>
       )}
     </View>
   );

@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
+import { KeyboardScroll } from '../../../src/components/ui/KeyboardScroll';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { FileText } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
@@ -148,7 +149,7 @@ export default function VerifyToConnectScreen() {
       <View style={styles.steps}>
         <Steps names={STEP_NAMES} current={STEP_NAMES.indexOf(step === 'phone' ? 'Phone' : step === 'code' ? 'Code' : 'Statement') + 1} />
       </View>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardScroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {saved.data && saved.data.emailVerified === false ? (
           <View style={styles.example}>
             <Text style={styles.exampleTitle}>First, confirm your email</Text>
@@ -283,7 +284,7 @@ export default function VerifyToConnectScreen() {
               ? 'No documents are needed here. Documents are shared later, at due diligence on a deal.'
               : 'No documents are needed here. Business documents come later, at due diligence on a deal.'}</Text>
         </View>
-      </ScrollView>
+      </KeyboardScroll>
     </View>
   );
 }
