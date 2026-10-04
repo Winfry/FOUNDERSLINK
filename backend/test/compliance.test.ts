@@ -199,10 +199,11 @@ test("the checklist changes with the business, and says when a county is not cov
 
 test("marking an item complete closes the matching gap on her funding matches", async () => {
   // Savanna Angels fit her, and require a registered business.
+  const { id: savannaId } = await prisma.funder.findUniqueOrThrow({ where: { name: "Savanna Angels Network (demo)" } });
   const savanna = async () => {
     const matches = await call("GET", "/funding/matches", "founder");
     const all = [...matches.json.apply_now, ...matches.json.apply_after].map((c: any) => ({ ...c, pitch: matches.json.apply_now.includes(c) }));
-    return all.find((c: any) => c.funder.name === "Savanna Angels Network (demo)");
+    return all.find((c: any) => c.funder.id === savannaId);
   };
   assert.deepEqual((await savanna()).gaps.map((g: any) => g.ref), ["brs_registration"]);
   assert.equal((await savanna()).pitch, false);

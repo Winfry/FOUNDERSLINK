@@ -168,8 +168,15 @@ test("investor matches come in three lists, with reasons and gaps", async () => 
   assert.equal(res.status, 200);
   assert.equal(res.json.engine, "stand_in");
 
+  // Found by id: a record an investor maintains is shown to this
+  // founder, who is not verified, without its name.
+  const idOf = async (name: string) => (await prisma.funder.findUniqueOrThrow({ where: { name } })).id;
+  const [savannaId, healthBridgeId, riftId] = await Promise.all(
+    ["Savanna Angels Network (demo)", "HealthBridge Accelerator (demo)", "Rift Growth Fund (demo)"].map(idOf),
+  );
+
   // Pitch: fits, and she already has the registration they require.
-  const savanna = res.json.apply_now.find((c: any) => c.funder.name === "Savanna Angels Network (demo)");
+  const savanna = res.json.apply_now.find((c: any) => c.funder.id === savannaId);
   assert.equal(savanna.band, "strong");
   assert.ok(savanna.explanation.length > 0);
   // Founders see a band, never a number.
@@ -177,11 +184,11 @@ test("investor matches come in three lists, with reasons and gaps", async () => 
   assert.ok(savanna.risk_factors.some((r: any) => r.code === "demo_data"));
 
   // Pitch after: fits, but she has no KRA PIN yet.
-  const healthBridge = res.json.apply_after.find((c: any) => c.funder.name === "HealthBridge Accelerator (demo)");
+  const healthBridge = res.json.apply_after.find((c: any) => c.funder.id === healthBridgeId);
   assert.deepEqual(healthBridge.gaps.map((g: any) => g.ref), ["kra_pin"]);
 
   // Don't pitch: their minimum is far above what she needs.
-  const rift = res.json.not_for_you.find((c: any) => c.funder.name === "Rift Growth Fund (demo)");
+  const rift = res.json.not_for_you.find((c: any) => c.funder.id === riftId);
   assert.ok(rift.reasons.some((r: any) => !r.fits));
   assert.deepEqual(rift.gaps, []);
   assert.equal(rift.band, null);

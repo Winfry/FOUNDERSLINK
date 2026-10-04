@@ -12,6 +12,7 @@ npm run db:migrate               # creates the tables
 npm run db:generate              # generates the Prisma client
 npm run db:seed                  # loads the demo compliance items and funders from data/
 npm run admin:create -- you@example.com "a-password" "Your Name"   # an admin, for the vetting queue
+npm run db:demo -- "a-password"  # the people in the demo story (see "Demo accounts" below)
 npm run dev                      # http://localhost:8000
 npm test                         # API tests, against the same database
 ```
@@ -419,6 +420,22 @@ Set `AI_SERVICE_URL` in `.env` to the AI service's base URL. Set `AI_SERVICE_API
 Emails and phone numbers are removed from the description before it is sent, and the eligibility flags are never sent.
 
 ## Data
+
+### Demo accounts
+
+`npm run db:demo -- <password>` loads the people the demo story in `docs/PRODUCT.md` needs, all with the password you give. Run `npm run db:seed` first. Running it again removes them and starts the story from the beginning, so it is also how to reset after a rehearsal.
+
+| Sign in as | Who | State |
+|---|---|---|
+| `admin@founderlink.example` | Demo Admin | Admin, for the review queue |
+| `grace@founderlink.example` | Grace Otieno, Savanna Angels Network | Approved investor. Maintains the Savanna Angels record. Her track record has two health businesses at MVP, one of them "Verified on FounderLink" |
+| `wanjiru@founderlink.example` | Wanjiru Kamau, Daktari Mkononi | Approved founder, the other party to Grace's closed deal |
+| `amina@founderlink.example` | Amina Njeri, Afya Booking | Founder in the queue, low risk. Has registered the business, has no KRA PIN |
+| `brian@founderlink.example` | Brian Mwangi, Global Capital Partners | Investor in the queue, flagged high risk |
+
+Before Amina is approved, Savanna Angels shows on her matches without its name (it is a member's record). Once approved she sees Savanna Angels under `apply_now`, HealthBridge Accelerator under `apply_after` with the KRA PIN gap, and Rift Growth Fund under `not_for_you`.
+
+The risk levels on the two applications are not written in by hand: both are submitted through the same code as a real applicant.
 
 `npm run db:seed` loads `data/demo-compliance-items.json` and `data/demo-funders.json`. Every record in them is made up and marked `is_demo`. To load real, curated files in the same format:
 

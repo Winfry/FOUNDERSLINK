@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx scripts/load-data.ts",
+    "db:demo": "tsx scripts/load-demo.ts",
     "admin:create": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
