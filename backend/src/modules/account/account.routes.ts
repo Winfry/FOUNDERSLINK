@@ -31,7 +31,8 @@ accountRouter.get("/me/export", requireAuth, async (req, res) => {
 });
 
 accountRouter.delete("/me", requireAuth, async (req, res) => {
-  res.json(await deleteAccount(req.user!.id, deleteSchema.parse(req.body).password));
+  const { password, reason } = deleteSchema.parse(req.body);
+  res.json(await deleteAccount(req.user!.id, password, reason));
 });
 
 accountRouter.patch("/me", requireAuth, async (req, res) => {

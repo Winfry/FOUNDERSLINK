@@ -14,7 +14,12 @@ import { removeFilesOf } from "../vetting/documents.js";
 import { codeError } from "../auth/email-codes.js";
 import { listConsents } from "./consents.js";
 
-export const deleteSchema = z.object({ password: z.string().min(1) });
+export const deleteSchema = z.object({
+  password: z.string().min(1),
+  // Why she is leaving, if she says. It is written to the server log with
+  // her role only, never her name or address, and is not stored.
+  reason: z.string().trim().max(500).optional(),
+});
 
 // Everything we hold about her, in one file she can keep. Other
 // people's details are left out: where she shares a record with someone
@@ -96,7 +101,7 @@ export async function exportData(userId: string) {
 // Two things are refused, since other people depend on them: a circle
 // she organises that still has other members, and a deal that is still
 // in progress. She settles those first.
-export async function deleteAccount(userId: string, password: string) {
+export async function deleteAccount(userId: string, password: string, reason?: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   if (!(await bcrypt.compare(password, user.password_hash))) throw unauthorized("Wrong password");
   if (user.role === "admin") throw conflict("ADMIN_ACCOUNT", "An admin account is removed by another admin, not here");
@@ -121,6 +126,10 @@ export async function deleteAccount(userId: string, password: string) {
 
   // Her uploaded files, before the rows that say where they are.
   await removeFilesOf(userId);
+
+  // Kept only as a line in the log, so the team can see why people leave
+  // without keeping anything that says who left.
+  if (reason) console.log(`Account deleted (${user.role}). Reason given: ${reason}`);
 
   await prisma.$transaction([
     // Circles where she was the only member go with her.
