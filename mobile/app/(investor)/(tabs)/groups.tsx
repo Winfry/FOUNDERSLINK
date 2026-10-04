@@ -1,5 +1,8 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { ChamasList } from '../../../src/components/chama/ChamasList';
 
-export default function InvestorGroupsTab() {
+function InvestorGroupsTab() {
   return <ChamasList />;
 }
+
+export default withBackdrop(InvestorGroupsTab);

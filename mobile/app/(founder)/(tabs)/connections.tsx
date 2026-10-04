@@ -1,3 +1,4 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Inbox, MessageCircle } from 'lucide-react-native';
@@ -24,7 +25,7 @@ function when(iso: string): string {
   return d.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' });
 }
 
-export default function ConnectionsScreen() {
+function ConnectionsScreen() {
   const router = useRouter();
   const { show } = useToast();
   const q = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list(), refetchInterval: 8000 });
@@ -259,7 +260,7 @@ export default function ConnectionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: spacing[2], paddingTop: spacing[1], paddingBottom: spacing[6] },
   flexOne: { flex: 1 },
   stretch: { alignSelf: 'stretch', marginTop: spacing[1] },
@@ -337,3 +338,5 @@ const styles = StyleSheet.create({
   sentRow: { padding: spacing[2], gap: spacing[1] },
   sentTop: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5] },
 });
+
+export default withBackdrop(ConnectionsScreen);

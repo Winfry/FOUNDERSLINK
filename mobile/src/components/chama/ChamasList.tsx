@@ -149,7 +149,7 @@ export function ChamasList() {
 }
 
 const styles = StyleSheet.create({
-  screen: { backgroundColor: colors.white },
+  screen: { backgroundColor: 'transparent' },
   list: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[4], gap: spacing[2] },
   head: { gap: spacing[0.5] },
   heading: { fontSize: 24, fontWeight: '800', color: colors.text },
