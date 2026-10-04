@@ -471,7 +471,7 @@ def _pack(parts: list[str], budget: _Budget) -> list[str]:
 # Entry point
 # ---------------------------------------------------------------------------
 
-def _skip_arrangement(lines: list[tuple[int, str]], contents_pages: set[int] = frozenset()) -> list[tuple[int, str]]:
+def _skip_arrangement(lines: list[tuple[int, str]], contents_pages: set[int] | frozenset[int] = frozenset()) -> list[tuple[int, str]]:
     """Drop the cover and contents list at the start of an Act or regulations.
 
     "ARRANGEMENT OF SECTIONS" (or REGULATIONS, RULES, or Kenya Law's
@@ -553,6 +553,7 @@ def chunk_legal_text(
         is_interpretation = bool(label and _NUMBERED_LABEL.match(label)
                                  and (_INTERPRETATION.search(label) or _INTERPRETATION.search(body[:300])))
         definitions = _split_definitions(body) if is_interpretation else None
+        intro = ""
         if definitions:
             # Each term keeps the opening words ("In this Act, unless the
             # context otherwise requires—") so it reads as a definition.
