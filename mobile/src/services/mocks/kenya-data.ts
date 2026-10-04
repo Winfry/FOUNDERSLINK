@@ -16,11 +16,8 @@ export const KENYAN_COUNTIES = [
 ];
 
 export function formatKes(amount: number): string {
-  return new Intl.NumberFormat('en-KE', {
-    style: 'currency',
-    currency: 'KES',
-    maximumFractionDigits: 0,
-  }).format(amount);
+  // Written the way it is written in Kenya, "KSh 1,000,000", the same on every device.
+  return `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
 }
 
 export function formatPhone254(phone: string): boolean {

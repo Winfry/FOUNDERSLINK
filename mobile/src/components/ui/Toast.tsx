@@ -54,7 +54,8 @@ export function useToast() {
 const styles = StyleSheet.create({
   toast: {
     position: 'absolute',
-    bottom: spacing[4],
+    // High enough to clear the bottom menu and a chat's message box.
+    bottom: 96,
     left: spacing[2],
     right: spacing[2],
     backgroundColor: colors.text,
