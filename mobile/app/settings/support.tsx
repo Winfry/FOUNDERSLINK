@@ -1,22 +1,25 @@
-import { Linking, StyleSheet } from 'react-native';
-import { Text } from '../../src/components/ui/Text';
-import { Header } from '../../src/components/layout/Header';
-import { Button } from '../../src/components/ui';
+import { Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, spacing } from '../../src/theme/tokens';
+import { Mail } from 'lucide-react-native';
+import { Button } from '../../src/components/ui';
+import { Note, Row, RowGroup, Section, SettingsPage } from '../../src/components/settings/SettingsPage';
+import { colors } from '../../src/theme/tokens';
 
 export default function SupportScreen() {
   const router = useRouter();
   return (
-    <>
-      <Header title="Contact support" onBack={() => router.back()} />
-      <Text style={styles.body}>Email support@founderlink.co.ke or call +254 700 000 000 (Mon–Fri, 8am–6pm EAT).</Text>
-      <Button title="Email support" onPress={() => Linking.openURL('mailto:support@founderlink.co.ke')} style={styles.btn} />
-    </>
+    <SettingsPage title="Contact support" heading="We are here to help" intro="Write to us about your account, a member, or anything that is not working.">
+      <Section>
+        <RowGroup>
+          <Row label="Email" line="support@founderlink.co.ke" right={<Mail size={24} color={colors.primary} />} />
+          <Row label="Hours" line="Monday to Friday, 8am to 6pm, Nairobi time" last />
+        </RowGroup>
+        <Button title="Email support" onPress={() => Linking.openURL('mailto:support@founderlink.co.ke')} />
+      </Section>
+      <Section title="Compliance questions">
+        <Note>For questions about registration, tax or licences, use Ask Compliance in the Readiness tab. It answers straight away.</Note>
+        <Button title="Report a member instead" variant="ghost" onPress={() => router.push('/settings/report')} />
+      </Section>
+    </SettingsPage>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { padding: spacing[3], color: colors.text, lineHeight: 22 },
-  btn: { marginHorizontal: spacing[3] },
-});

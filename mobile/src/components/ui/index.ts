@@ -14,3 +14,4 @@ export * from './Toast';
 export * from './ConfirmModal';
 export * from './BottomSheet';
 export * from './StepProgress';
+export * from './Switch';

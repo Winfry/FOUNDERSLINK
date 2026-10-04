@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Switch } from '../../../src/components/ui/Switch';
 import { Sparkles } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
@@ -308,10 +309,6 @@ export default function FounderOnboardingScreen() {
                   <Switch
                     value={consents[key]}
                     onValueChange={(on) => setConsents((c) => ({ ...c, [key]: on }))}
-                    trackColor={{ false: colors.grey300, true: colors.primary }}
-                    thumbColor={colors.white}
-                    // The web switch takes its "on" colours from these two.
-                    {...({ activeTrackColor: colors.primary, activeThumbColor: colors.white } as object)}
                   />
                 </Pressable>
               ))}

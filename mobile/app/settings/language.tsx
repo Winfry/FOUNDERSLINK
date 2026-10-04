@@ -1,31 +1,40 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Text } from '../../src/components/ui/Text';
-import { Header } from '../../src/components/layout/Header';
-import { useRouter } from 'expo-router';
-import { colors, spacing } from '../../src/theme/tokens';
+import { useToast } from '../../src/components/ui/Toast';
+import { Note, RadioRow, RowGroup, SettingsPage } from '../../src/components/settings/SettingsPage';
+import { API_URL } from '../../src/services/http/client';
+import { updatePreferences } from '../../src/services/http/account.http';
+import { useAuthStore } from '../../src/stores/authStore';
+
+type Lang = 'en' | 'sw';
+const NAMES: Record<Lang, string> = { en: 'English', sw: 'Kiswahili' };
 
 export default function LanguageScreen() {
-  const router = useRouter();
-  const [lang, setLang] = useState<'en' | 'sw'>('en');
+  const { show } = useToast();
+  const saved = useAuthStore((s) => s.user?.preferredLanguage);
+  const [lang, setLang] = useState<Lang>(saved === 'sw' ? 'sw' : 'en');
+
+  // With the backend the choice is saved on her account; without it, it stays on this screen.
+  const pick = async (next: Lang) => {
+    if (next === lang) return;
+    const before = lang;
+    setLang(next);
+    if (!API_URL) return;
+    try {
+      await updatePreferences({ preferred_language: next });
+      show(`Language saved: ${NAMES[next]}`, 'success');
+    } catch (e) {
+      setLang(before);
+      show((e as { message?: string })?.message ?? 'Could not save. Try again.', 'error');
+    }
+  };
+
   return (
-    <>
-      <Header title="Language" onBack={() => router.back()} />
-      <View style={styles.content}>
-        {(['en', 'sw'] as const).map((code) => (
-          <Pressable key={code} style={styles.row} onPress={() => setLang(code)}>
-            <Text style={styles.label}>{code === 'en' ? 'English' : 'Swahili'}</Text>
-            {lang === code ? <Text style={styles.check}>✓</Text> : null}
-          </Pressable>
-        ))}
-      </View>
-    </>
+    <SettingsPage title="Language" heading="Your language" intro="Pick the language you prefer.">
+      <RowGroup>
+        <RadioRow label="English" selected={lang === 'en'} onPress={() => pick('en')} />
+        <RadioRow label="Kiswahili" selected={lang === 'sw'} onPress={() => pick('sw')} last />
+      </RowGroup>
+      <Note>The screens are in English for now. Your choice is saved on your account for when Kiswahili is ready.</Note>
+    </SettingsPage>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { padding: spacing[3] },
-  row: { flexDirection: 'row', justifyContent: 'space-between', minHeight: 52, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.border },
-  label: { fontSize: 16, color: colors.text },
-  check: { color: colors.primary, fontWeight: '700' },
-});

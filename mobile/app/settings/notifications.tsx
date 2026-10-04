@@ -1,48 +1,55 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
-import { Text } from '../../src/components/ui/Text';
-import { Header } from '../../src/components/layout/Header';
-import { Button } from '../../src/components/ui';
 import { useRouter } from 'expo-router';
-import { colors, spacing } from '../../src/theme/tokens';
+import { Button, Switch } from '../../src/components/ui';
+import { useToast } from '../../src/components/ui/Toast';
+import { Note, RadioRow, Row, RowGroup, Section, SettingsPage } from '../../src/components/settings/SettingsPage';
+import { API_URL } from '../../src/services/http/client';
+import { updatePreferences } from '../../src/services/http/account.http';
+
+type Channel = 'in_app' | 'sms';
 
 export default function NotificationSettingsScreen() {
   const router = useRouter();
-  const [push, setPush] = useState(true);
-  const [email, setEmail] = useState(true);
+  const { show } = useToast();
+  const [channel, setChannel] = useState<Channel>('in_app');
   const [chat, setChat] = useState(true);
+  const [deals, setDeals] = useState(true);
+  const [email, setEmail] = useState(true);
+
+  // With the backend the choice is saved on her account; without it, it stays on this screen.
+  const pickChannel = async (next: Channel) => {
+    if (next === channel) return;
+    const before = channel;
+    setChannel(next);
+    if (!API_URL) return;
+    try {
+      await updatePreferences({ notification_channel: next });
+      show(next === 'sms' ? 'We will tell you by SMS' : 'We will tell you in the app', 'success');
+    } catch (e) {
+      setChannel(before);
+      show((e as { message?: string })?.message ?? 'Could not save. Try again.', 'error');
+    }
+  };
 
   return (
-    <>
-      <Header title="Notifications" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.content}>
-        <Row label="Push notifications" value={push} onChange={setPush} />
-        <Row label="Email updates" value={email} onChange={setEmail} />
-        <Row label="Chat messages" value={chat} onChange={setChat} />
-        <View style={styles.locked}>
-          <Text style={styles.lockedLabel}>Withdrawal alerts</Text>
-          <Text style={styles.lockedHint}>Required — cannot be turned off</Text>
-        </View>
-        <Button title="Push permission setup" variant="secondary" onPress={() => router.push('/settings/push-permission')} />
-      </ScrollView>
-    </>
+    <SettingsPage title="Notifications" heading="How we reach you" intro="Choose where FounderLink tells you about requests, messages and deal steps.">
+      <Section title="Where to tell you">
+        <RowGroup>
+          <RadioRow label="In the app" line="Updates wait for you in FounderLink." selected={channel === 'in_app'} onPress={() => pickChannel('in_app')} />
+          <RadioRow label="By SMS" line="Sent to the phone number on your account." selected={channel === 'sms'} onPress={() => pickChannel('sms')} last />
+        </RowGroup>
+      </Section>
+
+      <Section title="What to tell you about">
+        <RowGroup>
+          <Row label="Chat messages" right={<Switch value={chat} onValueChange={setChat} accessibilityLabel="Chat messages" />} />
+          <Row label="Deal and connection updates" right={<Switch value={deals} onValueChange={setDeals} accessibilityLabel="Deal and connection updates" />} />
+          <Row label="Email updates" right={<Switch value={email} onValueChange={setEmail} accessibilityLabel="Email updates" />} last />
+        </RowGroup>
+        <Note>These three switches are not saved yet in this demo. They go back to on when you leave this page.</Note>
+      </Section>
+
+      <Button title="Set up push alerts" variant="secondary" onPress={() => router.push('/settings/push-permission')} />
+    </SettingsPage>
   );
 }
-
-function Row({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary }} />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  content: { padding: spacing[3] },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 52, borderBottomWidth: 1, borderBottomColor: colors.border },
-  label: { color: colors.text, fontSize: 16 },
-  locked: { marginTop: spacing[3], padding: spacing[2], backgroundColor: colors.primaryLight, borderRadius: 12 },
-  lockedLabel: { fontWeight: '600', color: colors.text },
-  lockedHint: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
-});

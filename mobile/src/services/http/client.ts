@@ -72,7 +72,10 @@ export async function api<T>(method: string, path: string, body?: Body): Promise
   // The backend no longer accepts this session (it expired, or the
   // account was reset). Sign her out, so she lands on the welcome screen
   // instead of on screens that all fail to load.
-  if (res.status === 401 && bearer && !path.startsWith('/auth/')) {
+  // Deleting an account asks for her password; a wrong one is a 401 too,
+  // and is a mistake to correct, not an ended session.
+  const passwordCheck = method === 'DELETE' && path === '/me';
+  if (res.status === 401 && bearer && !path.startsWith('/auth/') && !passwordCheck) {
     token = null;
     const { useAuthStore } = await import('../../stores/authStore');
     await useAuthStore.getState().logout().catch(() => undefined);

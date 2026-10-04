@@ -1,26 +1,67 @@
 import { useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { Header } from '../../src/components/layout/Header';
+import { StyleSheet, View } from 'react-native';
 import { Button, Input, Select, Textarea } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';
-import { useRouter } from 'expo-router';
-import { spacing } from '../../src/theme/tokens';
+import { Note, SettingsPage, useSettingsBack } from '../../src/components/settings/SettingsPage';
+import { colors, spacing } from '../../src/theme/tokens';
 
 export default function ReportScreen() {
-  const router = useRouter();
+  const back = useSettingsBack();
   const { show } = useToast();
   const [target, setTarget] = useState('');
   const [name, setName] = useState('');
   const [details, setDetails] = useState('');
+  const [tried, setTried] = useState(false);
+
+  const submit = () => {
+    setTried(true);
+    if (!target || !name.trim() || !details.trim()) return;
+    show('Report received', 'success');
+    back();
+  };
+
   return (
-    <>
-      <Header title="Report / block" onBack={() => router.back()} />
-      <Select label="Report type" options={[{ label: 'User', value: 'user' }, { label: 'Group', value: 'group' }]} value={target} onChange={setTarget} />
-      <Input label="Name or ID" value={name} onChangeText={setName} />
-      <Textarea label="Details" value={details} onChangeText={setDetails} />
-      <Button title="Submit report" onPress={() => { show('Report received', 'success'); router.back(); }} style={styles.btn} />
-    </>
+    <SettingsPage
+      title="Report or block"
+      heading="Tell us what happened"
+      intro="Report anyone who asks for a fee, pressures you, or does not seem to be who they say they are."
+    >
+      <View>
+        <Select
+          label="Who are you reporting?"
+          placeholder="Choose one"
+          options={[
+            { label: 'A member', value: 'user' },
+            { label: 'A chama', value: 'group' },
+          ]}
+          value={target}
+          onChange={setTarget}
+          error={tried && !target ? 'Choose who you are reporting.' : undefined}
+        />
+        <Input
+          label="Their name"
+          placeholder="For example, the name shown in the chat"
+          value={name}
+          onChangeText={setName}
+          error={tried && !name.trim() ? 'Write their name.' : undefined}
+        />
+        <Textarea
+          label="What happened"
+          placeholder="Say what they did or asked for, and when."
+          value={details}
+          onChangeText={setDetails}
+          style={styles.area}
+          error={tried && !details.trim() ? 'Tell us what happened.' : undefined}
+        />
+        <Note>You can also report a message from inside the chat, which sends us the message itself.</Note>
+      </View>
+      <Button title="Send report" onPress={submit} style={styles.btn} />
+    </SettingsPage>
   );
 }
 
-const styles = StyleSheet.create({ btn: { margin: spacing[3] } });
+const styles = StyleSheet.create({
+  // The shared text box has no fill of its own.
+  area: { backgroundColor: colors.white },
+  btn: { marginTop: spacing[1] },
+});
