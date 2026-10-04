@@ -39,6 +39,8 @@ import { httpVettingService } from './http/vetting.http';
 import { httpConnectionService } from './http/connection.http';
 import { httpDealService } from './http/deal.http';
 import { httpConversationService } from './http/conversation.http';
+import { httpComplianceService } from './http/compliance.http';
+import { httpNotificationService } from './http/notifications.http';
 import { httpReferenceDataService } from './http/reference.http';
 
 /**
@@ -52,14 +54,14 @@ const live = (name: string) => API_URL !== '' && !mocked.has(name);
 export const authService: AuthService = live('auth') ? httpAuthService : mockAuthService;
 export const founderService: FounderService = live('founder') ? httpFounderService : mockFounderService;
 export const fundingService: FundingService = live('funding') ? httpFundingService : mockFundingService;
-export const complianceService: ComplianceService = mockComplianceService;
+export const complianceService: ComplianceService = live('compliance') ? httpComplianceService : mockComplianceService;
 export const connectionService: ConnectionService = live('connection') ? httpConnectionService : mockConnectionService;
 export const vettingService: VettingService = live('vetting') ? httpVettingService : mockVettingService;
 export const consentService: ConsentService = live('consent') ? httpConsentService : mockConsentService;
 export const dealService: DealService = live('deal') ? httpDealService : mockDealService;
 export const circleService: CircleService = mockCircleService;
 export const conversationService: ConversationService = live('conversation') ? httpConversationService : mockConversationService;
-export const notificationService: NotificationService = mockNotificationService;
+export const notificationService: NotificationService = live('notification') ? httpNotificationService : mockNotificationService;
 export const referenceDataService: ReferenceDataService = live('reference') ? httpReferenceDataService : mockReferenceDataService;
 
 /** Legacy alias — chamas replace project groups */

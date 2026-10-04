@@ -40,7 +40,10 @@ export function NotificationsList() {
   return (
     <>
       <View style={styles.toolbar}>
-        <Button title="Mark all read" variant="ghost" onPress={() => notificationService.markAllRead().then(() => qc.invalidateQueries({ queryKey: ['notifications'] }))} />
+        <Button title="Mark all read" variant="ghost" onPress={() => notificationService.markAllRead().then(() => {
+            void qc.invalidateQueries({ queryKey: ['notifications'] });
+            void qc.invalidateQueries({ queryKey: ['notifications-badge'] });
+          })} />
       </View>
       <SectionList
         sections={sections}

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Badge, Button, Card, Input } from '../../../src/components/ui';
@@ -11,6 +11,7 @@ export default function ReadinessScreen() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<string | null>(null);
 
+  const qc = useQueryClient();
   const q = useQuery({ queryKey: ['compliance'], queryFn: () => complianceService.listItems() });
 
   if (q.isLoading) return <ScreenLoading />;
@@ -20,7 +21,14 @@ export default function ReadinessScreen() {
   const done = items.filter((i) => i.status === 'complete').length;
 
   const ask = async () => {
-    const res = await complianceService.ask(question);
+    let res;
+    try {
+      res = await complianceService.ask(question);
+    } catch (e) {
+      // For example, a question too short to answer.
+      setAnswer((e as { message?: string })?.message ?? 'Could not get an answer. Try again.');
+      return;
+    }
     if (res.cannotConfirm) {
       setAnswer("We can't confirm this. Contact a verified expert.");
       return;
@@ -53,7 +61,13 @@ export default function ReadinessScreen() {
                 <Badge label={item.status.replace('_', ' ')} variant={item.status === 'complete' ? 'success' : 'warning'} />
                 {item.deadline ? <Text style={styles.deadline}>Deadline: {item.deadline}</Text> : null}
                 {item.status !== 'complete' ? (
-                  <Button title="Mark complete" variant="secondary" onPress={() => complianceService.updateItemStatus(item.id, 'complete').then(() => q.refetch())} />
+                  <Button title="Mark complete" variant="secondary" onPress={() =>
+                      complianceService.updateItemStatus(item.id, 'complete').then(() => {
+                        void q.refetch();
+                        // Closing an item can move an investor from "fix this first" to "pitch".
+                        void qc.invalidateQueries({ queryKey: ['funding-matches'] });
+                      })
+                    } />
                 ) : null}
               </Card>
             )}

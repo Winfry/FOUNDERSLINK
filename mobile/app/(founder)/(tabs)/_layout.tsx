@@ -7,7 +7,8 @@ import { colors } from '../../../src/theme/tokens';
 
 function NotificationBell() {
   const router = useRouter();
-  const q = useQuery({ queryKey: ['notifications-badge'], queryFn: () => notificationService.list() });
+  // Asked again every few seconds, so a new notice lights the bell without a reload.
+  const q = useQuery({ queryKey: ['notifications-badge'], queryFn: () => notificationService.list(), refetchInterval: 10000 });
   const unread = q.data?.unreadCount ?? 0;
   return (
     <Pressable
