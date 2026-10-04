@@ -31,6 +31,10 @@ export default function Index() {
   }
 
   if (user.role === 'investor') {
+    // An investor first says who she invests for and what she funds.
+    if (!user.investorOnboardingComplete) {
+      return <Redirect href="/investor/onboarding" />;
+    }
     return <Redirect href="/(investor)/(tabs)/discover" />;
   }
 

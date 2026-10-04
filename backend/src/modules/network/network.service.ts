@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { explainFit, matchFunders } from "../../ai/client.js";
 import type { FounderProfile, Funder } from "../../generated/prisma/client.js";
-import { COUNTIES, SECTORS, STAGES } from "../../shared/constants.js";
+import { COUNTIES, labelled, SECTORS, STAGES } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { consented, hasConsent } from "../account/consents.js";
 import { completedItemIds } from "../compliance/status.js";
@@ -45,8 +45,12 @@ const kes = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
 // reads the same whichever engine did the matching.
 function reasonsFor(profile: FounderProfile, funder: Funder, ready: boolean): string[] {
   const reasons: string[] = [];
-  reasons.push(funder.sectors.length === 0 ? `A ${profile.sector} business; you fund all sectors` : `In a sector you fund: ${profile.sector}`);
-  if (profile.stage) reasons.push(`At a stage you fund: ${profile.stage.replaceAll("_", " ")}`);
+  // Said in words a person reads ("Health", "MVP"), not the stored ids.
+  const word = (id: string) => labelled([id])[0]!.label;
+  reasons.push(
+    funder.sectors.length === 0 ? `A ${word(profile.sector).toLowerCase()} business; you fund all sectors` : `In a sector you fund: ${word(profile.sector)}`,
+  );
+  if (profile.stage) reasons.push(`At a stage you fund: ${word(profile.stage)}`);
   reasons.push(funder.counties.length === 0 ? `Based in ${profile.county}; you fund nationwide` : `Based in a county you cover: ${profile.county}`);
   if (profile.funding_amount_kes) reasons.push(`Asking for ${kes(profile.funding_amount_kes)}, within your range`);
   if (ready) reasons.push("Already meets everything you require");

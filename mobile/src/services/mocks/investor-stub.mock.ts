@@ -1,45 +1,48 @@
+import type { InvestorService } from '../http/investor.http';
 import { mockDelay } from './delay';
 
-export type DiscoverCard = {
-  id: string;
-  businessName: string;
-  sector: string;
-  stage: string;
-  county: string;
-  fundingAskKes: number;
-  matchReasons: string[];
-  verifiedDocumentsBadge: boolean;
-};
+export type { DiscoverCard } from '../http/investor.http';
 
-/** Investor journey stub until aligned with PRODUCT.md — founder path is primary. */
-export const mockInvestorStub = {
-  async getProfile() {
+/** The investor journey on mock data: nothing to discover, nothing saved. */
+export const mockInvestorStub: InvestorService = {
+  async getSetup() {
     await mockDelay();
-    return { bio: '', onboardingComplete: false };
+    return null;
   },
-  async saveMatchingQuestionnaire(data: Record<string, unknown>) {
+  async saveSetup() {
     await mockDelay();
-    return data;
   },
-  async discover(_params?: Record<string, string>): Promise<DiscoverCard[]> {
+  async discover() {
     await mockDelay();
-    return [];
+    return { approved: false, count: 0, message: '', founders: [], needsFund: true };
   },
-  async getFounderPublicProfile(id: string) {
+  async getFounderPublicProfile(id) {
     await mockDelay();
-    return { id, businessName: 'Founder business' };
+    return {
+      id,
+      founderName: 'Founder',
+      businessName: 'Founder business',
+      sector: null,
+      stage: null,
+      county: null,
+      description: null,
+      fundingAskKes: null,
+      useOfFunds: null,
+      yearStarted: null,
+      website: null,
+      ventures: [],
+      connection: { id: null, status: 'none' },
+    };
   },
-  async submitJoinRequest(_founderId: string, _payload: Record<string, unknown>) {
+  async submitJoinRequest() {
     await mockDelay();
     return { id: 'conn-new' };
   },
-  async getJoinRequests(): Promise<
-    { id: string; founderBusinessName: string; proposedAmountKes: number; status: string }[]
-  > {
+  async getJoinRequests() {
     await mockDelay();
     return [];
   },
-  async withdrawJoinRequest(_id: string) {
+  async withdrawJoinRequest() {
     await mockDelay();
   },
 };

@@ -93,8 +93,8 @@ test("she sees the businesses that fit her record, each with reasons written for
   const res = await call("GET", "/investor/matches", "grace");
   const afya = res.json.founders.find((f: any) => f.business_name === "Afya Booking");
   assert.deepEqual(afya.match_reasons, [
-    "In a sector you fund: health",
-    "At a stage you fund: mvp",
+    "In a sector you fund: Health",
+    "At a stage you fund: MVP",
     "Based in Nairobi; you fund nationwide",
     "Asking for KSh 1,000,000, within your range",
     "Already meets everything you require",

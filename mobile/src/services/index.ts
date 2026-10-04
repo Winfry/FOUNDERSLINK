@@ -40,6 +40,7 @@ import { httpConnectionService } from './http/connection.http';
 import { httpDealService } from './http/deal.http';
 import { httpCircleService } from './http/circle.http';
 import { httpConversationService } from './http/conversation.http';
+import { httpInvestorService, type InvestorService } from './http/investor.http';
 import { httpComplianceService } from './http/compliance.http';
 import { httpNotificationService } from './http/notifications.http';
 import { httpReferenceDataService } from './http/reference.http';
@@ -68,7 +69,9 @@ export const referenceDataService: ReferenceDataService = live('reference') ? ht
 /** Legacy alias — chamas replace project groups */
 export const groupService = mockGroupAlias;
 /** Investor tabs stub (founder rewrite is primary) */
-export const investorService = mockInvestorStub;
+export const investorService: InvestorService = live('investor') ? httpInvestorService : mockInvestorStub;
 export const chatService = mockChatAdapter;
 
 export * from './types/api';
+
+export type { DiscoverCard, DiscoverResult, FounderPublicProfile, InvestorService, InvestorSetup, JoinRequestRow } from './http/investor.http';
