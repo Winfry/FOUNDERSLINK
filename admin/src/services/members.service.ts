@@ -1,3 +1,4 @@
+import { approvalLabel } from "@/components/labels";
 import type { MemberDetail, MemberListItem, MemberRole, PaginatedParams, PaginatedResult } from "@/types";
 import { getMemberDetail, listMembers, reinstateMember, suspendMember } from "./admin-mock-store";
 import { delay, paginate } from "./pagination";
@@ -47,11 +48,11 @@ export async function exportMembersCsv(role: MemberRole): Promise<string> {
   if (live) return http.exportMembersCsv(role);
   await delay(80);
   const rows = listMembers(role);
-  const header = "Name,Organisation,Status,Joined,Verification status\n";
+  const header = "Name,Email,Organisation or business,Account,Verification,Joined\n";
   const body = rows
     .map(
       (r) =>
-        `"${r.fullName}","${r.organisationOrBusiness ?? ""}","${r.memberStatus}","${r.joinedAt}","${r.approvalStatus}"`,
+        `"${r.fullName}","${r.email}","${r.organisationOrBusiness ?? ""}","${r.memberStatus === "suspended" ? "Suspended" : "Active"}","${approvalLabel(r.approvalStatus)}","${r.joinedAt.slice(0, 10)}"`,
     )
     .join("\n");
   return header + body;

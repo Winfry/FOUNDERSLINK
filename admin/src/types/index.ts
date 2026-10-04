@@ -37,20 +37,73 @@ export interface RiskSignal {
   explanation: string;
 }
 
+// The backend's own lists (backend/src/shared/constants.ts).
+export type CheckType = "identity" | "phone" | "organisation" | "track_record" | "professional_register" | "reference";
+export type CheckMethod = "manual" | "otp" | "provider" | "brs" | "lsk" | "icpak" | "cma" | "domain" | "reference";
+
+export interface CheckInput {
+  checkType: CheckType;
+  result: "passed" | "failed";
+  method: CheckMethod;
+}
+
 export interface VettingCheck {
   id: string;
   checkType: string;
   result: "passed" | "failed";
-  method: "manual" | "provider";
+  method: CheckMethod;
   recordedAt: string;
 }
 
 export interface VettingDecisionRecord {
   id: string;
-  decision: "approved" | "rejected" | "needs_info" | "suspended" | "reinstated";
+  // The older words, or the audit log's own action when it comes from there.
+  decision:
+    | "approved"
+    | "rejected"
+    | "needs_info"
+    | "suspended"
+    | "reinstated"
+    | "approve"
+    | "approve_first"
+    | "reject"
+    | "suspend"
+    | "reinstate"
+    | "recheck_confirmed";
   reason: string;
   decidedAt: string;
+  /** The admin who decided, when the audit log says. */
+  decidedBy?: string | null;
   checks?: VettingCheck[];
+}
+
+export interface ReviewBusiness {
+  name: string | null;
+  sector: string | null;
+  stage: string | null;
+  county: string | null;
+  amountKes: number | null;
+  useOfFunds: string | null;
+  description: string | null;
+  website: string | null;
+}
+
+export interface ReviewInvestor {
+  organisation: string | null;
+  jobTitle: string | null;
+  website: string | null;
+  bio: string | null;
+  /** What she funds, from the funder record she holds. */
+  funds: {
+    name: string | null;
+    sectors: string[];
+    stages: string[];
+    ticketMinKes: number | null;
+    ticketMaxKes: number | null;
+    mandate: string | null;
+  } | null;
+  /** The listed funder she says she speaks for, when she claimed one. */
+  claimsFunderName: string | null;
 }
 
 export interface VerificationReference {
@@ -90,12 +143,22 @@ export interface VerificationDetail {
   submittedAt: string;
   decisions: VettingDecisionRecord[];
   checks: VettingCheck[];
+  // The rest comes from the live backend only. Undefined means "not told".
+  business?: ReviewBusiness | null;
+  investor?: ReviewInvestor | null;
+  emailConfirmedAt?: string | null;
+  phoneConfirmedAt?: string | null;
+  /** Set when she sent the application again after being asked for more. */
+  resubmittedAfter?: { reason: string; at: string; by: string | null } | null;
+  /** Set when one admin has approved an investor and a second must. */
+  firstApprovalBy?: string | null;
 }
 
 export interface MemberListItem {
   id: string;
   fullName: string;
   email: string;
+  phone?: string | null;
   role: MemberRole;
   organisationOrBusiness: string | null;
   memberStatus: "active" | "suspended";
@@ -144,6 +207,10 @@ export interface MemberDetail {
   joinedAt: string;
   approvalStatus: ApprovalStatus;
   verificationSummary: string | null;
+  /** Her verification application, when she has one. */
+  applicationId?: string | null;
+  /** How many deals she is a party to. The backend sends only the number. */
+  dealCount?: number;
   consents: ConsentRecord[];
   reportsAgainst: MemberReportSummary[];
   timeline: MemberTimelineEvent[];
@@ -230,6 +297,8 @@ export interface RecheckListItem {
   role: MemberRole;
   lastCheckedAt: string;
   dueReason: string;
+  email?: string;
+  dueAt?: string;
 }
 
 export interface ComplianceSourceRow {
@@ -274,6 +343,8 @@ export interface AuditEntry {
   action: string;
   targetMember: string;
   reason: string;
+  /** The admin who acted. */
+  by?: string;
 }
 
 export interface AdminNavCounts {
@@ -293,6 +364,8 @@ export interface AdminStats {
   openReports: number;
   dealsByStage: { stage: DealStage; count: number }[];
   chamasCount: number;
+  /** Deals with a document waiting for an admin: what Deal reviews lists. */
+  dealsWithDocumentsWaiting?: number;
   registrationsByMonth: { month: string; count: number }[];
 }
 

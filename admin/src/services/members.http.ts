@@ -34,7 +34,9 @@ interface ApiUserDetail {
   founder_profile: { business_name: string | null; county: string | null } | null;
   investor_profile: { organisation_name: string | null } | null;
   expert_profile: { profession: string | null } | null;
+  activity?: { deals: number; circles: number };
   vetting_application: {
+    id?: string;
     phone: string | null;
     organisation_name: string | null;
     risk_level: string | null;
@@ -60,6 +62,7 @@ function toItem(u: ApiUser): MemberListItem {
     id: u.id,
     fullName: u.full_name,
     email: u.email,
+    phone: u.phone,
     role: u.role,
     organisationOrBusiness: u.summary,
     memberStatus: memberStatus(u.approval_status),
@@ -122,11 +125,22 @@ async function reportsAgainst(userId: string): Promise<MemberReportSummary[]> {
     .sort((a, b) => b.reportedAt.localeCompare(a.reportedAt));
 }
 
+const APPROVAL_WORDS: Record<string, string> = {
+  draft: "Not submitted",
+  submitted: "Waiting for review",
+  in_review: "In review",
+  needs_info: "Needs more info",
+  approved: "Approved",
+  rejected: "Rejected",
+  suspended: "Suspended",
+  banned: "Banned",
+};
+
 function verificationSummary(u: ApiUserDetail): string | null {
   const a = u.vetting_application;
   if (!a || !a.submitted_at) return null;
   return [
-    `Application ${u.approval_status.replace(/_/g, " ")}`,
+    `Application: ${(APPROVAL_WORDS[u.approval_status] ?? u.approval_status.replace(/_/g, " ")).toLowerCase()}`,
     a.risk_level ? `risk level ${a.risk_level}` : null,
     `${a.checks.length} check${a.checks.length === 1 ? "" : "s"} recorded`,
     a.decision_reason ? `last decision: ${a.decision_reason}` : null,
@@ -150,6 +164,8 @@ function toDetail(u: ApiUserDetail, reports: MemberReportSummary[]): MemberDetai
     joinedAt: u.created_at,
     approvalStatus: u.approval_status,
     verificationSummary: verificationSummary(u),
+    applicationId: u.vetting_application?.submitted_at ? (u.vetting_application.id ?? null) : null,
+    dealCount: u.activity?.deals,
     // A purpose she has never answered counts as not granted. The
     // backend does not send when each was last changed.
     consents: (Object.keys(CONSENT_LABELS) as ConsentRecord["purpose"][]).map((purpose) => ({
@@ -198,10 +214,27 @@ export const suspendMember = (id: string, reason: string) => setSuspended(id, "s
 export const reinstateMember = (id: string, reason: string) => setSuspended(id, "reinstate", reason);
 
 export async function exportMembersCsv(role: MemberRole): Promise<string> {
-  const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  // A cell that starts like a formula is written as text, so a
+  // spreadsheet does not run what a member typed.
+  const cell = (value: string) => `"${(/^[=+\-@]/.test(value) && !/^\+\d+$/.test(value) ? "'" + value : value).replace(/"/g, '""')}"`;
+  const day = (iso: string) => (iso ? iso.slice(0, 10) : "");
   const rows = await allOfRole(role, "");
   return (
-    "Name,Organisation,Status,Joined,Verification status\n" +
-    rows.map((r) => [r.fullName, r.organisationOrBusiness ?? "", r.memberStatus, r.joinedAt, r.approvalStatus].map(cell).join(",")).join("\n")
+    "Name,Email,Phone,Organisation or business,Account,Verification,Joined\n" +
+    rows
+      .map((r) =>
+        [
+          r.fullName,
+          r.email,
+          r.phone ?? "",
+          r.organisationOrBusiness ?? "",
+          r.memberStatus === "suspended" ? "Suspended" : "Active",
+          APPROVAL_WORDS[r.approvalStatus] ?? r.approvalStatus.replace(/_/g, " "),
+          day(r.joinedAt),
+        ]
+          .map(cell)
+          .join(","),
+      )
+      .join("\n")
   );
 }

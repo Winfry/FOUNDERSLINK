@@ -1,4 +1,4 @@
-import type { PaginatedParams, PaginatedResult, VerificationDetail, VerificationQueueItem } from "@/types";
+import type { CheckInput, PaginatedParams, PaginatedResult, VerificationDetail, VerificationQueueItem } from "@/types";
 import {
   getVerificationDetail,
   listVerificationQueue,
@@ -33,7 +33,7 @@ export async function decideVerification(
   id: string,
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
-  checks: { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" }[],
+  checks: CheckInput[],
 ) {
   if (live) return http.decideVerification(id, decision, reason, checks);
   await delay();

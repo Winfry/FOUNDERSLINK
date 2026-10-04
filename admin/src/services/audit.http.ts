@@ -6,18 +6,31 @@ interface ApiAction {
   action: string;
   reason: string;
   created_at: string;
-  admin: { id: string; full_name: string };
-  target: { id: string; full_name: string; role: string };
+  admin: { id: string; full_name: string } | null;
+  target: { id: string; full_name: string; role: string } | null;
 }
 
 // The filter on the page, and the backend actions each choice covers.
-// The backend records no document, report or compliance actions here.
+// The backend records no report or compliance actions, so the page
+// offers no such choices.
 const ACTION_TYPES: Record<string, string[]> = {
   verification: ["approve", "approve_first", "reject", "needs_info", "recheck_confirmed"],
   member: ["suspend", "reinstate", "create_admin"],
-  document: [],
-  report: [],
-  compliance: [],
+  document: ["confirm_document", "reject_document"],
+};
+
+// The words the page shows, so a search for "approved" finds them.
+const WORDS: Record<string, string> = {
+  approve: "Approved",
+  approve_first: "Approved (first of two)",
+  reject: "Rejected",
+  needs_info: "Asked for more information",
+  suspend: "Suspended",
+  reinstate: "Reinstated",
+  recheck_confirmed: "Confirmed after a re-check",
+  confirm_document: "Confirmed a document",
+  reject_document: "Rejected a document",
+  create_admin: "Added an admin",
 };
 
 // The backend sends the newest fifty actions and has no paging or
@@ -40,11 +53,12 @@ export async function fetchAuditLog(params: PaginatedParams = {}): Promise<Pagin
     .map((a) => ({
       id: a.id,
       createdAt: a.created_at,
-      action: a.action.replace(/_/g, " "),
-      targetMember: a.target.full_name,
-      reason: a.reason,
+      action: a.action,
+      targetMember: a.target?.full_name ?? "",
+      reason: a.reason ?? "",
+      by: a.admin?.full_name ?? "",
     }))
-    .filter((e) => !search || `${e.action} ${e.targetMember} ${e.reason}`.toLowerCase().includes(search));
+    .filter((e) => !search || `${WORDS[e.action] ?? e.action} ${e.targetMember} ${e.reason} ${e.by}`.toLowerCase().includes(search));
 
   return { data: all.slice((page - 1) * pageSize, page * pageSize), total: all.length, page, pageSize };
 }

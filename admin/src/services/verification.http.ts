@@ -1,4 +1,4 @@
-import type { ApprovalStatus, MemberRole, PaginatedParams, PaginatedResult, RiskLevel, VerificationDetail, VerificationQueueItem } from "@/types";
+import type { ApprovalStatus, CheckInput, CheckMethod, MemberRole, PaginatedParams, PaginatedResult, RiskLevel, VerificationDetail, VerificationQueueItem, VettingDecisionRecord } from "@/types";
 import { backend } from "@/lib/api";
 
 interface ApiApplicant {
@@ -26,8 +26,50 @@ interface ApiDetail extends ApiListItem {
   decided_at: string | null;
   decision_reason: string | null;
   checks: { id: string; check_type: string; result: "pass" | "fail"; method: string; checked_at: string }[];
-  user: ApiApplicant & { expert_profile?: { profession?: string | null; registration_number?: string | null } | null };
+  user: ApiApplicant & {
+    expert_profile?: { profession?: string | null; registration_number?: string | null } | null;
+    founder_profile?: {
+      business_name: string | null;
+      description: string | null;
+      sector: string | null;
+      stage: string | null;
+      county: string | null;
+      funding_amount_kes: number | null;
+      use_of_funds: string | null;
+      website: string | null;
+    } | null;
+    investor_profile?: { organisation_name: string | null; job_title: string | null; organisation_website: string | null; bio: string | null } | null;
+    funder?: {
+      name: string | null;
+      mandate_text: string | null;
+      sectors: string[] | null;
+      stages: string[] | null;
+      ticket_min_kes: number | null;
+      ticket_max_kes: number | null;
+    } | null;
+  };
+  claims_funder?: { name: string | null } | null;
 }
+
+// The member's own record: says whether her email and phone were
+// confirmed by code, and carries every admin action about her.
+interface ApiMember {
+  email_verified_at: string | null;
+  phone_verified_at: string | null;
+  timeline: { at: string; event: string; by: string | null; reason: string | null }[];
+}
+
+interface ApiAction {
+  id: string;
+  action: string;
+  reason: string;
+  created_at: string;
+  admin: { full_name: string } | null;
+  target: { id: string } | null;
+}
+
+// The audit log's actions that are decisions about a member's standing.
+const DECISION_ACTIONS = ["approve", "approve_first", "reject", "needs_info", "suspend", "reinstate", "recheck_confirmed"];
 
 // The dashboard's tabs, and the backend statuses each one covers.
 const TAB_STATUS: Record<string, ApprovalStatus[]> = {
@@ -78,68 +120,118 @@ export async function fetchVerificationQueue(tab: string, params: PaginatedParam
 
 const RESULT = { pass: "passed", fail: "failed" } as const;
 
-function toDetail(a: ApiDetail): VerificationDetail {
+// Every decision about this member, newest first. Her own record holds
+// all of them. If it cannot be read, the audit log (the newest fifty
+// actions across all members) is used instead.
+async function decisionHistory(userId: string): Promise<{ member: ApiMember | null; decisions: VettingDecisionRecord[] }> {
+  const [member, actions] = await Promise.all([
+    backend<ApiMember>("GET", `/admin/users/${userId}`).catch(() => null),
+    backend<ApiAction[]>("GET", "/admin/actions").catch(() => [] as ApiAction[]),
+  ]);
+  const fromLog = actions
+    .filter((a) => a.target?.id === userId)
+    .map((a) => ({ id: a.id, decision: a.action, reason: a.reason, decidedAt: a.created_at, decidedBy: a.admin?.full_name ?? null }));
+  const fromMember = (member?.timeline ?? []).map((e, i) => ({
+    id: `t${i}`,
+    decision: e.event,
+    reason: e.reason ?? "",
+    decidedAt: typeof e.at === "string" ? e.at : new Date(e.at).toISOString(),
+    decidedBy: e.by,
+  }));
+  const decisions = (fromMember.length >= fromLog.length ? fromMember : fromLog)
+    .filter((d) => DECISION_ACTIONS.includes(d.decision))
+    .sort((x, y) => y.decidedAt.localeCompare(x.decidedAt)) as VettingDecisionRecord[];
+  return { member, decisions };
+}
+
+function toDetail(a: ApiDetail, member: ApiMember | null, decisions: VettingDecisionRecord[]): VerificationDetail {
   const checks = a.checks.map((c) => ({
     id: c.id,
-    checkType: c.check_type.replace(/_/g, " "),
+    checkType: c.check_type,
     result: RESULT[c.result],
-    method: c.method === "provider" ? ("provider" as const) : ("manual" as const),
+    method: c.method as CheckMethod,
     recordedAt: c.checked_at,
   }));
-  const decided = ["approved", "rejected", "needs_info"].includes(a.user.approval_status) && a.decided_at;
+  const f = a.user.founder_profile;
+  const inv = a.user.investor_profile;
+  const funder = a.user.funder;
+  const latest = decisions[0];
+  const waiting = a.user.approval_status === "submitted" || a.user.approval_status === "in_review";
   return {
     ...toItem(a),
     phone: a.phone,
     statement: a.statement,
-    organisationName: a.organisation_name,
-    website: a.organisation_website,
+    organisationName: a.organisation_name ?? inv?.organisation_name ?? null,
+    website: a.organisation_website ?? inv?.organisation_website ?? f?.website ?? null,
     // The backend keeps references as one free-text field.
     references: a.references ? [{ name: a.references, relationship: "", phone: "" }] : [],
     professionalRegister: a.user.expert_profile?.profession ?? null,
     registerNumber: a.user.expert_profile?.registration_number ?? null,
     // The backend sends each signal as one sentence.
     riskSignals: a.risk_signals.map((text, i) => ({ id: String(i), text, explanation: "" })),
-    decisions: decided
-      ? [{ id: a.id, decision: a.user.approval_status as "approved" | "rejected" | "needs_info", reason: a.decision_reason ?? "", decidedAt: a.decided_at!, checks }]
-      : [],
+    decisions,
     checks,
+    business: f
+      ? {
+          name: f.business_name,
+          sector: f.sector,
+          stage: f.stage,
+          county: f.county,
+          amountKes: f.funding_amount_kes,
+          useOfFunds: f.use_of_funds,
+          description: f.description,
+          website: f.website,
+        }
+      : null,
+    investor:
+      a.user.role === "investor"
+        ? {
+            organisation: inv?.organisation_name ?? a.organisation_name,
+            jobTitle: inv?.job_title ?? null,
+            website: inv?.organisation_website ?? a.organisation_website,
+            bio: inv?.bio ?? null,
+            funds: funder
+              ? {
+                  name: funder.name,
+                  sectors: funder.sectors ?? [],
+                  stages: funder.stages ?? [],
+                  ticketMinKes: funder.ticket_min_kes,
+                  ticketMaxKes: funder.ticket_max_kes,
+                  mandate: funder.mandate_text,
+                }
+              : null,
+            claimsFunderName: a.claims_funder?.name ?? null,
+          }
+        : null,
+    // Undefined when her record could not be read: the page then says nothing.
+    emailConfirmedAt: member ? member.email_verified_at : undefined,
+    phoneConfirmedAt: member ? member.phone_verified_at : undefined,
+    resubmittedAfter:
+      waiting && latest?.decision === "needs_info" ? { reason: latest.reason, at: latest.decidedAt, by: latest.decidedBy ?? null } : null,
+    firstApprovalBy: waiting && latest?.decision === "approve_first" ? (latest.decidedBy ?? "another admin") : null,
   };
 }
 
 // Opening an application marks it "in review" on the backend.
 export async function fetchVerificationDetail(id: string): Promise<VerificationDetail | null> {
   try {
-    return toDetail(await backend<ApiDetail>("GET", `/admin/vetting/${id}`));
+    const application = await backend<ApiDetail>("GET", `/admin/vetting/${id}`);
+    const { member, decisions } = await decisionHistory(application.user.id);
+    return toDetail(application, member, decisions);
   } catch {
     return null;
   }
 }
 
 const DECISION = { approved: "approve", rejected: "reject", needs_info: "needs_info" } as const;
-const CHECK_TYPES = ["identity", "phone", "organisation", "track_record", "professional_register", "reference"];
 
-// The form takes a check as free text ("Phone number"). The backend
-// keeps a fixed list, so each is matched to the closest one.
-function checkTypeOf(text: string) {
-  const t = text.toLowerCase();
-  if (t.includes("phone")) return "phone";
-  if (t.includes("organ") || t.includes("website") || t.includes("domain")) return "organisation";
-  if (t.includes("track") || t.includes("portfolio")) return "track_record";
-  if (t.includes("regist") || t.includes("lsk") || t.includes("icpak")) return "professional_register";
-  if (t.includes("refer")) return "reference";
-  return CHECK_TYPES.includes(t) ? t : "identity";
-}
-
-export async function decideVerification(
-  id: string,
-  decision: "approved" | "rejected" | "needs_info",
-  reason: string,
-  checks: { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" }[],
-) {
+// The form offers the backend's own check types and methods, so what
+// was chosen is sent as it is. Nothing is guessed.
+export async function decideVerification(id: string, decision: "approved" | "rejected" | "needs_info", reason: string, checks: CheckInput[]) {
   await backend("POST", `/admin/vetting/${id}/decision`, {
     decision: DECISION[decision],
     reason,
-    checks: checks.map((c) => ({ check_type: checkTypeOf(c.checkType), result: c.result === "passed" ? "pass" : "fail", method: c.method })),
+    checks: checks.map((c) => ({ check_type: c.checkType, result: c.result === "passed" ? "pass" : "fail", method: c.method })),
   });
   return fetchVerificationDetail(id);
 }

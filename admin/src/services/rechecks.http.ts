@@ -20,6 +20,8 @@ export async function fetchRechecks(): Promise<RecheckListItem[]> {
     role: r.user.role,
     lastCheckedAt: r.approved_at ?? "",
     dueReason: r.reason,
+    email: r.user.email,
+    dueAt: r.due_at,
   }));
 }
 

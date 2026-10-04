@@ -5,25 +5,40 @@ import { addRecheckAudit } from "@/services/admin-mock-store";
 import { confirmDocument, rejectDocument } from "@/services/deal-reviews.service";
 import { reviewComplianceSource } from "@/services/compliance-sources.service";
 import { exportMembersCsv, reinstateMemberAction, suspendMemberAction } from "@/services/members.service";
-import type { MemberRole } from "@/types";
+import type { CheckInput, MemberRole, VerificationDetail } from "@/types";
+import { ApiError } from "@/lib/api";
 import { actOnMemberReport, actOnMessageReport } from "@/services/reports.service";
 import { decideVerification } from "@/services/verification.service";
 import { recordRecheck } from "@/services/rechecks.service";
 import { changePassword, enableTwoFactor } from "@/services/settings.service";
 
+// What the page says when a decision was not saved. When the server
+// refused, its own message is passed on. "Did not answer" is said only
+// when it really did not.
+function refusal(err: unknown): string {
+  if (err instanceof ApiError) return err.message;
+  return "The server did not answer. Nothing was changed: try again.";
+}
+
+// Errors are returned, not thrown: a thrown error reaches the page
+// without its message.
 export async function verificationDecisionAction(
   id: string,
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
-  checks: { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" }[],
-) {
-  const result = await decideVerification(id, decision, reason, checks);
-  revalidatePath("/verification");
-  revalidatePath(`/verification/${id}`);
-  revalidatePath("/overview");
-  revalidatePath("/audit-log");
-  revalidatePath("/members");
-  return result;
+  checks: CheckInput[],
+): Promise<{ ok: true; detail: VerificationDetail | null } | { ok: false; message: string }> {
+  try {
+    const detail = await decideVerification(id, decision, reason, checks);
+    revalidatePath("/verification");
+    revalidatePath(`/verification/${id}`);
+    revalidatePath("/overview");
+    revalidatePath("/audit-log");
+    revalidatePath("/members");
+    return { ok: true, detail };
+  } catch (err) {
+    return { ok: false, message: refusal(err) };
+  }
 }
 
 export async function suspendMemberFormAction(id: string, reason: string) {
@@ -97,12 +112,22 @@ export async function recheckRecordedAction(memberName: string, reason: string) 
   revalidatePath("/rechecks");
 }
 
-export async function recheckDecisionAction(id: string, memberName: string, outcome: "confirm" | "suspend", reason: string) {
-  const result = await recordRecheck(id, memberName, outcome, reason);
-  revalidatePath("/audit-log");
-  revalidatePath("/rechecks");
-  revalidatePath("/members");
-  return result;
+export async function recheckDecisionAction(
+  id: string,
+  memberName: string,
+  outcome: "confirm" | "suspend",
+  reason: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    await recordRecheck(id, memberName, outcome, reason);
+    revalidatePath("/audit-log");
+    revalidatePath("/rechecks");
+    revalidatePath("/members");
+    revalidatePath("/overview");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: refusal(err) };
+  }
 }
 
 export async function enableTwoFactorAction(code: string) {
