@@ -36,6 +36,8 @@ import { httpFounderService } from './http/founder.http';
 import { httpFundingService } from './http/funding.http';
 import { httpConsentService } from './http/consent.http';
 import { httpVettingService } from './http/vetting.http';
+import { httpConnectionService } from './http/connection.http';
+import { httpDealService } from './http/deal.http';
 import { httpReferenceDataService } from './http/reference.http';
 
 /**
@@ -50,10 +52,10 @@ export const authService: AuthService = live('auth') ? httpAuthService : mockAut
 export const founderService: FounderService = live('founder') ? httpFounderService : mockFounderService;
 export const fundingService: FundingService = live('funding') ? httpFundingService : mockFundingService;
 export const complianceService: ComplianceService = mockComplianceService;
-export const connectionService: ConnectionService = mockConnectionService;
+export const connectionService: ConnectionService = live('connection') ? httpConnectionService : mockConnectionService;
 export const vettingService: VettingService = live('vetting') ? httpVettingService : mockVettingService;
 export const consentService: ConsentService = live('consent') ? httpConsentService : mockConsentService;
-export const dealService: DealService = mockDealService;
+export const dealService: DealService = live('deal') ? httpDealService : mockDealService;
 export const circleService: CircleService = mockCircleService;
 export const conversationService: ConversationService = mockConversationService;
 export const notificationService: NotificationService = mockNotificationService;
