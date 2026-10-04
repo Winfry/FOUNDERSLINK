@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Check, CircleAlert, CircleCheck, CircleDashed, Clock, FileText, Landmark, Upload } from 'lucide-react-native';
+import { Check, CircleAlert, CircleCheck, CircleDashed, Clock, FileText, Info, Landmark, Upload } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
 import { Avatar, Badge, Button, Card } from '../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
@@ -91,6 +91,15 @@ export default function DealScreen() {
   const iConfirmed = deal.confirmations.some((c) => c.userId === me && c.confirmed);
   const waitingOn = deal.confirmations.filter((c) => !c.confirmed && c.userId !== me).map((c) => c.name);
   const checklistDone = deal.checklist.filter((c) => c.done).length;
+  // Her own copy of a document that staff have not looked at yet: the
+  // one "Replace" swaps out. A reviewed copy stays on the record.
+  const replaceable = (type: string) =>
+    deal.documents.find((d) => d.ownerUserId === me && d.type === type && d.status === 'uploaded')?.id;
+  // A rejected document has been answered once a later copy of the same
+  // kind from the same person is in the list (the list is oldest first).
+  const superseded = (d: DealDocument, at: number) =>
+    deal.documents.some((o, j) => j > at && o.type !== undefined && o.type === d.type && o.ownerUserId === d.ownerUserId && o.status !== 'rejected');
+  const otherRole = deal.withRole === 'founder' || deal.withRole === 'investor' ? `the ${deal.withRole}` : (deal.withName || 'the other party');
 
   // The one thing she can do at this stage.
   const action: { title: string; help: string; onPress: () => void } | null =
@@ -144,7 +153,7 @@ export default function DealScreen() {
           <View style={styles.flex}>
             <Text style={styles.closedTitle}>This deal is closed</Text>
             <Text style={styles.closedCopy}>
-              The money moves between you and the investor through a bank. FoundersLink records the deal.
+              The money moves between you and {otherRole} through a bank. FoundersLink records the deal.
             </Text>
           </View>
         </View>
@@ -169,6 +178,13 @@ export default function DealScreen() {
         {deal.terms.notes ? <Text style={styles.termNote}>{deal.terms.notes}</Text> : null}
       </View>
 
+      {deal.notice ? (
+        <View style={styles.notice}>
+          <Info size={16} color={colors.textMuted} style={styles.noticeIcon} />
+          <Text style={styles.noticeText}>{deal.notice}</Text>
+        </View>
+      ) : null}
+
       {showDiligence ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Due diligence</Text>
@@ -192,9 +208,16 @@ export default function DealScreen() {
                     onPress={() =>
                       void run(
                         doc.type,
-                        () => dealService.uploadDocument(deal.id, doc.type),
-                        // Closing the file picker without choosing shares nothing.
-                        (after) => (after.documents.length > deal.documents.length ? `${doc.title} shared in this deal` : null),
+                        () => dealService.uploadDocument(deal.id, doc.type, replaceable(doc.type)),
+                        // Closing the file picker without choosing shares nothing,
+                        // and then the list is the same documents as before.
+                        (after) => {
+                          const before = new Set(deal.documents.map((d) => d.id));
+                          if (!after.documents.some((d) => !before.has(d.id))) return null;
+                          return after.documents.length > deal.documents.length
+                            ? `${doc.title} shared in this deal`
+                            : `${doc.title} replaced with your new copy`;
+                        },
                       )
                     }
                     style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed, busy !== null && styles.dim]}
@@ -245,7 +268,9 @@ export default function DealScreen() {
                         <Text style={styles.rejectedText}>
                           {note ? `Reason: ${note}` : 'FoundersLink did not accept this document.'}
                         </Text>
-                        <Text style={styles.rejectedHint}>Share a corrected copy to continue.</Text>
+                        <Text style={styles.rejectedHint}>
+                          {superseded(d, i) ? 'A newer copy has been shared since.' : 'Share a corrected copy to continue.'}
+                        </Text>
                       </View>
                     ) : note ? (
                       <Text style={styles.rowMeta}>{note}</Text>
@@ -361,6 +386,11 @@ const styles = StyleSheet.create({
   termFactLabel: { fontSize: 12, fontWeight: '600', color: '#C7D7F5' },
   termFactValue: { fontSize: 16, fontWeight: '700', color: colors.white },
   termNote: { fontSize: 14, color: '#E3EBFA' },
+
+  // Sits right under the terms block it explains.
+  notice: { flexDirection: 'row', gap: spacing[1], marginTop: -spacing[1.5] },
+  noticeIcon: { marginTop: 2 },
+  noticeText: { flex: 1, fontSize: 14, color: colors.textMuted },
 
   section: { gap: spacing[1.5] },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },

@@ -9,6 +9,7 @@ import { MenuGroup, MenuRow } from '../../../src/components/profile/MenuRow';
 import { Chip } from '../../../src/components/matches/parts';
 import { investorService, referenceDataService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationWords } from '../../../src/lib/verification-state';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
 import type { ApprovalStatus } from '../../../src/types';
 
@@ -28,9 +29,11 @@ function verification(status: ApprovalStatus | undefined): {
       return { label: 'Being checked', variant: 'default', state: 'checking' };
     case 'needs_info':
       return { label: 'More information needed', variant: 'warning', state: 'needs_info' };
+    case 'rejected':
+      return { label: 'Not approved', variant: 'error', state: 'held' };
     case 'suspended':
     case 'banned':
-      return { label: 'Account on hold', variant: 'error', state: 'held' };
+      return { label: 'Account paused', variant: 'error', state: 'held' };
     default:
       return { label: 'Not verified yet', variant: 'muted', state: 'none' };
   }
@@ -87,6 +90,7 @@ export default function InvestorProfileTab() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const v = verification(user?.approvalStatus);
+  const vw = verificationWords(user?.approvalStatus, 'investor');
   const setup = setupQ.data;
   const labels = ((metaQ.data as { labels?: Record<string, string> } | undefined)?.labels ?? {}) as Record<string, string>;
   const labelOf = (id: string) => labels[id] ?? tidy(id);
@@ -160,29 +164,9 @@ export default function InvestorProfileTab() {
           </View>
         ) : (
           <Card style={styles.cardGap}>
-            <Text style={styles.cardTitle}>
-              {v.state === 'checking'
-                ? "We're checking your details"
-                : v.state === 'needs_info'
-                  ? 'We need a little more from you'
-                  : v.state === 'held'
-                    ? 'Your account is on hold'
-                    : 'Verify to connect'}
-            </Text>
-            <Text style={styles.muted}>
-              {v.state === 'checking'
-                ? 'Founders\' names, connections and chat open as soon as FoundersLink approves you. You can keep exploring Discover.'
-                : v.state === 'needs_info'
-                  ? 'Open your status to see what is missing and send it.'
-                  : v.state === 'held'
-                    ? 'Open your status to see why, and what you can do.'
-                    : 'Everyone you meet here has been checked. Verify once, and you can see who the founders are, ask them to connect and chat with them.'}
-            </Text>
-            {v.state === 'none' && user?.approvalStatus !== 'rejected' ? (
-              <Button title="Verify to connect" onPress={() => router.push('/founder/verify')} />
-            ) : (
-              <Button title="See status" variant="secondary" onPress={() => router.push('/founder/verify/status')} />
-            )}
+            <Text style={styles.cardTitle}>{vw.title}</Text>
+            <Text style={styles.muted}>{vw.body}</Text>
+            <Button title={vw.action} variant={vw.starts ? 'primary' : 'secondary'} onPress={() => router.push(vw.href)} />
           </Card>
         )}
       </View>

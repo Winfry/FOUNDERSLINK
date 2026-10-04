@@ -8,6 +8,7 @@ import { Badge, Button, Card, ConfirmModal } from '../../../src/components/ui';
 import { MenuGroup, MenuRow } from '../../../src/components/profile/MenuRow';
 import { founderService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationWords } from '../../../src/lib/verification-state';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
 import type { ApprovalStatus } from '../../../src/types';
 
@@ -27,9 +28,11 @@ function verification(status: ApprovalStatus | undefined): {
       return { label: 'Being checked', variant: 'default', state: 'checking' };
     case 'needs_info':
       return { label: 'More information needed', variant: 'warning', state: 'needs_info' };
+    case 'rejected':
+      return { label: 'Not approved', variant: 'error', state: 'held' };
     case 'suspended':
     case 'banned':
-      return { label: 'Account on hold', variant: 'error', state: 'held' };
+      return { label: 'Account paused', variant: 'error', state: 'held' };
     default:
       return { label: 'Not verified yet', variant: 'muted', state: 'none' };
   }
@@ -87,6 +90,7 @@ export default function FounderProfileTab() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const v = verification(user?.approvalStatus);
+  const vw = verificationWords(user?.approvalStatus, 'founder');
   const profile = profileQ.data;
   const complete = Math.max(0, Math.min(100, Math.round(profile?.profileCompleteness ?? 0)));
 
@@ -130,6 +134,7 @@ export default function FounderProfileTab() {
                 <View style={[styles.fill, { width: `${complete}%` }]} />
               </View>
             </View>
+            <Button title="Edit my business" variant="secondary" onPress={() => router.push('/founder/onboarding')} />
           </Card>
         ) : (
           <Card style={styles.cardGap}>
@@ -149,29 +154,9 @@ export default function FounderProfileTab() {
           </View>
         ) : (
           <Card style={styles.cardGap}>
-            <Text style={styles.cardTitle}>
-              {v.state === 'checking'
-                ? "We're checking your details"
-                : v.state === 'needs_info'
-                  ? 'We need a little more from you'
-                  : v.state === 'held'
-                    ? 'Your account is on hold'
-                    : 'Verify to connect'}
-            </Text>
-            <Text style={styles.muted}>
-              {v.state === 'checking'
-                ? 'Connections, chat and chamas open as soon as FoundersLink approves you. You can keep exploring your matches.'
-                : v.state === 'needs_info'
-                  ? 'Open your status to see what is missing and send it.'
-                  : v.state === 'held'
-                    ? 'Open your status to see why, and what you can do.'
-                    : 'Everyone you meet here has been checked. Verify once, and you can ask investors to connect, chat with them and join chamas.'}
-            </Text>
-            {v.state === 'none' && user?.approvalStatus !== 'rejected' ? (
-              <Button title="Verify to connect" onPress={() => router.push('/founder/verify')} />
-            ) : (
-              <Button title="See status" variant="secondary" onPress={() => router.push('/founder/verify/status')} />
-            )}
+            <Text style={styles.cardTitle}>{vw.title}</Text>
+            <Text style={styles.muted}>{vw.body}</Text>
+            <Button title={vw.action} variant={vw.starts ? 'primary' : 'secondary'} onPress={() => router.push(vw.href)} />
           </Card>
         )}
       </View>

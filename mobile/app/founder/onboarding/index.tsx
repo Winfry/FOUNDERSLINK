@@ -1,10 +1,12 @@
-import { useRouter } from 'expo-router';
-import { useRef, useState, type ReactNode } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Switch } from '../../../src/components/ui/Switch';
 import { Sparkles } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
+import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { AmountField, Checkbox, FormError, LongSelect, Steps, SuggestedTag } from '../../../src/components/auth/parts';
 import { Button, Input, MultiSelect, Select, Textarea } from '../../../src/components/ui';
 import { useToast } from '../../../src/components/ui/Toast';
@@ -14,6 +16,8 @@ import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
 const STEP_NAMES = ['Describe', 'Confirm', 'Consent'];
+// A founder who comes back to change something skips the first step.
+const EDIT_STEP_NAMES = ['Your details', 'What is shared'];
 
 const EXAMPLES = [
   'We run a booking app for small clinics in Nairobi. We have 300 paying users and need KSh 2 million to grow.',
@@ -43,8 +47,15 @@ export default function FounderOnboardingScreen() {
   const router = useRouter();
   const { show } = useToast();
   const markComplete = useAuthStore((s) => s.markFounderOnboardingComplete);
+  const queryClient = useQueryClient();
+  const { step: startAt } = useLocalSearchParams<{ step?: string }>();
   const scroll = useRef<ScrollView>(null);
   const [step, setStepState] = useState(1);
+  // True once her saved profile has been found: this is then the screen
+  // where she edits it, not where she sets it up.
+  const [editing, setEditing] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [savedConsents, setSavedConsents] = useState<Record<string, boolean>>({});
   const [description, setDescription] = useState('');
   const [profile, setProfile] = useState<Partial<FounderProfile>>({
     journeyType: 'startup',
@@ -88,6 +99,43 @@ export default function FounderOnboardingScreen() {
     setMeta(m as Record<string, string[]>);
     setLabels((m.labels as Record<string, string>) ?? {});
   };
+
+  // A founder who already has a profile opens it filled in, with the
+  // consents she gave. A first-time founder starts at step 1.
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const existing = await founderService.getProfile();
+        if (!existing || !live) return;
+        const [given] = await Promise.all([consentService.list(), loadMeta().catch(() => undefined)]);
+        if (!live) return;
+        const granted = Object.fromEntries(given.map((c) => [c.purpose, c.granted]));
+        setProfile(existing);
+        setDescription(existing.description ?? '');
+        setConsents({
+          profile_visibility: granted.profile_visibility ?? false,
+          ai_matching: granted.ai_matching ?? false,
+          contact: granted.contact ?? false,
+        });
+        setSavedConsents(granted);
+        setEditing(true);
+        setStepState(startAt === 'consent' ? 3 : 2);
+      } catch {
+        // Could not tell: the form opens as it does for a new founder.
+      } finally {
+        if (live) setChecking(false);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // Only when the screen opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Back to wherever she opened this from.
+  const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const extract = async () => {
     if (description.trim().length < 10) {
@@ -141,9 +189,20 @@ export default function FounderOnboardingScreen() {
     try {
       const saved = await founderService.saveProfile(profile as FounderProfile);
       for (const [purpose, granted] of Object.entries(consents)) {
+        // When editing, only what she changed is recorded again.
+        if (editing && savedConsents[purpose] === granted) continue;
         await consentService.set(purpose as keyof typeof consents, granted);
       }
       await markComplete();
+      // Her matches, her profile and the consent switches all read from these.
+      await Promise.all(
+        [['founder-profile'], ['consents'], ['funding-matches']].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+      );
+      if (editing) {
+        show('Your changes are saved', 'success');
+        leave();
+        return;
+      }
       show(`Profile ${saved.profileCompleteness}% complete`, 'success');
       router.replace('/(founder)/(tabs)/matches');
     } catch (e) {
@@ -164,12 +223,19 @@ export default function FounderOnboardingScreen() {
 
   return (
     <View style={styles.flex}>
-      <Header title="Set up your profile" onBack={step > 1 ? () => setStep(step - 1) : undefined} />
-      <View style={styles.steps}>
-        <Steps names={STEP_NAMES} current={step} />
-      </View>
+      <Header
+        title={editing ? 'Edit your business' : 'Set up your profile'}
+        onBack={editing ? (step === 3 ? () => setStep(2) : leave) : step > 1 ? () => setStep(step - 1) : undefined}
+      />
+      {checking ? (
+        <ScreenLoading />
+      ) : (
+        <View style={styles.steps}>
+          {editing ? <Steps names={EDIT_STEP_NAMES} current={step - 1} /> : <Steps names={STEP_NAMES} current={step} />}
+        </View>
+      )}
       <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {step === 1 ? (
+        {!checking && step === 1 ? (
           <>
             <Text style={styles.heading}>Tell us about your business</Text>
             <Text style={styles.helper}>
@@ -213,9 +279,9 @@ export default function FounderOnboardingScreen() {
           </>
         ) : null}
 
-        {step === 2 ? (
+        {!checking && step === 2 ? (
           <>
-            <Text style={styles.heading}>Check your details</Text>
+            <Text style={styles.heading}>{editing ? 'Your business details' : 'Check your details'}</Text>
             <Text style={styles.helper}>Investors are matched to you on these, so make sure they are right.</Text>
             {suggestedCount !== null ? (
               <View style={styles.notice}>
@@ -283,15 +349,17 @@ export default function FounderOnboardingScreen() {
             <View style={styles.actions}>
               <FormError message={missingNames.length > 0 ? `Still needed: ${missingNames.join(', ')}. Scroll up to fill ${missingNames.length === 1 ? 'it' : 'them'} in.` : null} />
               <Button title="Continue" onPress={toConsents} />
-              <Button title="Back" variant="ghost" onPress={() => setStep(1)} />
+              <Button title={editing ? 'Cancel' : 'Back'} variant="ghost" onPress={editing ? leave : () => setStep(1)} />
             </View>
           </>
         ) : null}
 
-        {step === 3 ? (
+        {!checking && step === 3 ? (
           <>
             <Text style={styles.heading}>You decide what is shared</Text>
-            <Text style={styles.helper}>Everything is off until you turn it on.</Text>
+            <Text style={styles.helper}>
+              {editing ? 'These are your choices today. Change any of them and save.' : 'Everything is off until you turn it on.'}
+            </Text>
             <View style={styles.consents}>
               {CONSENTS.map(([key, title, line]) => (
                 <Pressable
@@ -315,7 +383,7 @@ export default function FounderOnboardingScreen() {
             </View>
             <View style={styles.actions}>
               <FormError message={failed} />
-              <Button title="Finish" loading={saving} onPress={() => void finish()} />
+              <Button title={editing ? 'Save changes' : 'Finish'} loading={saving} onPress={() => void finish()} />
               <Button title="Back" variant="ghost" onPress={() => setStep(2)} />
             </View>
           </>

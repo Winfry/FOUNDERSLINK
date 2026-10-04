@@ -188,6 +188,10 @@ export interface DealDocument {
   name: string;
   precheckStatus: 'pending' | 'ai_pre_checked' | 'confirmed_by_founderlink';
   summary?: string;
+  /** Which document it is (e.g. the KRA PIN certificate), who shared it, and where staff are with it. */
+  type?: string;
+  ownerUserId?: string;
+  status?: 'uploaded' | 'verified' | 'rejected';
 }
 
 export interface Deal {
@@ -209,6 +213,10 @@ export interface Deal {
   };
   /** What this deal asks the signed-in party to share at due diligence. */
   requiredDocuments?: { type: string; title: string; provided: boolean }[];
+  /** The backend's own words on where the money moves and what the terms are. */
+  notice?: string;
+  /** The other party's role in the deal (founder or investor), when known. */
+  withRole?: string;
 }
 
 export type CircleRole = 'organiser' | 'treasurer' | 'member';
@@ -255,6 +263,8 @@ export interface VettingApplication {
   organisationName?: string;
   organisationWebsite?: string;
   decisionReason?: string | null;
+  /** Why an admin paused her account, when she is suspended. */
+  suspensionReason?: string | null;
   /** Whether her email and her phone have been confirmed by code. */
   emailVerified?: boolean;
   phoneVerified?: boolean;
@@ -281,6 +291,8 @@ export interface AppNotification {
 export interface ApiError {
   code: string;
   message: string;
+  /** Which fields the backend refused and why, when it says. */
+  details?: { path: string; message: string }[];
 }
 
 export interface Paginated<T> {

@@ -22,6 +22,8 @@ export default function JoinRequestScreen() {
   const [vision, setVision] = useState('');
   const [offer, setOffer] = useState('');
   const [amount, setAmount] = useState<number | undefined>(undefined);
+  // What she typed in the amount field, to tell an empty field from a 0.
+  const [amountTyped, setAmountTyped] = useState('');
   const [tried, setTried] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,17 +44,21 @@ export default function JoinRequestScreen() {
         : `Add a little more: at least ${PITCH_MIN} characters (${pitchLength} so far).`
       : undefined;
 
+  // A typed 0 is not "no amount": she is told, and nothing is sent.
+  const amountError =
+    amountTyped !== '' && !amount ? 'Leave it empty if you are not proposing an amount yet. An amount has to be more than 0.' : undefined;
+
   const submit = async () => {
     setTried(true);
     setRefusal(null);
-    if (pitchLength < PITCH_MIN) return;
+    if (pitchLength < PITCH_MIN || amountError) return;
     setLoading(true);
     try {
       await investorService.submitJoinRequest(String(founderId), {
         pitch: pitch.trim(),
         vision: vision.trim(),
         offer: offer.trim(),
-        amountKes: amount,
+        amountKes: amount || undefined,
       });
       void queryClient.invalidateQueries({ queryKey: ['founder-profile', founderId] });
       void queryClient.invalidateQueries({ queryKey: ['join-requests'] });
@@ -60,8 +66,8 @@ export default function JoinRequestScreen() {
       router.replace('/(investor)/(tabs)/requests');
     } catch (e) {
       const message = (e as { message?: string })?.message ?? 'The request was not sent. Check your connection and try again.';
+      // Said once, in the form, next to the button she pressed.
       setRefusal(message);
-      show(message, 'error');
     } finally {
       setLoading(false);
     }
@@ -92,6 +98,8 @@ export default function JoinRequestScreen() {
             label="Amount you propose to invest (optional)"
             value={amount}
             onChange={setAmount}
+            onRawChange={setAmountTyped}
+            error={amountError}
             hint="FoundersLink never holds money. This is only your proposal."
           />
           <Textarea

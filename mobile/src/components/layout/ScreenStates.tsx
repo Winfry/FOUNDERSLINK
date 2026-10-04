@@ -4,6 +4,7 @@ import { Text } from '../ui/Text';
 import { useRouter } from 'expo-router';
 import { CloudOff, RefreshCw, AlertCircle, ShieldCheck } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
+import { verificationWords } from '../../lib/verification-state';
 import { colors, spacing } from '../../theme/tokens';
 import { Button } from '../ui/Button';
 import { SkeletonCard } from '../ui/Skeleton';
@@ -27,26 +28,19 @@ export function ScreenLoading({ rows = 3 }: { rows?: number }) {
 export function ScreenError({ message, code, onRetry }: { message: string; code?: string; onRetry?: () => void }) {
   const router = useRouter();
   const status = useAuthStore((s) => s.user?.approvalStatus);
-  const investor = useAuthStore((s) => s.user?.role === 'investor');
+  const role = useAuthStore((s) => s.user?.role);
 
   if (code === 'APPROVAL_REQUIRED' || /must be approved/i.test(message)) {
-    const waiting = status === 'submitted' || status === 'in_review';
+    // What she is told follows where her verification really stands.
+    const v = verificationWords(status, role);
     return (
       <View style={styles.center}>
         <View style={[styles.icon, { backgroundColor: colors.primaryLight }]}>
           <ShieldCheck size={28} color={colors.primary} />
         </View>
-        <Text style={styles.title}>{waiting ? "We're checking your details" : 'Verify to open this'}</Text>
-        <Text style={styles.desc}>
-          {waiting
-            ? `This opens as soon as FoundersLink approves you. You can keep exploring ${investor ? 'Discover' : 'your matches and readiness'}.`
-            : 'Everyone you meet here has been checked. Verify once, and chamas, connections and chat open for you.'}
-        </Text>
-        <Button
-          title={waiting ? 'See my verification status' : 'Verify to connect'}
-          onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
-          style={styles.btn}
-        />
+        <Text style={styles.title}>{v.kind === 'verify' ? 'Verify to open this' : v.title}</Text>
+        <Text style={styles.desc}>{v.body}</Text>
+        <Button title={v.action} variant={v.starts ? 'primary' : 'secondary'} onPress={() => router.push(v.href)} style={styles.btn} />
       </View>
     );
   }

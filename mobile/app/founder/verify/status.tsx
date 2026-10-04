@@ -53,8 +53,8 @@ const STATES: Record<string, State> = {
     icon: CircleSlash,
     tint: colors.errorLight,
     ink: colors.error,
-    title: 'Not approved',
-    body: 'Your verification was not approved, so you cannot connect with investors for now. You can still explore the app.',
+    title: 'Your verification was not approved',
+    body: 'You cannot connect with investors for now. You can still explore the app.',
   },
   suspended: {
     icon: CircleSlash,
@@ -83,8 +83,17 @@ export default function VerificationStatusScreen() {
   const status = q.data?.approvalStatus ?? user?.approvalStatus ?? 'draft';
   const state = STATES[status] ?? STATES.draft;
   const Icon = state.icon;
-  // The admin's own words, when a decision came with a reason.
-  const reason = status !== 'approved' && status !== 'draft' ? q.data?.decisionReason : null;
+  // The admin's own words, when a decision came with a reason. A paused
+  // account has its own reason: the note on her application is from the
+  // earlier approval, and would be the wrong thing to quote.
+  const paused = status === 'suspended' || status === 'banned';
+  const reason = paused
+    ? status === 'suspended'
+      ? q.data?.suspensionReason
+      : null
+    : status !== 'approved' && status !== 'draft'
+      ? q.data?.decisionReason
+      : null;
   // The opening screen sends each role to her own home.
   const toMatches = () => router.replace('/');
   const investor = user?.role === 'investor';

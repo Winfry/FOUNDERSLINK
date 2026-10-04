@@ -6,6 +6,7 @@ import { syncSessionUser } from './session-sync';
 
 interface ApiVetting {
   approval_status: VettingApplication['approvalStatus'];
+  suspension_reason?: string | null;
   application: {
     phone: string | null;
     statement: string | null;
@@ -16,7 +17,7 @@ interface ApiVetting {
 }
 
 async function load(): Promise<VettingApplication> {
-  const [{ approval_status, application }, me] = await Promise.all([
+  const [{ approval_status, application, suspension_reason }, me] = await Promise.all([
     get<ApiVetting>('/vetting/application'),
     get<{ email_verified_at: string | null; phone: string | null; phone_verified_at: string | null }>('/me'),
   ]);
@@ -30,6 +31,7 @@ async function load(): Promise<VettingApplication> {
     organisationName: application?.organisation_name ?? undefined,
     organisationWebsite: application?.organisation_website ?? undefined,
     decisionReason: application?.decision_reason ?? null,
+    suspensionReason: suspension_reason ?? null,
     emailVerified: me.email_verified_at !== null,
     phoneVerified: me.phone_verified_at !== null,
     accountPhone: me.phone ?? undefined,

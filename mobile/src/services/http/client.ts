@@ -96,6 +96,13 @@ export async function api<T>(method: string, path: string, body?: Body): Promise
       code: json?.error?.code ?? 'UNKNOWN_ERROR',
       message: json?.error?.message ?? 'Something went wrong. Try again.',
     };
+    // A refused form names its fields; the backend calls the list `fields`.
+    const details = json?.error?.details ?? json?.error?.fields;
+    if (Array.isArray(details)) {
+      error.details = details
+        .filter((d: unknown): d is { path?: unknown; message: string } => typeof (d as { message?: unknown })?.message === 'string')
+        .map((d) => ({ path: String(d.path ?? ''), message: d.message }));
+    }
     throw error;
   }
   return json as T;

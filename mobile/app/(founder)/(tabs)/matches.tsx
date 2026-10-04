@@ -10,6 +10,7 @@ import { bandMeta, Chip, ReasonRow, splitHeadline, topReasons } from '../../../s
 import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
 import { consentService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationWords } from '../../../src/lib/verification-state';
 import type { InvestorMatchCard } from '../../../src/types';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
@@ -70,7 +71,7 @@ export default function MatchesScreen() {
 
   const status = user?.approvalStatus;
   const unverified = status !== 'approved';
-  const waiting = status === 'submitted' || status === 'in_review';
+  const v = verificationWords(status, user?.role);
   const current = SEGMENTS.find((s) => s.key === segment) ?? SEGMENTS[0];
   const list = lists[segment];
 
@@ -86,18 +87,11 @@ export default function MatchesScreen() {
               <ShieldCheck size={22} color={colors.primary} />
             </View>
             <View style={styles.flexOne}>
-              <Text style={styles.inviteTitle}>{waiting ? "We're checking your details" : 'Verify to connect'}</Text>
-              <Text style={styles.inviteText}>
-                {waiting
-                  ? 'Names and the Connect button open as soon as FoundersLink approves you.'
-                  : 'Verify once to see investor names and send them a request to connect.'}
-              </Text>
+              <Text style={styles.inviteTitle}>{v.title}</Text>
+              <Text style={styles.inviteText}>{v.body}</Text>
             </View>
           </View>
-          <Button
-            title={waiting ? 'See my verification status' : 'Start verification'}
-            onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
-          />
+          <Button title={v.action} variant={v.starts ? 'primary' : 'secondary'} onPress={() => router.push(v.href)} />
         </View>
       ) : null}
 
@@ -137,9 +131,9 @@ export default function MatchesScreen() {
         {header}
         <ScreenEmpty
           title="Matching is off"
-          description="You have not allowed FoundersLink to use your business details for matching, so there are no investors to show. You can allow it in your business details."
-          actionLabel="Open my business details"
-          onAction={() => router.push('/founder/onboarding')}
+          description="You have not allowed FoundersLink to use your business details for matching, so there are no investors to show. You can allow it under what you share."
+          actionLabel="Change what I share"
+          onAction={() => router.push('/founder/onboarding?step=consent')}
         />
       </View>
     );

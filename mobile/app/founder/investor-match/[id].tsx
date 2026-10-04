@@ -1,8 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Info, Lock } from 'lucide-react-native';
+import { ChevronRight, Info, Lock, Wrench } from 'lucide-react-native';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
@@ -10,11 +10,14 @@ import { bandMeta, Chip, kes, ReasonRow, splitHeadline, words } from '../../../s
 import { useToast } from '../../../src/components/ui/Toast';
 import { connectionService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationWords } from '../../../src/lib/verification-state';
 import type { MatchBand } from '../../../src/types';
-import { colors, spacing } from '../../../src/theme/tokens';
+import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
 type Reason = { signal?: string; fits: boolean; text: string };
 type TrackEntry = { label: string; source: string };
+type Gap = { kind?: string; ref?: string; title: string };
+type Risk = { code?: string; text: string };
 
 // The verdict block is the one bold thing on this screen. Orange is kept for a strong fit.
 const HERO: Record<MatchBand, { bg: string; fg: string; sub: string }> = {
@@ -63,6 +66,16 @@ export default function InvestorMatchProfileScreen() {
   const meta = bandMeta[band];
   const hero = HERO[band];
   const fitCount = reasons.filter((r) => r.fits).length;
+  // What stands between her and pitching this investor. With a gap open,
+  // the verdict must not read as "go ahead".
+  const gaps = (Array.isArray(data.gaps) ? (data.gaps as Gap[]) : []).filter((g) => g && typeof g.title === 'string');
+  const risks = (Array.isArray(data.riskFactors) ? (data.riskFactors as Risk[]) : []).filter((r) => r && typeof r.text === 'string');
+  const hasGaps = gaps.length > 0 && band !== 'not_a_fit';
+  const things = gaps.length === 1 ? 'one thing' : `${gaps.length} things`;
+  const verdictLabel = hasGaps ? `${meta.label}, once you fix ${things}` : meta.label;
+  const verdictText = hasGaps
+    ? `Pitch them after you sort out what is listed below. The rest of what they look for matches.`
+    : meta.verdict;
 
   // A record with no name is known by its headline; show its parts, never the sentence.
   const rawName = String(data.displayName ?? 'Investor');
@@ -86,10 +99,11 @@ export default function InvestorMatchProfileScreen() {
   // nobody behind it on FoundersLink, so there is no one to ask.
   const personId = (data.connectUserId as string | null | undefined) ?? (data.connectUserId === undefined ? String(id) : null);
   const verified = user?.approvalStatus === 'approved';
+  const vw = verificationWords(user?.approvalStatus, 'founder');
 
   const connect = async () => {
     if (!verified) {
-      router.push('/founder/verify');
+      router.push(vw.href);
       return;
     }
     if (!personId) {
@@ -120,8 +134,8 @@ export default function InvestorMatchProfileScreen() {
 
       <View style={[styles.hero, { backgroundColor: hero.bg }]}>
         <Text style={[styles.heroLabel, { color: hero.sub }]}>How well you fit</Text>
-        <Text style={[styles.heroVerdict, { color: hero.fg }]}>{meta.label}</Text>
-        <Text style={[styles.heroText, { color: hero.sub }]}>{meta.verdict}</Text>
+        <Text style={[styles.heroVerdict, { color: hero.fg }]}>{verdictLabel}</Text>
+        <Text style={[styles.heroText, { color: hero.sub }]}>{verdictText}</Text>
         {reasons.length > 0 ? (
           <View style={styles.heroCount}>
             <Text style={[styles.heroCountText, { color: hero.fg }]}>
@@ -130,6 +144,38 @@ export default function InvestorMatchProfileScreen() {
           </View>
         ) : null}
       </View>
+
+      {gaps.length > 0 ? (
+        <Pressable
+          style={({ pressed }) => [styles.gapBox, pressed && styles.dim]}
+          onPress={() => router.push('/(founder)/(tabs)/readiness')}
+          accessibilityRole="button"
+          accessibilityLabel={`Fix this first: ${gaps.map((g) => g.title).join(', ')}. Open Readiness`}
+        >
+          <View style={styles.gapIcon}>
+            <Wrench size={16} color={colors.primaryDark} />
+          </View>
+          <View style={styles.flexOne}>
+            <Text style={styles.gapLabel}>Fix this first</Text>
+            {gaps.map((g) => (
+              <Text key={g.title} style={styles.gapText}>
+                {g.title}
+              </Text>
+            ))}
+            <Text style={styles.gapLink}>
+              {gaps.some((g) => g.kind === 'requirement') ? 'Sort it out in Readiness' : 'Answer it in Readiness'}
+            </Text>
+          </View>
+          <ChevronRight size={20} color={colors.primary} />
+        </Pressable>
+      ) : null}
+
+      {risks.map((r) => (
+        <View key={r.text} style={styles.note}>
+          <Info size={16} color={colors.textMuted} />
+          <Text style={styles.noteText}>{r.text}</Text>
+        </View>
+      ))}
 
       {reasons.length > 0 ? (
         <View style={styles.section}>
@@ -213,11 +259,18 @@ export default function InvestorMatchProfileScreen() {
           </View>
         ) : (
           <>
-            <Button title={verified ? 'Connect' : 'Verify to connect'} loading={sending} onPress={() => void connect()} />
+            <Button
+              title={verified ? 'Connect' : vw.kind === 'verify' ? 'Verify to connect' : vw.action}
+              variant={verified || vw.starts ? 'primary' : 'secondary'}
+              loading={sending}
+              onPress={() => void connect()}
+            />
             <Text style={styles.actionHint}>
               {verified
                 ? 'They get a request from you. You can chat once they accept.'
-                : 'Verify once, and you can send investors a request to connect.'}
+                : vw.kind === 'verify'
+                  ? 'Verify once, and you can send investors a request to connect.'
+                  : `${vw.title}. ${vw.body}`}
             </Text>
           </>
         )}
@@ -239,6 +292,30 @@ const styles = StyleSheet.create({
   heroText: { fontSize: 16, fontWeight: '500', marginTop: spacing[0.5] },
   heroCount: { marginTop: spacing[1.5] },
   heroCountText: { fontSize: 14, fontWeight: '700' },
+
+  flexOne: { flex: 1 },
+  dim: { opacity: 0.6 },
+  gapBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1.5],
+    padding: spacing[1.5],
+    marginTop: spacing[2],
+    borderRadius: 12,
+    backgroundColor: colors.primaryLight,
+    minHeight: touchTargetMin,
+  },
+  gapIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gapLabel: { fontSize: 12, fontWeight: '600', color: colors.primaryDark },
+  gapText: { fontSize: 16, fontWeight: '700', color: colors.text },
+  gapLink: { fontSize: 14, fontWeight: '600', color: colors.primary, marginTop: 2 },
 
   section: { marginTop: spacing[3], gap: spacing[1.5] },
   sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },

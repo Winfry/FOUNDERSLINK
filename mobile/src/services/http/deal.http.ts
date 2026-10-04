@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { Platform } from 'react-native';
 import type { DealService } from '../types/api';
 import type { Deal, DealDocument, DealStage, DealTerms, DealType } from '../../types';
-import { currentUserId, get, patch, post } from './client';
+import { currentUserId, del, get, patch, post } from './client';
 
 interface ApiDeal {
   id: string;
@@ -12,10 +12,14 @@ interface ApiDeal {
   pending: { to_stage: DealStage; waiting_for: { user_id: string }[] } | null;
   terms: { amount_kes?: number; instrument?: DealTerms['instrument']; equity_percent?: number; roles?: string; notes?: string };
   parties: { user_id: string; full_name: string; role: string }[];
+  notice?: string;
 }
 
 interface ApiDocument {
   id: string;
+  user_id?: string;
+  type?: string;
+  status?: 'uploaded' | 'verified' | 'rejected';
   title: string;
   file_name: string;
   check: 'uploaded' | 'ai_pre_checked' | 'confirmed' | 'rejected';
@@ -54,6 +58,9 @@ function toDocument(d: ApiDocument, owner: string): DealDocument {
     name: `${d.title} (${owner})`,
     precheckStatus: PRECHECK[d.check],
     summary: d.check === 'rejected' ? `Not accepted: ${d.rejection_reason ?? ''}` : (d.precheck?.concerns.join(' ') || undefined),
+    type: d.type,
+    ownerUserId: d.user_id,
+    status: d.status,
   };
 }
 
@@ -68,6 +75,8 @@ function base(deal: ApiDeal, me: string | null): Deal {
     stage: deal.stage,
     withUserId: other?.user_id ?? '',
     withName: other?.full_name ?? '',
+    withRole: other?.role,
+    notice: deal.notice,
     terms: {
       amountKes: deal.terms.amount_kes ?? 0,
       instrument: deal.terms.instrument ?? 'equity',
@@ -170,7 +179,10 @@ export const httpDealService: DealService = {
 
   // Opens the device's file picker and shares the chosen file in the
   // deal. `name` says which document it is (see typeOf).
-  async uploadDocument(dealId, name) {
+  // When she is replacing a copy of her own that staff have not looked
+  // at, `replaceDocumentId` names it: it is removed once she has chosen
+  // the new file, so closing the picker loses nothing.
+  async uploadDocument(dealId, name, replaceDocumentId) {
     const picked = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf', 'image/jpeg', 'image/png'],
       copyToCacheDirectory: true,
@@ -178,6 +190,10 @@ export const httpDealService: DealService = {
     });
     const asset = picked.assets?.[0];
     if (picked.canceled || !asset) return load(dealId);
+
+    // The backend refuses to remove a document staff have reviewed. The
+    // new copy is still shared; the old one stays on the record.
+    if (replaceDocumentId) await del(`/deals/${dealId}/documents/${replaceDocumentId}`).catch(() => undefined);
 
     const form = new FormData();
     form.append('type', typeOf(name));

@@ -229,14 +229,19 @@ export function AmountField({
   onChange,
   hint,
   error,
+  onRawChange,
 }: {
   label: string;
   value: number | undefined;
   onChange: (amount: number) => void;
   hint?: string;
   error?: string;
+  /** The digits as typed, for a form that must tell an empty field from a typed 0. */
+  onRawChange?: (digits: string) => void;
 }) {
   const [focused, setFocused] = useState(false);
+  // A typed 0 stays visible, so she can see what she entered.
+  const [typedZero, setTypedZero] = useState(false);
   return (
     <View style={styles.amountWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -245,8 +250,13 @@ export function AmountField({
           <Text style={styles.amountPrefixText}>KSh</Text>
         </View>
         <TextInput
-          value={value ? value.toLocaleString('en-US') : ''}
-          onChangeText={(t) => onChange(Number(t.replace(/\D/g, '').slice(0, 10)) || 0)}
+          value={value ? value.toLocaleString('en-US') : typedZero ? '0' : ''}
+          onChangeText={(t) => {
+            const digits = t.replace(/\D/g, '').slice(0, 10);
+            setTypedZero(digits !== '' && Number(digits) === 0);
+            onRawChange?.(digits);
+            onChange(Number(digits) || 0);
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           keyboardType="number-pad"

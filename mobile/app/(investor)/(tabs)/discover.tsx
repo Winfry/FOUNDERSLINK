@@ -10,6 +10,7 @@ import { bandMeta, Chip, kes, ReasonRow, words } from '../../../src/components/m
 import { investorService, referenceDataService } from '../../../src/services';
 import type { DiscoverCard } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationWords } from '../../../src/lib/verification-state';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
 export default function DiscoverScreen() {
@@ -67,7 +68,7 @@ export default function DiscoverScreen() {
     );
   }
 
-  const waiting = status === 'submitted' || status === 'in_review';
+  const v = verificationWords(status, 'investor');
   const filtering = Boolean(search || sector);
   const clear = () => {
     setTyped('');
@@ -87,18 +88,11 @@ export default function DiscoverScreen() {
               <ShieldCheck size={22} color={colors.primary} />
             </View>
             <View style={styles.flexOne}>
-              <Text style={styles.inviteTitle}>{waiting ? "We're checking your details" : 'Verify to see who they are'}</Text>
-              <Text style={styles.inviteText}>
-                {waiting
-                  ? 'Names and founder pages open as soon as FoundersLink approves you.'
-                  : 'Verify once to see founder names, open their pages and ask to join.'}
-              </Text>
+              <Text style={styles.inviteTitle}>{v.kind === 'verify' ? 'Verify to see who they are' : v.title}</Text>
+              <Text style={styles.inviteText}>{v.body}</Text>
             </View>
           </View>
-          <Button
-            title={waiting ? 'See my status' : 'Start verification'}
-            onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
-          />
+          <Button title={v.action} variant={v.starts ? 'primary' : 'secondary'} onPress={() => router.push(v.href)} />
         </View>
       ) : null}
 

@@ -79,7 +79,7 @@ export interface DealService {
   updateTerms(dealId: string, terms: Deal['terms']): Promise<Deal>;
   confirmTerms(dealId: string): Promise<Deal>;
   advanceStage(dealId: string): Promise<Deal>;
-  uploadDocument(dealId: string, name: string): Promise<Deal>;
+  uploadDocument(dealId: string, name: string, replaceDocumentId?: string): Promise<Deal>;
 }
 
 export interface CircleService {

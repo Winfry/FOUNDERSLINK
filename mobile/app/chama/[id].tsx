@@ -36,7 +36,10 @@ export default function ChamaDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['chama', id] });
     },
   });
-  const recordError = (record.error as ApiError | null)?.message;
+  // When the backend names the field it refused, its own words go at that field.
+  const refused = record.error as ApiError | null;
+  const receiptError = refused?.details?.find((d) => /receipt/i.test(d.path))?.message;
+  const recordError = receiptError ? undefined : (refused?.details?.[0]?.message ?? refused?.message);
 
   if (q.isLoading) return <ScreenLoading />;
   if (q.isError || !q.data) {
@@ -125,7 +128,11 @@ export default function ChamaDetailScreen() {
             <Input
               label="M-Pesa receipt (optional)"
               value={receipt}
-              onChangeText={setReceipt}
+              onChangeText={(t) => {
+                setReceipt(t);
+                if (record.isError) record.reset();
+              }}
+              error={receiptError ? `${receiptError}. Use the 8 to 12 letters and numbers on the M-Pesa message, or leave it empty.` : undefined}
               autoCapitalize="characters"
               placeholder="e.g. SJ45KQ2L9X"
               hint="8 to 12 letters and numbers, as on the M-Pesa message."
