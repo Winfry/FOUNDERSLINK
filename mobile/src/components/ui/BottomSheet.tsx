@@ -17,6 +17,7 @@ export function BottomSheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close sheet" />
+      {/* The sheet is as wide as the app, also in a wide browser window. */}
       <View style={styles.sheet}>
         <View style={styles.handle} />
         {title ? <Text style={styles.title}>{title}</Text> : null}
@@ -32,9 +33,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.4)',
   },
   sheet: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     backgroundColor: colors.white,
-    borderTopLeftRadius: radius.card,
-    borderTopRightRadius: radius.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: spacing[3],
     paddingBottom: spacing[4],
     borderWidth: 1,

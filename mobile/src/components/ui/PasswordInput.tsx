@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
-import { Eye, EyeOff } from 'lucide-react-native';
 import { Input } from './Input';
 import { passwordStrength } from '../../lib/validation';
 import { colors, spacing } from '../../theme/tokens';
@@ -26,29 +25,25 @@ export function PasswordInput({
 
   return (
     <View>
-      <View>
-        <Input
-          label={label}
-          error={error}
-          secureTextEntry={!visible}
-          value={value}
-          autoCapitalize="none"
-          autoCorrect={false}
-          {...rest}
-        />
-        <Pressable
-          accessibilityLabel={visible ? 'Hide password' : 'Show password'}
-          onPress={() => setVisible((v) => !v)}
-          style={styles.eye}
-          hitSlop={12}
-        >
-          {visible ? (
-            <EyeOff size={20} color={colors.textMuted} />
-          ) : (
-            <Eye size={20} color={colors.textMuted} />
-          )}
-        </Pressable>
-      </View>
+      <Input
+        label={label}
+        error={error}
+        secureTextEntry={!visible}
+        value={value}
+        autoCapitalize="none"
+        autoCorrect={false}
+        right={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+            onPress={() => setVisible((v) => !v)}
+            style={styles.toggle}
+          >
+            <Text style={styles.toggleText}>{visible ? 'Hide' : 'Show'}</Text>
+          </Pressable>
+        }
+        {...rest}
+      />
       {strength && value.length > 0 ? (
         <View style={styles.strengthRow}>
           <View style={styles.strengthTrack}>
@@ -70,15 +65,13 @@ export function PasswordInput({
 }
 
 const styles = StyleSheet.create({
-  eye: {
-    position: 'absolute',
-    right: spacing[2],
-    top: 38,
-    minWidth: 44,
-    minHeight: 44,
+  toggle: {
+    minWidth: 64,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  toggleText: { fontSize: 14, fontWeight: '700', color: colors.primary },
   strengthRow: {
     flexDirection: 'row',
     alignItems: 'center',
