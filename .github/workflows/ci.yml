@@ -49,6 +49,8 @@ jobs:
       - run: npm ci
       - run: npm run db:generate
       - run: npm run db:migrate
+      # The tests use the demo funders and compliance items (backend/README.md).
+      - run: npm run db:seed
       - run: npm run typecheck
       - run: npm test
 
