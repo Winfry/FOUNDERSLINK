@@ -4,6 +4,7 @@ import { Image, Pressable, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { useQuery } from '@tanstack/react-query';
 import { notificationService } from '../../../src/services';
+import { HeaderPattern } from '../../../src/components/ui/HeaderPattern';
 import { colors } from '../../../src/theme/tokens';
 
 function NotificationBell() {
@@ -58,6 +59,7 @@ export default function FounderTabsLayout() {
         headerLeft: () => <Brand />,
         headerRight: () => <NotificationBell />,
         headerStyle: { backgroundColor: colors.primaryDark },
+        headerBackground: () => <HeaderPattern />,
         headerShadowVisible: false,
         // Every tab sits on white. Without this, a screen that sets no
         // background of its own shows the navigator's grey.

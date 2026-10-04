@@ -1,3 +1,4 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,7 +21,7 @@ function sentOn(iso: string): string {
   return `Sent ${d.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 }
 
-export default function InvestorRequestsTab() {
+function InvestorRequestsTab() {
   const router = useRouter();
   const qc = useQueryClient();
   const toast = useToast();
@@ -198,7 +199,7 @@ export default function InvestorRequestsTab() {
 }
 
 const styles = StyleSheet.create({
-  screen: { backgroundColor: colors.white },
+  screen: { backgroundColor: 'transparent' },
   wrap: { flexGrow: 1, padding: spacing[2], paddingBottom: spacing[4], gap: spacing[3] },
   head: { gap: spacing[0.5] },
   heading: { fontSize: 24, fontWeight: '800', color: colors.text },
@@ -236,3 +237,5 @@ const styles = StyleSheet.create({
   emptyBody: { fontSize: 16, fontWeight: '500', color: colors.textMuted, textAlign: 'center' },
   emptyBtn: { alignSelf: 'stretch', marginTop: spacing[2] },
 });
+
+export default withBackdrop(InvestorRequestsTab);

@@ -1,3 +1,4 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useRouter } from 'expo-router';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ChevronRight, Lock, Search, ShieldCheck } from 'lucide-react-native';
@@ -13,7 +14,7 @@ import { useAuthStore } from '../../../src/stores/authStore';
 import { verificationWords } from '../../../src/lib/verification-state';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
-export default function DiscoverScreen() {
+function DiscoverScreen() {
   const router = useRouter();
   const status = useAuthStore((s) => s.user?.approvalStatus);
   const [typed, setTyped] = useState('');
@@ -256,7 +257,7 @@ function FounderCard({
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.white },
+  flex: { flex: 1, backgroundColor: 'transparent' },
   flexOne: { flex: 1 },
   list: { paddingBottom: spacing[6] },
   header: { paddingHorizontal: spacing[2], paddingTop: spacing[2], paddingBottom: spacing[2] },
@@ -346,3 +347,5 @@ const styles = StyleSheet.create({
   },
   moreText: { fontSize: 14, fontWeight: '700', color: colors.primary },
 });
+
+export default withBackdrop(DiscoverScreen);

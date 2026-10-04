@@ -2,6 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 COPY ai/requirements.txt ai/requirements.txt
+# CPU-only torch: the default build bundles GPU libraries worth several GB.
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r ai/requirements.txt
 
 COPY ai ai

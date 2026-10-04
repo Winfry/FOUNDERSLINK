@@ -2,9 +2,11 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 pydantic>=2.7
 sentence-transformers>=3.0
+# Ask Compliance's search index (ai/compliance_rag) and its LLM calls
+chromadb>=1.0
+httpx>=0.27
 # Reads the text in PDF documents for /documents/precheck
 pypdf>=4.0
 
 # Tests
 pytest>=8.0
-httpx>=0.27

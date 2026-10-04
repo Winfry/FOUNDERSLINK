@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const KEY = 'founderlink_welcome_seen_v2';
+const KEY = 'founderlink_welcome_seen_v3';
 
 export async function getWelcomeSeen(): Promise<boolean> {
   try {

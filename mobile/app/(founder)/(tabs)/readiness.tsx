@@ -1,3 +1,4 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
@@ -17,7 +18,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'ask', label: 'Ask Compliance' },
 ];
 
-export default function ReadinessScreen() {
+function ReadinessScreen() {
   const [tab, setTab] = useState<Tab>('checklist');
   const [savingId, setSavingId] = useState<string | null>(null);
 
@@ -87,9 +88,11 @@ export default function ReadinessScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.white },
+  flex: { flex: 1, backgroundColor: 'transparent' },
   hidden: { display: 'none' },
   switch: { paddingHorizontal: spacing[2], paddingTop: spacing[0.5], paddingBottom: spacing[1.5] },
   list: { paddingHorizontal: spacing[2], paddingBottom: spacing[3], gap: spacing[1.5] },
   hero: { marginBottom: spacing[1.5] },
 });
+
+export default withBackdrop(ReadinessScreen);

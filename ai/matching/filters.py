@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from ai.explanations.messages import kes, label, labels, t
 from ai.service.schemas import Candidate, MatchProfile
 
-# A miss on a hard signal rules the funder out. Instruments are only a
+# A miss on a hard signal rules the candidate out. Instruments are only a
 # preference, and the mandate check (in the pipeline) is never decisive.
-HARD_SIGNALS = {"journey", "sector", "stage", "county", "amount"}
+# skills, open and profession are the people-matching ones (ai/matching/people.py).
+HARD_SIGNALS = {"journey", "sector", "stage", "county", "amount", "skills", "open", "profession"}
 
 
 @dataclass

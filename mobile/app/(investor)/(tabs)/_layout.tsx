@@ -4,6 +4,7 @@ import { Image, Pressable, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { useQuery } from '@tanstack/react-query';
 import { notificationService } from '../../../src/services';
+import { HeaderPattern } from '../../../src/components/ui/HeaderPattern';
 import { colors } from '../../../src/theme/tokens';
 
 function NotificationBell() {
@@ -58,6 +59,7 @@ export default function InvestorTabsLayout() {
         headerLeft: () => <Brand />,
         headerRight: () => <NotificationBell />,
         headerStyle: { backgroundColor: colors.primaryDark },
+        headerBackground: () => <HeaderPattern />,
         headerShadowVisible: false,
         sceneStyle: { backgroundColor: colors.white, paddingTop: 12 },
         // The tab she is on is orange: icon and label.

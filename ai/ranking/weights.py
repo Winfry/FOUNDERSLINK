@@ -9,6 +9,17 @@ SIGNAL_WEIGHTS = {
     "amount": 0.20,
     "instrument": 0.05,
     "mandate": 0.15,
+    # People matching (co-founders and experts)
+    "skills": 0.35,
+    "same_skills": 0.05,
+    "open": 0.0,
+    "sector_interest": 0.15,
+    "location": 0.15,
+    "commitment": 0.10,
+    "profession": 0.30,
+    "services": 0.25,
+    "availability": 0.15,
+    "meaning": 0.15,
 }
 
 # Meaning match between the founder's description and the investor's

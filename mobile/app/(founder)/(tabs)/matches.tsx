@@ -1,3 +1,4 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Info, Lock, ShieldCheck, Wrench } from 'lucide-react-native';
@@ -40,7 +41,7 @@ const SEGMENTS: { key: Segment; label: string; title: string; hint: string; empt
   },
 ];
 
-export default function MatchesScreen() {
+function MatchesScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { isOffline } = useNetworkStatus();
@@ -256,7 +257,7 @@ function MatchCard({
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.white },
+  flex: { flex: 1, backgroundColor: 'transparent' },
   flexOne: { flex: 1 },
   list: { paddingBottom: spacing[6] },
   header: { paddingHorizontal: spacing[2], paddingTop: spacing[1], paddingBottom: spacing[2] },
@@ -370,3 +371,5 @@ const styles = StyleSheet.create({
   },
   moreText: { fontSize: 14, fontWeight: '700', color: colors.primary },
 });
+
+export default withBackdrop(MatchesScreen);

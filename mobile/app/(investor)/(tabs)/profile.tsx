@@ -1,3 +1,4 @@
+import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -79,7 +80,7 @@ function ChipRow({ label, items }: { label: string; items: string[] }) {
   );
 }
 
-export default function InvestorProfileTab() {
+function InvestorProfileTab() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -199,7 +200,7 @@ export default function InvestorProfileTab() {
 }
 
 const styles = StyleSheet.create({
-  screen: { backgroundColor: colors.white },
+  screen: { backgroundColor: 'transparent' },
   wrap: { padding: spacing[2], paddingBottom: spacing[4], gap: spacing[3] },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
   avatar: {
@@ -235,3 +236,5 @@ const styles = StyleSheet.create({
   },
   verifiedText: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.text },
 });
+
+export default withBackdrop(InvestorProfileTab);
