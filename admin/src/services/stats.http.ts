@@ -45,6 +45,7 @@ export async function fetchAdminStats(): Promise<AdminStats> {
     openReports: s.reports.messages + s.reports.members,
     dealsByStage: Object.entries(s.deals.by_stage).map(([stage, count]) => ({ stage: stage as DealStage, count })),
     chamasCount: chamasOf(s),
+    learningCirclesCount: s.circles?.by_type?.learning ?? 0,
     dealsWithDocumentsWaiting: await dealsWaiting(s),
     registrationsByMonth: s.registrations.map((r) => ({ month: r.month, count: r.founders + r.investors + r.experts })),
   };

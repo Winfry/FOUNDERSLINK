@@ -56,7 +56,7 @@ export function Sidebar({ navCounts, collapsed, onNavigate }: SidebarProps) {
                   {count > 0 ? (
                     <span
                       className="flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-2 text-xs font-bold text-navy"
-                      aria-label={`${count} waiting`}
+                      aria-label={item.countKey === "openReports" ? `${count} reports` : `${count} waiting`}
                     >
                       {count}
                     </span>

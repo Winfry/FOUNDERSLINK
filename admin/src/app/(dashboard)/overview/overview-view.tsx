@@ -36,7 +36,10 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
     { name: "Experts", value: stats.expertsCount },
   ].filter((d) => d.value > 0);
   const waiting = stats.verificationsWaiting;
-  const dueDiligence = stats.dealsByStage.find((d) => d.stage === "due_diligence")?.count ?? 0;
+  // The same number as the list Deal reviews opens. Older data has only the stage count.
+  const dealsWaiting = stats.dealsWithDocumentsWaiting ?? stats.dealsByStage.find((d) => d.stage === "due_diligence")?.count ?? 0;
+  const dealsTitle = stats.dealsWithDocumentsWaiting === undefined ? "Deals in due diligence" : "Deals with documents waiting";
+  const learning = stats.learningCirclesCount ?? 0;
 
   return (
     <div className="space-y-6">
@@ -51,7 +54,7 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
           <p className="mt-1 text-base text-white/80">
             {waiting === 0
               ? "The queue is clear. New applications appear here as soon as they are submitted."
-              : "Founders and investors cannot be matched until someone at FoundersLink decides."}
+              : "They can already see anonymised matches. They cannot connect, chat or start a deal until someone at FoundersLink decides."}
           </p>
         </div>
         <Link
@@ -65,10 +68,10 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Link href="/deal-reviews" className={cardLink}>
-          <StatCard title="Deals in due diligence" value={String(dueDiligence)} icon={ClipboardCheck} className={statHover} />
+          <StatCard title={dealsTitle} value={String(dealsWaiting)} icon={ClipboardCheck} className={statHover} />
         </Link>
         <Link href="/reports" className={cardLink}>
-          <StatCard title="Open reports" value={String(stats.openReports)} icon={FileBarChart} className={statHover} />
+          <StatCard title="Reports" value={String(stats.openReports)} icon={FileBarChart} className={statHover} />
         </Link>
         <Link href="/rechecks" className={cardLink}>
           <StatCard title="Re-checks due" value={String(stats.rechecksDue)} icon={RefreshCw} className={statHover} />
@@ -88,6 +91,11 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
           <StatCard title="Chamas" value={String(stats.chamasCount)} icon={UsersRound} className={statHover} />
         </Link>
       </div>
+      {learning > 0 ? (
+        <p className="!mt-3 text-sm font-medium text-muted">
+          Chamas are money circles only. There {learning === 1 ? "is also 1 learning circle" : `are also ${learning} learning circles`}.
+        </p>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">

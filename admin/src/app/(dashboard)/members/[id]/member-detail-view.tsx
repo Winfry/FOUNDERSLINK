@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import type { MemberDetail } from "@/types";
 import { reinstateMemberFormAction, suspendMemberFormAction } from "@/app/actions/admin-actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { formatDay, roleLabel } from "@/components/labels";
+import { auditActionLabel, formatDay, roleLabel } from "@/components/labels";
 import { StatusBadge } from "@/components/status-badge";
 import { ToastBanner } from "@/components/toast-banner";
 import { Timeline } from "@/components/timeline";
@@ -106,10 +106,10 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
               {member.verificationSummary ?? "This member has not submitted a verification application yet."}
             </p>
             <Link
-              href="/verification"
+              href={member.applicationId ? `/verification/${member.applicationId}` : "/verification"}
               className="inline-flex min-h-10 items-center rounded-btn border border-border bg-white px-4 text-sm font-bold text-primary hover:border-primary hover:bg-primary-light"
             >
-              Open the verification queue
+              {member.applicationId ? "Open her verification application" : "Open the verification queue"}
             </Link>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
           <CardTitle>History</CardTitle>
         </CardHeader>
         <CardContent>
-          <Timeline events={member.timeline.map((e) => ({ id: e.id, title: e.title, description: e.description, at: e.at }))} />
+          <Timeline events={member.timeline.map((e) => ({ id: e.id, title: /^[a-z]+([_.][a-z]+)*$/.test(e.title) ? auditActionLabel(e.title) : e.title, description: e.description, at: e.at, actor: e.actor }))} />
         </CardContent>
       </Card>
 

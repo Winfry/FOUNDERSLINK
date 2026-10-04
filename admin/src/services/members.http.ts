@@ -1,4 +1,5 @@
 import type { ApprovalStatus, ConsentRecord, MemberDetail, MemberListItem, MemberReportSummary, MemberRole, PaginatedParams, PaginatedResult } from "@/types";
+import { auditActionLabel } from "@/components/labels";
 import { ApiError, backend } from "@/lib/api";
 
 interface ApiUser {
@@ -179,9 +180,11 @@ function toDetail(u: ApiUserDetail, reports: MemberReportSummary[]): MemberDetai
     timeline: u.timeline
       .map((e, i) => ({
         id: String(i),
-        title: e.text.charAt(0).toUpperCase() + e.text.slice(1),
-        description: [e.reason, e.by ? `by ${e.by}` : null].filter(Boolean).join(" — ") || undefined,
+        // An admin's action is written in the audit log's words, with who acted.
+        title: e.by ? auditActionLabel(e.event) : e.text.charAt(0).toUpperCase() + e.text.slice(1),
+        description: e.reason || undefined,
         at: e.at,
+        actor: e.by ? `By ${e.by}` : undefined,
       }))
       .reverse(),
   };

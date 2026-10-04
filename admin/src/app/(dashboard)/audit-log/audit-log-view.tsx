@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { LegacyColumnDef as ColumnDef } from "@tanstack/react-table/legacy";
 import type { AuditEntry } from "@/types";
 import { DataTable } from "@/components/data-table";
-import { formatDayTime, humanize } from "@/components/labels";
+import { auditActionLabel, formatDayTime } from "@/components/labels";
 import { PageHeader } from "@/components/page-header";
 
 export function AuditLogView({
@@ -40,8 +40,9 @@ export function AuditLogView({
     {
       header: "Action",
       accessorKey: "action",
-      cell: ({ row }) => <span className="font-semibold">{/[_.]/.test(row.original.action) ? humanize(row.original.action.replace(/\./g, " ")) : row.original.action}</span>,
+      cell: ({ row }) => <span className="font-semibold">{auditActionLabel(row.original.action)}</span>,
     },
+    { header: "By", accessorKey: "by", cell: ({ row }) => row.original.by || <span className="text-muted">Not recorded</span> },
     { header: "Member", accessorKey: "targetMember", cell: ({ row }) => row.original.targetMember || <span className="text-muted">None</span> },
     {
       header: "Reason",
@@ -54,7 +55,7 @@ export function AuditLogView({
     <div className="space-y-6">
       <PageHeader
         title="Audit log"
-        description="Every decision and action an admin has taken, with the written reason. Entries cannot be edited."
+        description="Every decision and action an admin has taken, with who took it and the written reason. Entries cannot be edited."
       />
       <DataTable
         columns={columns}
@@ -62,7 +63,7 @@ export function AuditLogView({
         total={result.total}
         page={page}
         pageSize={result.pageSize}
-        searchPlaceholder="Search by member or reason"
+        searchPlaceholder="Search by member, admin or reason"
         onSearchChange={(s) => updateQuery({ search: s, page: 1 })}
         onPageChange={(p) => updateQuery({ page: p })}
         statusFilter={
@@ -85,11 +86,10 @@ export function AuditLogView({
               </label>
               <select id="audit-action" className="field" value={actionType} onChange={(e) => updateQuery({ actionType: e.target.value, page: 1 })}>
                 <option value="all">All actions</option>
-                <option value="verification">Verification</option>
-                <option value="document">Document</option>
-                <option value="member">Member</option>
-                <option value="report">Report</option>
-                <option value="compliance">Compliance</option>
+                <option value="verification">Verification decisions</option>
+                <option value="member">Suspensions and reinstatements</option>
+                <option value="document">Documents</option>
+                <option value="recheck">Re-checks</option>
               </select>
             </div>
           </div>

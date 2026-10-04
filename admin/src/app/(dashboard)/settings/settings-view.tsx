@@ -38,7 +38,22 @@ export function SettingsView({ settings }: { settings: AdminSettingsState }) {
         </CardHeader>
         <CardContent>
           <p className="rounded-btn bg-surface px-4 py-3 text-sm font-medium text-muted">
-            Turning two-step sign-in on or off from the dashboard is not available yet.
+            {settings.twoFactorEnabled
+              ? "Two-step sign-in is turned on and off from the command line, not from this page."
+              : "Two-step sign-in is off for this demo account. It is turned on from the command line, not from this page. For a real launch every admin account has it on."}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Approving investors</CardTitle>
+          <CardDescription>How many admins must approve an investor before she is verified.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="rounded-btn bg-surface px-4 py-3 text-sm font-medium text-muted">
+            In this demo, one admin&apos;s approval is enough for an investor. The rule for a real launch is two: a second admin must approve before she is
+            verified.
           </p>
         </CardContent>
       </Card>

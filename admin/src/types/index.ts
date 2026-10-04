@@ -185,6 +185,8 @@ export interface MemberTimelineEvent {
   title: string;
   description?: string;
   at: string;
+  /** The admin who acted, when the backend says. */
+  actor?: string;
 }
 
 export interface TimelineEvent {
@@ -364,6 +366,8 @@ export interface AdminStats {
   openReports: number;
   dealsByStage: { stage: DealStage; count: number }[];
   chamasCount: number;
+  /** Learning circles, which are not chamas. */
+  learningCirclesCount?: number;
   /** Deals with a document waiting for an admin: what Deal reviews lists. */
   dealsWithDocumentsWaiting?: number;
   registrationsByMonth: { month: string; count: number }[];

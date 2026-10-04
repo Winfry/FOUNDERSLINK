@@ -14,7 +14,8 @@ interface ApiAction {
 // The backend records no report or compliance actions, so the page
 // offers no such choices.
 const ACTION_TYPES: Record<string, string[]> = {
-  verification: ["approve", "approve_first", "reject", "needs_info", "recheck_confirmed"],
+  verification: ["approve", "approve_first", "reject", "needs_info"],
+  recheck: ["recheck_confirmed"],
   member: ["suspend", "reinstate", "create_admin"],
   document: ["confirm_document", "reject_document"],
 };
@@ -30,7 +31,7 @@ const WORDS: Record<string, string> = {
   recheck_confirmed: "Confirmed after a re-check",
   confirm_document: "Confirmed a document",
   reject_document: "Rejected a document",
-  create_admin: "Added an admin",
+  create_admin: "Created an admin",
 };
 
 // The backend sends the newest fifty actions and has no paging or
