@@ -10,9 +10,7 @@ import { extractableFields, profileCompleteness, profileSchema, type ProfileInpu
 
 export const profileRouter = Router();
 
-// Builds the full row, so switching path clears the other path's fields.
 function toRow(input: ProfileInput) {
-  const isStartup = input.journey_type === "startup";
   return {
     journey_type: input.journey_type,
     business_status: input.business_status,
@@ -25,10 +23,8 @@ function toRow(input: ProfileInput) {
     year_started: input.year_started ?? null,
     website: input.website ?? null,
     social_links: input.social_links,
-    stage: isStartup ? input.stage : null,
-    instruments: isStartup ? input.instruments : [],
-    months_trading: isStartup ? null : input.months_trading,
-    monthly_revenue_band: isStartup ? null : input.monthly_revenue_band,
+    stage: input.stage,
+    instruments: input.instruments,
     has_employees: input.has_employees ?? null,
     handles_personal_data: input.handles_personal_data ?? null,
     women_owned: input.women_owned ?? null,

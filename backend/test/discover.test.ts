@@ -57,7 +57,7 @@ before(async () => {
     name: fundName,
     kind: "angel",
     mandate_text: "We back health and agriculture businesses anywhere in Kenya.",
-    journey_types: ["startup", "sme"],
+    journey_types: ["startup"],
     sectors: ["health", "agri"],
     instruments: ["equity", "loan"],
     ticket_min_kes: 100_000,
@@ -69,14 +69,14 @@ before(async () => {
     funding_amount_kes: 1_000_000, stage: "mvp",
   });
   await call("PUT", "/me/profile", "otieno", {
-    journey_type: "sme", business_status: "registered_business_name", business_name: "Shamba Fresh",
+    journey_type: "startup", business_status: "registered_business_name", business_name: "Shamba Fresh",
     description: "A dairy that collects milk from small farms", sector: "agri", county: "Kisumu",
-    funding_amount_kes: 300_000, months_trading: 30, monthly_revenue_band: "200k_to_1m", has_employees: true,
+    funding_amount_kes: 300_000, stage: "early_revenue", has_employees: true,
   });
   await call("PUT", "/me/profile", "wanjiku", {
-    journey_type: "sme", business_status: "informal", business_name: "Glow Salon",
+    journey_type: "startup", business_status: "informal", business_name: "Glow Salon",
     description: "A salon in Mombasa", sector: "retail", county: "Mombasa",
-    funding_amount_kes: 150_000, months_trading: 18, monthly_revenue_band: "50k_to_200k", has_employees: false,
+    funding_amount_kes: 150_000, stage: "idea", has_employees: false,
   });
 });
 

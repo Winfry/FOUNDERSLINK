@@ -11,7 +11,7 @@ export const ops: Op[] = [
     path: "/me/profile",
     summary: "Save the founder profile",
     description:
-      "Saves the onboarding answers, replacing the whole profile. `journey_type` decides which fields are required: a `startup` needs `stage`; an `sme` needs `months_trading`, `monthly_revenue_band` and `has_employees`. Switching path clears the other path's fields.\n\nEach id in `already_have` is marked complete on her compliance checklist. Leaving one out later does not undo it.\n\nThe founder role is checked in the handler.",
+      "Saves the onboarding answers, replacing the whole profile. Every founder is a startup founder for now: `journey_type` may be left out, and `sme` is refused. `stage` is required.\n\nEach id in `already_have` is marked complete on her compliance checklist. Leaving one out later does not undo it.\n\nThe founder role is checked in the handler.",
     access: "user",
     body: profileSchema,
     ok: { description: "The saved profile.", schema: ref("FounderProfileWithProgress") },

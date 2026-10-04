@@ -144,97 +144,59 @@ test("startup profile saves and shows on /me", async () => {
   assert.deepEqual(me.json.founder_profile.already_have, ["brs_registration"]);
 });
 
-test("switching to the SME path requires SME fields and clears startup fields", async () => {
-  const sme = {
-    journey_type: "sme",
-    business_status: "informal",
-    description: "Nina salon Mombasa, nataka stock mpya",
-    sector: "retail",
-    county: "Mombasa",
-    funding_amount_kes: 150_000,
-    women_owned: true,
-  };
+test("every founder is a startup founder for now", async () => {
+  // journey_type can be left out, and the small-business path is refused.
+  const { journey_type: _path, ...withoutPath } = startupProfile;
+  const saved = await call("PUT", "/me/profile", withoutPath, token);
+  assert.equal(saved.json.journey_type, "startup");
 
-  const missing = await call("PUT", "/me/profile", sme, token);
-  assert.equal(missing.status, 400);
-
-  // women_owned is an eligibility attribute, so she has to agree first.
-  const smeFields = { months_trading: 18, monthly_revenue_band: "50k_to_200k", has_employees: false };
-  const noConsent = await call("PUT", "/me/profile", { ...sme, ...smeFields }, token);
-  assert.equal(noConsent.json.error.code, "CONSENT_REQUIRED");
-  await call("POST", "/me/consents", { purpose: "eligibility_attributes", granted: true }, token);
-
-  const saved = await call(
-    "PUT",
-    "/me/profile",
-    { ...sme, months_trading: 18, monthly_revenue_band: "50k_to_200k", has_employees: false },
-    token,
-  );
-  assert.equal(saved.status, 200);
-  assert.equal(saved.json.journey_type, "sme");
-  assert.equal(saved.json.stage, null);
-  assert.deepEqual(saved.json.instruments, []);
-  assert.equal(saved.json.women_owned, true);
+  const sme = await call("PUT", "/me/profile", { ...startupProfile, journey_type: "sme" }, token);
+  assert.equal(sme.status, 400);
+  assert.ok(sme.json.error.fields.some((f: any) => f.path === "journey_type"));
 });
 
-const names = (cards: any[]) => cards.map((c) => c.funder.name);
+test("eligibility attributes need her consent", async () => {
+  const withFlag = { ...startupProfile, women_owned: true };
+  assert.equal((await call("PUT", "/me/profile", withFlag, token)).json.error.code, "CONSENT_REQUIRED");
+  await call("POST", "/me/consents", { purpose: "eligibility_attributes", granted: true }, token);
+  assert.equal((await call("PUT", "/me/profile", withFlag, token)).json.women_owned, true);
+});
 
-test("startup founder: matches are grouped with reasons and gaps", async () => {
+test("investor matches come in three lists, with reasons and gaps", async () => {
   await call("PUT", "/me/profile", startupProfile, token);
   const res = await call("GET", "/funding/matches", undefined, token);
   assert.equal(res.status, 200);
   assert.equal(res.json.engine, "stand_in");
 
-  const healthBridge = res.json.apply_now.find((c: any) => c.funder.name === "HealthBridge Accelerator (demo)");
-  assert.equal(healthBridge.band, "strong");
-  assert.ok(healthBridge.explanation.length > 0);
+  // Pitch: fits, and she already has the registration they require.
+  const savanna = res.json.apply_now.find((c: any) => c.funder.name === "Savanna Angels Network (demo)");
+  assert.equal(savanna.band, "strong");
+  assert.ok(savanna.explanation.length > 0);
   // Founders see a band, never a number.
-  assert.equal(healthBridge.score, undefined);
+  assert.equal(savanna.score, undefined);
+  assert.ok(savanna.risk_factors.some((r: any) => r.code === "demo_data"));
 
-  // Fits, but she has registered the business and has no KRA PIN yet.
-  const angels = res.json.apply_after.find((c: any) => c.funder.name === "Savanna Angels Network (demo)");
-  assert.deepEqual(angels.gaps.map((g: any) => g.ref), ["kra_pin"]);
+  // Pitch after: fits, but she has no KRA PIN yet.
+  const healthBridge = res.json.apply_after.find((c: any) => c.funder.name === "HealthBridge Accelerator (demo)");
+  assert.deepEqual(healthBridge.gaps.map((g: any) => g.ref), ["kra_pin"]);
 
+  // Don't pitch: their minimum is far above what she needs.
   const rift = res.json.not_for_you.find((c: any) => c.funder.name === "Rift Growth Fund (demo)");
   assert.ok(rift.reasons.some((r: any) => !r.fits));
   assert.deepEqual(rift.gaps, []);
   assert.equal(rift.band, null);
   assert.match(rift.explanation, /their minimum is KSh 10,000,000/);
-});
-
-test("SME founder: sees what she can apply for now, after fixing gaps, and not at all", async () => {
-  const sme = {
-    journey_type: "sme",
-    business_status: "informal",
-    description: "Nina salon Mombasa, nataka stock mpya",
-    sector: "retail",
-    county: "Mombasa",
-    funding_amount_kes: 150_000,
-    months_trading: 18,
-    monthly_revenue_band: "50k_to_200k",
-    has_employees: false,
-  };
-  await call("PUT", "/me/profile", sme, token);
-  const res = await call("GET", "/funding/matches", undefined, token);
-
-  assert.ok(names(res.json.apply_now).includes("Mtaani Starter Fund (demo)"));
-
-  const bank = res.json.apply_after.find((c: any) => c.funder.name.startsWith("SME Working Capital Loan"));
-  // She ticked business registration earlier, and switching path does not undo that.
-  assert.deepEqual(bank.gaps.map((g: any) => g.ref), ["kra_pin", "business_bank_account"]);
-
-  // She has not said whether the business is women-owned, so she is asked.
-  const pwani = res.json.apply_after.find((c: any) => c.funder.name === "Pwani Women in Business Grant (demo)");
-  assert.deepEqual(pwani.gaps.map((g: any) => [g.kind, g.ref]), [["unanswered", "women_owned"]]);
-
-  assert.ok(names(res.json.not_for_you).includes("Rift Growth Fund (demo)"));
-
-  // A fee is a risk factor on the card, not a reason to hide the funder.
-  const fee = res.json.apply_now.find((c: any) => c.funder.name === "Global Founders Grant Award (demo)");
-  assert.ok(fee.risk_factors.some((r: any) => r.code === "application_fee"));
 
   const total = res.json.apply_now.length + res.json.apply_after.length + res.json.not_for_you.length;
   assert.equal(total, (await call("GET", "/funders", undefined, token)).json.length);
+});
+
+test("only investors are listed: no grants, government funds, banks or SACCOs", async () => {
+  const funders = (await call("GET", "/funders", undefined, token)).json;
+  assert.ok(funders.every((f: any) => ["angel", "vc", "accelerator"].includes(f.kind)));
+  const options = (await call("GET", "/meta/options")).json;
+  assert.deepEqual(options.funder_kinds, ["angel", "vc", "accelerator"]);
+  assert.deepEqual(options.journey_types, ["startup"]);
 });
 
 test("extract suggests fields from a description and saves nothing", async () => {
@@ -243,6 +205,8 @@ test("extract suggests fields from a description and saves nothing", async () =>
   assert.equal(res.json.fields.county, "Mombasa");
   assert.equal(res.json.fields.funding_amount_kes, 150_000);
   assert.ok(res.json.unsure.includes("business_status"));
+  // The only path there is.
+  assert.equal(res.json.fields.journey_type, "startup");
   assert.equal((await call("POST", "/me/profile/extract", { text: "short" }, token)).status, 400);
 });
 

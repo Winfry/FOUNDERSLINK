@@ -130,7 +130,7 @@ test("a deal needs an accepted connection, and is invisible to everyone else", a
     ["Amina Founder", "founder"],
     ["Grace Investor", "investor"],
   ]);
-  assert.match(opened.json.notice, /does not move money/);
+  assert.match(opened.json.notice, /through their bank, never through FounderLink/);
 
   assert.equal((await call("GET", `/deals/${dealId}`, "outsider")).status, 404);
   assert.deepEqual((await call("GET", "/deals", "outsider")).json, []);

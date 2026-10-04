@@ -62,14 +62,11 @@ before(async () => {
   }
 
   await call("PUT", "/me/profile", "stranger", {
-    journey_type: "sme",
     business_status: "informal",
-    description: "A salon in Mombasa that wants to grow",
+    description: "An online shop for salon supplies in Mombasa",
     sector: "retail",
     county: "Mombasa",
-    months_trading: 12,
-    monthly_revenue_band: "under_50k",
-    has_employees: false,
+    stage: "idea",
   });
 });
 
@@ -187,25 +184,13 @@ test("meeting minutes, notes and votes are kept with the circle", async () => {
   assert.equal((await vote("achieng", "no")).json.error.code, "DECISION_CLOSED");
 });
 
-test("a circle sees group funding, and what registering the group would unlock", async () => {
-  const groupOf = async () => {
-    const res = await call("GET", `/circles/${circle}/funding`, "mumbi");
-    return Object.fromEntries(res.json.funders.map((f: any) => [f.name, f]));
-  };
-
-  const before = await groupOf();
-  assert.equal(before["Chama Starter Grant (demo)"].group, "apply_now");
-  assert.equal(before["Vikundi Group Loan (demo)"].group, "apply_after");
-  assert.deepEqual(before["Vikundi Group Loan (demo)"].gaps.map((g: any) => g.ref), ["group_registration"]);
-
+test("a chama records its registration, and has no group funding for now", async () => {
   assert.equal((await call("PATCH", `/circles/${circle}`, "mumbi", { registration_status: "registered" })).status, 403);
-  await call("PATCH", `/circles/${circle}`, "wanjiku", { registration_status: "registered", registration_number: "SHG/2026/001" });
-  assert.equal((await groupOf())["Vikundi Group Loan (demo)"].group, "apply_now");
+  const updated = await call("PATCH", `/circles/${circle}`, "wanjiku", { registration_status: "registered", registration_number: "SHG/2026/001" });
+  assert.equal(updated.json.registration_status, "registered");
 
-  // Group funders are not offered to a founder on her own.
-  const own = await call("GET", "/funding/matches", "stranger");
-  const names = [...own.json.apply_now, ...own.json.apply_after, ...own.json.not_for_you].map((c: any) => c.funder.name);
-  assert.ok(!names.includes("Vikundi Group Loan (demo)"));
+  // Funding comes from investors only (TEAM_DECISIONS D11).
+  assert.equal((await call("GET", `/circles/${circle}/funding`, "mumbi")).status, 404);
 });
 
 test("the circle has a group chat for exactly its members", async () => {

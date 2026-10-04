@@ -1,7 +1,9 @@
 // Option lists for onboarding. Served by GET /meta/options so the frontend
 // does not hardcode them.
 
-export const JOURNEY_TYPES = ["startup", "sme"] as const;
+// Startups only for now (TEAM_DECISIONS D11). The small-business path is
+// switched off, not deleted: its columns are still in the database.
+export const JOURNEY_TYPES = ["startup"] as const;
 
 export const BUSINESS_STATUSES = [
   "idea",
@@ -30,15 +32,9 @@ export const REVENUE_BANDS = ["under_50k", "50k_to_200k", "200k_to_1m", "over_1m
 
 export const ELIGIBILITY_FLAGS = ["women_owned", "youth_owned", "pwd_owned"] as const;
 
-export const FUNDER_KINDS = [
-  "angel",
-  "vc",
-  "accelerator",
-  "grant",
-  "government_fund",
-  "bank",
-  "sacco",
-] as const;
+// Investors only for now (TEAM_DECISIONS D11): no grants, government
+// funds, bank products or SACCOs.
+export const FUNDER_KINDS = ["angel", "vc", "accelerator"] as const;
 
 export const COUNTIES = [
   "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo Marakwet", "Embu", "Garissa", "Homa Bay",

@@ -174,12 +174,5 @@
     "scope": "deal",
     "deal_type": "expert_engagement",
     "is_demo": true
-  },
-  {
-    "id": "group_registration",
-    "title": "Group registered, for example as a self-help group",
-    "why": "Some funds lend only to registered groups, and a registered group can open an account in its own name.",
-    "scope": "group",
-    "is_demo": true
   }
 ]

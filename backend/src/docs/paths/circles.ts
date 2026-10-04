@@ -317,38 +317,6 @@ export const ops: Op[] = [
     errors: [ORGANISER, [404, "NOT_FOUND", "No such circle for the caller, or no open decision with this id."]],
   },
   {
-    method: "get",
-    path: "/circles/:id/funding",
-    summary: "Funders that fund groups",
-    description: "Funders that lend to or fund groups, and what stands between this circle and each of them. Plain lookups, no AI. The only gap checked is group registration.",
-    access: "approved",
-    params: circleId,
-    ok: {
-      description: "The funders.",
-      schema: obj({
-        circle_id: uuid,
-        registration_status: oneOf(["unregistered", "in_progress", "registered"]),
-        funders: arr(
-          obj({
-            id: uuid,
-            name: str,
-            kind: str,
-            mandate_text: str,
-            ticket_min_kes: int,
-            ticket_max_kes: int,
-            how_to_apply_url: nullable(url),
-            source_url: nullable(url),
-            last_verified_at: nullable(dateTime),
-            is_demo: bool,
-            group: oneOf(["apply_now", "apply_after"]),
-            gaps: arr(obj({ ref: str, title: str, why: nullable(str), source_url: nullable(url) })),
-          }),
-        ),
-      }),
-    },
-    errors: [NO_CIRCLE],
-  },
-  {
     method: "post",
     path: "/circles/:id/statements",
     summary: "Import an M-Pesa statement",

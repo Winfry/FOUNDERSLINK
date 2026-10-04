@@ -132,7 +132,7 @@ test("redact removes contact details and keeps business content", () => {
 
 test("stand-in extraction picks out what it can and lists the rest as unsure", () => {
   const sw = extractProfile("Nina salon Mombasa, nataka 150k ya stock");
-  assert.deepEqual(sw.fields, { sector: "retail", county: "Mombasa", journey_type: "sme", funding_amount_kes: 150_000 });
+  assert.deepEqual(sw.fields, { sector: "retail", county: "Mombasa", journey_type: "startup", funding_amount_kes: 150_000 });
   assert.deepEqual(sw.unsure, ["business_status"]);
 
   const en = extractProfile("We are building a clinic booking app in Nairobi and need KSh 1.5m");

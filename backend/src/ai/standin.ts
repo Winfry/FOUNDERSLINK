@@ -172,8 +172,6 @@ const SECTOR_WORDS: Record<string, RegExp> = {
   logistics: /\b(delivery|logistics|boda|transport|courier)/i,
 };
 
-const STARTUP_WORDS = /\b(app|platform|software|startup|saas)\b/i;
-const SME_WORDS = /\b(salon|duka|shop|kiosk|shamba|farm|kinyozi|mitumba|boutique)\b/i;
 
 const MULTIPLIER: Record<string, number> = {
   k: 1_000,
@@ -210,8 +208,8 @@ export function extractProfile(text: string): Extraction {
   const county = COUNTIES.find((c) => text.toLowerCase().includes(c.toLowerCase()));
   if (county) fields.county = county;
 
-  if (STARTUP_WORDS.test(text)) fields.journey_type = "startup";
-  else if (SME_WORDS.test(text)) fields.journey_type = "sme";
+  // Startups only for now (TEAM_DECISIONS D11).
+  fields.journey_type = "startup";
 
   const amount = findAmount(text);
   if (amount) fields.funding_amount_kes = amount;

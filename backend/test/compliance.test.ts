@@ -14,7 +14,7 @@ import { prisma } from "../src/shared/db.js";
 // --- The rules on their own: no database, no server ---
 
 const business: MatchProfile = {
-  journey_type: "sme",
+  journey_type: "startup",
   business_status: "informal",
   description: "A salon in Mombasa",
   sector: "retail",
@@ -110,15 +110,14 @@ async function call(method: string, path: string, who?: string, body?: unknown) 
   return { status: res.status, json: (await res.json()) as any };
 }
 
-const salon = {
-  journey_type: "sme",
+const clinicApp = {
   business_status: "informal",
-  description: "Nina salon Mombasa, nataka stock mpya",
-  sector: "retail",
+  description: "An app for booking clinic visits in Mombasa",
+  sector: "health",
   county: "Mombasa",
-  funding_amount_kes: 150_000,
-  months_trading: 18,
-  monthly_revenue_band: "50k_to_200k",
+  funding_amount_kes: 1_000_000,
+  stage: "mvp",
+  instruments: ["equity"],
   has_employees: false,
   already_have: ["kra_pin"],
 };
@@ -153,7 +152,7 @@ test("the checklist needs a founder who has finished onboarding", async () => {
 });
 
 test("a founder sees the items that apply to her business, with what she ticked in onboarding done", async () => {
-  await call("PUT", "/me/profile", "founder", salon);
+  await call("PUT", "/me/profile", "founder", clinicApp);
   const res = await call("GET", "/compliance", "founder");
 
   assert.equal(res.status, 200);
@@ -174,7 +173,7 @@ test("a founder sees the items that apply to her business, with what she ticked 
 
 test("the checklist changes with the business, and says when a county is not covered", async () => {
   await call("PUT", "/me/profile", "founder", {
-    ...salon,
+    ...clinicApp,
     business_status: "limited_company",
     county: "Turkana",
     has_employees: true,
@@ -199,22 +198,26 @@ test("the checklist changes with the business, and says when a county is not cov
 });
 
 test("marking an item complete closes the matching gap on her funding matches", async () => {
-  const bankGaps = async () => {
+  // Savanna Angels fit her, and require a registered business.
+  const savanna = async () => {
     const matches = await call("GET", "/funding/matches", "founder");
-    const all = [...matches.json.apply_now, ...matches.json.apply_after];
-    return all.find((c: any) => c.funder.name.startsWith("SME Working Capital Loan")).gaps.map((g: any) => g.ref);
+    const all = [...matches.json.apply_now, ...matches.json.apply_after].map((c: any) => ({ ...c, pitch: matches.json.apply_now.includes(c) }));
+    return all.find((c: any) => c.funder.name === "Savanna Angels Network (demo)");
   };
-  assert.deepEqual(await bankGaps(), ["brs_registration", "business_bank_account"]);
+  assert.deepEqual((await savanna()).gaps.map((g: any) => g.ref), ["brs_registration"]);
+  assert.equal((await savanna()).pitch, false);
 
   const started = await call("PATCH", "/compliance/brs_registration/status", "founder", {
     status: "in_progress",
     note: "Name search done on eCitizen",
   });
   assert.deepEqual(started.json, { item_id: "brs_registration", status: "in_progress", note: "Name search done on eCitizen" });
-  assert.deepEqual(await bankGaps(), ["brs_registration", "business_bank_account"]);
+  assert.deepEqual((await savanna()).gaps.map((g: any) => g.ref), ["brs_registration"]);
 
+  // Done: Savanna moves from "pitch after you fix this" to "pitch".
   await call("PATCH", "/compliance/brs_registration/status", "founder", { status: "complete" });
-  assert.deepEqual(await bankGaps(), ["business_bank_account"]);
+  assert.deepEqual((await savanna()).gaps, []);
+  assert.equal((await savanna()).pitch, true);
 
   const item = await call("GET", "/compliance/brs_registration", "founder");
   assert.equal(item.json.status, "complete");

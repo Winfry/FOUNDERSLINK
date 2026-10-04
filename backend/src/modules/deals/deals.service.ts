@@ -33,7 +33,7 @@ const STAGE_LABEL: Record<string, string> = {
 };
 
 const NOTICE =
-  "FounderLink records this deal. It does not move money, and the terms here are self-reported, not a legal document.";
+  "FounderLink records this deal. The money moves between the parties through their bank, never through FounderLink, and the terms here are self-reported, not a legal document.";
 
 export const createSchema = z.object({
   type: z.enum(DEAL_TYPES),

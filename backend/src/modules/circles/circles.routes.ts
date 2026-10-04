@@ -25,7 +25,6 @@ import {
   getCircle,
   goalPatchSchema,
   goalSchema,
-  groupFunding,
   joinOpenCircle,
   joinSchema,
   joinWithInvite,
@@ -153,9 +152,6 @@ circlesRouter.post("/circles/:id/decisions/:decisionId/close", ...approved, asyn
   res.json(await closeDecision(req.user!.id, id(req.params.id), id(req.params.decisionId)));
 });
 
-circlesRouter.get("/circles/:id/funding", ...approved, async (req, res) => {
-  res.json(await groupFunding(req.user!.id, id(req.params.id)));
-});
 
 // --- M-Pesa: reading what members paid into the circle's own account ---
 

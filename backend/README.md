@@ -313,7 +313,6 @@ All of these need an approved account, and, past joining, membership of the circ
 | POST, GET | `/circles/:id/decisions` | circle member | `{ question }` |
 | POST | `/circles/:id/decisions/:decisionId/vote` | circle member | `{ choice: yes / no / abstain }`. Can be changed while open |
 | POST | `/circles/:id/decisions/:decisionId/close` | organiser | |
-| GET | `/circles/:id/funding` | circle member | Funders that fund groups, and what the circle still needs for each |
 
 **M-Pesa.** None of this has been run against a real statement or the Daraja sandbox; see the notes at the top of `src/modules/circles/mpesa.ts`.
 

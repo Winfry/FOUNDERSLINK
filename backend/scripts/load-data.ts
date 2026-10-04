@@ -98,5 +98,17 @@ for (const funder of funders) {
   await prisma.funder.upsert({ where: { name: funder.name }, create: funder, update: funder });
 }
 
+// The demo set is whatever the files say. A demo record that is no
+// longer in them is removed, unless an investor has taken it over.
+const gone = await prisma.funder.deleteMany({
+  where: { is_demo: true, claimed_by_user_id: null, name: { notIn: funders.map((f) => f.name) } },
+});
+const goneItems = await prisma.complianceItem.deleteMany({
+  where: { is_demo: true, id: { notIn: items.map((i) => i.id) } },
+});
+
 console.log(`Loaded ${items.length} compliance items and ${funders.length} funders`);
+if (gone.count + goneItems.count > 0) {
+  console.log(`Removed ${gone.count} demo funders and ${goneItems.count} demo compliance items that are no longer in the files`);
+}
 await prisma.$disconnect();
