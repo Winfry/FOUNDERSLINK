@@ -83,8 +83,10 @@ export default function VerificationStatusScreen() {
   const status = q.data?.approvalStatus ?? user?.approvalStatus ?? 'draft';
   const state = STATES[status] ?? STATES.draft;
   const Icon = state.icon;
-  // The admin's own words, when a decision came with a reason.
-  const reason = status !== 'approved' && status !== 'draft' ? q.data?.decisionReason : null;
+  // The words that explain where she is now, from the backend: the
+  // reviewer's reason, or why her account was paused.
+  const reason = q.data?.statusReason ?? null;
+  const reasonLabel = status === 'suspended' || status === 'banned' ? 'Why' : 'What our reviewer said';
   // The opening screen sends each role to her own home.
   const toMatches = () => router.replace('/');
   const investor = user?.role === 'investor';
@@ -104,7 +106,7 @@ export default function VerificationStatusScreen() {
         <Text style={styles.body}>{forRole(state.body)}</Text>
         {reason ? (
           <View style={styles.reason}>
-            <Text style={styles.reasonLabel}>What our reviewer said</Text>
+            <Text style={styles.reasonLabel}>{reasonLabel}</Text>
             <Text style={styles.reasonText}>{reason}</Text>
           </View>
         ) : null}

@@ -457,7 +457,7 @@ export const components: Record<string, Schema> = {
   Notification: obj({
     id: uuid,
     user_id: uuid,
-    type: described(str, 'e.g. "connection_request", "deal_stage_changed", "vetting_approve", "deadline_reminder".'),
+    type: described(str, 'e.g. "connection_request", "deal_stage_changed", "vetting_approve", "account_suspended", "account_reinstated", "deadline_reminder".'),
     title: str,
     body: str,
     link: described(nullable(str), "A path into the app."),

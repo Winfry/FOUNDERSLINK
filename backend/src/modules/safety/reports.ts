@@ -6,6 +6,7 @@ import { z } from "zod";
 import { setApproved } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
+import { REPORTED_REASON, tellMember } from "../vetting/vetting.service.js";
 
 const REPORTS_TO_SUSPEND = 3;
 
@@ -28,8 +29,10 @@ export async function suspendIfReported(userId: string): Promise<boolean> {
     where: { id: userId, approval_status: "approved" },
     data: { approval_status: "suspended" },
   });
-  if (count > 0) setApproved(userId, false);
-  return count > 0;
+  if (count === 0) return false;
+  setApproved(userId, false);
+  await tellMember(userId, { type: "account_suspended", title: "Your account is paused", body: REPORTED_REASON, link: "/vetting/application" });
+  return true;
 }
 
 export async function reportUser(reporterId: string, input: z.infer<typeof userReportSchema>) {

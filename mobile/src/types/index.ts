@@ -256,7 +256,12 @@ export interface VettingApplication {
   statement?: string;
   organisationName?: string;
   organisationWebsite?: string;
-  decisionReason?: string | null;
+  /**
+   * The words that explain her status now: the reviewer's reason when more
+   * is needed or she was not approved, the reason her account was paused
+   * when suspended. Never the note written when she was approved.
+   */
+  statusReason?: string | null;
   /** Whether her email and her phone have been confirmed by code. */
   emailVerified?: boolean;
   phoneVerified?: boolean;

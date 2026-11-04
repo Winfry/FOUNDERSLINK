@@ -6,17 +6,17 @@ import { syncSessionUser } from './session-sync';
 
 interface ApiVetting {
   approval_status: VettingApplication['approvalStatus'];
+  status_reason: string | null;
   application: {
     phone: string | null;
     statement: string | null;
     organisation_name: string | null;
     organisation_website: string | null;
-    decision_reason: string | null;
   } | null;
 }
 
 async function load(): Promise<VettingApplication> {
-  const [{ approval_status, application }, me] = await Promise.all([
+  const [{ approval_status, status_reason, application }, me] = await Promise.all([
     get<ApiVetting>('/vetting/application'),
     get<{ email_verified_at: string | null; phone: string | null; phone_verified_at: string | null }>('/me'),
   ]);
@@ -29,7 +29,7 @@ async function load(): Promise<VettingApplication> {
     statement: application?.statement ?? undefined,
     organisationName: application?.organisation_name ?? undefined,
     organisationWebsite: application?.organisation_website ?? undefined,
-    decisionReason: application?.decision_reason ?? null,
+    statusReason: status_reason ?? null,
     emailVerified: me.email_verified_at !== null,
     phoneVerified: me.phone_verified_at !== null,
     accountPhone: me.phone ?? undefined,

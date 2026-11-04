@@ -26,6 +26,12 @@ export const ops: Op[] = [
       description: "The application.",
       schema: obj({
         approval_status: APPROVAL_STATUS,
+        status_reason: nullable(
+          described(
+            str,
+            "The words that explain her status now, to show her: the reviewer's reason for `needs_info` or `rejected`, the suspension's reason for `suspended`. Null otherwise. Never the note written when she was approved.",
+          ),
+        ),
         application: nullable({ allOf: [ref("VettingApplication"), obj({ checks: arr(ref("VettingCheck")) })] }),
         documents: arr(ref("VettingDocument")),
         identity_check: described(str, "A fixed sentence: identity is reviewed by an admin by hand, and no ID number or document is stored."),

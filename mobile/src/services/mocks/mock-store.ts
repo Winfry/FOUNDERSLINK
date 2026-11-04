@@ -194,7 +194,7 @@ function init() {
       approvalStatus: 'needs_info',
       phone: '+254711000333',
       statement: 'Payments API for chamas and savings groups.',
-      decisionReason: 'Please clarify your business registration status and resubmit.',
+      statusReason: 'Please clarify your business registration status and resubmit.',
     },
   });
 }

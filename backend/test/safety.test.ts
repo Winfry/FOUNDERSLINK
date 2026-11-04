@@ -46,9 +46,9 @@ async function verifyPhone(who: Who, number: string) {
 }
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {
@@ -160,4 +160,12 @@ test("reports from three different members suspend the one reported, and admins 
   const mine = list.json.members.filter((r: any) => r.reported.id === ids.grace);
   assert.equal(mine.length, 3);
   assert.equal(mine[0].reported.approval_status, "suspended");
+
+  // She is told, without being told who reported her or what they said.
+  const status = (await call("GET", "/vetting/application", "grace")).json;
+  assert.match(status.status_reason, /^Several members reported this account/);
+  const notices = (await call("GET", "/notifications", "grace")).json.notifications;
+  const paused = notices.find((n: any) => n.type === "account_suspended");
+  assert.equal(paused?.title, "Your account is paused");
+  assert.ok(!paused.body.includes("fee"));
 });

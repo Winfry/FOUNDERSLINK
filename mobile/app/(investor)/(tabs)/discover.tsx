@@ -11,6 +11,7 @@ import { bandMeta, Chip, kes, ReasonRow, words } from '../../../src/components/m
 import { investorService, referenceDataService } from '../../../src/services';
 import type { DiscoverCard } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationInvite } from '../../../src/lib/verification-invite';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
 function DiscoverScreen() {
@@ -68,7 +69,8 @@ function DiscoverScreen() {
     );
   }
 
-  const waiting = status === 'submitted' || status === 'in_review';
+  // The backend says whether names are open; her status says which words fit.
+  const invite = data.approved ? null : verificationInvite(status === 'approved' ? 'draft' : status, 'investor');
   const filtering = Boolean(search || sector);
   const clear = () => {
     setTyped('');
@@ -81,25 +83,18 @@ function DiscoverScreen() {
       <Text style={styles.heading}>Founders for you</Text>
       {data.message ? <Text style={styles.sub}>{data.message}</Text> : null}
 
-      {!data.approved ? (
+      {invite ? (
         <View style={styles.invite}>
           <View style={styles.inviteTop}>
             <View style={styles.inviteIcon}>
               <ShieldCheck size={22} color={colors.primary} />
             </View>
             <View style={styles.flexOne}>
-              <Text style={styles.inviteTitle}>{waiting ? "We're checking your details" : 'Verify to see who they are'}</Text>
-              <Text style={styles.inviteText}>
-                {waiting
-                  ? 'Names and founder pages open as soon as FoundersLink approves you.'
-                  : 'Verify once to see founder names, open their pages and ask to join.'}
-              </Text>
+              <Text style={styles.inviteTitle}>{invite.title}</Text>
+              <Text style={styles.inviteText}>{invite.text}</Text>
             </View>
           </View>
-          <Button
-            title={waiting ? 'See my status' : 'Start verification'}
-            onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
-          />
+          <Button title={invite.button} onPress={() => router.push(invite.route)} />
         </View>
       ) : null}
 

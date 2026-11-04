@@ -36,9 +36,9 @@ async function call(method: string, path: string, who?: Who, body?: unknown) {
 const list = async (query: string) => (await call("GET", `/admin/users?search=${tag}${query}`, "admin")).json;
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {
@@ -122,6 +122,18 @@ test("a member's page shows her profile and her history in order", async () => {
 
   // An admin's own account is not a member page.
   assert.equal((await call("GET", `/admin/users/${ids.admin}`, "admin")).status, 404);
+});
+
+test("a suspended member is told why, in the app, and never shown the note from her approval", async () => {
+  // FINAL_VERIFICATION 11: her status screen quoted "Identity and business checked by hand."
+  const mine = (await call("GET", "/vetting/application", "amina")).json;
+  assert.equal(mine.approval_status, "suspended");
+  assert.equal(mine.status_reason, "Reported by two members.");
+
+  const notices = (await call("GET", "/notifications", "amina")).json.notifications;
+  const paused = notices.find((n: any) => n.type === "account_suspended");
+  assert.equal(paused?.title, "Your account is paused");
+  assert.equal(paused?.body, "Reported by two members.");
 });
 
 test("the applications list includes decided ones, with the reason", async () => {

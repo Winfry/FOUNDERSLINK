@@ -11,6 +11,7 @@ import { bandMeta, Chip, ReasonRow, splitHeadline, topReasons } from '../../../s
 import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
 import { consentService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
+import { verificationInvite } from '../../../src/lib/verification-invite';
 import type { InvestorMatchCard } from '../../../src/types';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 
@@ -70,8 +71,7 @@ function MatchesScreen() {
   }
 
   const status = user?.approvalStatus;
-  const unverified = status !== 'approved';
-  const waiting = status === 'submitted' || status === 'in_review';
+  const invite = verificationInvite(status, 'founder');
   const current = SEGMENTS.find((s) => s.key === segment) ?? SEGMENTS[0];
   const list = lists[segment];
 
@@ -80,25 +80,18 @@ function MatchesScreen() {
       <Text style={styles.heading}>Investors for you</Text>
       <Text style={styles.sub}>Sorted by how well they fit your business.</Text>
 
-      {unverified ? (
+      {invite ? (
         <View style={styles.invite}>
           <View style={styles.inviteTop}>
             <View style={styles.inviteIcon}>
               <ShieldCheck size={22} color={colors.primary} />
             </View>
             <View style={styles.flexOne}>
-              <Text style={styles.inviteTitle}>{waiting ? "We're checking your details" : 'Verify to connect'}</Text>
-              <Text style={styles.inviteText}>
-                {waiting
-                  ? 'Names and the Connect button open as soon as FoundersLink approves you.'
-                  : 'Verify once to see investor names and send them a request to connect.'}
-              </Text>
+              <Text style={styles.inviteTitle}>{invite.title}</Text>
+              <Text style={styles.inviteText}>{invite.text}</Text>
             </View>
           </View>
-          <Button
-            title={waiting ? 'See my verification status' : 'Start verification'}
-            onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
-          />
+          <Button title={invite.button} onPress={() => router.push(invite.route)} />
         </View>
       ) : null}
 

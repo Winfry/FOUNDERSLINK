@@ -56,6 +56,28 @@ async function statusOf(userId: string) {
   return user;
 }
 
+// Said to a member whose account was paused automatically, because
+// enough different members reported her. Which reports, and by whom, is
+// never said.
+export const REPORTED_REASON =
+  "Several members reported this account, so it is paused until someone at FoundersLink has looked at the reports.";
+
+// The words that explain the status she is in now. A vetting decision's
+// reason explains needs_info and rejected; a suspension has its own
+// reason, never the note an admin wrote when approving her
+// (FINAL_VERIFICATION 11).
+async function statusReason(userId: string, status: string, decisionReason: string | null | undefined) {
+  if (status === "needs_info" || status === "rejected") return decisionReason ?? null;
+  if (status !== "suspended") return null;
+  const last = await prisma.adminAction.findFirst({
+    where: { target_user_id: userId, action: { in: ["suspend", "reinstate"] } },
+    orderBy: { created_at: "desc" },
+    select: { action: true, reason: true },
+  });
+  // No admin suspended her since she was last reinstated: the reports did.
+  return last?.action === "suspend" ? last.reason : REPORTED_REASON;
+}
+
 export async function getApplication(userId: string) {
   const [user, application] = await Promise.all([
     statusOf(userId),
@@ -63,6 +85,7 @@ export async function getApplication(userId: string) {
   ]);
   return {
     approval_status: user.approval_status,
+    status_reason: await statusReason(userId, user.approval_status, application?.decision_reason),
     application,
     documents: application ? await listDocuments(application.id) : [],
     identity_check: "For this demo, identity is reviewed by an admin by hand. No ID number or document is stored.",
@@ -278,13 +301,17 @@ export async function decide(adminId: string, applicationId: string, input: z.in
     needs_info: ["We need a little more from you", input.reason],
   } as const;
   const [title, body] = OUTCOME[input.decision];
-  await notify(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
-
-  // Also by email: someone who is waiting may not have the app open.
-  const applicantUser = await prisma.user.findUnique({ where: { id: application.user_id }, select: { email: true } });
-  if (applicantUser) await sendEmail(applicantUser.email, `FoundersLink: ${title}`, body);
+  await tellMember(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
 
   return { application_id: applicationId, approval_status: status };
+}
+
+// A change to her account is sent in the app and also by email: someone
+// who is waiting, or who has just been locked out, may not open the app.
+export async function tellMember(userId: string, notice: { type: string; title: string; body: string; link: string }) {
+  await notify(userId, notice);
+  const member = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  if (member) await sendEmail(member.email, `FoundersLink: ${notice.title}`, notice.body);
 }
 
 // Suspend an approved member, or bring a suspended one back.
@@ -309,6 +336,12 @@ export async function setSuspended(adminId: string, userId: string, suspend: boo
   // A suspended member stops receiving live chat at once, and a
   // reinstated one starts again.
   setApproved(userId, !suspend);
+
+  // She is told, with the reason, in the app and by email.
+  const [title, body] = suspend
+    ? ["Your account is paused", reason]
+    : ["Your account is active again", "You can connect and message other members again."];
+  await tellMember(userId, { type: suspend ? "account_suspended" : "account_reinstated", title, body, link: "/vetting/application" });
 
   return { user_id: userId, approval_status: to };
 }
