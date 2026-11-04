@@ -22,6 +22,7 @@ import type {
   RiskInput,
   TrackRecordItem,
 } from "./types.js";
+import { wasRead } from "./types.js";
 
 export const kes = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
 
@@ -331,7 +332,7 @@ export function dueDiligencePack(parties: PackPartyInput[]): Pack {
       verified: [...party.checks, ...confirmed.map((d) => `${d.title}: confirmed by FoundersLink`)],
       self_reported: [
         "Profile details",
-        ...waiting.map((d) => `${d.title}: uploaded${d.precheck ? ", AI pre-checked" : ""}, not yet confirmed`),
+        ...waiting.map((d) => `${d.title}: uploaded${wasRead(d.precheck) ? ", AI pre-checked" : ""}, not yet confirmed`),
       ],
       missing: party.required.filter((r) => !usable.some((d) => d.type === r.type)).map((r) => r.title),
     };

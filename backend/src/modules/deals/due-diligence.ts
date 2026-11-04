@@ -17,7 +17,7 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { dueDiligencePack, precheckDocument } from "../../ai/client.js";
-import type { Precheck } from "../../ai/types.js";
+import { type Precheck, wasRead } from "../../ai/types.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
@@ -58,11 +58,12 @@ export const dealUploadSchema = z.object({
 type Doc = Awaited<ReturnType<typeof prisma.dealDocument.findFirstOrThrow>>;
 
 // What a person is told about a document. "ai_pre_checked" only when
-// the AI service really read it.
-function labelOf(d: Pick<Doc, "status" | "precheck">) {
+// the AI service really read it: a precheck saying it could not read the
+// file is shown to the admin, but the member just sees "Uploaded".
+export function labelOf(d: Pick<Doc, "status" | "precheck">) {
   if (d.status === "verified") return "confirmed";
   if (d.status === "rejected") return "rejected";
-  return d.precheck ? "ai_pre_checked" : "uploaded";
+  return wasRead(d.precheck as Precheck | null) ? "ai_pre_checked" : "uploaded";
 }
 
 const LABEL_TEXT: Record<string, string> = {

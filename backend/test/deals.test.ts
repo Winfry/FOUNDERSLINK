@@ -69,9 +69,9 @@ const stage = (who: Who, to_stage: string) => call("POST", `/deals/${dealId}/sta
 const confirm = (who: Who) => call("POST", `/deals/${dealId}/stage/confirm`, who);
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   // Vetting has its own tests, so these members start out already decided.
   const password_hash = await bcrypt.hash(password, 4);
@@ -367,4 +367,15 @@ test("any party can pause or decline with a reason, and declined is final", asyn
   assert.equal((await status("outsider", { status: "open", reason: "Accounts are ready." })).json.status, "open");
   assert.equal((await status("investor", { status: "declined", reason: "Outside our mandate after all." })).json.status, "declined");
   assert.equal((await status("outsider", { status: "open", reason: "Please reconsider." })).json.error.code, "DEAL_DECLINED");
+});
+
+test("a document is called AI pre-checked only when the AI service could read it", async () => {
+  const { labelOf } = await import("../src/modules/deals/due-diligence.js");
+  const read = { fields: {}, checks: [], concerns: [], readable: true };
+  const unread = { ...read, readable: false, checks: [{ check: "readable", passed: false, note: "a scan" }] };
+  assert.equal(labelOf({ status: "uploaded", precheck: read }), "ai_pre_checked");
+  // FINAL_VERIFICATION 16: a scan the service could not read is just "uploaded".
+  assert.equal(labelOf({ status: "uploaded", precheck: unread }), "uploaded");
+  assert.equal(labelOf({ status: "uploaded", precheck: null }), "uploaded");
+  assert.equal(labelOf({ status: "verified", precheck: unread }), "confirmed");
 });

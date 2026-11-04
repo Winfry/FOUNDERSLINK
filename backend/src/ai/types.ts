@@ -139,6 +139,11 @@ export interface Precheck {
   readable: boolean;
 }
 
+// Whether the AI service actually read the document. A precheck that
+// says it could not (a scan, a locked PDF) is kept for the admin, but the
+// document must not be called "AI pre-checked" (FINAL_VERIFICATION 16).
+export const wasRead = (precheck: Precheck | null | undefined): boolean => precheck?.readable === true;
+
 export interface PackPartyInput {
   role: string;
   profile: Record<string, unknown>;
