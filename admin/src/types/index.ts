@@ -49,10 +49,18 @@ export interface VettingCheck {
 
 export interface VettingDecisionRecord {
   id: string;
-  decision: "approved" | "rejected" | "needs_info" | "suspended" | "reinstated";
+  decision: "approved" | "approved_first" | "rejected" | "needs_info" | "suspended" | "reinstated" | "recheck_confirmed";
   reason: string;
   decidedAt: string;
+  /** The admin who made the decision. */
+  by: string;
   checks?: VettingCheck[];
+}
+
+/** A re-check waiting on an approved member. */
+export interface RecheckDue {
+  dueAt: string;
+  reason: string;
 }
 
 export interface VerificationReference {
@@ -90,8 +98,11 @@ export interface VerificationDetail {
   riskSignals: RiskSignal[];
   approvalStatus: ApprovalStatus;
   submittedAt: string;
+  /** Every decision made about her, newest first. */
   decisions: VettingDecisionRecord[];
   checks: VettingCheck[];
+  /** Set when she is approved and a re-check is due: decided as a re-check, not a new decision. */
+  recheck: RecheckDue | null;
 }
 
 export interface MemberListItem {

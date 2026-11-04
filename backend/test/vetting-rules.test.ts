@@ -18,6 +18,7 @@ const people = {
   grace: { role: "investor", full_name: "Grace Investor", status: "draft" },
   peter: { role: "investor", full_name: "Peter Investor", status: "draft" },
   amina: { role: "founder", full_name: "Amina Founder", status: "draft" },
+  wanjiru: { role: "founder", full_name: "Wanjiru Founder", status: "draft" },
 } as const;
 type Who = keyof typeof people;
 
@@ -138,6 +139,46 @@ test("an approved member who changes a key detail is listed to be looked at agai
   });
   assert.equal(confirmed.json.approval_status, "approved");
   assert.equal(await dueFor("grace"), undefined);
+
+  // The re-check is part of her history on the review page, with each admin's name.
+  const review = (await call("GET", `/admin/vetting/${applications.grace}`, "adminOne")).json;
+  assert.deepEqual(
+    review.history.map((h: any) => [h.action, h.admin.full_name]),
+    [
+      ["recheck_confirmed", "First Admin"],
+      ["approve", "Second Admin"],
+      ["approve_first", "First Admin"],
+    ],
+  );
+});
+
+test("the decision history survives a resubmission, with the checks made at each decision", async () => {
+  // FINAL_VERIFICATION 18: the review page showed only the latest decision, and lost it on resubmission.
+  await apply("wanjiru", 4);
+  await call("POST", `/admin/vetting/${applications.wanjiru}/decision`, "adminOne", {
+    decision: "needs_info",
+    reason: "Say which county the business trades in.",
+    checks: [{ check_type: "organisation", result: "fail", method: "brs" }],
+  });
+  await call("PATCH", "/vetting/application", "wanjiru", { statement: "I run a clinic booking app in Kisumu County, trading since 2024." });
+  assert.equal((await call("POST", "/vetting/application/submit", "wanjiru")).status, 200);
+
+  const review = (await call("GET", `/admin/vetting/${applications.wanjiru}`, "adminTwo")).json;
+  assert.equal(review.decision_reason, "Say which county the business trades in.");
+  assert.equal(review.history.length, 1);
+  const [asked] = review.history;
+  assert.equal(asked.action, "needs_info");
+  assert.equal(asked.reason, "Say which county the business trades in.");
+  assert.equal(asked.admin.full_name, "First Admin");
+  assert.deepEqual(asked.checks.map((c: any) => [c.check_type, c.result, c.method]), [["organisation", "fail", "brs"]]);
+
+  // The second decision joins the first; neither replaces the other.
+  await call("POST", `/admin/vetting/${applications.wanjiru}/decision`, "adminTwo", { decision: "approve", reason: "County confirmed by phone." });
+  const after = (await call("GET", `/admin/vetting/${applications.wanjiru}`, "adminTwo")).json;
+  assert.deepEqual(after.history.map((h: any) => [h.action, h.admin.full_name, h.checks.length]), [
+    ["approve", "Second Admin", 0],
+    ["needs_info", "First Admin", 1],
+  ]);
 });
 
 test("approval lasts a year, and a re-check can end in suspension", async () => {

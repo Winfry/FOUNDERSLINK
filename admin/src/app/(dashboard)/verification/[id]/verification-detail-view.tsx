@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 import type { RiskLevel, VerificationDetail } from "@/types";
-import { verificationDecisionAction } from "@/app/actions/admin-actions";
+import { recheckDecisionAction, verificationDecisionAction, type DecisionResult } from "@/app/actions/admin-actions";
 import { approvalLabel, formatDay, formatDayTime, roleLabel } from "@/components/labels";
 import { RISK_LABEL } from "@/components/risk-level-badge";
 import { StatusBadge } from "@/components/status-badge";
@@ -74,31 +74,51 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
     setCheckType("");
   }
 
-  function submit(decision: "approved" | "rejected" | "needs_info") {
+  // Runs a decision and says what happened. When the backend refuses, its
+  // own reason is shown, not "the server did not answer".
+  function act(run: () => Promise<DecisionResult>, done: string) {
     startTransition(async () => {
+      let result: DecisionResult;
       try {
-        const updated = await verificationDecisionAction(detail.id, decision, reason.trim(), checks);
-        if (updated) {
-          setDetail(updated);
-          setToast({
-            text:
-              decision === "approved"
-                ? "Approved. The decision and your reason are in the audit log."
-                : decision === "rejected"
-                  ? "Rejected. The decision and your reason are in the audit log."
-                  : "Marked as needs more info. Your reason is in the audit log.",
-          });
-          setReason("");
-          setChecks([]);
-          router.refresh();
-        } else {
-          setToast({ text: "Your decision was not saved. The application is unchanged: try again.", error: true });
-        }
+        result = await run();
       } catch {
-        setToast({ text: "Your decision was not saved because the server did not answer. Try again.", error: true });
+        result = { ok: false, message: "Not saved: the FoundersLink server did not answer. Try again." };
       }
+      if (!result.ok) {
+        setToast({ text: result.message, error: true });
+        return;
+      }
+      setDetail(result.detail);
+      setToast({ text: done });
+      setReason("");
+      setChecks([]);
+      router.refresh();
     });
   }
+
+  function submit(decision: "approved" | "rejected" | "needs_info") {
+    act(
+      () => verificationDecisionAction(detail.id, decision, reason.trim(), checks),
+      decision === "approved"
+        ? "Approved. The decision and your reason are in the audit log."
+        : decision === "rejected"
+          ? "Rejected. The decision and your reason are in the audit log."
+          : "Marked as needs more info. Your reason is in the audit log.",
+    );
+  }
+
+  function decideRecheck(outcome: "confirm" | "suspend") {
+    act(
+      () => recheckDecisionAction(detail.id, outcome, reason.trim()),
+      outcome === "confirm"
+        ? "Re-check passed. They stay approved for another year, and your reason is in the audit log."
+        : "Suspended. They have been told why, and your reason is in the audit log.",
+    );
+  }
+
+  // Only an application waiting for a decision can be decided; an approved
+  // member with a re-check due gets the re-check instead.
+  const awaiting = detail.approvalStatus === "submitted" || detail.approvalStatus === "in_review";
 
   const signalCount = detail.riskSignals.length;
 
@@ -203,6 +223,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
         </Card>
       </div>
 
+      {awaiting ? (
       <Card className="border-primary/30">
         <CardHeader>
           <h2 className="text-xl font-bold text-foreground">Your decision</h2>
@@ -322,6 +343,57 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           </div>
         </CardContent>
       </Card>
+      ) : detail.recheck ? (
+        <Card className="border-primary/30">
+          <CardHeader>
+            <h2 className="text-xl font-bold text-foreground">Re-check due</h2>
+            <CardDescription>
+              {detail.recheck.reason}. They are approved; decide whether they stay approved for another year. Write your
+              reason first: it is saved in the audit log with your name, and sent to them if you suspend.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="recheck-reason" className="text-sm font-semibold text-foreground">
+                Written reason <span className="text-destructive">(required)</span>
+              </label>
+              <textarea
+                id="recheck-reason"
+                rows={3}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="What you checked again, and what you found"
+                className="field resize-y"
+              />
+              <p className={cn("text-xs font-semibold", canAct ? "text-green-700" : "text-muted")}>
+                {canAct ? "Reason written. Choose below." : `At least ${MIN_REASON} characters.`}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
+              <Button type="button" variant="primary" className="min-h-11 px-6" disabled={!canAct || pending} onClick={() => decideRecheck("confirm")}>
+                Keep approved
+              </Button>
+              <Button type="button" variant="destructive" className="min-h-11 sm:ml-auto" disabled={!canAct || pending} onClick={() => decideRecheck("suspend")}>
+                Suspend
+              </Button>
+              {pending ? <p className="w-full text-sm font-semibold text-muted">Saving…</p> : null}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <h2 className="text-xl font-bold text-foreground">Nothing to decide</h2>
+            <CardDescription>
+              {detail.approvalStatus === "needs_info"
+                ? "You asked them for more. The decision buttons come back when they resubmit."
+                : detail.approvalStatus === "draft"
+                  ? "They have not submitted an application yet."
+                  : "A decision has been made; it is in the history below. To suspend or reinstate, use their member page."}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -329,14 +401,16 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
         </CardHeader>
         <CardContent>
           {detail.decisions.length === 0 ? (
-            <p className="text-sm text-muted">No decision has been made on this application yet. Each one will be listed here with its reason.</p>
+            <p className="text-sm text-muted">No decision has been made about them yet. Each one will be listed here with its reason and who made it.</p>
           ) : (
             <ul className="divide-y divide-border">
               {detail.decisions.map((d) => (
                 <li key={d.id} className="py-3 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={d.decision} />
-                    <span className="text-xs font-semibold text-muted">{formatDayTime(d.decidedAt)}</span>
+                    <span className="text-xs font-semibold text-muted">
+                      {formatDayTime(d.decidedAt)} · {d.by}
+                    </span>
                   </div>
                   <p className="mt-1.5 text-sm font-medium text-foreground">{d.reason || approvalLabel(d.decision)}</p>
                   {d.checks && d.checks.length > 0 ? (

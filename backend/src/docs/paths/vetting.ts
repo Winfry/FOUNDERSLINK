@@ -146,7 +146,7 @@ export const ops: Op[] = [
     path: "/admin/vetting/:id",
     summary: "One application, for review",
     description:
-      "The application with its checks, documents, the person's profiles and the funder record she asked to take over. **This GET changes state:** opening an application that is `submitted` moves its member to `in_review`.",
+      "The application with its checks, documents, the person's profiles, the funder record she asked to take over, and `history`: every decision made about her, newest first, read from the audit log (the application keeps only its latest decision). `recheck_due_at` and `recheck_reason` say whether a re-check is waiting; it is decided with `POST /admin/vetting/:id/recheck`, not with a decision. **This GET changes state:** opening an application that is `submitted` moves its member to `in_review`.",
     access: "admin",
     params: { id: described(uuid, "The application id.") },
     ok: {
@@ -166,6 +166,16 @@ export const ops: Op[] = [
         }),
         claims_funder: nullable(obj({ id: uuid, name: str, source_url: nullable(url), claimed_by_user_id: nullable(uuid) })),
         documents: arr(ref("VettingDocument")),
+        history: arr(
+          obj({
+            id: uuid,
+            action: oneOf(["approve_first", "approve", "reject", "needs_info", "suspend", "reinstate", "recheck_confirmed"]),
+            reason: str,
+            created_at: dateTime,
+            admin: obj({ id: uuid, full_name: str }),
+            checks: described(arr(ref("VettingCheck")), "The checks the same admin recorded with this decision."),
+          }),
+        ),
       }),
     },
     errors: [NO_APPLICATION],

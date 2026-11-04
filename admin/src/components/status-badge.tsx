@@ -13,6 +13,8 @@ const STATUS_MAP: Record<string, { label: string; variant: Variant }> = {
   needs_info: { label: "Needs more info", variant: "warning" },
   pending: { label: "Pending", variant: "warning" },
   approved: { label: "Approved", variant: "success" },
+  approved_first: { label: "First approval", variant: "default" },
+  recheck_confirmed: { label: "Re-check passed", variant: "success" },
   reinstated: { label: "Reinstated", variant: "success" },
   rejected: { label: "Rejected", variant: "destructive" },
   verified: { label: "Verified", variant: "success" },

@@ -1,4 +1,14 @@
-import type { ApprovalStatus, MemberRole, PaginatedParams, PaginatedResult, RiskLevel, VerificationDetail, VerificationQueueItem } from "@/types";
+import type {
+  ApprovalStatus,
+  MemberRole,
+  PaginatedParams,
+  PaginatedResult,
+  RiskLevel,
+  VerificationDetail,
+  VerificationQueueItem,
+  VettingCheck,
+  VettingDecisionRecord,
+} from "@/types";
 import { isCheckMethod, isCheckType, type NewCheck } from "@/lib/checks";
 import { backend } from "@/lib/api";
 
@@ -18,6 +28,14 @@ interface ApiListItem {
   submitted_at: string | null;
 }
 
+interface ApiCheck {
+  id: string;
+  check_type: string;
+  result: "pass" | "fail";
+  method: string;
+  checked_at: string;
+}
+
 interface ApiDetail extends ApiListItem {
   phone: string | null;
   statement: string | null;
@@ -26,7 +44,10 @@ interface ApiDetail extends ApiListItem {
   references: string | null;
   decided_at: string | null;
   decision_reason: string | null;
-  checks: { id: string; check_type: string; result: "pass" | "fail"; method: string; checked_at: string }[];
+  checks: ApiCheck[];
+  recheck_due_at: string | null;
+  recheck_reason: string | null;
+  history: { id: string; action: string; reason: string; created_at: string; admin: { full_name: string }; checks: ApiCheck[] }[];
   user: ApiApplicant & { expert_profile?: { profession?: string | null; registration_number?: string | null } | null };
 }
 
@@ -79,17 +100,29 @@ export async function fetchVerificationQueue(tab: string, params: PaginatedParam
 
 const RESULT = { pass: "passed", fail: "failed" } as const;
 
+const toCheck = (c: ApiCheck): VettingCheck => ({
+  id: c.id,
+  // An unknown value would mean the backend's list grew; show it as identity
+  // or by hand rather than break the page.
+  checkType: isCheckType(c.check_type) ? c.check_type : "identity",
+  result: RESULT[c.result],
+  method: isCheckMethod(c.method) ? c.method : "manual",
+  recordedAt: c.checked_at,
+});
+
+// The backend's audit actions, as the decisions shown in the history.
+const DECISION_OF: Record<string, VettingDecisionRecord["decision"]> = {
+  approve: "approved",
+  approve_first: "approved_first",
+  reject: "rejected",
+  needs_info: "needs_info",
+  suspend: "suspended",
+  reinstate: "reinstated",
+  recheck_confirmed: "recheck_confirmed",
+};
+
 function toDetail(a: ApiDetail): VerificationDetail {
-  const checks = a.checks.map((c) => ({
-    id: c.id,
-    // An unknown value would mean the backend's list grew; show it as identity
-    // or by hand rather than break the page, as before.
-    checkType: isCheckType(c.check_type) ? c.check_type : ("identity" as const),
-    result: RESULT[c.result],
-    method: isCheckMethod(c.method) ? c.method : ("manual" as const),
-    recordedAt: c.checked_at,
-  }));
-  const decided = ["approved", "rejected", "needs_info"].includes(a.user.approval_status) && a.decided_at;
+  const checks = a.checks.map(toCheck);
   return {
     ...toItem(a),
     phone: a.phone,
@@ -102,10 +135,22 @@ function toDetail(a: ApiDetail): VerificationDetail {
     registerNumber: a.user.expert_profile?.registration_number ?? null,
     // The backend sends each signal as one sentence.
     riskSignals: a.risk_signals.map((text, i) => ({ id: String(i), text, explanation: "" })),
-    decisions: decided
-      ? [{ id: a.id, decision: a.user.approval_status as "approved" | "rejected" | "needs_info", reason: a.decision_reason ?? "", decidedAt: a.decided_at!, checks }]
-      : [],
+    // From the audit log, so a resubmission does not wipe it (FINAL_VERIFICATION 18).
+    decisions: a.history
+      .filter((h) => DECISION_OF[h.action])
+      .map((h) => ({
+        id: h.id,
+        decision: DECISION_OF[h.action]!,
+        reason: h.reason,
+        decidedAt: h.created_at,
+        by: h.admin.full_name,
+        checks: h.checks.map(toCheck),
+      })),
     checks,
+    recheck:
+      a.user.approval_status === "approved" && a.recheck_due_at && new Date(a.recheck_due_at).getTime() <= Date.now()
+        ? { dueAt: a.recheck_due_at, reason: a.recheck_reason ?? "Yearly re-check" }
+        : null,
   };
 }
 

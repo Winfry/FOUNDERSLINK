@@ -1,5 +1,6 @@
-import type { RecheckListItem } from "@/types";
-import { addRecheckAudit, listRechecks } from "./admin-mock-store";
+import type { RecheckListItem, VerificationDetail } from "@/types";
+import { decideRecheck as decideRecheckMock, listRechecks } from "./admin-mock-store";
+import { fetchVerificationDetail } from "./verification.http";
 import { live } from "@/lib/api";
 import * as http from "./rechecks.http";
 import { delay } from "./pagination";
@@ -10,10 +11,13 @@ export async function fetchRechecks(): Promise<RecheckListItem[]> {
   return listRechecks();
 }
 
-// Records the admin's answer to a re-check: keep her approved, or suspend her.
-export async function recordRecheck(id: string, memberName: string, outcome: "confirm" | "suspend", reason: string) {
-  if (live) return http.recordRecheck(id, outcome, reason);
+// Records the admin's answer to a re-check (keep her approved, or suspend
+// her) and returns the application as it now stands.
+export async function decideRecheck(id: string, outcome: "confirm" | "suspend", reason: string): Promise<VerificationDetail | null> {
+  if (live) {
+    await http.recordRecheck(id, outcome, reason);
+    return fetchVerificationDetail(id);
+  }
   await delay();
-  addRecheckAudit(memberName, reason);
-  return { application_id: id, approval_status: outcome === "suspend" ? "suspended" : "approved" };
+  return decideRecheckMock(id, outcome, reason);
 }

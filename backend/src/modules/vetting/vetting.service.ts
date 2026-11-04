@@ -221,7 +221,40 @@ export async function getApplicationForReview(applicationId: string) {
       })
     : null;
 
-  return { ...application, claims_funder: claims, documents: await listDocuments(application.id) };
+  return {
+    ...application,
+    claims_funder: claims,
+    documents: await listDocuments(application.id),
+    history: await decisionHistory(application.user_id, application.checks),
+  };
+}
+
+// Every decision ever made about her, newest first, from the audit log.
+// The application itself keeps only the latest decision, and loses it when
+// she resubmits, so the history is read from here (FINAL_VERIFICATION 18).
+export const HISTORY_ACTIONS = ["approve_first", "approve", "reject", "needs_info", "suspend", "reinstate", "recheck_confirmed"];
+
+// A decision's checks are written in the same transaction, by the same
+// admin, so they carry the same moment; a few seconds allows for a clock
+// read on each side.
+const SAME_DECISION_MS = 5_000;
+
+async function decisionHistory(userId: string, checks: { checked_by: string; checked_at: Date }[]) {
+  const actions = await prisma.adminAction.findMany({
+    where: { target_user_id: userId, action: { in: HISTORY_ACTIONS } },
+    orderBy: { created_at: "desc" },
+    include: { admin: { select: { id: true, full_name: true } } },
+  });
+  return actions.map((a) => ({
+    id: a.id,
+    action: a.action,
+    reason: a.reason,
+    created_at: a.created_at,
+    admin: a.admin,
+    checks: checks.filter(
+      (c) => c.checked_by === a.admin_id && Math.abs(c.checked_at.getTime() - a.created_at.getTime()) <= SAME_DECISION_MS,
+    ),
+  }));
 }
 
 const STATUS_AFTER = { approve: "approved", reject: "rejected", needs_info: "needs_info" } as const;

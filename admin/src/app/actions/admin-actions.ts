@@ -2,28 +2,58 @@
 
 import { revalidatePath } from "next/cache";
 import type { NewCheck } from "@/lib/checks";
-import { addRecheckAudit } from "@/services/admin-mock-store";
 import { confirmDocument, rejectDocument } from "@/services/deal-reviews.service";
 import { reviewComplianceSource } from "@/services/compliance-sources.service";
 import { exportMembersCsv, reinstateMemberAction, suspendMemberAction } from "@/services/members.service";
-import type { MemberRole } from "@/types";
+import type { MemberRole, VerificationDetail } from "@/types";
+import { ApiError } from "@/lib/api";
 import { actOnMemberReport, actOnMessageReport } from "@/services/reports.service";
 import { decideVerification } from "@/services/verification.service";
-import { recordRecheck } from "@/services/rechecks.service";
+import { decideRecheck } from "@/services/rechecks.service";
 import { changePassword, enableTwoFactor } from "@/services/settings.service";
+
+// What a decision on the verification page comes back with. A thrown
+// error loses its message on the way out of a server action, so the
+// backend's own reason is returned instead (FINAL_VERIFICATION 18: a
+// refusal used to read "the server did not answer").
+export type DecisionResult = { ok: true; detail: VerificationDetail } | { ok: false; message: string };
+
+async function decided(run: () => Promise<VerificationDetail | null>): Promise<DecisionResult> {
+  try {
+    const detail = await run();
+    return detail
+      ? { ok: true, detail }
+      : { ok: false, message: "The decision may have been saved, but the page could not load it again. Refresh the page to check." };
+  } catch (e) {
+    if (e instanceof ApiError) return { ok: false, message: `Not saved: ${e.message}.` };
+    return { ok: false, message: "Not saved: the FoundersLink server did not answer. Try again." };
+  }
+}
+
+function refreshVerificationPages(id: string) {
+  revalidatePath("/verification");
+  revalidatePath(`/verification/${id}`);
+  revalidatePath("/rechecks");
+  revalidatePath("/overview");
+  revalidatePath("/audit-log");
+  revalidatePath("/members");
+}
 
 export async function verificationDecisionAction(
   id: string,
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
   checks: NewCheck[],
-) {
-  const result = await decideVerification(id, decision, reason, checks);
-  revalidatePath("/verification");
-  revalidatePath(`/verification/${id}`);
-  revalidatePath("/overview");
-  revalidatePath("/audit-log");
-  revalidatePath("/members");
+): Promise<DecisionResult> {
+  const result = await decided(() => decideVerification(id, decision, reason, checks));
+  refreshVerificationPages(id);
+  return result;
+}
+
+// A re-check of an approved member: keep her approved for another year, or suspend her.
+export async function recheckDecisionAction(id: string, outcome: "confirm" | "suspend", reason: string): Promise<DecisionResult> {
+  const result = await decided(() => decideRecheck(id, outcome, reason));
+  refreshVerificationPages(id);
   return result;
 }
 
@@ -89,20 +119,6 @@ export async function complianceReviewAction(id: string, note: string) {
   const result = await reviewComplianceSource(id, note);
   revalidatePath("/compliance-sources");
   revalidatePath("/audit-log");
-  return result;
-}
-
-export async function recheckRecordedAction(memberName: string, reason: string) {
-  addRecheckAudit(memberName, reason);
-  revalidatePath("/audit-log");
-  revalidatePath("/rechecks");
-}
-
-export async function recheckDecisionAction(id: string, memberName: string, outcome: "confirm" | "suspend", reason: string) {
-  const result = await recordRecheck(id, memberName, outcome, reason);
-  revalidatePath("/audit-log");
-  revalidatePath("/rechecks");
-  revalidatePath("/members");
   return result;
 }
 

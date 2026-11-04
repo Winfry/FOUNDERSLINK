@@ -91,6 +91,7 @@ const members: StoredMember[] = [
       ],
     },
     verification: {
+      recheck: null,
       id: "vet-u-amina",
       memberId: "u-amina",
       fullName: "Amina Wanjiru",
@@ -155,6 +156,7 @@ const members: StoredMember[] = [
       ],
     },
     verification: {
+      recheck: null,
       id: "vet-u-fake-inv",
       memberId: "u-fake-inv",
       fullName: "Daniel Omondi",
@@ -221,6 +223,7 @@ const members: StoredMember[] = [
       ],
     },
     verification: {
+      recheck: null,
       id: "vet-inv-savanna",
       memberId: "inv-savanna",
       fullName: "Savanna Angels",
@@ -243,6 +246,7 @@ const members: StoredMember[] = [
           decision: "approved",
           reason: "Organisation website and references checked; fits investor verification requirements.",
           decidedAt: "2025-11-05T12:00:00.000Z",
+          by: "Demo Admin",
           checks: [
             {
               id: "chk-s1",
@@ -297,6 +301,7 @@ const members: StoredMember[] = [
       timeline: [{ id: "tl-e1", title: "Verification approved", at: "2025-12-18T10:00:00.000Z" }],
     },
     verification: {
+      recheck: null,
       id: "vet-u-expert",
       memberId: "u-expert",
       fullName: "Faith Akinyi",
@@ -319,6 +324,7 @@ const members: StoredMember[] = [
           decision: "approved",
           reason: "LSK register number verified manually.",
           decidedAt: "2025-12-18T10:00:00.000Z",
+          by: "Demo Admin",
         },
       ],
       checks: [
@@ -366,6 +372,7 @@ const members: StoredMember[] = [
       ],
     },
     verification: {
+      recheck: null,
       id: "vet-u-info",
       memberId: "u-info",
       fullName: "Peter Kamau",
@@ -394,6 +401,7 @@ const members: StoredMember[] = [
           decision: "needs_info",
           reason: "Please clarify your business registration status and resubmit.",
           decidedAt: "2026-01-25T11:00:00.000Z",
+          by: "Demo Admin",
         },
       ],
       checks: [],
@@ -630,7 +638,29 @@ export function listVerificationQueue(tab: string): VerificationQueueItem[] {
 
 export function getVerificationDetail(id: string): VerificationDetail | null {
   const m = members.find((x) => x.verification.id === id);
-  return m ? { ...m.verification } : null;
+  if (!m) return null;
+  const due = m.verification.approvalStatus === "approved" ? rechecks.find((r) => r.memberId === m.list.id) : undefined;
+  return { ...m.verification, recheck: due ? { dueAt: due.lastCheckedAt, reason: due.dueReason } : null };
+}
+
+// A re-check decided in the mock: she stays approved, or is suspended.
+export function decideRecheck(id: string, outcome: "confirm" | "suspend", reason: string) {
+  const m = members.find((x) => x.verification.id === id);
+  if (!m) return null;
+  const at = rechecks.findIndex((r) => r.memberId === m.list.id);
+  if (at >= 0) rechecks.splice(at, 1);
+  const record: VettingDecisionRecord = {
+    id: `dec-${Date.now()}`,
+    decision: outcome === "confirm" ? "recheck_confirmed" : "suspended",
+    reason,
+    decidedAt: new Date().toISOString(),
+    by: "Demo Admin",
+  };
+  m.verification.decisions = [record, ...m.verification.decisions];
+  if (outcome === "suspend") m.verification.approvalStatus = "suspended";
+  syncMemberFromVerification(m.verification);
+  pushAudit(outcome === "confirm" ? "Re-check confirmed" : "Suspended after re-check", m.list.fullName, reason);
+  return getVerificationDetail(id);
 }
 
 export function submitVerificationDecision(
@@ -653,6 +683,7 @@ export function submitVerificationDecision(
     decision,
     reason,
     decidedAt: now,
+    by: "Demo Admin",
     checks: newChecks,
   };
   m.verification.approvalStatus = statusMap[decision];
@@ -826,6 +857,3 @@ export function listAuditLog(): AuditEntry[] {
   return [...auditLog];
 }
 
-export function addRecheckAudit(memberName: string, reason: string) {
-  pushAudit("Re-check recorded", memberName, reason);
-}
