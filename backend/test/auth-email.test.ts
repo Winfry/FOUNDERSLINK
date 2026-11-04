@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
+import { confirmPhone, runPhone } from "./phone.js";
 import { app } from "../src/app.js";
 import { prisma } from "../src/shared/db.js";
 
@@ -70,7 +71,13 @@ test("a wrong code is refused, the right one verifies, and it works once", async
   // Used up: there is no code waiting any more.
   assert.equal((await call("POST", "/auth/email/verify", { code }, token)).json.error.code, "CODE_EXPIRED");
   assert.equal((await call("POST", "/auth/email/code", undefined, token)).json.error.code, "ALREADY_VERIFIED");
-  assert.equal((await call("POST", "/vetting/application/submit", undefined, token)).status, 200);
+  // FINAL_VERIFICATION 20: a phone typed on the form is not enough; it must be confirmed by code.
+  assert.equal((await call("POST", "/vetting/application/submit", undefined, token)).json.error.code, "PHONE_NOT_VERIFIED");
+  const confirmed = await confirmPhone(base, token, runPhone(run, 9));
+  const submitted = await call("POST", "/vetting/application/submit", undefined, token);
+  assert.equal(submitted.status, 200);
+  // The application carries the confirmed number, not the one typed on the form.
+  assert.equal(submitted.json.application.phone, confirmed);
 });
 
 test("asking to reset a password gives the same answer for any address", async () => {

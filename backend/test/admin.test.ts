@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
+import { confirmPhone, runPhone } from "./phone.js";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
 import { prisma } from "../src/shared/db.js";
@@ -92,7 +93,8 @@ test("the member list can be searched and filtered, and comes a page at a time",
 });
 
 test("a member's page shows her profile and her history in order", async () => {
-  await call("PATCH", "/vetting/application", "amina", { phone: "0712000077", statement: "I run a clinic booking app in Nairobi." });
+  await confirmPhone(base, tokens.amina!, runPhone(run, 7));
+  await call("PATCH", "/vetting/application", "amina", { statement: "I run a clinic booking app in Nairobi." });
   const submitted = await call("POST", "/vetting/application/submit", "amina");
   await call("POST", `/admin/vetting/${submitted.json.application.id}/decision`, "admin", {
     decision: "approve",

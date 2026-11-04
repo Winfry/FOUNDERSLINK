@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
+import { confirmPhone, runPhone } from "./phone.js";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
 import { prisma } from "../src/shared/db.js";
@@ -51,7 +52,9 @@ async function signUp(who: keyof typeof emails, role: string, full_name: string)
   return res;
 }
 
-async function apply(who: string, application: object) {
+// Her phone is confirmed by code first, as the app does; submitting needs it.
+async function apply(who: string, phone: string, application: object) {
+  await confirmPhone(base, tokens[who]!, phone);
   assert.equal((await call("PATCH", "/vetting/application", who, application)).status, 200);
   const res = await call("POST", "/vetting/application/submit", who);
   assert.equal(res.status, 200);
@@ -170,30 +173,30 @@ test("applications are scored for risk when submitted, and lock after that", asy
   const incomplete = await call("POST", "/vetting/application/submit", "founder");
   assert.equal(incomplete.status, 400);
 
-  const founder = await apply("founder", {
-    phone: "0712000001",
+  const founder = await apply("founder", runPhone(run, 1), {
     statement: "I run Afya Booking and want to meet health investors.",
   });
   assert.equal(founder.risk_level, "low");
 
-  const investor = await apply("investor", {
-    phone: "0712000002",
+  const investor = await apply("investor", runPhone(run, 2), {
     organisation_name: "Test Health Angels",
     organisation_website: "https://example.com",
     statement: "Partner at Test Health Angels. We have invested in four clinics.",
   });
   assert.equal(investor.risk_level, "low");
 
-  // The same number as the investor's, typed the other way.
-  const fake = await apply("fake", {
-    phone: "+254712000002",
+  // The investor's number, typed the other way, cannot be put on a second
+  // account, so it can never be confirmed and sent with an application.
+  const taken = await call("PATCH", "/me", "fake", { phone: `+254${runPhone(run, 2).slice(1)}` });
+  assert.equal(taken.json.error.code, "PHONE_TAKEN");
+
+  const fake = await apply("fake", runPhone(run, 3), {
     organisation_name: "Quick Capital",
     statement: "Guaranteed funding for every founder. Pay a small processing fee to start.",
   });
   assert.equal(fake.risk_level, "high");
   assert.ok(fake.risk_signals.includes("Uses a disposable email address"));
   assert.ok(fake.risk_signals.includes("Mentions a fee that people must pay"));
-  assert.ok(fake.risk_signals.includes("The same phone number is used on another account"));
 
   const edit = await call("PATCH", "/vetting/application", "founder", { statement: "Changed after submitting it." });
   assert.equal(edit.status, 409);
@@ -334,8 +337,7 @@ test("an investor can ask to take over a public record, and gets it on approval"
   await call("PUT", "/me/investor-profile", "claimer", { organisation_name: "Rift Growth Fund" });
   const record = await prisma.funder.findUniqueOrThrow({ where: { name: "Rift Growth Fund (demo)" } });
 
-  await apply("claimer", {
-    phone: "0712000009",
+  await apply("claimer", runPhone(run, 9), {
     organisation_name: "Rift Growth Fund",
     organisation_website: "https://example.org",
     statement: "I am an associate at Rift Growth Fund and keep our listing up to date.",

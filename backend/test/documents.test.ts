@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { after, before, test } from "node:test";
+import { confirmPhone, runPhone } from "./phone.js";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
 import { purgeExpired } from "../src/modules/vetting/documents.js";
@@ -136,7 +137,8 @@ test("an admin marks a document verified, or rejected with a reason", async () =
 });
 
 test("once she submits, her documents are locked", async () => {
-  await call("PATCH", "/vetting/application", "amina", { phone: `07${String(run).slice(-7)}5`, statement: "I run a clinic booking app in Nairobi." });
+  await confirmPhone(base, tokens.amina!, runPhone(run, 5));
+  await call("PATCH", "/vetting/application", "amina", { statement: "I run a clinic booking app in Nairobi." });
   assert.equal((await call("POST", "/vetting/application/submit", "amina")).status, 200);
 
   assert.equal((await upload("amina", pdf, "late.pdf", "application/pdf")).json.error.code, "APPLICATION_LOCKED");

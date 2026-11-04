@@ -110,6 +110,13 @@ export default function VerifyToConnectScreen() {
       await vettingService.submit();
       router.replace('/founder/verify/status');
     } catch (e) {
+      // Her number is no longer confirmed (she changed it in Settings, say):
+      // back to the phone step, with her statement kept.
+      if ((e as { code?: string })?.code === 'PHONE_NOT_VERIFIED') {
+        setStep('phone');
+        setError('Confirm your phone number with a code first. Your statement is kept.');
+        return;
+      }
       setError(messageOf(e, 'We could not submit your details. Check your connection and try again.'));
     } finally {
       setLoading(false);

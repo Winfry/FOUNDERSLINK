@@ -59,7 +59,7 @@ Ordered by how much they hurt. **Updated at 08:50:** the first ten, and number 2
 | 17 | **"Replace" on a deal document adds a duplicate** instead of replacing; the rejected row stays with "share a corrected copy". | Q3-16 | Mobile | S | Open |
 | 18 | **Decision history is lost on resubmission,** and a re-check cannot be decided: the page refuses with a false "server did not answer". | Q5-13, Q5-01 | Admin | M | Open |
 | 19 | **Deal document decisions are not in the audit log,** though the dashboard says every decision is recorded. The log also has no "who" column. | Q5-02, Q5-03, Q3-12 | Backend + Admin | M | Open |
-| 20 | **Vetting can be submitted without the phone being confirmed by code.** The phone typed on the application and the account's phone are two separate fields. | Q5-15, Q4-36, Q3-28 | Backend | S | Open |
+| 20 | **Vetting can be submitted without the phone being confirmed by code.** The phone typed on the application and the account's phone are two separate fields. | Q5-15, Q4-36, Q3-28 | Backend | S | **Fixed** (checked by tests on the backend; the app typechecks) |
 | 21 | **Changing a consent means redoing onboarding from blank.** The link reopens the form with nothing filled in. | Q1-05 | Mobile | M | Open |
 | 22 | The phone field refuses `07…` numbers and insists on `+254`. | Q1-13 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
 | 23 | An amount of 0 is accepted on a join request; a repeated request shows the backend's sentence twice. | Q2-19 | Mobile | S | Open |

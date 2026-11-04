@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
+import { confirmPhone, runPhone } from "./phone.js";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
 import { vettingRules } from "../src/modules/vetting/vetting.service.js";
@@ -39,8 +40,8 @@ async function call(method: string, path: string, who?: Who, body?: unknown) {
 }
 
 async function apply(who: Who, n: number) {
+  await confirmPhone(base, tokens[who]!, runPhone(run, n));
   await call("PATCH", "/vetting/application", who, {
-    phone: `07${String(run).slice(-7)}${n}`,
     organisation_name: "Health Angels",
     organisation_website: "https://example.com",
     statement: "I invest in early health startups on behalf of Health Angels.",

@@ -129,12 +129,19 @@ export async function submitApplication(userId: string) {
     throw conflict("EMAIL_NOT_VERIFIED", "Verify your email address before submitting your application");
   }
   const application = user.vetting_application;
-  if (!application?.statement || !application.phone) {
-    throw new AppError(400, "APPLICATION_INCOMPLETE", "Add your phone number and a short statement before submitting");
+  if (!application?.statement) {
+    throw new AppError(400, "APPLICATION_INCOMPLETE", "Add a short statement before submitting");
   }
   if (user.role === "investor" && !application.organisation_name) {
     throw new AppError(400, "APPLICATION_INCOMPLETE", "Investors must say which organisation they invest for");
   }
+  // The phone on the application is the one she proved is hers with a
+  // code, not one typed on the form (TEAM_DECISIONS D12 level 1;
+  // FINAL_VERIFICATION 20). Whatever the form said is replaced by it.
+  if (!user.phone || !user.phone_verified_at) {
+    throw conflict("PHONE_NOT_VERIFIED", "Confirm your phone number with the code we send to it before submitting");
+  }
+  const phone = user.phone;
 
   const ai = await vettingRiskSignals({
     role: user.role,
@@ -149,7 +156,7 @@ export async function submitApplication(userId: string) {
   let level = ai.risk_level;
   const signals = [...ai.signals];
   const samePhone = await prisma.vettingApplication.count({
-    where: { phone: application.phone, user_id: { not: userId } },
+    where: { phone, user_id: { not: userId } },
   });
   if (samePhone > 0) {
     signals.push("The same phone number is used on another account");
@@ -159,7 +166,7 @@ export async function submitApplication(userId: string) {
   const [saved] = await prisma.$transaction([
     prisma.vettingApplication.update({
       where: { id: application.id },
-      data: { risk_level: level, risk_signals: signals, submitted_at: new Date() },
+      data: { phone, risk_level: level, risk_signals: signals, submitted_at: new Date() },
     }),
     prisma.user.update({ where: { id: userId }, data: { approval_status: "submitted" } }),
   ]);
