@@ -58,6 +58,25 @@ PAY_CHANNEL = re.compile(
 )
 HAS_NUMBER = re.compile(r"\[phone removed\]|\b\d{5,}\b")
 PAY_VERB = re.compile(r"\b(?:pay|send|deposit|transfer|tuma|lipa|lipia|weka|nitumie)\b")
+# Paying "to secure your slot": what a scam says the payment is for.
+PAY_PURPOSE = re.compile(r"\b(?:to|ili)\s+(?:secure|reserve|activate|unlock|confirm|book)\b")
+
+# An amount of money: "5000", "5,000", "KSh 500", "5k", "200 bob", "10 elfu".
+AMOUNT = (
+    r"(?:(?:ksh?s?|kes|sh)\.?\s*\d[\d,]*(?:\.\d+)?|\d{1,3}(?:,\d{3})+|\d{3,}"
+    r"|\d+(?:\.\d+)?\s*k\b|\d+\s*(?:bob|elfu))"
+)
+AMOUNT_RE = re.compile(rf"\b{AMOUNT}")
+MONEY_WORD = re.compile(r"\b(?:money|cash|funds|pesa|hela|m-pesa|till|pay\s?bill|pochi)\b")
+# "Send me 5000", "nitumie 5000" ("send me" in Swahili): an amount asked for
+# by the person writing (FINAL_VERIFICATION 14 missed this).
+ASK_AMOUNT = re.compile(rf"\b(?:send|transfer|wire)\s+(?:me|us)\s+{AMOUNT}|\bnitumie\s+{AMOUNT}")
+# Money sent to the writer's own number or account, not a chama's or a
+# company's: "to my number", "to my M-Pesa", "kwa namba yangu".
+TO_SELF = re.compile(
+    r"\b(?:to|on|into|kwa|via)\s+my\s+(?:m-pesa|number|phone|line|till|pay\s?bill|account|pochi)\b"
+    r"|\b(?:namba|nambari|simu|m-pesa|till|akaunti)\s+yangu\b"
+)
 
 TOO_GOOD_PATTERN = re.compile(
     r"\bguarantee(?:d|s)?\s+(?:returns?|profits?|income|funding|approval|loans?|payouts?|money)\b"
@@ -91,12 +110,17 @@ def check_message(text: str) -> dict:
     norm = re.sub(r"\bm\s?-?\s?pesa\b", "mpesa", norm).replace("mpesa", "m-pesa")
 
     fee = bool(FEE_PATTERN.search(norm))
-    asks = bool(ASK_PATTERN.search(norm))
+    # To the writer's own number, with money in the message: "send the code
+    # to my number" is not a payment.
+    to_self = bool(TO_SELF.search(norm) and PAY_VERB.search(norm) and (AMOUNT_RE.search(norm) or MONEY_WORD.search(norm)))
+    asks = bool(ASK_PATTERN.search(norm) or ASK_AMOUNT.search(norm)) or to_self
     too_good = bool(TOO_GOOD_PATTERN.search(norm))
     details = bool(PAY_CHANNEL.search(norm) and HAS_NUMBER.search(norm))
     # Payment details on their own are normal (a chama's Paybill). With a
-    # request to pay they are what a scam needs.
-    details_with_request = details and (fee or asks or bool(PAY_VERB.search(norm)))
+    # request to pay they are what a scam needs. Her own number is a payment
+    # detail too: the one a scam most often gives.
+    paying = fee or asks or bool(PAY_VERB.search(norm) or PAY_PURPOSE.search(norm))
+    details_with_request = (details and paying) or to_self
 
     flagged = fee or asks or too_good or details_with_request
     if not flagged:

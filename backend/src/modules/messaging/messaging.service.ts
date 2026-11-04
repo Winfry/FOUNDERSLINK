@@ -228,7 +228,14 @@ export async function sendMessage(userId: string, conversationId: string, body: 
     if (blocked) throw new AppError(403, "BLOCKED", "You cannot message this member");
   }
 
-  const check = await checkMessage(body);
+  // In a chama's own chat, paying into the chama's registered Paybill or
+  // Till is ordinary ("Contributions are due, Paybill 522533"), so that
+  // number is not read as payment details. Any other number still is
+  // (FINAL_VERIFICATION 14).
+  const ownNumber = conversation.circle_id
+    ? (await prisma.circle.findUnique({ where: { id: conversation.circle_id }, select: { paybill_number: true } }))?.paybill_number
+    : null;
+  const check = await checkMessage(body, ownNumber ? [ownNumber] : []);
   const message = await prisma.message.create({
     data: { conversation_id: conversationId, sender_id: userId, body, flagged: check.flagged, flag_reasons: check.reasons },
     include: { sender },

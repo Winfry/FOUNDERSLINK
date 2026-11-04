@@ -22,6 +22,12 @@ DATASET = Path(__file__).resolve().parents[1] / "evaluation" / "datasets" / "sca
     ("Tuma ada ya usajili kwa M-Pesa [phone removed] haraka.", [FEE, ASKS_MONEY, PAYMENT_DETAILS]),
     ("Lipa ada ya maombi leo tu.", [FEE, ASKS_MONEY, PRESSURE]),
     ("Tuma doo ya processing fee", [FEE, ASKS_MONEY]),
+    # FINAL_VERIFICATION 14: an amount, asked for, to her own number.
+    ("Please send me 5000 by M-Pesa to my number urgently", [ASKS_MONEY, PAYMENT_DETAILS, PRESSURE]),
+    ("Send me 5k", [ASKS_MONEY]),
+    ("Nitumie 2000 kwa namba yangu", [ASKS_MONEY, PAYMENT_DETAILS]),
+    ("Transfer the money to my M-Pesa", [ASKS_MONEY, PAYMENT_DETAILS]),
+    ("Use M-Pesa paybill 522533 to secure your slot", [PAYMENT_DETAILS]),
 ])
 def test_flags_money_requests_with_reasons(text, reasons):
     assert check_message(text) == {"flagged": True, "reasons": reasons}
@@ -33,6 +39,11 @@ def test_flags_money_requests_with_reasons(text, reasons):
     "The grant is paid straight to your company's bank account.",
     "Wait till Friday, I will confirm the terms.",
     "Please send me your pitch deck.",
+    # FINAL_VERIFICATION 14: a chama's contribution reminder is not a scam.
+    "Contributions are due, Paybill 522533",
+    "Please send the verification code to my number.",
+    "Send me 3 slides on your traction.",
+    "Our revenue grew to 5000 customers on my account of it.",
     "Urgent: can we move the meeting to 3pm?",
     "",
     "   ",

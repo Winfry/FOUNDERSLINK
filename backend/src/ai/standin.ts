@@ -296,26 +296,61 @@ export function answerCompliance(question: string, sources: AnswerSource[]): Com
   };
 }
 
-const HAS_NUMBER = /(\+?254|0)[17]\d{8}|\b\d{5,7}\b/;
-
 // The scam guard on messages: does this look like a request for money?
 // A flag adds a warning for the people receiving the message. It never
-// blocks the message, because a real investor may also discuss payments.
+// blocks the message, because real investors and chamas also talk about
+// money. The same rules as the AI service's
+// (ai/moderation/payment_request_detector.py), so a warning does not
+// depend on which one answered; only its Sheng reading is left out.
+
+const FEE =
+  /\b(?:processing|registration|facilitation|commitment|clearance|application|approval|administration|admin|activation|release|transfer|verification|onboarding|joining|membership|unlocking|disbursement)\s+fees?\b|\bfees?\s+(?:of|for)\s+(?:processing|registration|approval|release|disbursement)\b|\bada\s+ya\s+(?:usajili|kujiandikisha|maombi|uthibitisho|kuidhinisha|huduma|kutoa)\b|\bmalipo\s+ya\s+(?:awali|usajili|kwanza)\b/;
+const ASK =
+  /\bsend\s+(?:me|us|it|him|her)?\s*(?:the|some|your|a)?\s*(?:money|cash|funds|payment|amount|fee)\b|\btransfer\s+(?:the\s+|some\s+|your\s+)?(?:money|cash|funds|amount|fee)\b|\bpay\s+(?:the|a|your|this|that)?\s*(?:fee|amount|deposit|money|charges?|balance)\b|\b(?:make|pay)\s+(?:a\s+|the\s+)?deposit\b|\btop[\s-]?up\b|\btuma\s+(?:pesa|hela|kiasi|ada|malipo)\b|\bnitumie\s+(?:pesa|hela|kiasi|ada)\b|\b(?:lipa|lipia)\s+(?:ada|pesa|kiasi|malipo)\b|\bweka\s+pesa\b/;
+// An amount: "5000", "5,000", "KSh 500", "5k", "200 bob", "10 elfu".
+const AMOUNT = String.raw`(?:(?:ksh?s?|kes|sh)\.?\s*\d[\d,]*(?:\.\d+)?|\d{1,3}(?:,\d{3})+|\d{3,}|\d+(?:\.\d+)?\s*k\b|\d+\s*(?:bob|elfu))`;
+const HAS_AMOUNT = new RegExp(String.raw`\b${AMOUNT}`);
+// "Send me 5000", "nitumie 5000": an amount asked for by the writer.
+const ASK_AMOUNT = new RegExp(String.raw`\b(?:send|transfer|wire)\s+(?:me|us)\s+${AMOUNT}|\bnitumie\s+${AMOUNT}`);
+const MONEY_WORD = /\b(?:money|cash|funds|pesa|hela|m-pesa|till|pay\s?bill|pochi)\b/;
+// To the writer's own number or account: "to my number", "kwa namba yangu".
+const TO_SELF =
+  /\b(?:to|on|into|kwa|via)\s+my\s+(?:m-pesa|number|phone|line|till|pay\s?bill|account|pochi)\b|\b(?:namba|nambari|simu|m-pesa|till|akaunti)\s+yangu\b/;
+const PAY_CHANNEL = /\bm-pesa\b|\bpay\s?bill\b|\btill\b|\bbuy\s+goods\b|\bpochi\b|\baccount\s+(?:number|no\.?)|\bacc\.?\s+no\b|\bbank\s+account\b/;
+// A phone number or a Paybill, Till or account number.
+const HAS_NUMBER = /(?:\+?254|\b0)[17]\d{8}\b|\b\d{5,}\b/;
+const PAY_VERB = /\b(?:pay|send|deposit|transfer|tuma|lipa|lipia|weka|nitumie)\b/;
+const PAY_PURPOSE = /\b(?:to|ili)\s+(?:secure|reserve|activate|unlock|confirm|book)\b/;
+const TOO_GOOD =
+  /\bguarantee(?:d|s)?\s+(?:returns?|profits?|income|funding|approval|loans?|payouts?|money)\b|\b(?:returns?|profits?|funding|approval)\s+(?:is|are)\s+guaranteed\b|\bdouble\s+your\s+(?:money|investment|capital|cash)\b|\b100\s?%\s+(?:guaranteed|approval|returns?|profit|funding)\b|\brisk[\s-]free\s+(?:returns?|investment|profits?)\b|\bfaida\s+ya\s+uhakika\b/;
+const PRESSURE =
+  /\btoday\s+only\b|\bwithin\s+\d+\s*(?:hours?|hrs?|minutes?|mins?)\b|\bbefore\s+(?:midnight|tonight|it\s+expires)\b|\b(?:act|pay|send|reply)\s+(?:now|immediately|urgently|asap)\b|\burgent(?:ly)?\b|\blimited\s+(?:slots?|spaces?|time|offer)\b|\blast\s+chance\b|\bharaka\b|\bleo\s+tu\b|\bsasa\s+hivi\b/;
+const SECRECY = /\b(?:don'?t|do\s+not)\s+tell\b|\bkeep\s+(?:this|it)\s+(?:between\s+us|private|secret|confidential)\b|\busimwambie\b|\bsiri\s+yetu\b|\bkati\s+yetu\b/;
+
 export function checkMessage(text: string): ModerationResult {
+  const norm = text.toLowerCase().replace(/\bm\s?-?\s?pesa\b/g, "m-pesa");
+  if (!norm.trim()) return { flagged: false, reasons: [] };
+
+  const fee = FEE.test(norm);
+  // Her own number with money in the message; "send the code to my number" is not a payment.
+  const toSelf = TO_SELF.test(norm) && PAY_VERB.test(norm) && (HAS_AMOUNT.test(norm) || MONEY_WORD.test(norm));
+  const asks = ASK.test(norm) || ASK_AMOUNT.test(norm) || toSelf;
+  const tooGood = TOO_GOOD.test(norm);
+  // Payment details on their own are ordinary (a chama's Paybill); with a
+  // request to pay they are what a scam needs.
+  const paying = fee || asks || PAY_VERB.test(norm) || PAY_PURPOSE.test(norm);
+  const details = (PAY_CHANNEL.test(norm) && HAS_NUMBER.test(norm) && paying) || toSelf;
+  if (!fee && !asks && !tooGood && !details) return { flagged: false, reasons: [] };
+
   const reasons: string[] = [];
-
-  if (/(processing|registration|facilitation|upfront|application|commitment) fees?/i.test(text)) {
-    reasons.push("Mentions a fee to be paid");
-  }
-  if (/send (me |us )?(the |some |your )?money|tuma (pesa|hela)/i.test(text)) {
-    reasons.push("Asks for money to be sent");
-  }
-  // Naming M-Pesa is ordinary. Naming it next to a number to pay is not.
-  if (/m-?pesa|paybill|till (number|no)|pochi/i.test(text) && HAS_NUMBER.test(text)) {
-    reasons.push("Gives payment details to pay into");
-  }
-
-  return { flagged: reasons.length > 0, reasons };
+  if (fee) reasons.push("Mentions a fee to be paid");
+  if (asks) reasons.push("Asks for money to be sent");
+  if (details) reasons.push("Gives payment details to pay into");
+  if (tooGood) reasons.push("Promises guaranteed returns or funding");
+  // Pressure and secrecy are worth saying only about a money request.
+  if (PRESSURE.test(norm)) reasons.push("Pushes you to act quickly");
+  if (SECRECY.test(norm)) reasons.push("Asks you to keep it secret");
+  return { flagged: true, reasons: reasons.slice(0, 3) };
 }
 
 // The due-diligence pack without the AI: the same facts, sorted into

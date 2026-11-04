@@ -206,10 +206,22 @@ const moderationSchema = z.object({ flagged: z.boolean(), reasons: z.array(z.str
 // The AI service gets the message with contact details replaced by
 // placeholders. The stand-in runs inside the backend, so it reads the
 // original text.
-export async function checkMessage(text: string): Promise<ModerationResult & { engine: Engine }> {
-  const answer = await post("/moderation/check-message", { text: redact(text) }, moderationSchema);
+// `known` are numbers that are fine to pay into here, such as a chama's
+// own Paybill in its chat. They are replaced with words before either check
+// reads the message, so they do not count as payment details; the stored
+// message is unchanged.
+export async function checkMessage(text: string, known: string[] = []): Promise<ModerationResult & { engine: Engine }> {
+  const checked = withoutKnownNumbers(text, known);
+  const answer = await post("/moderation/check-message", { text: redact(checked) }, moderationSchema);
   if (answer) return { ...answer, engine: "ai_service" };
-  return { ...standin.checkMessage(text), engine: "stand_in" };
+  return { ...standin.checkMessage(checked), engine: "stand_in" };
+}
+
+export function withoutKnownNumbers(text: string, known: string[]) {
+  return known
+    .map((n) => n.replace(/\D/g, ""))
+    .filter((digits) => digits.length >= 5)
+    .reduce((t, digits) => t.replace(new RegExp(String.raw`(?<!\d)${digits}(?!\d)`, "g"), "the chama's own number"), text);
 }
 
 // --- Level 3: documents shared in a deal (TEAM_DECISIONS D12) ---

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
 import bcrypt from "bcrypt";
+import { readFileSync } from "node:fs";
+import { withoutKnownNumbers } from "../src/ai/client.js";
 import { checkMessage } from "../src/ai/standin.js";
 import { app } from "../src/app.js";
 import { notify } from "../src/modules/notifications/notifications.service.js";
@@ -18,6 +20,38 @@ test("the scam check flags requests for money, not ordinary talk about payments"
   assert.deepEqual(checkMessage("Pay the processing fee first, then we release the funds.").reasons, ["Mentions a fee to be paid"]);
   assert.deepEqual(checkMessage("Tuma pesa kwa 0712345678 leo").reasons, ["Asks for money to be sent"]);
   assert.deepEqual(checkMessage("Use M-Pesa paybill 522533 to secure your slot").reasons, ["Gives payment details to pay into"]);
+
+  // FINAL_VERIFICATION 14: an amount asked for, to her own number, is flagged...
+  assert.deepEqual(checkMessage("Please send me 5000 by M-Pesa to my number urgently").reasons, [
+    "Asks for money to be sent",
+    "Gives payment details to pay into",
+    "Pushes you to act quickly",
+  ]);
+  assert.equal(checkMessage("Nitumie 2000 kwa namba yangu").flagged, true);
+  // ...and a chama's contribution reminder is not.
+  assert.equal(checkMessage("Contributions are due, Paybill 522533").flagged, false);
+  assert.equal(checkMessage("Please send the verification code to my number.").flagged, false);
+  assert.equal(checkMessage("Send me 3 slides on your traction.").flagged, false);
+});
+
+test("in a chama's chat its own Paybill is not payment details, and any other number still is", () => {
+  const own = (text: string) => checkMessage(withoutKnownNumbers(text, ["522533"]));
+  assert.equal(own("Pay this month's contribution to Paybill 522533 by Friday").flagged, false);
+  assert.equal(own("Tuma 500 kwa paybill 522533").flagged, false);
+  // A different number in the same chat is exactly what a scammer would send.
+  assert.equal(own("The Paybill changed, pay this month's contribution to 0712345678 instead").flagged, true);
+  assert.equal(own("Pay to Paybill 5225330").flagged, true);
+});
+
+test("the backend's rules agree with the AI service's on its labelled examples", () => {
+  // The same rules on both sides, so a warning does not depend on which one answered.
+  // The backend's copy does not read Sheng, so examples that need it are left out.
+  const rows = readFileSync(new URL("../../ai/evaluation/datasets/scam_examples.jsonl", import.meta.url), "utf-8")
+    .split(/\r?\n/)
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line) as { text: string; scam: boolean; lang: string });
+  const wrong = rows.filter((r) => r.lang !== "sheng" && checkMessage(r.text).flagged !== r.scam).map((r) => r.text);
+  assert.deepEqual(wrong, []);
 });
 
 const run = Date.now();
