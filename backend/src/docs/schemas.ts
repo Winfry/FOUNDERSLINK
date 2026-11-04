@@ -23,7 +23,7 @@ export const ENGINE = described(
 );
 const COMPLIANCE_STATUS = oneOf(["not_started", "in_progress", "complete"]);
 const SEND_STATUS = oneOf(["sent", "not_configured", "failed"]);
-const DEV_CODE = described(str, "The code itself. Present only when it could not be delivered and `NODE_ENV` is not `production`, so the flow can be shown without a provider.");
+const DEV_CODE = described(str, "The code itself. Present only when it could not be delivered, `SHOW_DEMO_CODES` is on and `NODE_ENV` is not `production`, so the demo can be shown without a provider.");
 
 export const person = obj({ id: uuid, full_name: str });
 const personWithRole = obj({ id: uuid, full_name: str, role: ROLE });

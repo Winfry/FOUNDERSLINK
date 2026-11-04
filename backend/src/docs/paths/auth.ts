@@ -18,7 +18,7 @@ export const ops: Op[] = [
     path: "/auth/register",
     summary: "Create an account",
     description:
-      "Creates a founder, investor or expert account and signs it in. `admin` cannot be chosen here. The account starts with `approval_status: \"draft\"`.\n\nA six-digit code is emailed to prove the address. Email goes through Resend; until a sending domain is verified there, it reaches only the address that owns the Resend account. When the email cannot be sent, `email_verification.dev_code` carries the code outside production.",
+      "Creates a founder, investor or expert account and signs it in. `admin` cannot be chosen here. The account starts with `approval_status: \"draft\"`.\n\nA six-digit code is emailed to prove the address. Email goes through Resend; until a sending domain is verified there, it reaches only the address that owns the Resend account. When the email cannot be sent and `SHOW_DEMO_CODES` is on (never in production), `email_verification.dev_code` carries the code.",
     access: "public",
     body: registerSchema,
     ok: {
@@ -100,12 +100,12 @@ export const ops: Op[] = [
     path: "/auth/password/forgot",
     summary: "Ask for a password reset code",
     description:
-      "Emails a six-digit code if the address has an account. The answer is the same whether or not it does, so it cannot be used to find out who is registered. Outside production the answer always carries a `dev_code`, so the flow can be tried without email; for an address with no account it is a made-up code that never works.",
+      "Emails a six-digit code if the address has an account. The answer is the same whether or not it does, so it cannot be used to find out who is registered. Only when `SHOW_DEMO_CODES` is on, `NODE_ENV` is not `production` and no email service is configured, the answer carries a `dev_code` so the demo can be tried without email. It is real for a member's address; for an address with no account, or an admin's, it is a made-up code that never works, so the answer does not reveal either.",
     access: "public",
     body: forgotSchema,
     ok: {
       description: "Always the same message.",
-      schema: obj({ message: str, dev_code: described(str, "Only outside production. Real for an address with an account, made up otherwise.") }, ["dev_code"]),
+      schema: obj({ message: str, dev_code: described(str, "Only for the demo (see above). Real for a member's address, made up for an unknown or admin address.") }, ["dev_code"]),
     },
   },
   {

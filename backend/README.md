@@ -17,6 +17,8 @@ npm run dev                      # http://localhost:8000
 npm test                         # API tests, against the same database
 ```
 
+To show sign-up, phone and password-reset codes on screen when no email or SMS service is set up (the demo), set `SHOW_DEMO_CODES=true` in `.env`. It is off by default and ignored in production. `docker compose` turns it on. Leave it off on any server people outside the team can reach.
+
 ## API docs
 
 With the server running, Swagger UI is at `http://localhost:8000/docs` and the raw OpenAPI 3.1 document at `/openapi.json`. Neither needs a token. They cover every HTTP endpoint; the WebSocket at `/ws` is described in the document's introduction, since OpenAPI has no way to describe it.
@@ -212,7 +214,7 @@ Nothing is agreed by default, so the onboarding screens need to ask. What each c
 | POST | `/me/phone/verify` | `{ code }` |
 | POST | `/reports` | `{ user_id, reason }`. Reports a member. Approved members only |
 
-With no SMS provider set (`SMS_PROVIDER_USERNAME` and `SMS_PROVIDER_API_KEY`), the code cannot be texted. Outside production the response then includes `dev_code` so the flow can still be shown. The sender targets Africa's Talking and has not been run against the real sandbox.
+With no SMS provider set (`SMS_PROVIDER_USERNAME` and `SMS_PROVIDER_API_KEY`), the code cannot be texted. With `SHOW_DEMO_CODES=true` (never in production) the response then includes `dev_code` so the flow can still be shown. The sender targets Africa's Talking and has not been run against the real sandbox.
 
 An accepted connection carries `contact: { email, phone, whatsapp_link }` in `GET /connections` and on the profile page, unless that member turned `share_contact` off. The phone appears only if verified.
 
@@ -414,7 +416,7 @@ A request from a member who is not approved gets `403` with code `APPROVAL_REQUI
 
 **Two-step sign-in for admins.** An admin turns it on with `POST /auth/2fa/setup` (returns a secret and an `otpauth://` link for her authenticator app) and `POST /auth/2fa/enable` with `{ code }`. After that, `POST /auth/login` answers `{ two_factor_required, pending_token }`, and `POST /auth/2fa/verify` with `{ pending_token, code }` returns the session. Set `ADMIN_2FA_REQUIRED=true` to make the admin pages refuse any session that was not signed into this way.
 
-**Email** goes through Resend, with `RESEND_API_KEY`. Until a sending domain is verified with Resend, it delivers only to the address that owns the Resend account; other addresses fail. When an email cannot be sent, the response carries `dev_code` outside production, so the flow can still be shown. `EMAIL_FROM` sets the sender.
+**Email** goes through Resend, with `RESEND_API_KEY`. Until a sending domain is verified with Resend, it delivers only to the address that owns the Resend account; other addresses fail. When an email cannot be sent and `SHOW_DEMO_CODES=true` (never in production), the response carries `dev_code`, so the flow can still be shown. "Forgot password" shows a code only while no email service is set up, and never a working one for an admin. `EMAIL_FROM` sets the sender.
 
 **Code checks answer the same way everywhere** (email, phone and two-step sign-in): `400 WRONG_CODE`, `400 CODE_EXPIRED`, `429 TOO_MANY_ATTEMPTS`. Password reset is the exception: it answers `400 WRONG_CODE` for everything, so it cannot be used to find out which addresses have accounts.
 

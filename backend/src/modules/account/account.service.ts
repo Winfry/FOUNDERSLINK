@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import { disconnect } from "../../realtime.js";
 import { prisma } from "../../shared/db.js";
-import { env } from "../../config/env.js";
+import { env, demoCodesOn } from "../../config/env.js";
 import { AppError, conflict, unauthorized } from "../../shared/errors.js";
 import { kenyanMobile } from "../../shared/phone.js";
 import { sendSms } from "../../shared/sms.js";
@@ -209,9 +209,9 @@ export async function sendPhoneCode(userId: string) {
     sms: sms.status,
     expires_in_minutes: CODE_MINUTES,
     // With no SMS provider set up, the code cannot reach her phone. So
-    // that the flow can still be shown, it is returned here, but never
-    // in production.
-    ...(sms.status !== "sent" && env.NODE_ENV !== "production" ? { dev_code: code } : {}),
+    // that the demo can still be shown, it is returned to her (she is
+    // signed in) when SHOW_DEMO_CODES is on; never in production.
+    ...(sms.status !== "sent" && demoCodesOn() ? { dev_code: code } : {}),
   };
 }
 

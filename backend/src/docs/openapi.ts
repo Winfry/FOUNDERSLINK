@@ -59,8 +59,8 @@ Every error is \`{ "error": { "code", "message" } }\`. Branch on \`code\`. A val
 Stated here once, and again on the operations concerned:
 
 - **AI.** Matching, profile extraction, the compliance checklist and answers, vetting risk signals and the message scam check call a separate AI service. When none is configured (\`AI_SERVICE_URL\`), or a call fails, times out or returns something invalid, a rule-based stand-in in \`src/ai/standin.ts\` answers instead. It is plain rules, not AI. Responses that carry an \`engine\` field say which one answered: \`ai_service\` or \`stand_in\`.
-- **SMS.** No SMS provider is configured. Phone codes and SMS notifications are not sent. Outside production, the response that would have sent a code returns it as \`dev_code\`.
-- **Email** goes through Resend and, until a sending domain is verified there, reaches only the address that owns the Resend account. Unsent email codes are also returned as \`dev_code\` outside production.
+- **SMS.** No SMS provider is configured. Phone codes and SMS notifications are not sent. With \`SHOW_DEMO_CODES\` on (never in production), the response that would have sent a code returns it as \`dev_code\`.
+- **Email** goes through Resend and, until a sending domain is verified there, reaches only the address that owns the Resend account. Unsent email codes are also returned as \`dev_code\` when \`SHOW_DEMO_CODES\` is on.
 - **M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's sandbox.
 - **Uploaded files** are stored on the server's local disk and are not encrypted.
 - **Money.** FoundersLink never holds or moves money. Circles, contributions and deal terms are records of what members say happened.

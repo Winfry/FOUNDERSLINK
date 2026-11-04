@@ -4,7 +4,7 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { env } from "../../config/env.js";
+import { demoCodesOn, env } from "../../config/env.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict } from "../../shared/errors.js";
 import { sendEmail } from "../../shared/email.js";
@@ -32,7 +32,7 @@ const TEXT: Record<Purpose, [string, (code: string) => string]> = {
   ],
 };
 
-async function issue(user: { id: string; email: string }, purpose: Purpose, options: { alwaysReturnCode?: boolean } = {}) {
+async function issue(user: { id: string; email: string }, purpose: Purpose) {
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const row = { code_hash: hash(code), expires_at: new Date(Date.now() + CODE_MINUTES * 60_000), attempts: 0 };
   await prisma.emailCode.upsert({
@@ -47,9 +47,9 @@ async function issue(user: { id: string; email: string }, purpose: Purpose, opti
     email: email.status,
     expires_in_minutes: CODE_MINUTES,
     // When the email could not be sent, the code cannot reach her. So
-    // that the flow can still be shown, it is returned here, but never
-    // in production.
-    ...((email.status !== "sent" || options.alwaysReturnCode) && env.NODE_ENV !== "production" ? { dev_code: code } : {}),
+    // that the demo can still be shown, it is returned here when
+    // SHOW_DEMO_CODES is on; never in production.
+    ...(email.status !== "sent" && demoCodesOn() ? { dev_code: code } : {}),
   };
 }
 
@@ -99,15 +99,22 @@ export async function verifyEmail(userId: string, code: string) {
 
 // The answer is the same whether or not the address has an account, so
 // it cannot be used to find out who is registered.
+//
+// Anyone can ask, without signing in, so a code shown on screen here would
+// let a stranger take over the account (FINAL_VERIFICATION 24). It is
+// shown only for the demo: SHOW_DEMO_CODES on, never in production, and
+// only while no email service is set up, so a code that can be emailed
+// goes only to the inbox. Even then a staff account never gets a real one.
 export async function forgotPassword(email: string) {
-  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true } });
-  const sent = user ? await issue(user, "reset_password", { alwaysReturnCode: true }) : null;
+  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, role: true } });
+  const sent = user ? await issue(user, "reset_password") : null;
   const message = "If that address has an account, a code has been sent to it.";
-  if (env.NODE_ENV === "production") return { message };
-  // Outside production the code is shown so the flow can be tried
-  // without email. An address with no account gets a made-up code that
-  // will never work, so the two answers still look the same.
-  return { message, dev_code: sent?.dev_code ?? String(randomInt(0, 1_000_000)).padStart(6, "0") };
+  if (!demoCodesOn() || env.RESEND_API_KEY) return { message };
+  // An address with no account, or an admin's, gets a made-up code that
+  // never works, so the answers look the same and do not say which
+  // addresses are staff.
+  const real = user && user.role !== "admin" ? sent?.dev_code : undefined;
+  return { message, dev_code: real ?? String(randomInt(0, 1_000_000)).padStart(6, "0") };
 }
 
 export async function resetPassword(input: z.infer<typeof resetSchema>) {

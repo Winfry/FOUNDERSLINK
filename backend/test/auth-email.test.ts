@@ -87,7 +87,7 @@ test("asking to reset a password gives the same answer for any address", async (
   assert.equal(known.status, 200);
   assert.equal(unknown.status, 200);
   assert.equal(known.json.message, unknown.json.message);
-  // Outside production both answers carry a code, so they look alike.
+  // In the demo both answers carry a code, so they look alike.
   // The one for an address with no account is made up and never works.
   assert.deepEqual(Object.keys(known.json).sort(), Object.keys(unknown.json).sort());
   assert.match(unknown.json.dev_code, /^\d{6}$/);
@@ -110,6 +110,47 @@ test("a new password needs the right code, and replaces the old one", async () =
   assert.equal((await call("POST", "/auth/login", { email, password: newPassword })).status, 200);
   // The code cannot be used a second time.
   assert.equal((await call("POST", "/auth/password/reset", { email, code, new_password: password })).json.error.code, "WRONG_CODE");
+});
+
+test("a staff account never gets a working reset code on screen", async () => {
+  // FINAL_VERIFICATION 24: outside production, anyone could reset the admin's password from the sign-in screen.
+  const adminEmail = `mail-admin-${run}@example.com`;
+  const hash = (await prisma.user.findUniqueOrThrow({ where: { email }, select: { password_hash: true } })).password_hash;
+  await prisma.user.create({ data: { email: adminEmail, role: "admin", full_name: "Staff Admin", password_hash: hash, approval_status: "approved" } });
+  try {
+    const asked = await call("POST", "/auth/password/forgot", { email: adminEmail });
+    // The answer looks like any other, so it does not say the address is staff...
+    assert.deepEqual(Object.keys(asked.json).sort(), ["dev_code", "message"]);
+    // ...but the code on screen does not work, and the password is unchanged.
+    const tried = await call("POST", "/auth/password/reset", { email: adminEmail, code: asked.json.dev_code, new_password: "taken-over-password" });
+    assert.equal(tried.json.error.code, "WRONG_CODE");
+    assert.equal((await prisma.user.findUniqueOrThrow({ where: { email: adminEmail } })).password_hash, hash);
+  } finally {
+    await prisma.user.deleteMany({ where: { email: adminEmail } });
+  }
+});
+
+test("codes are shown only when the demo asks for it, and a reset code only while email is not set up", async () => {
+  const { env } = await import("../src/config/env.js");
+  const saved = { show: env.SHOW_DEMO_CODES, key: env.RESEND_API_KEY, url: env.EMAIL_API_URL };
+  try {
+    env.SHOW_DEMO_CODES = false;
+    assert.equal((await call("POST", "/auth/password/forgot", { email })).json.dev_code, undefined);
+    const signup = await call("POST", "/auth/register", { email: `mail3-${run}@example.com`, password, full_name: "Third Founder" });
+    assert.equal(signup.json.email_verification.dev_code, undefined);
+
+    // With an email service set up, a reset code goes only to the inbox,
+    // even if that one email failed. (Nothing listens on port 9.)
+    env.SHOW_DEMO_CODES = true;
+    env.RESEND_API_KEY = "test-key-not-real";
+    env.EMAIL_API_URL = "http://127.0.0.1:9/emails";
+    assert.equal((await call("POST", "/auth/password/forgot", { email })).json.dev_code, undefined);
+  } finally {
+    env.SHOW_DEMO_CODES = saved.show;
+    env.RESEND_API_KEY = saved.key;
+    env.EMAIL_API_URL = saved.url;
+    await prisma.user.deleteMany({ where: { email: `mail3-${run}@example.com` } });
+  }
 });
 
 test("five wrong codes stop further tries, with the same answer the phone and 2FA checks give", async () => {

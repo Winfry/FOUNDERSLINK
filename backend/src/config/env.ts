@@ -38,6 +38,15 @@ const schema = z.object({
     .default("false")
     .transform((v) => v === "true"),
   INVESTOR_APPROVALS_REQUIRED: z.coerce.number().int().min(1).max(2).default(1),
+  // When true, a code that could not be emailed or texted is returned in
+  // the response as `dev_code`, so the demo works without providers. Off
+  // unless asked for, and never in production: on a server anyone can
+  // reach, a code on screen lets a stranger finish someone else's flow
+  // (FINAL_VERIFICATION 24).
+  SHOW_DEMO_CODES: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -49,3 +58,6 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+// Whether undeliverable codes may be shown on screen (see SHOW_DEMO_CODES).
+export const demoCodesOn = () => env.SHOW_DEMO_CODES && env.NODE_ENV !== "production";

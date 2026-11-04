@@ -47,6 +47,9 @@ services:
       AI_SERVICE_URL: http://ai:8001
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-demo-key-2026}
       DEMO_PASSWORD: ${DEMO_PASSWORD:-DemoPass2026}
+      # The demo shows codes it cannot email or text. Set to false on any
+      # server people outside the team can reach.
+      SHOW_DEMO_CODES: ${SHOW_DEMO_CODES:-true}
       CORS_ORIGIN: http://localhost:8081,http://localhost:3000
     ports:
       - "8000:8000"
