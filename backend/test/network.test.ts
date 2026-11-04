@@ -63,9 +63,9 @@ const decide = (who: string, decision: string, reason: string, checks?: object[]
   call("POST", `/admin/vetting/${applications[who]}/decision`, "admin", { decision, reason, checks });
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   // Admins cannot sign up, so this one is created the way the script does it.
   await prisma.user.create({

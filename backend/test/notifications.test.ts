@@ -41,9 +41,9 @@ const types = async (who: Who) => (await inbox(who)).notifications.map((n: any) 
 const days = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {

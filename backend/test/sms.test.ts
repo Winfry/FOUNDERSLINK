@@ -20,10 +20,10 @@ const server = createServer((req, res) => {
 let sendSms: typeof import("../src/shared/sms.js").sendSms;
 
 before(async () => {
-  server.listen(0);
+  server.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
   // Set before the module loads, because the environment is read once at import.
-  process.env.SMS_API_URL = `http://localhost:${(server.address() as AddressInfo).port}`;
+  process.env.SMS_API_URL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   process.env.SMS_PROVIDER_USERNAME = "sandbox";
   process.env.SMS_PROVIDER_API_KEY = "test-key";
   ({ sendSms } = await import("../src/shared/sms.js"));

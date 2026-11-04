@@ -125,9 +125,9 @@ const clinicApp = {
 const ids = (items: any[]) => items.map((i) => i.id).sort();
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   for (const [who, role] of [["founder", "founder"], ["other", "founder"], ["investor", "investor"]] as const) {
     const res = await call("POST", "/auth/register", undefined, { email: emails[who], password, full_name: `Test ${who}`, role });

@@ -23,13 +23,18 @@ const server = createServer((req: IncomingMessage, res) => {
 let client: typeof import("../src/ai/client.js");
 
 before(async () => {
-  server.listen(0);
+  server.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
   // Set before the client loads, because the environment is read once at import.
-  process.env.AI_SERVICE_URL = `http://localhost:${(server.address() as AddressInfo).port}`;
+  process.env.AI_SERVICE_URL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   process.env.AI_SERVICE_API_KEY = "test-key";
   client = await import("../src/ai/client.js");
   console.warn = () => {};
+  // Node loads fetch lazily, so the first request in a process can take
+  // seconds on a busy machine. Pay that here, not inside the first test,
+  // where it races the client's own timeout and fails at random.
+  reply = () => ({ json: [] });
+  await fetch(`${process.env.AI_SERVICE_URL}/warm-up`, { method: "POST", body: "{}" });
 });
 
 after(() => server.close());

@@ -20,10 +20,10 @@ const server = createServer((req, res) => {
 let sendEmail: typeof import("../src/shared/email.js").sendEmail;
 
 before(async () => {
-  server.listen(0);
+  server.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
   // Set before the module loads, because the environment is read once at import.
-  process.env.EMAIL_API_URL = `http://localhost:${(server.address() as AddressInfo).port}`;
+  process.env.EMAIL_API_URL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   process.env.RESEND_API_KEY = "re_test_key";
   ({ sendEmail } = await import("../src/shared/email.js"));
 });

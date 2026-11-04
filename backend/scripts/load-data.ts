@@ -7,6 +7,7 @@
 // repeat: items are matched by id and funders by name.
 
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
   mandateFields,
@@ -74,7 +75,8 @@ function read<T>(path: string, schema: z.ZodType<T>): T[] {
   return result.data;
 }
 
-const dataDir = new URL("../data/", import.meta.url).pathname;
+// fileURLToPath, not .pathname: on Windows .pathname gives "/C:/...", which breaks the path.
+const dataDir = fileURLToPath(new URL("../data/", import.meta.url));
 const itemsPath = process.argv[2] ?? `${dataDir}demo-compliance-items.json`;
 const fundersPath = process.argv[3] ?? `${dataDir}demo-funders.json`;
 

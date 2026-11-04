@@ -25,9 +25,9 @@ async function call(method: string, path: string, body?: unknown, auth?: string)
 }
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
 
 after(async () => {

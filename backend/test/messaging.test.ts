@@ -75,12 +75,12 @@ async function listen(token: string) {
 }
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   attachRealtime(server);
   await new Promise((resolve) => server.once("listening", resolve));
   const { port } = server.address() as AddressInfo;
-  base = `http://localhost:${port}`;
-  wsBase = `ws://localhost:${port}`;
+  base = `http://127.0.0.1:${port}`;
+  wsBase = `ws://127.0.0.1:${port}`;
 
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {

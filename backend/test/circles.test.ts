@@ -46,9 +46,9 @@ const pay = (who: Who, body: object) => call("POST", `/circles/${circle}/contrib
 const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
 before(async () => {
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {
