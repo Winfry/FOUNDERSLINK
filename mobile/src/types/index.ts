@@ -210,7 +210,7 @@ export interface Deal {
     missing: string[];
   };
   /** What this deal asks the signed-in party to share at due diligence. */
-  requiredDocuments?: { type: string; title: string; provided: boolean }[];
+  requiredDocuments?: { type: string; title: string; provided: boolean; confirmed?: boolean }[];
 }
 
 export type CircleRole = 'organiser' | 'treasurer' | 'member';

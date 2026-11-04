@@ -182,9 +182,11 @@ export default function DealScreen() {
                   <View style={styles.flex}>
                     <Text style={styles.rowTitle}>{doc.title}</Text>
                     <Text style={[styles.rowMeta, doc.provided && { color: colors.success }]}>
-                      {doc.provided ? 'Shared' : 'Not shared yet'}
+                      {doc.confirmed ? 'Confirmed by FoundersLink' : doc.provided ? 'Shared' : 'Not shared yet'}
                     </Text>
                   </View>
+                  {/* A confirmed copy stays; anything else can be replaced with a new copy. */}
+                  {doc.confirmed ? null : (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={doc.provided ? `Replace ${doc.title}` : `Upload ${doc.title}`}
@@ -193,8 +195,15 @@ export default function DealScreen() {
                       void run(
                         doc.type,
                         () => dealService.uploadDocument(deal.id, doc.type),
-                        // Closing the file picker without choosing shares nothing.
-                        (after) => (after.documents.length > deal.documents.length ? `${doc.title} shared in this deal` : null),
+                        // Closing the file picker without choosing shares nothing. A new
+                        // copy replaces the earlier one, so look for a new document,
+                        // not a longer list.
+                        (after) =>
+                          after.documents.some((d) => !deal.documents.some((before) => before.id === d.id))
+                            ? doc.provided
+                              ? `New copy of ${doc.title} shared. It replaces the earlier one.`
+                              : `${doc.title} shared in this deal`
+                            : null,
                       )
                     }
                     style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed, busy !== null && styles.dim]}
@@ -202,6 +211,7 @@ export default function DealScreen() {
                     <Upload size={16} color={colors.primary} />
                     <Text style={styles.uploadText}>{busy === doc.type ? 'Sharing' : doc.provided ? 'Replace' : 'Upload'}</Text>
                   </Pressable>
+                  )}
                 </View>
               ))}
             </Card>
@@ -245,7 +255,7 @@ export default function DealScreen() {
                         <Text style={styles.rejectedText}>
                           {note ? `Reason: ${note}` : 'FoundersLink did not accept this document.'}
                         </Text>
-                        <Text style={styles.rejectedHint}>Share a corrected copy to continue.</Text>
+                        <Text style={styles.rejectedHint}>Use Replace above to share a corrected copy.</Text>
                       </View>
                     ) : note ? (
                       <Text style={styles.rowMeta}>{note}</Text>

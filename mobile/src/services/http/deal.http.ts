@@ -29,7 +29,7 @@ interface ApiDueDiligence {
   parties: {
     user_id: string;
     full_name: string;
-    required: { type: string; title: string; provided: boolean }[];
+    required: { type: string; title: string; provided: boolean; confirmed: boolean }[];
     documents: ApiDocument[];
     verified: string[];
     self_reported: string[];

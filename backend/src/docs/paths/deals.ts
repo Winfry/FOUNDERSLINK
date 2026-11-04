@@ -80,7 +80,7 @@ const dueDiligence = obj({
       full_name: str,
       role: ROLE,
       ready: bool,
-      required: arr(obj({ type: str, title: str, provided: bool })),
+      required: arr(obj({ type: str, title: str, provided: bool, confirmed: described(bool, "FoundersLink has confirmed her copy; it can no longer be replaced.") })),
       documents: arr(dealDocument),
       verified: described(arr(str), "What FoundersLink has confirmed about her."),
       self_reported: described(arr(str), "What she says herself, including documents not yet confirmed."),
@@ -359,7 +359,7 @@ export const ops: Op[] = [
     path: "/deals/:id/documents",
     summary: "Share a document in a deal",
     description:
-      "One file per request, as `multipart/form-data`. PDF, JPEG or PNG, up to 5 MB. Allowed from `due_diligence` until the deal closes, at most 10 per party.\n\nFor `business_registration` and `kra_pin_certificate` the backend asks the AI service to read the file and compare it with her profile, and stores the answer as `precheck`. If the AI service does not answer, the document is stored with `precheck: null`. Her `document_processing` consent is sent along: without it the AI service must not pass the file to an outside model.\n\nThe file is on the server's local disk, **not encrypted**, and is deleted 30 days after the deal closes or is declined. The other parties to the deal and admins can download it. ID documents are not asked for.",
+      "One file per request, as `multipart/form-data`. PDF, JPEG or PNG, up to 5 MB. Allowed from `due_diligence` until the deal closes, at most 10 per party.\n\nA document of a type she has already shared replaces her earlier copy when that copy is waiting for review or was rejected: the earlier row and its file are removed (the admin's decision on it stays in the audit log). A confirmed copy is never replaced. Documents of type `other` are never replaced; each is added.\n\nFor `business_registration` and `kra_pin_certificate` the backend asks the AI service to read the file and compare it with her profile, and stores the answer as `precheck`. If the AI service does not answer, the document is stored with `precheck: null`. Her `document_processing` consent is sent along: without it the AI service must not pass the file to an outside model.\n\nThe file is on the server's local disk, **not encrypted**, and is deleted 30 days after the deal closes or is declined. The other parties to the deal and admins can download it. ID documents are not asked for.",
     access: "approved",
     params: dealId,
     requestBody: {
@@ -384,6 +384,7 @@ export const ops: Op[] = [
       NOT_OPEN,
       [409, "WRONG_STAGE", "The deal has not reached due diligence, or has closed."],
       [409, "TOO_MANY_DOCUMENTS", "She has already shared 10 documents in this deal."],
+      [409, "ALREADY_CONFIRMED", "Her copy of this type was already confirmed by FoundersLink, so there is nothing to replace."],
     ],
   },
   {

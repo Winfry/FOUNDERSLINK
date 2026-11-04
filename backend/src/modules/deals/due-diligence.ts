@@ -133,7 +133,22 @@ export async function uploadDealDocument(userId: string, dealId: string, file: U
   if (!SHARING_STAGES.includes(deal.stage)) {
     throw conflict("WRONG_STAGE", "Documents are shared once the deal reaches due diligence, and until it closes");
   }
-  if ((await prisma.dealDocument.count({ where: { deal_id: dealId, user_id: userId } })) >= MAX_PER_PARTY) {
+
+  // A new copy of a kind she has already shared replaces the earlier one,
+  // if nobody has confirmed it yet: one waiting for review, or one that was
+  // not accepted (FINAL_VERIFICATION 17). A confirmed copy is never thrown
+  // away by an upload. "Other" documents are each their own thing, so they
+  // add up instead. The admin's decision on the earlier copy stays in the
+  // audit log.
+  const earlier =
+    input.type === "other"
+      ? []
+      : await prisma.dealDocument.findMany({ where: { deal_id: dealId, user_id: userId, type: input.type } });
+  if (earlier.some((d) => d.status === "verified")) {
+    throw conflict("ALREADY_CONFIRMED", `Your ${TITLES[input.type] ?? input.type} has already been confirmed by FoundersLink, so there is nothing to replace`);
+  }
+  const shared = await prisma.dealDocument.count({ where: { deal_id: dealId, user_id: userId } });
+  if (shared - earlier.length >= MAX_PER_PARTY) {
     throw conflict("TOO_MANY_DOCUMENTS", `You can share at most ${MAX_PER_PARTY} documents in a deal`);
   }
 
@@ -155,20 +170,33 @@ export async function uploadDealDocument(userId: string, dealId: string, file: U
     });
   }
 
-  const saved = await prisma.dealDocument.create({
-    data: {
-      deal_id: dealId,
-      user_id: userId,
-      type: input.type,
-      label: input.label ?? null,
-      file_name: path.basename(file.originalname).slice(0, 120),
-      mime_type: file.mimetype,
-      size_bytes: file.size,
-      storage_key: await storeFile(file.buffer),
-      ...(precheck ? { precheck: { ...precheck } } : {}),
-    },
-  });
-  await prisma.dealEvent.create({ data: { deal_id: dealId, actor_id: userId, event: "document_shared", note: TITLES[input.type] ?? input.type } });
+  const storage_key = await storeFile(file.buffer);
+  const [saved] = await prisma.$transaction([
+    prisma.dealDocument.create({
+      data: {
+        deal_id: dealId,
+        user_id: userId,
+        type: input.type,
+        label: input.label ?? null,
+        file_name: path.basename(file.originalname).slice(0, 120),
+        mime_type: file.mimetype,
+        size_bytes: file.size,
+        storage_key,
+        ...(precheck ? { precheck: { ...precheck } } : {}),
+      },
+    }),
+    prisma.dealDocument.deleteMany({ where: { id: { in: earlier.map((d) => d.id) } } }),
+    prisma.dealEvent.create({
+      data: {
+        deal_id: dealId,
+        actor_id: userId,
+        event: "document_shared",
+        note: `${TITLES[input.type] ?? input.type}${earlier.length > 0 ? " (a new copy, replacing the earlier one)" : ""}`,
+      },
+    }),
+  ]);
+  // The earlier files go only once the new one is safely recorded.
+  for (const d of earlier) await removeFile(d.storage_key);
   return viewDocument(saved);
 }
 
@@ -269,7 +297,12 @@ async function build(dealId: string) {
       full_name: party.user.full_name,
       role: party.role,
       ready: missing.length === 0,
-      required: required.map((r) => ({ ...r, provided: !missing.includes(r) })),
+      required: required.map((r) => ({
+        ...r,
+        provided: !missing.includes(r),
+        // A confirmed copy cannot be replaced, so the app stops offering to.
+        confirmed: documents.some((d) => d.type === r.type && d.status === "verified"),
+      })),
       documents: documents.map(viewDocument),
       // The pack's three lists for this party.
       verified: pack.parties[i]!.verified,

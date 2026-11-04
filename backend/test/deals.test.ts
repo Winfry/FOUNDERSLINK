@@ -214,9 +214,32 @@ test("terms cannot be agreed until every party has shared her documents", async 
   assert.ok(JSON.stringify(told.json).includes("The page is cut off"));
 
   // She shares another, and the admin confirms the registration.
-  await share("founder", "kra_pin_certificate");
+  const corrected = await share("founder", "kra_pin_certificate");
+  assert.equal(corrected.status, 201);
   const confirmed = await call("PATCH", `/admin/deal-documents/${registration.json.id}`, "admin", { status: "verified" });
   assert.equal(confirmed.json.check_label, "Confirmed by FoundersLink");
+
+  // FINAL_VERIFICATION 17: the new copy replaces the rejected one; it is not a second row.
+  const pins = await prisma.dealDocument.findMany({ where: { deal_id: dealId, user_id: ids.founder, type: "kra_pin_certificate" } });
+  assert.deepEqual(pins.map((d) => [d.id, d.status]), [[corrected.json.id, "uploaded"]]);
+  // Sharing it again before review replaces it once more.
+  const again = await share("founder", "kra_pin_certificate");
+  assert.equal((await prisma.dealDocument.count({ where: { deal_id: dealId, user_id: ids.founder, type: "kra_pin_certificate" } })), 1);
+  assert.notEqual(again.json.id, corrected.json.id);
+  // A confirmed copy is never thrown away by an upload.
+  assert.equal((await share("founder", "business_registration")).json.error.code, "ALREADY_CONFIRMED");
+  const mine = (await call("GET", `/deals/${dealId}/due-diligence`, "founder")).json.parties.find((p: any) => p.user_id === ids.founder);
+  assert.deepEqual(
+    mine.required.map((r: any) => [r.type, r.provided, r.confirmed]),
+    [
+      ["business_registration", true, true],
+      ["kra_pin_certificate", true, false],
+    ],
+  );
+  // "Other" documents add up.
+  await share("founder", "other");
+  await share("founder", "other");
+  assert.equal(await prisma.dealDocument.count({ where: { deal_id: dealId, user_id: ids.founder, type: "other" } }), 2);
 
   // Both decisions are in the audit log, with who made them (FINAL_VERIFICATION 19).
   const log = (await call("GET", "/admin/actions", "admin")).json.filter((a: any) => a.target.id === ids.founder);
