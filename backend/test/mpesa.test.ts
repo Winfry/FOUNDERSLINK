@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import { after, before, test } from "node:test";
 import bcrypt from "bcrypt";
-import { csvToRows, maskDigits, matchMember } from "../src/modules/circles/mpesa.js";
+import { csvToRows, maskDigits, matchMember, parseStatementDate } from "../src/modules/circles/mpesa.js";
 
 // Reading a circle's M-Pesa payments. The statement layout and the
 // confirmation fields here are our best knowledge of Safaricom's
@@ -47,6 +47,20 @@ test("statement text is read by column name, with commas inside quotes and in am
   });
   assert.equal(rows[1]!.paid_in_kes, 0);
   assert.throws(() => csvToRows("Date,Notes\n2026-10-01,hello"), /needs columns for: receipt, details, paid_in_kes/);
+});
+
+test("statement dates are read day first, in Nairobi time, and an impossible date is refused", () => {
+  const iso = (v: string) => parseStatementDate(v)?.toISOString();
+  // 4 October, not 10 April (the verification report, item 15).
+  assert.equal(iso("04-10-2026 14:05:09"), "2026-10-04T11:05:09.000Z");
+  assert.equal(iso("04/10/2026"), "2026-10-03T21:00:00.000Z");
+  assert.equal(iso("4.10.2026 9:05"), "2026-10-04T06:05:00.000Z");
+  assert.equal(iso("2026-10-04 14:05:09"), "2026-10-04T11:05:09.000Z");
+  assert.equal(iso("2026-10-04T11:05:09.000Z"), "2026-10-04T11:05:09.000Z");
+  assert.equal(iso("2026-10-04T14:05:09+0300"), "2026-10-04T11:05:09.000Z");
+  for (const bad of ["31-02-2026", "13/13/2026", "04-10-2026 25:00", "Oct 4 2026", "", "1759575909"]) {
+    assert.equal(parseStatementDate(bad), null, bad);
+  }
 });
 
 test("phone numbers are masked in anything kept about an unmatched payer", () => {
@@ -100,9 +114,9 @@ before(async () => {
   ({ app } = await import("../src/app.js"));
   ({ prisma } = await import("../src/shared/db.js"));
 
-  server = app.listen(0);
+  server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
-  base = `http://localhost:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   const password_hash = await bcrypt.hash(password, 4);
   for (const who of Object.keys(people) as Who[]) {

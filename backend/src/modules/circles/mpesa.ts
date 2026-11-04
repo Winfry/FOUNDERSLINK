@@ -20,9 +20,56 @@ import { env } from "../../config/env.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, forbidden, notFound } from "../../shared/errors.js";
 
+// A statement's date, read the way Kenya writes it. JavaScript's own Date
+// reads "04-10-2026" month first (10 April); an M-Pesa statement means
+// 4 October. Accepted: day first (04-10-2026, 04/10/2026, 4.10.2026) or
+// ISO (2026-10-04), each with an optional time (14:05 or 14:05:09).
+// A time with no zone is Nairobi time (+03:00), as on the statement.
+// Anything else, or a date that does not exist, is refused, not guessed.
+const DAY_FIRST = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
+const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+
+export function parseStatementDate(value: unknown): Date | null {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  let parts: [string, string, string, string?, string?, string?];
+  let zone: string | undefined;
+  const dayFirst = DAY_FIRST.exec(text);
+  const iso = dayFirst ? null : ISO.exec(text);
+  if (dayFirst) {
+    const [, d, m, y, hh, mm, ss] = dayFirst;
+    parts = [y!, m!, d!, hh, mm, ss];
+  } else if (iso) {
+    const [, y, m, d, hh, mm, ss, z] = iso;
+    parts = [y!, m!, d!, hh, mm, ss];
+    zone = z;
+  } else return null;
+
+  const [y, m, d, hh, mm, ss] = parts.map((p) => (p ?? "0").padStart(2, "0")) as string[];
+  const [year, month, day, hour, minute, second] = [y, m, d, hh, mm, ss].map(Number) as number[];
+  // Date.UTC rolls 31-02 over into March; check the parts survive.
+  const probe = new Date(Date.UTC(year!, month! - 1, day!));
+  if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month! - 1 || probe.getUTCDate() !== day) return null;
+  if (hour! > 23 || minute! > 59 || second! > 59) return null;
+
+  const offset = !zone ? "+03:00" : zone === "Z" ? "Z" : zone.includes(":") ? zone : `${zone.slice(0, 3)}:${zone.slice(3)}`;
+  const result = new Date(`${y}-${m}-${d}T${hh}:${mm}:${ss}${offset}`);
+  return Number.isNaN(result.getTime()) ? null : result;
+}
+
+const statementDate = z.unknown().transform((value, ctx) => {
+  const date = parseStatementDate(value);
+  if (!date) {
+    ctx.addIssue({ code: "custom", message: "Not a date: use day-month-year, e.g. 04-10-2026 14:05" });
+    return z.NEVER;
+  }
+  return date;
+});
+
 const rowSchema = z.object({
   receipt: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{8,12}$/, "Not an M-Pesa receipt number"),
-  completed_at: z.coerce.date(),
+  completed_at: statementDate,
   details: z.string().trim().max(300),
   paid_in_kes: z.number().nonnegative(),
 });

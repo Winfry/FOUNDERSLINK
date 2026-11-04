@@ -54,7 +54,7 @@ Ordered by how much they hurt. **Updated at 08:50:** the first ten, and number 2
 | 12 | **Checks staff type are recorded wrongly.** "BRS lookup" is saved as an identity check; any unrecognised text silently becomes "Identity". | Q5-05 | Admin | S | Open |
 | 13 | **A "fix this first" investor's page says "Good fit, 6 of 6 match"** with no mention of the gap that put it there, and no demo-record note. | Q1-10 | Mobile | S | Open |
 | 14 | **A false money warning in chama chat.** "Contributions are due, Paybill 522533" is flagged; "Please send me 5000 by M-Pesa to my number urgently" is not. | Q4-16 | Backend rules / AI | M | Open |
-| 15 | **M-Pesa statement dates are read the wrong way round:** `04-10-2026` is imported as 10 April. | Q4-17 | Backend | S | Open |
+| 15 | **M-Pesa statement dates are read the wrong way round:** `04-10-2026` is imported as 10 April. | Q4-17 | Backend | S | **Fixed** (checked by a test) |
 | 16 | **A document the AI could not read would still be labelled "AI pre-checked"** once the new AI service runs. | Q6-12 | Backend | S | Open |
 | 17 | **"Replace" on a deal document adds a duplicate** instead of replacing; the rejected row stays with "share a corrected copy". | Q3-16 | Mobile | S | Open |
 | 18 | **Decision history is lost on resubmission,** and a re-check cannot be decided: the page refuses with a false "server did not answer". | Q5-13, Q5-01 | Admin | M | Open |
