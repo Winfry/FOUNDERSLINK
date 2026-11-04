@@ -18,7 +18,7 @@ export async function fetchAuditLog(params: PaginatedParams = {}): Promise<Pagin
     if (from && at < from) return false;
     if (to && at > to) return false;
     if (!search) return true;
-    const hay = `${entry.action} ${entry.targetMember} ${entry.reason}`.toLowerCase();
+    const hay = `${entry.action} ${entry.admin} ${entry.targetMember} ${entry.reason}`.toLowerCase();
     return hay.includes(search);
   });
 }

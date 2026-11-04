@@ -150,16 +150,31 @@ export async function fileForAdmin(documentId: string) {
 }
 
 export async function reviewDocument(adminId: string, documentId: string, input: z.infer<typeof reviewSchema>) {
-  const { count } = await prisma.vettingDocument.updateMany({
+  const document = await prisma.vettingDocument.findUnique({
     where: { id: documentId },
-    data: {
-      status: input.status,
-      rejection_reason: input.status === "rejected" ? input.reason : null,
-      reviewed_by: adminId,
-      reviewed_at: new Date(),
-    },
+    select: { file_name: true, application: { select: { user_id: true } } },
   });
-  if (count === 0) throw notFound("No such document");
+  if (!document) throw notFound("No such document");
+  // The decision and its audit entry are saved together (FINAL_VERIFICATION 19).
+  await prisma.$transaction([
+    prisma.vettingDocument.update({
+      where: { id: documentId },
+      data: {
+        status: input.status,
+        rejection_reason: input.status === "rejected" ? input.reason : null,
+        reviewed_by: adminId,
+        reviewed_at: new Date(),
+      },
+    }),
+    prisma.adminAction.create({
+      data: {
+        admin_id: adminId,
+        action: input.status === "verified" ? "vetting_document_confirmed" : "vetting_document_rejected",
+        target_user_id: document.application.user_id,
+        reason: `Verification document "${document.file_name}"${input.reason ? `: ${input.reason}` : ""}`,
+      },
+    }),
+  ]);
   return prisma.vettingDocument.findUniqueOrThrow({ where: { id: documentId }, select: publicFields });
 }
 

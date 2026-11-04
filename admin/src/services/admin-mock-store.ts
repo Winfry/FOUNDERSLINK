@@ -35,6 +35,8 @@ function pushAudit(action: string, targetMember: string, reason: string) {
       id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       createdAt: new Date().toISOString(),
       action,
+      // The mock has one signed-in admin.
+      admin: "Demo Admin",
       targetMember,
       reason,
     },

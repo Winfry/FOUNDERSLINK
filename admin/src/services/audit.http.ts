@@ -11,11 +11,11 @@ interface ApiAction {
 }
 
 // The filter on the page, and the backend actions each choice covers.
-// The backend records no document, report or compliance actions here.
+// The backend records no report or compliance actions here.
 const ACTION_TYPES: Record<string, string[]> = {
   verification: ["approve", "approve_first", "reject", "needs_info", "recheck_confirmed"],
   member: ["suspend", "reinstate", "create_admin"],
-  document: [],
+  document: ["deal_document_confirmed", "deal_document_rejected", "vetting_document_confirmed", "vetting_document_rejected"],
   report: [],
   compliance: [],
 };
@@ -41,10 +41,11 @@ export async function fetchAuditLog(params: PaginatedParams = {}): Promise<Pagin
       id: a.id,
       createdAt: a.created_at,
       action: a.action.replace(/_/g, " "),
+      admin: a.admin.full_name,
       targetMember: a.target.full_name,
       reason: a.reason,
     }))
-    .filter((e) => !search || `${e.action} ${e.targetMember} ${e.reason}`.toLowerCase().includes(search));
+    .filter((e) => !search || `${e.action} ${e.admin} ${e.targetMember} ${e.reason}`.toLowerCase().includes(search));
 
   return { data: all.slice((page - 1) * pageSize, page * pageSize), total: all.length, page, pageSize };
 }

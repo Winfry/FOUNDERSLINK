@@ -134,6 +134,15 @@ test("an admin marks a document verified, or rejected with a reason", async () =
   const verified = await review({ status: "verified" });
   assert.equal(verified.json.status, "verified");
   assert.equal(verified.json.rejection_reason, null);
+
+  // Both decisions are in the audit log, with who made them (FINAL_VERIFICATION 19).
+  const log = (await call("GET", "/admin/actions", "admin")).json.filter((a: any) => a.target.id === ids.amina);
+  assert.deepEqual(
+    log.map((a: any) => a.action).sort(),
+    ["vetting_document_confirmed", "vetting_document_rejected"],
+  );
+  assert.match(log.find((a: any) => a.action === "vetting_document_rejected").reason, /: The certificate is cut off at the bottom\.$/);
+  assert.ok(log.every((a: any) => a.admin.full_name));
 });
 
 test("once she submits, her documents are locked", async () => {

@@ -218,6 +218,13 @@ test("terms cannot be agreed until every party has shared her documents", async 
   const confirmed = await call("PATCH", `/admin/deal-documents/${registration.json.id}`, "admin", { status: "verified" });
   assert.equal(confirmed.json.check_label, "Confirmed by FoundersLink");
 
+  // Both decisions are in the audit log, with who made them (FINAL_VERIFICATION 19).
+  const log = (await call("GET", "/admin/actions", "admin")).json.filter((a: any) => a.target.id === ids.founder);
+  const seen = JSON.stringify(log.map((a: any) => [a.action, a.reason]));
+  assert.ok(log.some((a: any) => a.action === "deal_document_rejected" && a.reason.endsWith(": The page is cut off")), seen);
+  assert.ok(log.some((a: any) => a.action === "deal_document_confirmed"), seen);
+  assert.ok(log.every((a: any) => a.admin.full_name));
+
   const pack = await call("GET", `/deals/${dealId}/due-diligence`, "investor");
   assert.equal(pack.json.deal_ready, true);
   // Compiled by the backend's rules here, and it says so.

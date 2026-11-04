@@ -274,6 +274,8 @@ export interface AuditEntry {
   id: string;
   createdAt: string;
   action: string;
+  /** The admin who took the action. */
+  admin: string;
   targetMember: string;
   reason: string;
 }

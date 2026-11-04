@@ -310,16 +310,27 @@ export async function reviewDealDocument(adminId: string, documentId: string, in
   const document = await prisma.dealDocument.findUnique({ where: { id: documentId }, include: { deal: { select: { title: true } } } });
   if (!document) throw notFound("No such document");
 
-  const saved = await prisma.dealDocument.update({
-    where: { id: documentId },
-    data: {
-      status: input.status,
-      rejection_reason: input.status === "rejected" ? (input.reason ?? null) : null,
-      reviewed_by: adminId,
-      reviewed_at: new Date(),
-    },
-  });
   const title = TITLES[document.type] ?? document.type;
+  // The decision and its audit entry are saved together (FINAL_VERIFICATION 19).
+  const [saved] = await prisma.$transaction([
+    prisma.dealDocument.update({
+      where: { id: documentId },
+      data: {
+        status: input.status,
+        rejection_reason: input.status === "rejected" ? (input.reason ?? null) : null,
+        reviewed_by: adminId,
+        reviewed_at: new Date(),
+      },
+    }),
+    prisma.adminAction.create({
+      data: {
+        admin_id: adminId,
+        action: input.status === "verified" ? "deal_document_confirmed" : "deal_document_rejected",
+        target_user_id: document.user_id,
+        reason: `${title} for the deal "${document.deal.title}"${input.reason ? `: ${input.reason}` : ""}`,
+      },
+    }),
+  ]);
   await notify(
     document.user_id,
     input.status === "verified"

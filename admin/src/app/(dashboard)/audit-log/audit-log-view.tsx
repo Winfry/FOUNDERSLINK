@@ -42,6 +42,7 @@ export function AuditLogView({
       accessorKey: "action",
       cell: ({ row }) => <span className="font-semibold">{/[_.]/.test(row.original.action) ? humanize(row.original.action.replace(/\./g, " ")) : row.original.action}</span>,
     },
+    { header: "By", accessorKey: "admin", cell: ({ row }) => <span className="whitespace-nowrap">{row.original.admin}</span> },
     { header: "Member", accessorKey: "targetMember", cell: ({ row }) => row.original.targetMember || <span className="text-muted">None</span> },
     {
       header: "Reason",
@@ -62,7 +63,7 @@ export function AuditLogView({
         total={result.total}
         page={page}
         pageSize={result.pageSize}
-        searchPlaceholder="Search by member or reason"
+        searchPlaceholder="Search by admin, member or reason"
         onSearchChange={(s) => updateQuery({ search: s, page: 1 })}
         onPageChange={(p) => updateQuery({ page: p })}
         statusFilter={
