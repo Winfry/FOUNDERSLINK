@@ -1,4 +1,5 @@
 import type { ApprovalStatus, MemberRole, PaginatedParams, PaginatedResult, RiskLevel, VerificationDetail, VerificationQueueItem } from "@/types";
+import { isCheckMethod, isCheckType, type NewCheck } from "@/lib/checks";
 import { backend } from "@/lib/api";
 
 interface ApiApplicant {
@@ -81,9 +82,11 @@ const RESULT = { pass: "passed", fail: "failed" } as const;
 function toDetail(a: ApiDetail): VerificationDetail {
   const checks = a.checks.map((c) => ({
     id: c.id,
-    checkType: c.check_type.replace(/_/g, " "),
+    // An unknown value would mean the backend's list grew; show it as identity
+    // or by hand rather than break the page, as before.
+    checkType: isCheckType(c.check_type) ? c.check_type : ("identity" as const),
     result: RESULT[c.result],
-    method: c.method === "provider" ? ("provider" as const) : ("manual" as const),
+    method: isCheckMethod(c.method) ? c.method : ("manual" as const),
     recordedAt: c.checked_at,
   }));
   const decided = ["approved", "rejected", "needs_info"].includes(a.user.approval_status) && a.decided_at;
@@ -116,30 +119,16 @@ export async function fetchVerificationDetail(id: string): Promise<VerificationD
 }
 
 const DECISION = { approved: "approve", rejected: "reject", needs_info: "needs_info" } as const;
-const CHECK_TYPES = ["identity", "phone", "organisation", "track_record", "professional_register", "reference"];
-
-// The form takes a check as free text ("Phone number"). The backend
-// keeps a fixed list, so each is matched to the closest one.
-function checkTypeOf(text: string) {
-  const t = text.toLowerCase();
-  if (t.includes("phone")) return "phone";
-  if (t.includes("organ") || t.includes("website") || t.includes("domain")) return "organisation";
-  if (t.includes("track") || t.includes("portfolio")) return "track_record";
-  if (t.includes("regist") || t.includes("lsk") || t.includes("icpak")) return "professional_register";
-  if (t.includes("refer")) return "reference";
-  return CHECK_TYPES.includes(t) ? t : "identity";
-}
-
 export async function decideVerification(
   id: string,
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
-  checks: { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" }[],
+  checks: NewCheck[],
 ) {
   await backend("POST", `/admin/vetting/${id}/decision`, {
     decision: DECISION[decision],
     reason,
-    checks: checks.map((c) => ({ check_type: checkTypeOf(c.checkType), result: c.result === "passed" ? "pass" : "fail", method: c.method })),
+    checks: checks.map((c) => ({ check_type: c.checkType, result: c.result === "passed" ? "pass" : "fail", method: c.method })),
   });
   return fetchVerificationDetail(id);
 }

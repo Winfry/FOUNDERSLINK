@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { NewCheck } from "@/lib/checks";
 import { addRecheckAudit } from "@/services/admin-mock-store";
 import { confirmDocument, rejectDocument } from "@/services/deal-reviews.service";
 import { reviewComplianceSource } from "@/services/compliance-sources.service";
@@ -15,7 +16,7 @@ export async function verificationDecisionAction(
   id: string,
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
-  checks: { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" }[],
+  checks: NewCheck[],
 ) {
   const result = await decideVerification(id, decision, reason, checks);
   revalidatePath("/verification");

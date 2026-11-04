@@ -5,17 +5,23 @@ import { useState, useTransition } from "react";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 import type { RiskLevel, VerificationDetail } from "@/types";
 import { verificationDecisionAction } from "@/app/actions/admin-actions";
-import { approvalLabel, formatDay, formatDayTime, humanize, roleLabel } from "@/components/labels";
+import { approvalLabel, formatDay, formatDayTime, roleLabel } from "@/components/labels";
 import { RISK_LABEL } from "@/components/risk-level-badge";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { ToastBanner } from "@/components/toast-banner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CHECK_METHOD_LABEL,
+  CHECK_TYPE_LABEL,
+  DEFAULT_METHOD,
+  STAFF_CHECK_METHODS,
+  type CheckMethod,
+  type CheckType,
+  type NewCheck,
+} from "@/lib/checks";
 import { cn } from "@/lib/utils";
-
-type Check = { checkType: string; result: "passed" | "failed"; method: "manual" | "provider" };
 
 const MIN_REASON = 8;
 
@@ -52,10 +58,10 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
   const [reason, setReason] = useState("");
-  const [checkType, setCheckType] = useState("");
+  const [checkType, setCheckType] = useState<CheckType | "">("");
   const [checkResult, setCheckResult] = useState<"passed" | "failed">("passed");
-  const [checkMethod, setCheckMethod] = useState<"manual" | "provider">("manual");
-  const [checks, setChecks] = useState<Check[]>([]);
+  const [checkMethod, setCheckMethod] = useState<CheckMethod>("manual");
+  const [checks, setChecks] = useState<NewCheck[]>([]);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -63,8 +69,8 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
   const canAct = reasonLength >= MIN_REASON;
 
   function addCheck() {
-    if (!checkType.trim()) return;
-    setChecks((c) => [...c, { checkType: checkType.trim(), result: checkResult, method: checkMethod }]);
+    if (!checkType) return;
+    setChecks((c) => [...c, { checkType, result: checkResult, method: checkMethod }]);
     setCheckType("");
   }
 
@@ -231,21 +237,31 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           <div className="rounded-btn bg-surface p-4">
             <p className="text-sm font-semibold text-foreground">Checks you made (optional)</p>
             <p className="mt-0.5 text-sm text-muted">
-              Record what you verified yourself, for example a phone call or a registry lookup. They are saved with your decision.
+              Record what you verified yourself, for example a BRS lookup of the business or a call to a reference. They are saved with your decision.
             </p>
             <div className="mt-3 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_140px_180px_auto]">
-              <Input
-                label="What you checked"
-                value={checkType}
-                onChange={(e) => setCheckType(e.target.value)}
-                placeholder="e.g. Phone number"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addCheck();
-                  }
-                }}
-              />
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="check-type" className="text-sm font-semibold text-foreground">
+                  What you checked
+                </label>
+                <select
+                  id="check-type"
+                  className="field !w-full"
+                  value={checkType}
+                  onChange={(e) => {
+                    const next = e.target.value as CheckType | "";
+                    setCheckType(next);
+                    if (next) setCheckMethod(DEFAULT_METHOD[next]);
+                  }}
+                >
+                  <option value="">Choose…</option>
+                  {(Object.keys(CHECK_TYPE_LABEL) as CheckType[]).map((t) => (
+                    <option key={t} value={t}>
+                      {CHECK_TYPE_LABEL[t]}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="check-result" className="text-sm font-semibold text-foreground">
                   Result
@@ -259,12 +275,15 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                 <label htmlFor="check-method" className="text-sm font-semibold text-foreground">
                   How
                 </label>
-                <select id="check-method" className="field !w-full" value={checkMethod} onChange={(e) => setCheckMethod(e.target.value as "manual" | "provider")}>
-                  <option value="manual">By hand</option>
-                  <option value="provider">Outside provider</option>
+                <select id="check-method" className="field !w-full" value={checkMethod} onChange={(e) => setCheckMethod(e.target.value as CheckMethod)}>
+                  {STAFF_CHECK_METHODS.map((m) => (
+                    <option key={m} value={m}>
+                      {CHECK_METHOD_LABEL[m]}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <Button type="button" variant="secondary" className="min-h-11" disabled={!checkType.trim()} onClick={addCheck}>
+              <Button type="button" variant="secondary" className="min-h-11" disabled={!checkType} onClick={addCheck}>
                 Add check
               </Button>
             </div>
@@ -272,14 +291,14 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
               <ul className="mt-3 space-y-2">
                 {checks.map((c, i) => (
                   <li key={i} className="flex items-center gap-3 rounded-btn border border-border bg-white px-3 py-2 text-sm">
-                    <span className="flex-1 font-semibold text-foreground">{c.checkType}</span>
+                    <span className="flex-1 font-semibold text-foreground">{CHECK_TYPE_LABEL[c.checkType]}</span>
                     <Badge variant={c.result === "passed" ? "success" : "destructive"}>{c.result === "passed" ? "Passed" : "Failed"}</Badge>
-                    <span className="text-xs font-semibold text-muted">{c.method === "manual" ? "By hand" : "Outside provider"}</span>
+                    <span className="text-xs font-semibold text-muted">{CHECK_METHOD_LABEL[c.method]}</span>
                     <button
                       type="button"
                       onClick={() => setChecks((list) => list.filter((_, j) => j !== i))}
                       className="flex h-8 w-8 items-center justify-center rounded-full text-primary hover:bg-primary-light"
-                      aria-label={`Remove check: ${c.checkType}`}
+                      aria-label={`Remove check: ${CHECK_TYPE_LABEL[c.checkType]}`}
                     >
                       <X className="h-4 w-4" aria-hidden />
                     </button>
@@ -322,7 +341,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                   <p className="mt-1.5 text-sm font-medium text-foreground">{d.reason || approvalLabel(d.decision)}</p>
                   {d.checks && d.checks.length > 0 ? (
                     <p className="mt-1 text-xs font-semibold text-muted">
-                      Checks: {d.checks.map((c) => `${humanize(c.checkType)} (${c.result})`).join(", ")}
+                      Checks: {d.checks.map((c) => `${CHECK_TYPE_LABEL[c.checkType]}, ${CHECK_METHOD_LABEL[c.method].toLowerCase()} (${c.result})`).join("; ")}
                     </p>
                   ) : null}
                 </li>

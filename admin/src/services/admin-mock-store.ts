@@ -244,9 +244,9 @@ const members: StoredMember[] = [
           checks: [
             {
               id: "chk-s1",
-              checkType: "Organisation website",
+              checkType: "organisation",
               result: "passed",
-              method: "manual",
+              method: "domain",
               recordedAt: "2025-11-05T11:50:00.000Z",
             },
           ],
@@ -255,9 +255,9 @@ const members: StoredMember[] = [
       checks: [
         {
           id: "chk-s1",
-          checkType: "Organisation website",
+          checkType: "organisation",
           result: "passed",
-          method: "manual",
+          method: "domain",
           recordedAt: "2025-11-05T11:50:00.000Z",
         },
       ],
@@ -322,9 +322,9 @@ const members: StoredMember[] = [
       checks: [
         {
           id: "chk-e1",
-          checkType: "Professional register",
+          checkType: "professional_register",
           result: "passed",
-          method: "provider",
+          method: "lsk",
           recordedAt: "2025-12-18T09:55:00.000Z",
         },
       ],

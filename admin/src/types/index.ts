@@ -1,3 +1,5 @@
+import type { CheckMethod, CheckType } from "@/lib/checks";
+
 export type MemberRole = "founder" | "investor" | "expert";
 
 export type ApprovalStatus =
@@ -39,9 +41,9 @@ export interface RiskSignal {
 
 export interface VettingCheck {
   id: string;
-  checkType: string;
+  checkType: CheckType;
   result: "passed" | "failed";
-  method: "manual" | "provider";
+  method: CheckMethod;
   recordedAt: string;
 }
 
