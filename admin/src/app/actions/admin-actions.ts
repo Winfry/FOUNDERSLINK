@@ -10,7 +10,7 @@ import { ApiError } from "@/lib/api";
 import { actOnMemberReport, actOnMessageReport } from "@/services/reports.service";
 import { decideVerification } from "@/services/verification.service";
 import { decideRecheck } from "@/services/rechecks.service";
-import { changePassword, enableTwoFactor } from "@/services/settings.service";
+import { changePassword, enableTwoFactor, startTwoFactorSetup } from "@/services/settings.service";
 
 // What a decision on the verification page comes back with. A thrown
 // error loses its message on the way out of a server action, so the
@@ -125,6 +125,10 @@ export async function complianceReviewAction(id: string, note: string) {
   revalidatePath("/compliance-sources");
   revalidatePath("/audit-log");
   return result;
+}
+
+export async function startTwoFactorSetupAction() {
+  return startTwoFactorSetup();
 }
 
 export async function enableTwoFactorAction(code: string) {

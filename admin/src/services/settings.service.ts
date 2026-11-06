@@ -10,9 +10,16 @@ export async function fetchAdminSettings(): Promise<AdminSettingsState> {
   return getAdminSettings();
 }
 
+// Starts two-step setup: the secret to add to an authenticator app.
+export async function startTwoFactorSetup(): Promise<{ secret: string; otpauthUrl: string }> {
+  if (live) return http.startTwoFactorSetup();
+  await delay();
+  const secret = getAdminSettings().twoFactorSecret;
+  return { secret, otpauthUrl: `otpauth://totp/FoundersLink:admin?secret=${secret}&issuer=FoundersLink` };
+}
+
 export async function enableTwoFactor(code: string): Promise<{ ok: boolean; error?: string }> {
-  // Not connected: it needs the setup step first, and a new session after.
-  if (live) return { ok: false, error: "Two-step sign-in is not connected to the backend yet. Nothing was changed." };
+  if (live) return http.enableTwoFactor(code);
   await delay();
   if (code !== "123456") return { ok: false, error: "That code is not right." };
   setTwoFactorEnabled(true);

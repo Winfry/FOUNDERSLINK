@@ -356,7 +356,8 @@ Approved → Suspended (after reports or a failed re-check) → Reinstated | Ban
 
 ### Who decides
 - Platform admins (`users.role = admin`) make every decision, with a written reason.
-- Investors need **two admins** to approve in production (four-eyes rule). One admin is enough for the demo.
+- Investors need **two admins** to approve in production (four-eyes rule): `INVESTOR_APPROVALS_REQUIRED=2`. One admin is enough for the demo (the default, 1).
+- Admins use **two-step sign-in** with an authenticator app, turned on in the dashboard's Settings. In production it is required for every admin page: `ADMIN_2FA_REQUIRED=true`. The demo admin may run without it.
 - Every admin action goes into an audit log.
 
 ### Where the AI helps (AI/ML 2)
@@ -523,7 +524,7 @@ Most teams will show an AI that recommends people. These six things make Founder
 | **3. Deal-ready** | When a deal reaches **due diligence** | Business documents (founder); organisation or fund documents and track record (investor); identity through a regulated provider. The AI pre-checks every document | Moving to terms agreed, closing, and a verified track record |
 
 **Rules**
-- "Verify now so you're ready" is offered from sign-up, so nobody has to wait at the moment they want to connect.
+- "Verify now so you're ready" is offered as soon as the profile is set up (at the top of Matches, Discover or the expert's home, and on Profile), so nobody has to wait at the moment they want to connect. *(Updated 6 November: it used to say "from sign-up". Asking before the profile exists gave a reviewer nothing to read.)*
 - An unverified member never sees a founder's name, business name or contact details.
 - FoundersLink never stores ID documents or ID numbers (D10). Identity comes back from the provider as pass or fail.
 - The AI prepares; a person decides. Nothing is labelled "verified" until an admin confirms it.
