@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -13,6 +14,7 @@ export function ConfirmModal({
   loading,
   onConfirm,
   onCancel,
+  children,
 }: {
   visible: boolean;
   title: string;
@@ -23,6 +25,8 @@ export function ConfirmModal({
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Anything to fill in before confirming, shown under the message. */
+  children?: ReactNode;
 }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -30,6 +34,7 @@ export function ConfirmModal({
         <View style={styles.sheet}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
+          {children}
           <View style={styles.actions}>
             <Button title={cancelLabel} variant="secondary" onPress={onCancel} style={styles.btn} />
             <Button

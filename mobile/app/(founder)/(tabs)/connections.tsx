@@ -5,7 +5,8 @@ import { ChevronRight, Inbox, MessageCircle } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Avatar, Badge, Button, Card } from '../../../src/components/ui';
+import { Avatar, Badge, Button, Card, Textarea } from '../../../src/components/ui';
+import { ConfirmModal } from '../../../src/components/ui/ConfirmModal';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { kes, words } from '../../../src/components/matches/parts';
 import { useToast } from '../../../src/components/ui/Toast';
@@ -31,6 +32,13 @@ function ConnectionsScreen() {
   const q = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list(), refetchInterval: 8000 });
   // Which request is being answered, and how, so only that button spins.
   const [busy, setBusy] = useState<{ id: string; action: 'accept' | 'decline' } | null>(null);
+  // After accepting a request with an amount: the offer to open a deal on
+  // it (TEAM_DECISIONS D13). Saying no leaves them connected.
+  const [offer, setOffer] = useState<ConnectionJoinRequest | null>(null);
+  const [starting, setStarting] = useState(false);
+  // Declining: what she wants to tell them, if anything.
+  const [declining, setDeclining] = useState<ConnectionJoinRequest | null>(null);
+  const [declineReason, setDeclineReason] = useState('');
 
   if (q.isLoading) return <ScreenLoading />;
   if (q.isError) {
@@ -50,21 +58,16 @@ function ConnectionsScreen() {
   const connected = all.filter((c) => c.status === 'accepted');
   const sent = all.filter((c) => c.direction === 'sent' && c.status !== 'accepted');
 
+  // Accepting connects the two, and nothing more: a deal is opened only
+  // if she chooses to (FINAL_VERIFICATION section 4, item 1: it used to
+  // open one at once, titled "Investment deal", with equity nobody chose).
   const accept = async (item: ConnectionJoinRequest) => {
     setBusy({ id: item.id, action: 'accept' });
     try {
       await connectionService.respond(item.id, true);
-      // A plain request to connect proposes no money, so there is no deal to open.
-      if (item.proposedAmountKes > 0) {
-        const deal = await dealService.createInvestment(item.withUserId, 'Investment deal');
-        await dealService.updateTerms(deal.id, { amountKes: item.proposedAmountKes, instrument: 'equity' });
-        show(`You accepted ${item.withFullName}. Your deal is open.`, 'success');
-        void q.refetch();
-        router.push(`/deal/${deal.id}`);
-      } else {
-        show(`You are now connected with ${item.withFullName}.`, 'success');
-        void q.refetch();
-      }
+      show(`You are now connected with ${item.withFullName}. You can chat.`, 'success');
+      void q.refetch();
+      if (item.proposedAmountKes > 0) setOffer(item);
     } catch (e) {
       show((e as { message?: string })?.message ?? 'Could not accept the request. Try again.', 'error');
       void q.refetch();
@@ -73,11 +76,32 @@ function ConnectionsScreen() {
     }
   };
 
-  const decline = async (item: ConnectionJoinRequest) => {
+  // Opens a deal with the amount they proposed, and nothing else filled in:
+  // the kind of investment is for the two of them to agree.
+  const startDeal = async (item: ConnectionJoinRequest) => {
+    setStarting(true);
+    try {
+      const deal = await dealService.createInvestment(item.withUserId, `Investment from ${item.withFullName}`);
+      await dealService.updateTerms(deal.id, { amountKes: item.proposedAmountKes });
+      setOffer(null);
+      router.push(`/deal/${deal.id}`);
+    } catch (e) {
+      show((e as { message?: string })?.message ?? 'The deal was not opened. Try again.', 'error');
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const decline = async () => {
+    const item = declining;
+    if (!item) return;
     setBusy({ id: item.id, action: 'decline' });
     try {
-      await connectionService.respond(item.id, false, 'Not the right time');
+      // Her own words if she wrote any; otherwise no reason is given.
+      await connectionService.respond(item.id, false, declineReason.trim() || undefined);
       show(`You declined ${item.withFullName}'s request.`, 'success');
+      setDeclining(null);
+      setDeclineReason('');
       void q.refetch();
     } catch (e) {
       show((e as { message?: string })?.message ?? 'Could not decline the request. Try again.', 'error');
@@ -171,7 +195,7 @@ function ConnectionsScreen() {
                     style={styles.flexOne}
                     disabled={isBusy}
                     loading={isBusy && busy?.action === 'decline'}
-                    onPress={() => void decline(item)}
+                    onPress={() => setDeclining(item)}
                   />
                   <Button
                     title="Accept"
@@ -183,7 +207,7 @@ function ConnectionsScreen() {
                 </View>
                 <Text style={styles.fine}>
                   {hasAmount
-                    ? 'Accepting connects you and opens a deal with this amount. Nothing is final until you both agree terms.'
+                    ? 'Accepting connects you, so you can chat. You then choose whether to open a deal with this amount.'
                     : 'Accepting connects you, so you can chat.'}
                 </Text>
               </Card>
@@ -215,9 +239,22 @@ function ConnectionsScreen() {
                     {item.withOrganisationName ?? (item.focusAreas.length > 0 ? item.focusAreas.map(words).join(', ') : 'Connected')}
                   </Text>
                 </View>
-                <View style={styles.messageLink}>
-                  <MessageCircle size={16} color={colors.primary} />
-                  <Text style={styles.linkText}>Message</Text>
+                <View style={styles.connectedActions}>
+                  <View style={styles.messageLink}>
+                    <MessageCircle size={16} color={colors.primary} />
+                    <Text style={styles.linkText}>Message</Text>
+                  </View>
+                  {/* An investor who proposed an amount: the deal can be opened any time. */}
+                  {item.direction === 'received' && item.proposedAmountKes > 0 ? (
+                    <Pressable
+                      onPress={() => setOffer(item)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Start an investment deal with ${item.withFullName}`}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.linkText}>Start a deal</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
               </Pressable>
             ))}
@@ -255,6 +292,40 @@ function ConnectionsScreen() {
           </Card>
         )}
       </View>
+      <ConfirmModal
+        visible={offer !== null}
+        title="Start an investment deal with these terms?"
+        message={
+          offer
+            ? `${offer.withFullName} proposed ${kes(offer.proposedAmountKes)}. A deal is where you agree the terms and share documents. Nothing is final until you both agree, and the money never passes through FoundersLink.`
+            : ''
+        }
+        confirmLabel="Start the deal"
+        cancelLabel="Not now"
+        loading={starting}
+        onConfirm={() => offer && void startDeal(offer)}
+        onCancel={() => setOffer(null)}
+      />
+      <ConfirmModal
+        visible={declining !== null}
+        title={declining ? `Decline ${declining.withFullName}'s request?` : 'Decline this request?'}
+        message="They are told you declined. You can add a reason; it is shown to them as you write it."
+        confirmLabel="Decline"
+        destructive
+        loading={busy?.action === 'decline'}
+        onConfirm={() => void decline()}
+        onCancel={() => {
+          setDeclining(null);
+          setDeclineReason('');
+        }}
+      >
+        <Textarea
+          label="Reason (optional)"
+          value={declineReason}
+          onChangeText={setDeclineReason}
+          placeholder="For example: we are not raising until next year"
+        />
+      </ConfirmModal>
     </ScrollView>
   );
 }
@@ -332,6 +403,7 @@ const styles = StyleSheet.create({
     minHeight: touchTargetMin,
   },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
+  connectedActions: { alignItems: 'flex-end', gap: spacing[1] },
   messageLink: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
   linkText: { fontSize: 14, fontWeight: '700', color: colors.primary },
 

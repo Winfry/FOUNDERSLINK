@@ -45,7 +45,7 @@ export const mockDealService: DealService = {
   async updateTerms(dealId, terms) {
     await mockDelay();
     const deal = await this.get(dealId);
-    deal.terms = terms;
+    deal.terms = { ...deal.terms, ...terms };
     return deal;
   },
 

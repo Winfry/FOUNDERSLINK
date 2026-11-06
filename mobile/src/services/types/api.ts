@@ -77,7 +77,8 @@ export interface DealService {
   list(): Promise<Deal[]>;
   get(dealId: string): Promise<Deal>;
   createInvestment(withUserId: string, title: string): Promise<Deal>;
-  updateTerms(dealId: string, terms: Deal['terms']): Promise<Deal>;
+  /** Changes only the terms given; the rest stay as they are. */
+  updateTerms(dealId: string, terms: Partial<Deal['terms']>): Promise<Deal>;
   confirmTerms(dealId: string): Promise<Deal>;
   advanceStage(dealId: string): Promise<Deal>;
   uploadDocument(dealId: string, name: string): Promise<Deal>;
