@@ -178,6 +178,11 @@ export async function submitApplication(userId: string) {
   if (user.role === "investor" && !application.organisation_name) {
     throw new AppError(400, "APPLICATION_INCOMPLETE", "Investors must say which organisation they invest for");
   }
+  // Level 2 asks an investor for an organisation and its website (TEAM_DECISIONS D12).
+  // An angel with no company site can give her LinkedIn page.
+  if (user.role === "investor" && !application.organisation_website) {
+    throw new AppError(400, "APPLICATION_INCOMPLETE", "Investors must give their organisation's website, or a LinkedIn page");
+  }
   // The phone on the application is the one she proved is hers with a
   // code, not one typed on the form (TEAM_DECISIONS D12 level 1;
   // FINAL_VERIFICATION 20). Whatever the form said is replaced by it.

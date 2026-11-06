@@ -197,8 +197,15 @@ test("applications are scored for risk when submitted, and lock after that", asy
   const taken = await call("PATCH", "/me", "fake", { phone: `+254${runPhone(run, 2).slice(1)}` });
   assert.equal(taken.json.error.code, "PHONE_TAKEN");
 
+  // An investor cannot submit without a website (TEAM_DECISIONS D12).
+  await call("PATCH", "/vetting/application", "fake", { organisation_name: "Quick Capital", statement: "Guaranteed funding for every founder. Pay a small processing fee to start." });
+  const noSite = await call("POST", "/vetting/application/submit", "fake");
+  assert.equal(noSite.json.error.code, "APPLICATION_INCOMPLETE");
+  assert.match(noSite.json.error.message, /website/);
+
   const fake = await apply("fake", runPhone(run, 3), {
     organisation_name: "Quick Capital",
+    organisation_website: "https://quick-capital.example",
     statement: "Guaranteed funding for every founder. Pay a small processing fee to start.",
   });
   const caught = await scored("fake");

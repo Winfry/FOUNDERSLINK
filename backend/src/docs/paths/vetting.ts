@@ -60,14 +60,14 @@ export const ops: Op[] = [
     path: "/vetting/application/submit",
     summary: "Submit my application",
     description:
-      "Locks the application and sets `approval_status` to `submitted`. Needs a verified email, a phone number confirmed by code on her account (`POST /me/phone/verify`) and a statement; an investor also needs `organisation_name`. The application's `phone` is set to that confirmed number, whatever was saved on the form.\n\nThe application is given a risk level and signals, by the AI service or, when none is configured or the call fails, by the rule-based stand-in. The backend adds one signal itself: the same phone number on another application (possible only when that account has since changed its number). The risk level only orders the admin queue.",
+      "Locks the application and sets `approval_status` to `submitted`. Needs a verified email, a phone number confirmed by code on her account (`POST /me/phone/verify`) and a statement; an investor also needs `organisation_name` and `organisation_website` (a LinkedIn page is accepted). The application's `phone` is set to that confirmed number, whatever was saved on the form.\n\nThe application is given a risk level and signals, by the AI service or, when none is configured or the call fails, by the rule-based stand-in. The backend adds one signal itself: the same phone number on another application (possible only when that account has since changed its number). The risk level only orders the admin queue.",
     access: "user",
     ok: {
       description: "Submitted.",
       schema: obj({ approval_status: oneOf(["submitted"]), application: ref("MemberApplication") }),
     },
     errors: [
-      [400, "APPLICATION_INCOMPLETE", "The statement is missing, or an investor has not named her organisation."],
+      [400, "APPLICATION_INCOMPLETE", "The statement is missing, or an investor has not given her organisation and its website."],
       LOCKED,
       [409, "EMAIL_NOT_VERIFIED", "The email address is not verified."],
       [409, "PHONE_NOT_VERIFIED", "The account has no phone number confirmed by code."],

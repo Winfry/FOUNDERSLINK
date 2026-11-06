@@ -24,6 +24,10 @@ export default function VerifyToConnectScreen() {
   const [phone, setPhone] = useState('+254');
   const [code, setCode] = useState('');
   const [statement, setStatement] = useState('');
+  // An investor's organisation website (or LinkedIn page), which the
+  // reviewer checks (TEAM_DECISIONS D12; FINAL_VERIFICATION section 4, item 4).
+  const [website, setWebsite] = useState('');
+  const [websiteError, setWebsiteError] = useState<string | null>(null);
   const [step, setStep] = useState<'phone' | 'code' | 'statement'>('phone');
   const [loading, setLoading] = useState(false);
   // What is wrong with the field on screen, said under it.
@@ -38,6 +42,7 @@ export default function VerifyToConnectScreen() {
     setResumed(true);
     if (saved.data.accountPhone) setPhone(saved.data.accountPhone);
     if (saved.data.statement) setStatement(saved.data.statement);
+    if (saved.data.organisationWebsite) setWebsite(saved.data.organisationWebsite);
     if (saved.data.phoneVerified) setStep('statement');
   }, [saved.data, resumed]);
 
@@ -88,6 +93,14 @@ export default function VerifyToConnectScreen() {
   };
 
   const submit = async () => {
+    // People type "savanna.co.ke": the address is kept with https:// in front.
+    const typedSite = website.trim();
+    const site = typedSite && !/^https?:\/\//i.test(typedSite) ? `https://${typedSite}` : typedSite;
+    if (isInvestor && !/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(site)) {
+      setWebsiteError(site ? 'That does not look like a web address, like savanna.co.ke.' : 'Add your organisation\'s website, or your LinkedIn page.');
+      return;
+    }
+    setWebsiteError(null);
     if (statement.trim().length < STATEMENT_MIN) {
       setError(`Write at least ${STATEMENT_MIN} characters so the reviewer knows what you do.`);
       return;
@@ -106,7 +119,7 @@ export default function VerifyToConnectScreen() {
           return;
         }
       }
-      await vettingService.saveDraft({ statement, organisationName });
+      await vettingService.saveDraft({ statement, organisationName, organisationWebsite: isInvestor ? site : undefined });
       await vettingService.submit();
       router.replace('/founder/verify/status');
     } catch (e) {
@@ -210,6 +223,23 @@ export default function VerifyToConnectScreen() {
             <Text style={styles.helper}>
               A person on our team reads this before approving you. Two or three honest sentences are enough.
             </Text>
+            {isInvestor ? (
+              <View style={styles.field}>
+                <Input
+                  label="Your organisation's website"
+                  value={website}
+                  onChangeText={(t) => {
+                    setWebsite(t);
+                    setWebsiteError(null);
+                  }}
+                  placeholder="savanna.co.ke, or your LinkedIn page"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  error={websiteError ?? undefined}
+                />
+              </View>
+            ) : null}
             <View style={styles.field}>
               <Textarea
                 label="Your statement"
