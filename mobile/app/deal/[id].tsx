@@ -145,7 +145,7 @@ export default function DealScreen() {
           <View style={styles.flex}>
             <Text style={styles.closedTitle}>This deal is closed</Text>
             <Text style={styles.closedCopy}>
-              The money moves between you and the investor through a bank. FoundersLink records the deal.
+              The money moves between the parties through their bank. FoundersLink records the deal and never holds the money.
             </Text>
           </View>
         </View>
@@ -153,6 +153,8 @@ export default function DealScreen() {
 
       <View style={styles.terms}>
         <Text style={styles.termsLabel}>Terms</Text>
+        {/* Said from the start, not only once the deal closes (TEAM_DECISIONS D11; FINAL_VERIFICATION section 4, item 11). */}
+        <Text style={styles.termsFine}>Self-reported by the parties. Not a legal document.</Text>
         <Text style={styles.amount}>{deal.terms.amountKes > 0 ? formatKes(deal.terms.amountKes) : 'Amount not set yet'}</Text>
         <View style={styles.termFacts}>
           <View style={styles.termFact}>
@@ -168,6 +170,12 @@ export default function DealScreen() {
         </View>
         {deal.terms.roles ? <Text style={styles.termNote}>Roles: {deal.terms.roles}</Text> : null}
         {deal.terms.notes ? <Text style={styles.termNote}>{deal.terms.notes}</Text> : null}
+        <View style={styles.moneyRow}>
+          <Landmark size={16} color={colors.textMuted} />
+          <Text style={styles.moneyText}>
+            The money moves between the parties through their bank, never through FoundersLink.
+          </Text>
+        </View>
       </View>
 
       {showDiligence ? (
@@ -380,6 +388,9 @@ const styles = StyleSheet.create({
   // The one bold block on the screen: the money.
   terms: { backgroundColor: colors.primaryDark, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
   termsLabel: { fontSize: 14, fontWeight: '600', color: '#C7D7F5' },
+  termsFine: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  moneyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1], marginTop: spacing[1] },
+  moneyText: { flex: 1, fontSize: 13, fontWeight: '500', color: colors.textMuted },
   amount: { fontSize: 32, fontWeight: '800', color: colors.white },
   termFacts: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3], marginTop: spacing[0.5] },
   termFact: { gap: 2 },
