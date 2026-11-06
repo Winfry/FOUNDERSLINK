@@ -104,3 +104,24 @@ def test_none_reads_no_file(tmp_path):
     env = tmp_path / ".env"
     env.write_text("FL_TEST_NEVER=x\n", encoding="utf-8")
     assert load_env_file("none") == []
+
+
+def _sent_body(**kwargs):
+    import json
+
+    import httpx
+
+    from ai.compliance_rag.answer import ChatClient
+    seen = {}
+
+    def handler(request):
+        seen.update(json.loads(request.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "NOT_FOUND"}}]})
+
+    ChatClient("https://llm.example/v1", "k", "some-model", transport=httpx.MockTransport(handler), **kwargs)         .complete("system", "user")
+    return seen
+
+
+def test_thinking_is_limited_only_when_asked():
+    assert "reasoning_effort" not in _sent_body()
+    assert _sent_body(reasoning_effort="low")["reasoning_effort"] == "low"

@@ -96,20 +96,28 @@ class ChatClient:
     """
 
     def __init__(self, base_url: str, api_key: str, model: str, timeout_s: float = LLM_TIMEOUT_S,
-                 transport: httpx.BaseTransport | None = None):
+                 transport: httpx.BaseTransport | None = None, reasoning_effort: str = ""):
         self.url = base_url.rstrip("/") + "/chat/completions"
         self.model = model
         self.timeout_s = timeout_s
+        # Models that think before answering (Gemini 2.5 and later, OpenAI's
+        # o-series) spend time and tokens on it. Ask Compliance has 6 seconds
+        # and only rewrites passages it is given, so little thinking is needed.
+        # Sent only when set: providers name the levels differently.
+        self.reasoning_effort = reasoning_effort
         self._http = httpx.Client(headers={"Authorization": f"Bearer {api_key}"}, timeout=timeout_s,
                                   transport=transport)
 
     def complete(self, system: str, user: str) -> str:
-        res = self._http.post(self.url, json={
+        body = {
             "model": self.model,
             "temperature": 0,
             "max_tokens": MAX_ANSWER_TOKENS,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        })
+        }
+        if self.reasoning_effort:
+            body["reasoning_effort"] = self.reasoning_effort
+        res = self._http.post(self.url, json=body)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"] or ""
 
@@ -119,7 +127,8 @@ def load_chat_client() -> ChatClient | None:
     if not key or not model:
         log.warning("LLM_API_KEY or LLM_MODEL is not set: Ask Compliance will leave answers to the backend's stand-in")
         return None
-    return ChatClient(os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"), key, model)
+    return ChatClient(os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"), key, model,
+                      reasoning_effort=os.getenv("LLM_REASONING_EFFORT", ""))
 
 
 # ---------------------------------------------------------------------------

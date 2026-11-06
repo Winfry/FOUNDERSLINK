@@ -27,6 +27,7 @@ AI_SERVICE_API_KEY=<same value as the AI service's AI_SERVICE_API_KEY>
 | `AI_SERVICE_API_KEY` | empty | Shared key the backend sends as `X-Internal-Api-Key`. Empty means no check (local only). |
 | `EMBEDDING_MODEL` | `intfloat/multilingual-e5-small` | Multilingual model for mandate matching and Ask Compliance search. `none` turns embeddings off. |
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | empty | The LLM that writes Ask Compliance answers. Without a key, the best official passage is quoted instead. |
+| `LLM_REASONING_EFFORT` | empty | For models that think before answering (Gemini 2.5 and later): `low` keeps answers within the time limit. Sent only when set. |
 | `AI_ENV_FILE` | the root `.env` | The settings file the service reads at start. `none` reads no file (the tests do this). |
 
 ## Ask Compliance
