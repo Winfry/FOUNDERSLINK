@@ -181,7 +181,7 @@ test("documents are shared only by the parties, and only once the deal reaches d
   assert.match(before.json.summary, /3 documents are still missing/);
 });
 
-test("terms cannot be agreed until every party has shared her documents", async () => {
+test("terms cannot be agreed until FoundersLink has confirmed every party's documents", async () => {
   const blocked = await stage("founder", "terms_agreed");
   assert.equal(blocked.status, 409);
   assert.equal(blocked.json.error.code, "NOT_DEAL_READY");
@@ -193,7 +193,7 @@ test("terms cannot be agreed until every party has shared her documents", async 
   assert.equal(registration.json.precheck, null);
   assert.equal(registration.json.check, "uploaded");
   const pin = await share("founder", "kra_pin_certificate");
-  await share("investor", "organisation_proof");
+  const proof = await share("investor", "organisation_proof");
 
   // Each party can open the other's documents. Nobody else can.
   const file = await fetch(`${base}/deals/${dealId}/documents/${pin.json.id}/file`, { headers: { authorization: `Bearer ${tokens.investor}` } });
@@ -248,13 +248,32 @@ test("terms cannot be agreed until every party has shared her documents", async 
   assert.ok(log.some((a: any) => a.action === "deal_document_confirmed"), seen);
   assert.ok(log.every((a: any) => a.admin.full_name));
 
+  // Everything is shared, but two documents wait for a person at FoundersLink:
+  // shared is not enough (FINAL_VERIFICATION section 4, item 3).
+  const waiting = await call("GET", `/deals/${dealId}/due-diligence`, "investor");
+  assert.equal(waiting.json.deal_ready, false);
+  assert.deepEqual(
+    waiting.json.parties.map((p: any) => [p.role, p.ready, p.missing, p.awaiting_confirmation]),
+    [
+      ["founder", false, [], ["KRA PIN certificate"]],
+      ["investor", false, [], ["Organisation or fund documents"]],
+    ],
+  );
+  const held = await stage("founder", "terms_agreed");
+  assert.equal(held.json.error.code, "NOT_DEAL_READY");
+  assert.match(held.json.error.message, /Waiting for FoundersLink to confirm: KRA PIN certificate \(Amina Founder\), Organisation or fund documents \(Grace Investor\)/);
+  assert.doesNotMatch(held.json.error.message, /Still missing/);
+
+  await call("PATCH", `/admin/deal-documents/${again.json.id}`, "admin", { status: "verified" });
+  await call("PATCH", `/admin/deal-documents/${proof.json.id}`, "admin", { status: "verified" });
+
   const pack = await call("GET", `/deals/${dealId}/due-diligence`, "investor");
   assert.equal(pack.json.deal_ready, true);
   // Compiled by the backend's rules here, and it says so.
   assert.equal(pack.json.engine, "stand_in");
   const [founder, investor] = pack.json.parties;
   assert.ok(founder.verified.includes("Business registration certificate: confirmed by FoundersLink"));
-  assert.ok(founder.self_reported.includes("KRA PIN certificate: uploaded, not yet confirmed"));
+  assert.ok(founder.verified.includes("KRA PIN certificate: confirmed by FoundersLink"));
   assert.deepEqual(founder.missing, []);
   assert.deepEqual(investor.missing, []);
   assert.equal((await call("GET", `/admin/deals/${dealId}/due-diligence`, "admin")).json.deal_ready, true);

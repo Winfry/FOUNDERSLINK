@@ -34,6 +34,7 @@ interface ApiDueDiligence {
     verified: string[];
     self_reported: string[];
     missing: string[];
+    awaiting_confirmation: string[];
   }[];
 }
 
@@ -97,7 +98,7 @@ async function load(dealId: string): Promise<Deal> {
     get<ApiDueDiligence>(`/deals/${dealId}/due-diligence`),
     currentUserId(),
   ]);
-  const named = (list: 'verified' | 'self_reported' | 'missing') =>
+  const named = (list: 'verified' | 'self_reported' | 'missing' | 'awaiting_confirmation') =>
     diligence.parties.flatMap((party) => party[list].map((line) => `${party.full_name}: ${line}`));
 
   return {
@@ -105,7 +106,12 @@ async function load(dealId: string): Promise<Deal> {
     checklist: checklist.items.map((item) => ({ id: item.id, label: item.title, done: item.status === 'complete' })),
     timeline: timeline.map((event) => ({ id: event.id, title: event.text, at: event.created_at })),
     documents: diligence.parties.flatMap((party) => party.documents.map((d) => toDocument(d, party.full_name))),
-    dueDiligenceSummary: { verified: named('verified'), selfReported: named('self_reported'), missing: named('missing') },
+    dueDiligenceSummary: {
+      verified: named('verified'),
+      selfReported: named('self_reported'),
+      missing: named('missing'),
+      awaitingConfirmation: named('awaiting_confirmation'),
+    },
     // What this deal still asks of her, for the upload buttons.
     requiredDocuments: diligence.parties.find((party) => party.user_id === me)?.required ?? [],
   };

@@ -208,6 +208,8 @@ export interface Deal {
     verified: string[];
     selfReported: string[];
     missing: string[];
+    /** Shared, and waiting for FoundersLink to confirm before terms can be agreed. */
+    awaitingConfirmation?: string[];
   };
   /** What this deal asks the signed-in party to share at due diligence. */
   requiredDocuments?: { type: string; title: string; provided: boolean; confirmed?: boolean }[];

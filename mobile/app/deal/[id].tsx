@@ -85,6 +85,7 @@ export default function DealScreen() {
 
   const required = deal.requiredDocuments ?? [];
   const missing = deal.dueDiligenceSummary?.missing ?? [];
+  const awaiting = deal.dueDiligenceSummary?.awaitingConfirmation ?? [];
   const atDueDiligence = deal.stage === 'due_diligence';
   const isClosed = deal.stage === 'closed' || deal.stage === 'active';
   const showDiligence = atDueDiligence || deal.documents.length > 0;
@@ -223,6 +224,20 @@ export default function DealScreen() {
               {missing.map((line) => (
                 <View key={line} style={styles.neededRow}>
                   <CircleAlert size={16} color={colors.warning} style={styles.neededIcon} />
+                  <Text style={styles.neededText}>{line}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {/* Terms wait for a person at FoundersLink to confirm what was shared (TEAM_DECISIONS D12). */}
+          {awaiting.length > 0 ? (
+            <View style={styles.awaitingBox}>
+              <Text style={styles.neededTitle}>Waiting for FoundersLink to check</Text>
+              <Text style={styles.neededText}>Terms can be agreed once these are confirmed. You do not need to do anything.</Text>
+              {awaiting.map((line) => (
+                <View key={line} style={styles.neededRow}>
+                  <Clock size={16} color={colors.primary} style={styles.neededIcon} />
                   <Text style={styles.neededText}>{line}</Text>
                 </View>
               ))}
@@ -401,6 +416,7 @@ const styles = StyleSheet.create({
 
   needed: { backgroundColor: colors.warningLight, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
   neededTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
+  awaitingBox: { backgroundColor: colors.primaryLight, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
   neededRow: { flexDirection: 'row', gap: spacing[1] },
   neededIcon: { marginTop: 2 },
   neededText: { flex: 1, fontSize: 14, color: colors.text },

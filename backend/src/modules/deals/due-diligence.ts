@@ -104,26 +104,55 @@ async function partyDeal(userId: string, dealId: string) {
   return deal;
 }
 
-// Each party's required documents that are not in, by title. A rejected
-// document does not count: she has to send another.
-export async function missingDocuments(dealId: string) {
+// Where each required document stands for one party: not shared (or only
+// a rejected copy), shared and waiting for FoundersLink, or confirmed.
+type Standing = "missing" | "awaiting" | "confirmed";
+function standingOf(documents: { type: string; status: string }[], type: string): Standing {
+  const usable = documents.filter((d) => d.type === type && d.status !== "rejected");
+  if (usable.length === 0) return "missing";
+  return usable.some((d) => d.status === "verified") ? "confirmed" : "awaiting";
+}
+
+// Each party's required documents that are not yet confirmed, by title,
+// and whether each is not shared or waiting for FoundersLink.
+export async function unconfirmedDocuments(dealId: string) {
   const deal = await prisma.deal.findUniqueOrThrow({
     where: { id: dealId },
     include: { parties: { include: { user: { select: { full_name: true } } } }, documents: true },
   });
-  return deal.parties.flatMap((party) =>
-    requiredFor(deal.type, party.role)
-      .filter((type) => !deal.documents.some((d) => d.user_id === party.user_id && d.type === type && d.status !== "rejected"))
-      .map((type) => ({ user_id: party.user_id, full_name: party.user.full_name, type, title: TITLES[type]! })),
-  );
+  return deal.parties.flatMap((party) => {
+    const mine = deal.documents.filter((d) => d.user_id === party.user_id);
+    return requiredFor(deal.type, party.role)
+      .map((type) => ({ user_id: party.user_id, full_name: party.user.full_name, type, title: TITLES[type]!, standing: standingOf(mine, type) }))
+      .filter((d) => d.standing !== "confirmed");
+  });
 }
 
-// Called before a deal moves to terms agreed.
+// Called before a deal moves to terms agreed. Every party's documents
+// must be confirmed by a person at FoundersLink, not only shared: the AI
+// prepares, a person decides (TEAM_DECISIONS D12; FINAL_VERIFICATION
+// section 4, item 3: terms were agreed on documents nobody had checked).
 export async function mustBeDealReady(dealId: string) {
-  const missing = await missingDocuments(dealId);
-  if (missing.length === 0) return;
-  const list = missing.map((m) => `${m.title} (${m.full_name})`).join(", ");
-  throw new AppError(409, "NOT_DEAL_READY", `Terms can be agreed once every party has shared their documents. Still missing: ${list}`);
+  const open = await unconfirmedDocuments(dealId);
+  if (open.length === 0) return;
+  const list = (standing: Standing) =>
+    open
+      .filter((d) => d.standing === standing)
+      .map((d) => `${d.title} (${d.full_name})`)
+      .join(", ");
+  const missing = list("missing");
+  const awaiting = list("awaiting");
+  throw new AppError(
+    409,
+    "NOT_DEAL_READY",
+    [
+      "Terms can be agreed once FoundersLink has confirmed every party's documents.",
+      missing ? `Still missing: ${missing}.` : "",
+      awaiting ? `Waiting for FoundersLink to confirm: ${awaiting}.` : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
 }
 
 export async function uploadDealDocument(userId: string, dealId: string, file: UploadedFile | undefined, input: z.infer<typeof dealUploadSchema>) {
@@ -265,8 +294,9 @@ async function build(dealId: string) {
   const parties = deal.parties.map((party) => {
     const required = requiredFor(deal.type, party.role).map((type) => ({ type, title: TITLES[type]! }));
     const documents = deal.documents.filter((d) => d.user_id === party.user_id);
-    const missing = required.filter((r) => !documents.some((d) => d.type === r.type && d.status !== "rejected"));
-    return { party, required, documents, missing };
+    const missing = required.filter((r) => standingOf(documents, r.type) === "missing");
+    const awaiting = required.filter((r) => standingOf(documents, r.type) === "awaiting");
+    return { party, required, documents, missing, awaiting };
   });
 
   const pack = await dueDiligencePack(
@@ -290,13 +320,16 @@ async function build(dealId: string) {
     type: deal.type,
     stage: deal.stage,
     terms: deal.terms,
-    // Whether the deal may move to terms agreed.
-    deal_ready: parties.every((p) => p.missing.length === 0),
-    parties: parties.map(({ party, required, documents, missing }, i) => ({
+    // Whether the deal may move to terms agreed: every required document
+    // shared and confirmed by FoundersLink.
+    deal_ready: parties.every((p) => p.missing.length === 0 && p.awaiting.length === 0),
+    parties: parties.map(({ party, required, documents, missing, awaiting }, i) => ({
       user_id: party.user_id,
       full_name: party.user.full_name,
       role: party.role,
-      ready: missing.length === 0,
+      ready: missing.length === 0 && awaiting.length === 0,
+      // Shared, and waiting for a person at FoundersLink to confirm.
+      awaiting_confirmation: awaiting.map((r) => r.title),
       required: required.map((r) => ({
         ...r,
         provided: !missing.includes(r),

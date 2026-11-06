@@ -27,7 +27,7 @@ const NOT_OPEN: ErrorCase = [409, "DEAL_NOT_OPEN", "The deal is paused or declin
 const NOT_READY: ErrorCase = [
   409,
   "NOT_DEAL_READY",
-  "The move is to `terms_agreed` and a party to an investment deal has not shared a required document. The message lists what is missing and from whom.",
+  "The move is to `terms_agreed` and a required document of a party to an investment deal is not yet confirmed by FoundersLink: not shared, or shared and waiting for an admin. The message lists each, and from whom.",
 ];
 const NO_DOCUMENT: ErrorCase = [404, "NOT_FOUND", "No such deal for the caller, or no such document on it."];
 const FILE_DELETED: ErrorCase = [410, "FILE_DELETED", "The file was deleted after the retention period. Its record remains."];
@@ -73,13 +73,14 @@ const dueDiligence = obj({
   type: oneOf(DEAL_TYPES),
   stage: str,
   terms: described({ type: "object" }, "The terms as recorded so far: `amount_kes`, `instrument`, `equity_percent`, `roles`, `notes`, each optional."),
-  deal_ready: described(bool, "Every party has shared what this deal asks of her, so it may move to `terms_agreed`."),
+  deal_ready: described(bool, "Every party has shared what this deal asks of her and FoundersLink has confirmed it, so it may move to `terms_agreed`."),
   parties: arr(
     obj({
       user_id: uuid,
       full_name: str,
       role: ROLE,
-      ready: bool,
+      ready: described(bool, "Everything this deal asks of her is shared and confirmed by FoundersLink."),
+      awaiting_confirmation: described(arr(str), "Documents she has shared that are waiting for FoundersLink to confirm."),
       required: arr(obj({ type: str, title: str, provided: bool, confirmed: described(bool, "FoundersLink has confirmed her copy; it can no longer be replaced.") })),
       documents: arr(dealDocument),
       verified: described(arr(str), "What FoundersLink has confirmed about her."),
