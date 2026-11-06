@@ -386,6 +386,8 @@ test("any party can pause or decline with a reason, and declined is final", asyn
   const other = await call("POST", "/deals", "outsider", { type: "investment", title: `Other round ${run}`, with_user_id: ids.investor });
   const otherId = other.json.id;
   const status = (who: Who, body: object) => call("POST", `/deals/${otherId}/status`, who, body);
+  const openStages = async () => (await call("GET", "/admin/stats", "admin")).json.deals;
+  const before = await openStages();
 
   assert.equal((await status("investor", { status: "paused" })).status, 400);
 
@@ -397,6 +399,14 @@ test("any party can pause or decline with a reason, and declined is final", asyn
   assert.equal((await status("outsider", { status: "open", reason: "Accounts are ready." })).json.status, "open");
   assert.equal((await status("investor", { status: "declined", reason: "Outside our mandate after all." })).json.status, "declined");
   assert.equal((await status("outsider", { status: "open", reason: "Please reconsider." })).json.error.code, "DEAL_DECLINED");
+
+  // FINAL_VERIFICATION 25: the dashboard counts open deals by stage, so a
+  // declined one drops out, and "waiting for review" is the review list's own number.
+  const after = await openStages();
+  assert.equal(after.by_stage.exploring ?? 0, (before.by_stage.exploring ?? 0) - 1);
+  assert.equal(after.total, before.total - 1);
+  const waiting = (await call("GET", "/admin/deal-documents", "admin")).json;
+  assert.equal(after.waiting_review, new Set(waiting.map((d: any) => d.deal.id)).size);
 });
 
 test("a document is called AI pre-checked only when the AI service could read it", async () => {

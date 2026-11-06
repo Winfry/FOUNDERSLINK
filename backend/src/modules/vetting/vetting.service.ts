@@ -232,7 +232,7 @@ export async function getApplicationForReview(applicationId: string) {
 // Every decision ever made about her, newest first, from the audit log.
 // The application itself keeps only the latest decision, and loses it when
 // she resubmits, so the history is read from here (FINAL_VERIFICATION 18).
-export const HISTORY_ACTIONS = ["approve_first", "approve", "reject", "needs_info", "suspend", "reinstate", "recheck_confirmed"];
+export const HISTORY_ACTIONS = ["approve_first", "approve", "reject", "needs_info", "suspend", "suspend_confirmed", "reinstate", "recheck_confirmed"];
 
 // A decision's checks are written in the same transaction, by the same
 // admin, so they carry the same moment; a few seconds allows for a clock

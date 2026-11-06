@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Flag, Info } from "lucide-react";
 import type { ReportedMemberRow, ReportedMessageRow } from "@/types";
@@ -31,7 +32,9 @@ export function ReportsView({
   const [messages, setMessages] = useState(initialMessages);
   const [members, setMembers] = useState(initialMembers);
   const [reason, setReason] = useState("");
-  const [target, setTarget] = useState<{ kind: Tab; id: string; name: string } | null>(null);
+  const router = useRouter();
+  // Which report, and what she chose to do with it.
+  const [target, setTarget] = useState<{ kind: Tab; id: string; name: string; action: "dismiss" | "suspend" } | null>(null);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -42,25 +45,31 @@ export function ReportsView({
     setReason("");
   }
 
-  function suspend() {
+  function resolve() {
     const t = target;
     if (!t || reasonLength < MIN_REASON) return;
     startTransition(async () => {
       try {
         const result =
           t.kind === "messages"
-            ? await reportMessageAction(t.id, "suspend", reason.trim())
-            : await reportMemberAction(t.id, "suspend", reason.trim());
+            ? await reportMessageAction(t.id, t.action, reason.trim())
+            : await reportMemberAction(t.id, t.action, reason.trim());
         // The backend says so when it could not do what was asked.
         if (result && "ok" in result && !result.ok) {
           setToast({ text: result.error ?? "Nothing was changed.", error: true });
         } else {
-          if (t.kind === "messages") {
-            setMessages((list) => list.map((x) => (x.id === t.id ? { ...x, status: "handled" as const } : x)));
-          } else {
-            setMembers((list) => list.map((x) => (x.id === t.id ? { ...x, status: "handled" as const } : x)));
-          }
-          setToast({ text: `${t.name} was suspended. Your reason is in the audit log.` });
+          const outcome = t.action === "suspend" ? ("suspended" as const) : ("dismissed" as const);
+          const done = { status: "handled" as const, handledOutcome: outcome, handledNote: reason.trim(), handledAt: new Date().toISOString() };
+          if (t.kind === "messages") setMessages((list) => list.map((x) => (x.id === t.id ? { ...x, ...done } : x)));
+          else setMembers((list) => list.map((x) => (x.id === t.id ? { ...x, ...done } : x)));
+          setToast({
+            text:
+              t.action === "suspend"
+                ? `${t.name} was suspended, and every open report about them is closed. Your reason is in the audit log.`
+                : "Report dismissed. It no longer counts towards an automatic suspension. Your reason is in the audit log.",
+          });
+          // A suspension closes the member's other reports too: read them again.
+          router.refresh();
         }
       } catch {
         setToast({ text: "Nothing was changed: the server did not answer. Try again.", error: true });
@@ -69,7 +78,9 @@ export function ReportsView({
     });
   }
 
+  // Open reports first, as the backend sends them; the tabs count the open ones.
   const rows: Row[] = tab === "messages" ? messages : members;
+  const open = (list: Row[]) => list.filter((r) => r.status === "open").length;
 
   return (
     <div className="space-y-6">
@@ -81,16 +92,17 @@ export function ReportsView({
       <div className="flex items-start gap-3 rounded-btn bg-primary-light px-4 py-3 text-sm font-medium text-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
         <p>
-          The one action you can take from a report today is suspending the reported member. Dismissing a report and
-          warning a member are not available yet, so reports stay in this list.
+          Dismiss a report that does not call for action: it is closed and no longer counts towards an automatic
+          suspension. Suspending the member closes every open report about them. Both are recorded in the audit log with
+          your reason.
         </p>
       </div>
 
       <Tabs
         label="Report type"
         items={[
-          { id: "messages", label: "Reported messages", count: messages.length },
-          { id: "members", label: "Reported members", count: members.length },
+          { id: "messages", label: "Reported messages, open", count: open(messages) },
+          { id: "members", label: "Reported members, open", count: open(members) },
         ]}
         active={tab}
         onChange={(id) => setTab(id as Tab)}
@@ -118,7 +130,7 @@ export function ReportsView({
                   </p>
                   <div className="flex items-center gap-2">
                     {row.aiWarning ? <Badge variant="warning">Flagged automatically</Badge> : null}
-                    <StatusBadge status={row.status} />
+                    <StatusBadge status={row.handledOutcome ?? row.status} />
                   </div>
                 </div>
                 <div>
@@ -133,12 +145,35 @@ export function ReportsView({
                     </p>
                   </div>
                 ) : null}
+                {row.status === "handled" ? (
+                  <div className="rounded-btn bg-surface px-4 py-3">
+                    <p className="text-xs font-semibold text-muted">
+                      {row.handledOutcome === "suspended" ? "Member suspended" : "Dismissed"}
+                      {row.handledBy ? ` by ${row.handledBy}` : ""}
+                      {row.handledAt ? `, ${formatDayTime(row.handledAt)}` : ""}
+                    </p>
+                    {row.handledNote ? <p className="text-sm font-medium text-foreground">{row.handledNote}</p> : null}
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
                   <p className="text-xs font-semibold text-muted">Reported {formatDayTime(row.reportedAt)}</p>
                   {row.status === "open" ? (
-                    <Button type="button" variant="destructive" onClick={() => setTarget({ kind: tab, id: row.id, name: row.reportedMemberName })}>
-                      Suspend {row.reportedMemberName}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setTarget({ kind: tab, id: row.id, name: row.reportedMemberName, action: "dismiss" })}
+                      >
+                        Dismiss
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => setTarget({ kind: tab, id: row.id, name: row.reportedMemberName, action: "suspend" })}
+                      >
+                        Suspend {row.reportedMemberName}
+                      </Button>
+                    </div>
                   ) : null}
                 </div>
               </CardContent>
@@ -149,14 +184,18 @@ export function ReportsView({
 
       <ConfirmDialog
         open={target !== null}
-        title={`Suspend ${target?.name ?? "this member"}?`}
-        description="They will not be able to use FoundersLink until they are reinstated. This is recorded in the audit log with your reason."
-        confirmLabel="Suspend member"
-        variant="destructive"
+        title={target?.action === "dismiss" ? "Dismiss this report?" : `Suspend ${target?.name ?? "this member"}?`}
+        description={
+          target?.action === "dismiss"
+            ? "The report is closed and no longer counts towards an automatic suspension. Nothing happens to the member. This is recorded in the audit log with your reason."
+            : "They will not be able to use FoundersLink until they are reinstated, and every open report about them is closed. This is recorded in the audit log with your reason."
+        }
+        confirmLabel={target?.action === "dismiss" ? "Dismiss report" : "Suspend member"}
+        variant={target?.action === "dismiss" ? "primary" : "destructive"}
         loading={pending}
         confirmDisabled={reasonLength < MIN_REASON}
         onCancel={close}
-        onConfirm={suspend}
+        onConfirm={resolve}
       >
         <div className="flex flex-col gap-1.5">
           <label htmlFor="report-reason" className="text-sm font-semibold text-foreground">

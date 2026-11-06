@@ -223,6 +223,11 @@ export interface ReportedMessageRow {
   messageText: string;
   aiWarning: boolean;
   status: "open" | "handled";
+  /** How an admin closed it: set once it is handled. */
+  handledOutcome?: "dismissed" | "suspended";
+  handledBy?: string;
+  handledAt?: string;
+  handledNote?: string;
 }
 
 export interface ReportedMemberRow {
@@ -234,6 +239,11 @@ export interface ReportedMemberRow {
   reportedAt: string;
   aiWarning: boolean;
   status: "open" | "handled";
+  /** How an admin closed it: set once it is handled. */
+  handledOutcome?: "dismissed" | "suspended";
+  handledBy?: string;
+  handledAt?: string;
+  handledNote?: string;
 }
 
 export interface RecheckListItem {
@@ -305,9 +315,15 @@ export interface AdminStats {
   membersByStatus: { status: ApprovalStatus; count: number }[];
   verificationsWaiting: number;
   rechecksDue: number;
+  /** Reports no admin has handled yet. */
   openReports: number;
+  /** Open deals only. */
   dealsByStage: { stage: DealStage; count: number }[];
+  /** Deals with a document waiting for an admin: the deal reviews list. */
+  dealsWaitingReview: number;
+  /** Savings chamas. Learning circles are counted on their own. */
   chamasCount: number;
+  learningCirclesCount: number;
   registrationsByMonth: { month: string; count: number }[];
 }
 

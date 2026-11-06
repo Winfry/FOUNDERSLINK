@@ -14,7 +14,7 @@ import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { areConnected } from "../network/connections.js";
 import { notifyMany } from "../notifications/notifications.service.js";
-import { listUserReports, suspendIfReported } from "../safety/reports.js";
+import { handlingOf, listUserReports, openFirst, suspendIfReported } from "../safety/reports.js";
 
 export const openSchema = z.object({ user_id: z.uuid() });
 export const sendSchema = z.object({ body: z.string().trim().min(1).max(4000) });
@@ -275,7 +275,8 @@ export async function reportMessage(userId: string, messageId: string, reason: s
   return { message_id: messageId, reported: true, sender_suspended: suspended };
 }
 
-// For admins: reported messages, with who reported them and why.
+// For admins: reported messages, with who reported them and why, open
+// ones first, and how each was handled.
 export async function listReports() {
   const reports = await prisma.messageReport.findMany({
     orderBy: { created_at: "desc" },
@@ -285,15 +286,19 @@ export async function listReports() {
       message: { include: { sender: { select: { id: true, full_name: true, role: true, approval_status: true } } } },
     },
   });
+  const handled = await handlingOf(reports);
   return {
-    messages: reports.map((r) => ({
-      id: r.id,
-      reason: r.reason,
-      reporter: r.reporter,
-      message: { id: r.message.id, body: r.message.body, flagged: r.message.flagged, sent_at: r.message.created_at },
-      sender: r.message.sender,
-      created_at: r.created_at,
-    })),
+    messages: reports
+      .map((r) => ({
+        id: r.id,
+        reason: r.reason,
+        reporter: r.reporter,
+        message: { id: r.message.id, body: r.message.body, flagged: r.message.flagged, sent_at: r.message.created_at },
+        sender: r.message.sender,
+        created_at: r.created_at,
+        handled: handled(r),
+      }))
+      .sort(openFirst),
     members: await listUserReports(),
   };
 }

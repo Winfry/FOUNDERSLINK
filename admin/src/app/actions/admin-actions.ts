@@ -95,23 +95,27 @@ export async function rejectDocumentAction(dealId: string, documentId: string, r
 
 export async function reportMessageAction(
   id: string,
-  action: "dismiss" | "warn" | "suspend",
+  action: "dismiss" | "suspend",
   reason: string,
 ) {
   const result = await actOnMessageReport(id, action, reason);
   revalidatePath("/reports");
   revalidatePath("/audit-log");
+  revalidatePath("/overview");
+  revalidatePath("/members");
   return result;
 }
 
 export async function reportMemberAction(
   id: string,
-  action: "dismiss" | "warn" | "suspend",
+  action: "dismiss" | "suspend",
   reason: string,
 ) {
   const result = await actOnMemberReport(id, action, reason);
   revalidatePath("/reports");
   revalidatePath("/audit-log");
+  revalidatePath("/overview");
+  revalidatePath("/members");
   return result;
 }
 

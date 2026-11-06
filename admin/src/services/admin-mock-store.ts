@@ -599,7 +599,9 @@ export function getAdminStats(): AdminStats {
     rechecksDue: rechecks.length,
     openReports: getNavCounts().openReports,
     dealsByStage,
-    chamasCount: chamas.length,
+    dealsWaitingReview: getNavCounts().dealReviews,
+    chamasCount: chamas.filter((c) => c.type === "money").length,
+    learningCirclesCount: chamas.filter((c) => c.type !== "money").length,
     registrationsByMonth: [
       { month: "2025-09", count: 2 },
       { month: "2025-10", count: 4 },
@@ -793,6 +795,10 @@ export function handleReportMessage(
   const row = reportedMessages.find((r) => r.id === id);
   if (!row) return null;
   row.status = "handled";
+  row.handledOutcome = action === "suspend" ? "suspended" : "dismissed";
+  row.handledBy = "Demo Admin";
+  row.handledAt = new Date().toISOString();
+  row.handledNote = reason;
   const label =
     action === "dismiss" ? "Report dismissed" : action === "warn" ? "Member warned" : "Member suspended";
   if (action === "suspend") {
@@ -811,6 +817,10 @@ export function handleReportMember(
   const row = reportedMembers.find((r) => r.id === id);
   if (!row) return null;
   row.status = "handled";
+  row.handledOutcome = action === "suspend" ? "suspended" : "dismissed";
+  row.handledBy = "Demo Admin";
+  row.handledAt = new Date().toISOString();
+  row.handledNote = reason;
   const label =
     action === "dismiss" ? "Report dismissed" : action === "warn" ? "Member warned" : "Member suspended";
   if (action === "suspend") suspendMember(row.reportedMemberId, reason);

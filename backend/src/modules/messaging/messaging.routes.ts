@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
-import { reportUser, userReportSchema } from "../safety/reports.js";
+import { reportUser, resolveReport, resolveReportSchema, userReportSchema } from "../safety/reports.js";
 import {
   listConversations,
   listMessages,
@@ -66,3 +66,10 @@ messagingRouter.delete("/users/:id/block", ...member, async (req, res) => {
 messagingRouter.get("/admin/reports", requireAuth, requireRole("admin"), async (_req, res) => {
   res.json(await listReports());
 });
+
+// Close a report: dismiss it, or suspend the member it is about.
+for (const kind of ["messages", "members"] as const) {
+  messagingRouter.post(`/admin/reports/${kind}/:id/resolve`, requireAuth, requireRole("admin"), async (req, res) => {
+    res.json(await resolveReport(req.user!.id, kind, id(req.params.id), resolveReportSchema.parse(req.body)));
+  });
+}

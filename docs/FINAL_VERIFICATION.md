@@ -64,7 +64,7 @@ Ordered by how much they hurt. **Updated at 08:50:** the first ten, and number 2
 | 22 | The phone field refuses `07…` numbers and insists on `+254`. | Q1-13 | Mobile | S | **Fixed** in `806813e` (checked in the app) |
 | 23 | An amount of 0 is accepted on a join request; a repeated request shows the backend's sentence twice. | Q2-19 | Mobile | S | **Fixed** (checked by tests on the backend; the app typechecks) |
 | 24 | Outside production, "Forgot password" returns the working reset code for any account, the admin's included. It is how the demo shows codes; a judge may ask. | Q6-14 | Backend | S | **Fixed** (checked by tests on the backend) |
-| 25 | "Open reports" and its badge count every report ever made; "Chamas" on the overview counts learning circles; "Deals in due diligence 3" links to a list of 2. | Q5-19, Q4-15 | Admin | S | Open |
+| 25 | "Open reports" and its badge count every report ever made; "Chamas" on the overview counts learning circles; "Deals in due diligence 3" links to a list of 2. | Q5-19, Q4-15 | Admin | S | **Fixed** (checked by tests on the backend; the dashboard was typechecked with its packages stubbed, not run in a browser) |
 
 ## 4. Where the product differs from what the team decided
 

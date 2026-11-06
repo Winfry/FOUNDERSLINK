@@ -22,6 +22,7 @@ const STATUS_MAP: Record<string, { label: string; variant: Variant }> = {
   uploaded: { label: "Waiting for review", variant: "default" },
   open: { label: "Open", variant: "warning" },
   handled: { label: "Handled", variant: "success" },
+  dismissed: { label: "Dismissed", variant: "muted" },
   current: { label: "Current", variant: "success" },
   due: { label: "Review due", variant: "warning" },
   out_of_date: { label: "Out of date", variant: "destructive" },

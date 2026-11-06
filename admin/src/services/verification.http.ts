@@ -117,6 +117,7 @@ const DECISION_OF: Record<string, VettingDecisionRecord["decision"]> = {
   reject: "rejected",
   needs_info: "needs_info",
   suspend: "suspended",
+  suspend_confirmed: "suspended",
   reinstate: "reinstated",
   recheck_confirmed: "recheck_confirmed",
 };

@@ -173,16 +173,21 @@ const MONTHS = 6;
 export async function getStats(now = new Date()) {
   const since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (MONTHS - 1), 1));
 
-  const [byRole, byStatus, waiting, recent, deals, circles, messageReports, userReports, rechecks] = await Promise.all([
+  const [byRole, byStatus, waiting, recent, deals, circles, messageReports, userReports, rechecks, toReview] = await Promise.all([
     prisma.user.groupBy({ by: ["role"], where: { role: { not: "admin" } }, _count: true }),
     prisma.user.groupBy({ by: ["approval_status"], where: { role: { not: "admin" } }, _count: true }),
     prisma.user.count({ where: { approval_status: { in: ["submitted", "in_review"] } } }),
     prisma.user.findMany({ where: { role: { not: "admin" }, created_at: { gte: since } }, select: { created_at: true, role: true } }),
-    prisma.deal.groupBy({ by: ["stage"], _count: true }),
+    // Open deals only: a paused or declined deal is not at a stage any more
+    // (FINAL_VERIFICATION 25: "due diligence 3" counted a declined one).
+    prisma.deal.groupBy({ by: ["stage"], where: { status: "open" }, _count: true }),
     prisma.circle.groupBy({ by: ["type"], _count: true }),
-    prisma.messageReport.count(),
-    prisma.userReport.count(),
+    // Open reports: the ones no admin has handled yet.
+    prisma.messageReport.count({ where: { handled_at: null } }),
+    prisma.userReport.count({ where: { handled_at: null } }),
     prisma.vettingApplication.count({ where: { recheck_due_at: { lte: now }, user: { approval_status: "approved" } } }),
+    // Deals with a document waiting for an admin: the deal reviews list.
+    prisma.dealDocument.findMany({ where: { status: "uploaded", storage_key: { not: null } }, distinct: ["deal_id"], select: { deal_id: true } }),
   ]);
 
   const count = <K extends string>(rows: ({ _count: number } & Record<K, string>)[], key: K) =>
@@ -206,7 +211,7 @@ export async function getStats(now = new Date()) {
     applications_waiting: waiting,
     rechecks_due: rechecks,
     reports: { messages: messageReports, members: userReports },
-    deals: { total: deals.reduce((t, d) => t + d._count, 0), by_stage: count(deals, "stage") },
+    deals: { total: deals.reduce((t, d) => t + d._count, 0), by_stage: count(deals, "stage"), waiting_review: toReview.length },
     circles: { total: circles.reduce((t, c) => t + c._count, 0), by_type: count(circles, "type") },
     registrations,
   };

@@ -15,7 +15,7 @@ export async function fetchReports(): Promise<{
 
 export async function actOnMessageReport(
   id: string,
-  action: "dismiss" | "warn" | "suspend",
+  action: "dismiss" | "suspend",
   reason: string,
 ) {
   if (live) return http.actOnMessageReport(id, action, reason);
@@ -25,7 +25,7 @@ export async function actOnMessageReport(
 
 export async function actOnMemberReport(
   id: string,
-  action: "dismiss" | "warn" | "suspend",
+  action: "dismiss" | "suspend",
   reason: string,
 ) {
   if (live) return http.actOnMemberReport(id, action, reason);

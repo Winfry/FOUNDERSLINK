@@ -169,7 +169,7 @@ export const ops: Op[] = [
         history: arr(
           obj({
             id: uuid,
-            action: oneOf(["approve_first", "approve", "reject", "needs_info", "suspend", "reinstate", "recheck_confirmed"]),
+            action: oneOf(["approve_first", "approve", "reject", "needs_info", "suspend", "suspend_confirmed", "reinstate", "recheck_confirmed"]),
             reason: str,
             created_at: dateTime,
             admin: obj({ id: uuid, full_name: str }),

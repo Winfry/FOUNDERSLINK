@@ -36,7 +36,7 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
     { name: "Experts", value: stats.expertsCount },
   ].filter((d) => d.value > 0);
   const waiting = stats.verificationsWaiting;
-  const dueDiligence = stats.dealsByStage.find((d) => d.stage === "due_diligence")?.count ?? 0;
+  const learning = stats.learningCirclesCount;
 
   return (
     <div className="space-y-6">
@@ -51,7 +51,7 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
           <p className="mt-1 text-base text-white/80">
             {waiting === 0
               ? "The queue is clear. New applications appear here as soon as they are submitted."
-              : "Founders and investors cannot be matched until someone at FoundersLink decides."}
+              : "Until someone at FoundersLink decides, they see their matches without names and cannot connect."}
           </p>
         </div>
         <Link
@@ -65,10 +65,11 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Link href="/deal-reviews" className={cardLink}>
-          <StatCard title="Deals in due diligence" value={String(dueDiligence)} icon={ClipboardCheck} className={statHover} />
+          {/* The same number as the menu badge and the list it opens (FINAL_VERIFICATION 25). */}
+          <StatCard title="Deals waiting for a document review" value={String(stats.dealsWaitingReview)} icon={ClipboardCheck} className={statHover} />
         </Link>
         <Link href="/reports" className={cardLink}>
-          <StatCard title="Open reports" value={String(stats.openReports)} icon={FileBarChart} className={statHover} />
+          <StatCard title="Open reports" note="Not yet dismissed or acted on" value={String(stats.openReports)} icon={FileBarChart} className={statHover} />
         </Link>
         <Link href="/rechecks" className={cardLink}>
           <StatCard title="Re-checks due" value={String(stats.rechecksDue)} icon={RefreshCw} className={statHover} />
@@ -85,7 +86,13 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
           </Link>
         ) : null}
         <Link href="/chamas" className={cardLink}>
-          <StatCard title="Chamas" value={String(stats.chamasCount)} icon={UsersRound} className={statHover} />
+          <StatCard
+            title="Chamas"
+            note={learning > 0 ? `Plus ${learning} learning ${learning === 1 ? "circle" : "circles"}` : undefined}
+            value={String(stats.chamasCount)}
+            icon={UsersRound}
+            className={statHover}
+          />
         </Link>
       </div>
 
@@ -148,7 +155,7 @@ export function OverviewView({ stats }: { stats: AdminStats }) {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Deals by stage</CardTitle>
-            <CardDescription>FoundersLink tracks the stage of each deal. It never holds or moves the money.</CardDescription>
+            <CardDescription>Open deals. Paused and declined ones are not counted. FoundersLink never holds or moves the money.</CardDescription>
           </CardHeader>
           <CardContent>
             {barData.length === 0 ? (

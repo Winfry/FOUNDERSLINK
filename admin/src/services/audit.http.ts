@@ -11,12 +11,12 @@ interface ApiAction {
 }
 
 // The filter on the page, and the backend actions each choice covers.
-// The backend records no report or compliance actions here.
+// The backend records no compliance actions here.
 const ACTION_TYPES: Record<string, string[]> = {
   verification: ["approve", "approve_first", "reject", "needs_info", "recheck_confirmed"],
-  member: ["suspend", "reinstate", "create_admin"],
+  member: ["suspend", "suspend_confirmed", "reinstate", "create_admin"],
   document: ["deal_document_confirmed", "deal_document_rejected", "vetting_document_confirmed", "vetting_document_rejected"],
-  report: [],
+  report: ["report_dismissed", "suspend_confirmed"],
   compliance: [],
 };
 

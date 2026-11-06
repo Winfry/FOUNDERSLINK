@@ -57,7 +57,8 @@ function toDocument(d: ApiDocument, partyName: string): DealDocumentItem {
     mimeType: d.mime_type,
     // Served through the dashboard, which adds the admin's session.
     previewUrl: `/api/deal-documents/${d.id}/file`,
-    aiPrechecked: d.precheck !== null,
+    // A precheck that could not read the file is not a pre-check (FINAL_VERIFICATION 16).
+    aiPrechecked: d.precheck?.readable === true,
     precheckFlags: flagsOf(d.precheck),
     adminStatus: STATUS[d.status],
     rejectionReason: d.rejection_reason,

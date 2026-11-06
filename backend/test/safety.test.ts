@@ -16,6 +16,7 @@ const people = {
   grace: { role: "investor", full_name: "Grace Investor" },
   achieng: { role: "founder", full_name: "Achieng Friend" },
   mumbi: { role: "founder", full_name: "Mumbi Friend" },
+  otieno: { role: "founder", full_name: "Otieno Friend" },
   admin: { role: "admin", full_name: "Test Admin" },
 } as const;
 type Who = keyof typeof people;
@@ -168,4 +169,57 @@ test("reports from three different members suspend the one reported, and admins 
   const paused = notices.find((n: any) => n.type === "account_suspended");
   assert.equal(paused?.title, "Your account is paused");
   assert.ok(!paused.body.includes("fee"));
+});
+
+// --- Handling reports (FINAL_VERIFICATION 25: every report ever made counted as open) ---
+
+const openReports = async () => (await call("GET", "/admin/stats", "admin")).json.reports;
+const reportsAbout = async (who: Who) =>
+  (await call("GET", "/admin/reports", "admin")).json.members.filter((r: any) => r.reported.id === ids[who]);
+
+test("a suspension closes every open report about the member, and is recorded", async () => {
+  // Grace was paused automatically by three reports in the test above.
+  const before = await openReports();
+  const [first] = await reportsAbout("grace");
+  assert.equal(first.handled, null);
+
+  const res = await call("POST", `/admin/reports/members/${first.id}/resolve`, "admin", {
+    outcome: "suspend",
+    reason: "Asked three founders for a fee; confirmed with them.",
+  });
+  assert.deepEqual(res.json, { id: first.id, handled: true, outcome: "suspended" });
+
+  const after = await reportsAbout("grace");
+  assert.equal(after.length, 3);
+  assert.ok(after.every((r: any) => r.handled?.outcome === "suspended" && r.handled.by.full_name === "Test Admin"));
+  assert.equal((await openReports()).members, before.members - 3);
+
+  // She was already paused, so this is recorded as the decision to keep her paused.
+  const log = (await call("GET", "/admin/actions", "admin")).json.filter((a: any) => a.target.id === ids.grace);
+  assert.equal(log[0].action, "suspend_confirmed");
+  assert.equal((await call("POST", `/admin/reports/members/${first.id}/resolve`, "admin", { outcome: "dismiss", reason: "Again." })).json.error.code, "ALREADY_HANDLED");
+});
+
+test("a dismissed report is closed, and no longer counts towards an automatic suspension", async () => {
+  const report = (who: Who) => call("POST", "/reports", who, { user_id: ids.amina, reason: "Was rude to me in a chat." });
+  await report("mumbi");
+  const [mine] = await reportsAbout("amina");
+  assert.equal((await call("POST", `/admin/reports/members/${mine.id}/resolve`, "amina", { outcome: "dismiss", reason: "Not me." })).status, 403);
+
+  const dismissed = await call("POST", `/admin/reports/members/${mine.id}/resolve`, "admin", {
+    outcome: "dismiss",
+    reason: "A disagreement about a meeting time, not abuse.",
+  });
+  assert.equal(dismissed.json.outcome, "dismissed");
+  assert.equal((await call("GET", "/admin/actions", "admin")).json.find((a: any) => a.target.id === ids.amina)?.action, "report_dismissed");
+
+  // Two more reports: with the dismissed one that would have been three
+  // different reporters, but a dismissed report does not count.
+  assert.equal((await report("achieng")).json.suspended, false);
+  assert.equal((await report("otieno")).json.suspended, false);
+  assert.equal((await call("GET", "/me", "amina")).json.approval_status, "approved");
+
+  // Open reports come first in the list.
+  const list = await reportsAbout("amina");
+  assert.deepEqual(list.map((r: any) => r.handled?.outcome ?? "open"), ["open", "open", "dismissed"]);
 });

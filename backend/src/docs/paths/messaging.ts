@@ -1,5 +1,5 @@
 import { openSchema, pageSchema, reportSchema, sendSchema } from "../../modules/messaging/messaging.service.js";
-import { userReportSchema } from "../../modules/safety/reports.js";
+import { resolveReportSchema, userReportSchema } from "../../modules/safety/reports.js";
 import { arr, bool, dateTime, described, nullable, obj, oneOf, ref, str, uuid, type ErrorCase, type Op } from "../builder.js";
 import { APPROVAL_STATUS, person, ROLE } from "../schemas.js";
 
@@ -12,6 +12,17 @@ export const tag = {
 const NO_CONVERSATION: ErrorCase = [404, "NOT_FOUND", "No such conversation, or the caller is not in it."];
 const conversationId = { id: described(uuid, "The conversation id.") };
 const reported = obj({ id: uuid, full_name: str, role: ROLE, approval_status: APPROVAL_STATUS });
+const handled = nullable(
+  described(
+    obj({
+      at: dateTime,
+      by: nullable(obj({ id: uuid, full_name: str })),
+      outcome: oneOf(["dismissed", "suspended"]),
+      note: nullable(str),
+    }),
+    "How an admin dealt with the report. Null while it is open.",
+  ),
+);
 
 export const ops: Op[] = [
   {
@@ -128,7 +139,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/admin/reports",
     summary: "Reported messages and members",
-    description: "The 100 most recent of each, newest first. There is no paging.",
+    description: "The 100 most recent of each: open reports first, then newest first. There is no paging. A report is open until an admin handles it (`handled`).",
     access: "admin",
     ok: {
       description: "The reports.",
@@ -141,10 +152,30 @@ export const ops: Op[] = [
             message: obj({ id: uuid, body: str, flagged: bool, sent_at: dateTime }),
             sender: nullable(reported),
             created_at: dateTime,
+            handled,
           }),
         ),
-        members: arr(obj({ id: uuid, reason: str, reporter: person, reported, created_at: dateTime })),
+        members: arr(obj({ id: uuid, reason: str, reporter: person, reported, created_at: dateTime, handled })),
       }),
     },
   },
+  ...(["messages", "members"] as const).map(
+    (kind): Op => ({
+      method: "post",
+      path: `/admin/reports/${kind}/:id/resolve`,
+      summary: kind === "messages" ? "Handle a message report" : "Handle a member report",
+      description:
+        "Closes the report. `dismiss` closes this one only: it no longer counts as open, nor towards an automatic suspension. `suspend` suspends the member it is about (or, if the reports already paused her, records the decision to keep her paused) and closes every open report about her. Both are written to the audit log, as `report_dismissed`, `suspend` or `suspend_confirmed`.",
+      access: "admin",
+      params: { id: described(uuid, "The report id.") },
+      body: resolveReportSchema,
+      ok: { description: "Handled.", schema: obj({ id: uuid, handled: bool, outcome: oneOf(["dismissed", "suspended"]) }) },
+      errors: [
+        [404, "NOT_FOUND", "No such report."],
+        [409, "ALREADY_HANDLED", "The report has already been handled."],
+        [409, "WRONG_STATUS", "`suspend`, but the member is neither approved nor already suspended."],
+        [409, "MEMBER_GONE", "`suspend` on a message whose sender has deleted her account."],
+      ],
+    }),
+  ),
 ];

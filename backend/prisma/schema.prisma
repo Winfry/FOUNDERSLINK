@@ -587,6 +587,12 @@ model MessageReport {
   reporter_id String   @db.Uuid
   reason      String
   created_at  DateTime @default(now())
+  // Set once an admin has dealt with it, so "open reports" means the ones
+  // nobody has looked at yet (FINAL_VERIFICATION 25).
+  handled_at      DateTime?
+  handled_by      String?   @db.Uuid
+  handled_outcome String? // dismissed | suspended
+  handled_note    String?
 
   message  Message @relation(fields: [message_id], references: [id], onDelete: Cascade)
   reporter User    @relation(fields: [reporter_id], references: [id], onDelete: Cascade)
@@ -802,6 +808,12 @@ model UserReport {
   reported_user_id String   @db.Uuid
   reason           String
   created_at       DateTime @default(now())
+  // Set once an admin has dealt with it, so "open reports" means the ones
+  // nobody has looked at yet (FINAL_VERIFICATION 25).
+  handled_at      DateTime?
+  handled_by      String?   @db.Uuid
+  handled_outcome String? // dismissed | suspended
+  handled_note    String?
 
   reporter User @relation("reporter", fields: [reporter_id], references: [id], onDelete: Cascade)
   reported User @relation("reported", fields: [reported_user_id], references: [id], onDelete: Cascade)
