@@ -11,6 +11,7 @@ import { AppError, conflict, unauthorized } from "../../shared/errors.js";
 import { kenyanMobile } from "../../shared/phone.js";
 import { sendSms } from "../../shared/sms.js";
 import { removeFilesOf } from "../vetting/documents.js";
+import { memberView } from "../vetting/vetting.service.js";
 import { codeError } from "../auth/email-codes.js";
 import { listConsents } from "./consents.js";
 
@@ -45,7 +46,7 @@ export async function exportData(userId: string) {
       investor_profile: true,
       expert_profile: true,
       funder: true,
-      vetting_application: { include: { checks: true, documents: { select: { type: true, file_name: true, status: true, uploaded_at: true, deleted_at: true } } } },
+      vetting_application: { include: { documents: { select: { type: true, file_name: true, status: true, uploaded_at: true, deleted_at: true } } } },
       portfolio: true,
       ventures: true,
     },
@@ -76,13 +77,21 @@ export async function exportData(userId: string) {
         where: { sender_id: userId },
         select: { id: true, conversation_id: true, body: true, created_at: true },
       }),
-      prisma.messageReport.findMany({ where: { reporter_id: userId } }),
+      // How staff handled her report, and who, is FoundersLink's note, not hers.
+      prisma.messageReport.findMany({ where: { reporter_id: userId }, omit: { handled_by: true, handled_note: true } }),
       prisma.block.findMany({ where: { blocker_id: userId } }),
     ]);
 
+  // Her application as she sees it: what she gave, not the risk check, the
+  // admin's reason or the checks staff made (FINAL_VERIFICATION section 4,
+  // item 12; an export must not reveal what the screens keep back).
+  const { vetting_application: application, ...account } = user;
   return {
     exported_at: new Date(),
-    account: user,
+    account: {
+      ...account,
+      vetting_application: application ? { ...memberView(application), documents: application.documents } : null,
+    },
     consents,
     compliance: { statuses, deadlines, questions },
     connections,

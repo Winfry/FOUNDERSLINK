@@ -2,7 +2,7 @@
  * Account settings that live on the backend: her language, how she is
  * told about things, and deleting her account.
  */
-import { API_URL, currentToken, patch, post } from './client';
+import { API_URL, currentToken, get, patch, post } from './client';
 import type { ApiError } from '../../types';
 
 export interface AccountPreferences {
@@ -43,3 +43,6 @@ export async function deleteAccount(password: string, reason?: string): Promise<
 export async function reportMember(userId: string, reason: string): Promise<void> {
   await post('/reports', { user_id: userId, reason });
 }
+
+/** Everything FoundersLink holds about her, as the backend exports it (PRODUCT section 5). */
+export const exportMyData = () => get<Record<string, unknown>>('/me/export');

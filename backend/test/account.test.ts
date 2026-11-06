@@ -153,6 +153,18 @@ test("the export has everything of hers and nothing of anyone else's", async () 
   await call("POST", `/conversations/${chat.json.id}/messages`, "founder", { body: "My message" });
   await call("POST", `/conversations/${chat.json.id}/messages`, "investor", { body: "Her reply" });
 
+  // An application staff have scored and decided, with notes she must not see.
+  await prisma.vettingApplication.create({
+    data: {
+      user_id: ids.founder!,
+      statement: "I run a clinic booking app.",
+      risk_level: "medium",
+      risk_signals: ["Statement copies a known template"],
+      decision_reason: "Internal: checked against BRS",
+      member_message: "Please add your registration number.",
+    },
+  });
+
   assert.equal((await call("GET", "/me/export")).status, 401);
   const res = await call("GET", "/me/export", "founder");
   const data = res.json;
@@ -165,7 +177,14 @@ test("the export has everything of hers and nothing of anyone else's", async () 
   assert.deepEqual(data.messages_sent.map((m: any) => m.body), ["My message"]);
 
   const text = JSON.stringify(data);
-  assert.ok(!text.includes("password_hash"));
+  assert.ok(!text.includes("password_hash"), "password hash exported");
+  // The risk check and staff notes stay with FoundersLink, in an export as on screen.
+  for (const internal of ["risk_level", "risk_signals", "decision_reason", "decided_by", "handled_by", "handled_note"]) {
+    assert.ok(!text.includes(internal), `${internal} exported`);
+  }
+  assert.ok(!text.includes("known template"), "a risk signal was exported");
+  assert.ok(!text.includes("Internal: checked"), "the admin's reason was exported");
+  assert.equal(data.account.vetting_application.statement, "I run a clinic booking app.");
   assert.ok(!text.includes("Her reply"));
   assert.ok(!text.includes(`acct-investor-${run}@example.com`));
 });

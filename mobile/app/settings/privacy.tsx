@@ -23,6 +23,7 @@ const SECTIONS: LegalSection[] = [
     body: [
       'Nothing is used without your consent. There are five separate consents: for your profile to be visible, for matching, for keeping whether your business is women-, youth- or disability-owned, for contact by SMS, and for AI reading of the documents you share.',
       'You can turn each one on or off at any time, in Settings, under Your consents.',
+      'You can download everything we hold about you at any time, in Settings, under Download my data.',
       'Without the AI matching consent, your details are not sent to the AI service.',
     ],
   },
