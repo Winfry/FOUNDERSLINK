@@ -294,7 +294,7 @@ What is true today, so nobody over-claims:
 - The AI service does not have `/documents/precheck` or `/deals/due-diligence-pack` yet. Until it does, every document is `uploaded` (never `ai_pre_checked`) and the pack says `engine: "stand_in"`: the backend sorts the same facts into the three lists by rule. Do not call that pack AI-compiled.
 - Being deal-ready means the documents are **in and not rejected**. It does not wait for an admin to confirm each one; confirmation changes the label and moves the document from `self_reported` to `verified` in the pack.
 - Identity is not checked. There is no provider integration.
-- Files are on the server's disk, not encrypted, and deleted 30 days after the deal closes or is declined.
+- Files are on the server's disk, encrypted, and deleted 30 days after the deal closes or is declined.
 
 Stages run `exploring` → `due_diligence` → `terms_agreed` → `documents_compliance` → `closed` → `active`. Moving to `terms_agreed` or `closed` needs every party: the first call to `/stage` proposes it, and the deal's `pending.waiting_for` lists who has yet to confirm.
 
@@ -410,7 +410,7 @@ Each notification has `type`, `title`, `body`, a `link` into the app, and `deliv
 
 Set `INVESTOR_APPROVALS_REQUIRED=2` to require two different admins to approve an investor. The first approval then answers `approval_status: "in_review"` with `approvals: { given: 1, needed: 2 }`.
 
-Uploaded files are kept on the server's disk under `UPLOAD_DIR` (default `./uploads`), under a name the backend chooses. They are **not encrypted**, and a real deployment needs proper file storage. Each file is deleted 30 days after the decision on its application; the record of the review stays.
+Uploaded files are kept on the server's disk under `UPLOAD_DIR` (default `./uploads`), under a name the backend chooses. They are **encrypted** with AES-256-GCM before they touch the disk, with the key in `UPLOAD_ENCRYPTION_KEY` (32 bytes, base64 or hex; generate one with `openssl rand -base64 32`). Production refuses to start without it; on a laptop a key derived from `JWT_SECRET` is used and a warning says so. A file stored before encryption still opens. A real deployment still needs proper file storage. Each file is deleted 30 days after the decision on its application; the record of the review stays.
 
 A request from a member who is not approved gets `403` with code `APPROVAL_REQUIRED` on the endpoints that need approval. What each role sees before and after approval is in `docs/FUNDING_FLOW.md` section 6.3.
 

@@ -6,7 +6,7 @@ import { APPROVAL_STATUS, applicant, person, ROLE, vettingApplicationWith } from
 export const tag = {
   name: "Vetting",
   description:
-    "The application every member submits before she can see other members, and the admin's side of it. Every decision is made by a person, with a written reason; the risk level only sorts the queue.\n\nUploaded files are stored on the server's local disk under `UPLOAD_DIR` and are **not encrypted**. Each file is deleted 30 days after the decision on its application.",
+    "The application every member submits before she can see other members, and the admin's side of it. Every decision is made by a person, with a written reason; the risk level only sorts the queue.\n\nUploaded files are stored on the server's local disk under `UPLOAD_DIR`, encrypted with AES-256-GCM using `UPLOAD_ENCRYPTION_KEY`. Each file is deleted 30 days after the decision on its application.",
 };
 
 const LOCKED: ErrorCase = [409, "APPLICATION_LOCKED", "The application has been submitted. It can be changed only in `draft` or `needs_info`."];
@@ -78,7 +78,7 @@ export const ops: Op[] = [
     path: "/vetting/application/documents",
     summary: "Upload a document",
     description:
-      "One file per request, as `multipart/form-data`. PDF, JPEG or PNG, up to 5 MB; the claimed type is checked against the file's first bytes. At most 10 documents per application, and only before it is submitted.\n\nThe file is written to the server's local disk under a name the backend chooses. It is **not encrypted** and there is no virus scan. Only admins can download it. ID documents are not asked for.",
+      "One file per request, as `multipart/form-data`. PDF, JPEG or PNG, up to 5 MB; the claimed type is checked against the file's first bytes. At most 10 documents per application, and only before it is submitted.\n\nThe file is written to the server's local disk under a name the backend chooses, encrypted with AES-256-GCM using `UPLOAD_ENCRYPTION_KEY`. There is no virus scan. Only admins can download it. ID documents are not asked for.",
     access: "user",
     requestBody: {
       required: true,
@@ -258,7 +258,7 @@ export const ops: Op[] = [
     method: "get",
     path: "/admin/vetting/documents/:id/file",
     summary: "Download an uploaded file",
-    description: "Sent as a download (`Content-Disposition: attachment`, `X-Content-Type-Options: nosniff`), read from the server's local disk. The file is stored unencrypted.",
+    description: "Sent as a download (`Content-Disposition: attachment`, `X-Content-Type-Options: nosniff`), read from the server's local disk and decrypted in memory. The file is stored encrypted.",
     access: "admin",
     ok: {
       description: "The file.",

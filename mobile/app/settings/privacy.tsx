@@ -52,7 +52,7 @@ const SECTIONS: LegalSection[] = [
   {
     title: 'Limits you should know about',
     body: [
-      'This is a demo. Uploaded files are currently stored on the server without encryption at rest. Please do not upload anything you would not want stored that way.',
+      'Files you upload are encrypted on our server, and opened only when someone allowed to see them downloads them.',
       'Questions about your data can be sent from Contact support in Settings.',
     ],
   },

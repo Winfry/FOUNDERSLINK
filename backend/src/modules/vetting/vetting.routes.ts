@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { readStored } from "../../shared/file-crypto.js";
 import { z } from "zod";
 import multer from "multer";
 import { requireAuth, requireRole } from "../../middlewares/auth.js";
@@ -104,7 +105,8 @@ vettingRouter.get("/admin/vetting/documents/:id/file", requireAuth, isAdmin, asy
   // Sent as a download, and the browser is told not to guess its type.
   res.setHeader("Content-Disposition", `attachment; filename="${file.file_name.replace(/[^\w. -]/g, "_")}"`);
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.sendFile(file.path);
+  // Stored encrypted; opened in memory only for the admin.
+  res.send(await readStored(file.path));
 });
 
 vettingRouter.patch("/admin/vetting/documents/:id", requireAuth, isAdmin, async (req, res) => {

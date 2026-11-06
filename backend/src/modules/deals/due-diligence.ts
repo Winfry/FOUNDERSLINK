@@ -11,7 +11,7 @@
 // - Identity is not checked here. In production that comes from a
 //   regulated provider as pass or fail; FoundersLink stores no ID.
 // - Files are kept as vetting documents are: on this machine's disk,
-//   not encrypted, deleted 30 days after the deal closes or is declined.
+//   encrypted, deleted 30 days after the deal closes or is declined.
 
 import path from "node:path";
 import { readFile } from "node:fs/promises";

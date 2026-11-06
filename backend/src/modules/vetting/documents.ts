@@ -5,7 +5,8 @@
 //   are served only to admins.
 // - A file is deleted 30 days after the decision on the application.
 //   The record of what was reviewed, and the outcome, stays.
-// - Files are NOT encrypted on disk. Do not describe them as encrypted.
+// - Files are encrypted on disk (shared/file-crypto.ts) and opened only
+//   in memory for someone allowed to see them.
 // - ID documents are not asked for. Identity is checked by an admin by hand.
 
 import { randomUUID } from "node:crypto";
@@ -15,6 +16,7 @@ import { z } from "zod";
 import { env } from "../../config/env.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
+import { encrypt } from "../../shared/file-crypto.js";
 
 export const DOCUMENT_TYPES = [
   "business_registration",
@@ -88,7 +90,8 @@ export function checkFile(file: UploadedFile | undefined): asserts file is Uploa
 export async function storeFile(buffer: Buffer) {
   const key = randomUUID();
   await mkdir(env.UPLOAD_DIR, { recursive: true });
-  await writeFile(fileOf(key), buffer);
+  // Encrypted before it touches the disk (shared/file-crypto.ts).
+  await writeFile(fileOf(key), encrypt(buffer));
   return key;
 }
 

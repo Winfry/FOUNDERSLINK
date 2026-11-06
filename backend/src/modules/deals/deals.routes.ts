@@ -1,4 +1,5 @@
 import { Router, type Response } from "express";
+import { readStored } from "../../shared/file-crypto.js";
 import { z } from "zod";
 import multer from "multer";
 import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
@@ -130,11 +131,12 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX
 const isAdmin = requireRole("admin");
 
 // Sent as a download, and the browser is told not to guess its type.
-function sendFile(res: Response, file: { path: string; mime_type: string; file_name: string }) {
+async function sendFile(res: Response, file: { path: string; mime_type: string; file_name: string }) {
   res.setHeader("Content-Type", file.mime_type);
   res.setHeader("Content-Disposition", `attachment; filename="${file.file_name.replace(/[^\w. -]/g, "_")}"`);
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.sendFile(file.path);
+  // Stored encrypted; opened in memory only for someone allowed to see it.
+  res.send(await readStored(file.path));
 }
 
 dealsRouter.get("/deals/:id/due-diligence", ...member, async (req, res) => {
@@ -151,7 +153,7 @@ dealsRouter.delete("/deals/:id/documents/:doc_id", ...member, async (req, res) =
 });
 
 dealsRouter.get("/deals/:id/documents/:doc_id/file", ...member, async (req, res) => {
-  sendFile(res, await dealFileForParty(req.user!.id, id(req.params.id), id(req.params.doc_id)));
+  await sendFile(res, await dealFileForParty(req.user!.id, id(req.params.id), id(req.params.doc_id)));
 });
 
 // An admin confirms a document, or says why not. Until then it is at
@@ -161,7 +163,7 @@ dealsRouter.get("/admin/deal-documents", requireAuth, isAdmin, async (_req, res)
 });
 
 dealsRouter.get("/admin/deal-documents/:id/file", requireAuth, isAdmin, async (req, res) => {
-  sendFile(res, await dealFileForAdmin(id(req.params.id)));
+  await sendFile(res, await dealFileForAdmin(id(req.params.id)));
 });
 
 dealsRouter.patch("/admin/deal-documents/:id", requireAuth, isAdmin, async (req, res) => {

@@ -43,13 +43,21 @@ const schema = z.object({
   // unless asked for, and never in production: on a server anyone can
   // reach, a code on screen lets a stranger finish someone else's flow
   // (FINAL_VERIFICATION 24).
+  // 32 bytes, as base64 or 64 hex characters, that encrypt uploaded files
+  // on disk (shared/file-crypto.ts). Required in production.
+  UPLOAD_ENCRYPTION_KEY: z.string().optional(),
   SHOW_DEMO_CODES: z
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),
 });
 
-const parsed = schema.safeParse(process.env);
+const parsed = schema
+  .refine((e) => e.NODE_ENV !== "production" || Boolean(e.UPLOAD_ENCRYPTION_KEY), {
+    message: "Set UPLOAD_ENCRYPTION_KEY: uploaded documents are encrypted with it",
+    path: ["UPLOAD_ENCRYPTION_KEY"],
+  })
+  .safeParse(process.env);
 
 // Fail at startup, not on the first request that needs a missing value.
 if (!parsed.success) {

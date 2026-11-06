@@ -62,7 +62,7 @@ Stated here once, and again on the operations concerned:
 - **SMS.** No SMS provider is configured. Phone codes and SMS notifications are not sent. With \`SHOW_DEMO_CODES\` on (never in production), the response that would have sent a code returns it as \`dev_code\`.
 - **Email** goes through Resend and, until a sending domain is verified there, reaches only the address that owns the Resend account. Unsent email codes are also returned as \`dev_code\` when \`SHOW_DEMO_CODES\` is on.
 - **M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's sandbox.
-- **Uploaded files** are stored on the server's local disk and are not encrypted.
+- **Uploaded files** are stored on the server's local disk, encrypted with AES-256-GCM (\`UPLOAD_ENCRYPTION_KEY\`, required in production), and opened only in memory when someone allowed downloads them.
 - **Money.** FoundersLink never holds or moves money. Circles, contributions and deal terms are records of what members say happened.
 
 ## Live delivery (WebSocket)

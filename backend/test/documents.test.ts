@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { after, before, test } from "node:test";
 import { confirmPhone, runPhone } from "./phone.js";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
-import { purgeExpired } from "../src/modules/vetting/documents.js";
+import { fileOf, purgeExpired } from "../src/modules/vetting/documents.js";
+import { decrypt, encrypt } from "../src/shared/file-crypto.js";
 import { prisma } from "../src/shared/db.js";
 
 // Uploading evidence with a vetting application: what is accepted, who
@@ -122,6 +123,26 @@ test("only an admin can open the file", async () => {
   assert.equal(asAdmin.headers.get("content-type"), "application/pdf");
   assert.match(asAdmin.headers.get("content-disposition")!, /^attachment; filename="certificate\.pdf"$/);
   assert.deepEqual(Buffer.from(await asAdmin.arrayBuffer()), pdf);
+});
+
+test("a document is encrypted on disk, and opened only when someone allowed downloads it", async () => {
+  // TEAM_DECISIONS D7; FINAL_VERIFICATION section 4, item 9: files used to sit on disk as they were.
+  const { storage_key } = await prisma.vettingDocument.findUniqueOrThrow({ where: { id: documentId } });
+  const onDisk = readFileSync(fileOf(storage_key!));
+  assert.ok(!onDisk.includes(Buffer.from("%PDF")), "the PDF is readable on disk");
+  assert.ok(!onDisk.includes(Buffer.from("tiny test certificate")), "the PDF's text is readable on disk");
+  assert.equal(onDisk.subarray(0, 6).toString(), "FLENC1");
+
+  // A file stored before encryption still opens.
+  writeFileSync(fileOf(storage_key!), pdf);
+  const legacy = await fetch(`${base}/admin/vetting/documents/${documentId}/file`, { headers: { authorization: `Bearer ${tokens.admin}` } });
+  assert.deepEqual(Buffer.from(await legacy.arrayBuffer()), pdf);
+
+  // A file changed on disk is refused, never served.
+  const sealed = encrypt(pdf);
+  sealed[sealed.length - 1]! ^= 0xff;
+  assert.throws(() => decrypt(sealed));
+  writeFileSync(fileOf(storage_key!), encrypt(pdf));
 });
 
 test("an admin marks a document verified, or rejected with a reason", async () => {
