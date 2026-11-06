@@ -130,15 +130,16 @@ export default function FounderProfileScreen() {
               <Text style={styles.actionHint}>You are connected with {p.founderName}.</Text>
             </>
           ) : status === 'pending' ? (
-            <Button title="Request sent, waiting for her reply" disabled onPress={() => undefined} />
+            <Button title="Request sent, waiting for the reply" disabled onPress={() => undefined} />
+          ) : status === 'declined' ? (
+            // FoundersLink does not let anyone ask again after a no
+            // (FINAL_VERIFICATION 23: the app used to invite a new request
+            // that the backend then refused).
+            <Text style={styles.actionHint}>An earlier request between you was declined, so a new one cannot be sent.</Text>
           ) : (
             <>
               <Button title="Ask to join" onPress={() => router.push(`/investor/join-request/${p.id}`)} />
-              <Text style={styles.actionHint}>
-                {status === 'declined'
-                  ? 'She declined an earlier request. You can send a new one.'
-                  : 'She sees your request and decides whether to connect.'}
-              </Text>
+              <Text style={styles.actionHint}>They see your request and decide whether to connect.</Text>
             </>
           )}
         </View>

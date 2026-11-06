@@ -111,6 +111,9 @@ test("a decline can carry a reason, the investor is told, and she cannot ask aga
   assert.equal(told.type, "connection_declined");
   assert.equal(told.body, "Amina Founder declined your request: We are not raising until next year.");
 
-  assert.equal((await request()).json.error.code, "ALREADY_REQUESTED");
+  const again = await request();
+  assert.equal(again.json.error.code, "ALREADY_REQUESTED");
+  // Said plainly, from her side (FINAL_VERIFICATION 23).
+  assert.equal(again.json.error.message, "They declined your earlier request, so you cannot ask again.");
   assert.equal((await call("DELETE", `/connections/${sent.id}`, "grace")).status, 404);
 });

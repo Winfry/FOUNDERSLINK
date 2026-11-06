@@ -56,6 +56,23 @@ export async function areConnected(a: string, b: string) {
   return (await connectionBetween(a, b))?.status === "accepted";
 }
 
+// Why a second request is refused, said from the asker's side and saying
+// what she can do instead (FINAL_VERIFICATION 23: it read "A connection
+// between you already exists and is declined").
+function alreadyRequested(existing: { status: string; requester_id: string }, userId: string) {
+  const mine = existing.requester_id === userId;
+  if (existing.status === "accepted") return "You are already connected.";
+  if (existing.status === "pending") {
+    return mine
+      ? "You have already sent a request. Wait for the reply, or withdraw it from your requests."
+      : "They have already sent you a request. Accept it from your requests.";
+  }
+  if (existing.status === "declined") {
+    return mine ? "They declined your earlier request, so you cannot ask again." : "You declined their request earlier.";
+  }
+  return "There is already a request between you.";
+}
+
 export async function requestConnection(userId: string, input: z.infer<typeof requestSchema>) {
   if (input.user_id === userId) throw new AppError(400, "INVALID_TARGET", "You cannot connect with yourself");
 
@@ -81,7 +98,7 @@ export async function requestConnection(userId: string, input: z.infer<typeof re
   // A request that was withdrawn leaves no trace to block a new one. A
   // declined one does: asking again after a no is not allowed.
   if (existing?.status === "withdrawn") await prisma.connection.delete({ where: { id: existing.id } });
-  else if (existing) throw conflict("ALREADY_REQUESTED", `A connection between you already exists and is ${existing.status}`);
+  else if (existing) throw conflict("ALREADY_REQUESTED", alreadyRequested(existing, userId));
 
   const created = await prisma.connection.create({
     data: {

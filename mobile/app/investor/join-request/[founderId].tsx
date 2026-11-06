@@ -42,10 +42,14 @@ export default function JoinRequestScreen() {
         : `Add a little more: at least ${PITCH_MIN} characters (${pitchLength} so far).`
       : undefined;
 
+  // The amount is optional, but one that is typed has to be an amount
+  // (FINAL_VERIFICATION 23: a 0 was blanked and the request went without one).
+  const amountError = tried && amount !== undefined && amount <= 0 ? 'Enter an amount above 0, or leave it empty.' : undefined;
+
   const submit = async () => {
     setTried(true);
     setRefusal(null);
-    if (pitchLength < PITCH_MIN) return;
+    if (pitchLength < PITCH_MIN || (amount !== undefined && amount <= 0)) return;
     setLoading(true);
     try {
       await investorService.submitJoinRequest(String(founderId), {
@@ -59,9 +63,8 @@ export default function JoinRequestScreen() {
       show('Request sent', 'success');
       router.replace('/(investor)/(tabs)/requests');
     } catch (e) {
-      const message = (e as { message?: string })?.message ?? 'The request was not sent. Check your connection and try again.';
-      setRefusal(message);
-      show(message, 'error');
+      // Said once, under the button where she is looking; not also in a toast.
+      setRefusal((e as { message?: string })?.message ?? 'The request was not sent. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -92,6 +95,7 @@ export default function JoinRequestScreen() {
             label="Amount you propose to invest (optional)"
             value={amount}
             onChange={setAmount}
+            error={amountError}
             hint="FoundersLink never holds money. This is only your proposal."
           />
           <Textarea

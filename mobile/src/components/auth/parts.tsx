@@ -232,7 +232,8 @@ export function AmountField({
 }: {
   label: string;
   value: number | undefined;
-  onChange: (amount: number) => void;
+  /** Nothing typed is `undefined`; a typed 0 stays 0, so the form can say it is not an amount. */
+  onChange: (amount: number | undefined) => void;
   hint?: string;
   error?: string;
 }) {
@@ -245,8 +246,11 @@ export function AmountField({
           <Text style={styles.amountPrefixText}>KSh</Text>
         </View>
         <TextInput
-          value={value ? value.toLocaleString('en-US') : ''}
-          onChangeText={(t) => onChange(Number(t.replace(/\D/g, '').slice(0, 10)) || 0)}
+          value={value === undefined ? '' : value.toLocaleString('en-US')}
+          onChangeText={(t) => {
+            const digits = t.replace(/\D/g, '').slice(0, 10);
+            onChange(digits === '' ? undefined : Number(digits));
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           keyboardType="number-pad"

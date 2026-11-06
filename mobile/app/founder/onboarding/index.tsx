@@ -252,7 +252,7 @@ export default function FounderOnboardingScreen() {
             <View style={styles.section}>
               <Text style={styles.group}>What you need</Text>
               {field('fundingAmountKes',
-                <AmountField label="How much you want to raise" hint="Leave it empty if you are not sure yet." value={profile.fundingAmountKes} onChange={(n) => change({ fundingAmountKes: n })} />,
+                <AmountField label="How much you want to raise" hint="Leave it empty if you are not sure yet." value={profile.fundingAmountKes} onChange={(n) => change({ fundingAmountKes: n || undefined })} />,
               )}
               {field('instruments',
                 <MultiSelect label="How you would take the money" labels={Object.fromEntries(INSTRUMENTS.map((i) => [i, labelOf(i)]))} options={INSTRUMENTS} values={(profile.instruments as string[]) ?? []} onChange={(v) => change({ instruments: v as Instrument[] })} />,
