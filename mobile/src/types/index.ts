@@ -32,7 +32,7 @@ export type DealType =
 
 export type ComplianceItemStatus = 'not_started' | 'in_progress' | 'complete';
 
-export type ConsentPurpose = 'profile_visibility' | 'ai_matching' | 'contact';
+export type ConsentPurpose = 'profile_visibility' | 'ai_matching' | 'eligibility_attributes' | 'contact' | 'document_processing';
 
 export type ConversationType = 'direct' | 'circle' | 'deal';
 

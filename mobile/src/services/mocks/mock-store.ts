@@ -14,7 +14,8 @@ export interface MockMemberState {
   user: SessionUser;
   password: string;
   founderProfile: FounderProfile | null;
-  consents: Record<ConsentPurpose, boolean>;
+  /** What she has answered; a consent never answered is not granted. */
+  consents: Partial<Record<ConsentPurpose, boolean>>;
   vetting: VettingApplication;
   matches: FundingMatches;
   deals: Deal[];

@@ -131,6 +131,8 @@ function FounderProfileTab() {
                 <View style={[styles.fill, { width: `${complete}%` }]} />
               </View>
             </View>
+            {/* Opens the same form, filled in with what she saved. */}
+            <Button title="Edit my business details" variant="secondary" onPress={() => router.push('/founder/onboarding')} />
           </Card>
         ) : (
           <Card style={styles.cardGap}>

@@ -131,9 +131,10 @@ function MatchesScreen() {
         {header}
         <ScreenEmpty
           title="Matching is off"
-          description="You have not allowed FoundersLink to use your business details for matching, so there are no investors to show. You can allow it in your business details."
-          actionLabel="Open my business details"
-          onAction={() => router.push('/founder/onboarding')}
+          description="You have not allowed FoundersLink to use your business details for matching, so there are no investors to show. You can turn it on in your consents; nothing else about your profile changes."
+          actionLabel="Open my consents"
+          // A route the typed-routes list learns of when the dev server next runs.
+          onAction={() => router.push('/settings/consents' as never)}
         />
       </View>
     );

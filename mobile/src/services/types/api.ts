@@ -68,7 +68,8 @@ export interface VettingService {
 }
 
 export interface ConsentService {
-  list(): Promise<ConsentRecord[]>;
+  /** Every consent that applies to this role, with whether it is granted. */
+  list(role?: string): Promise<ConsentRecord[]>;
   set(purpose: ConsentRecord['purpose'], granted: boolean): Promise<void>;
 }
 

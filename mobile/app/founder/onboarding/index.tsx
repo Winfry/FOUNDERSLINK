@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Switch } from '../../../src/components/ui/Switch';
 import { Sparkles } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import { Header } from '../../../src/components/layout/Header';
 import { AmountField, Checkbox, FormError, LongSelect, Steps, SuggestedTag } from '../../../src/components/auth/parts';
 import { Button, Input, MultiSelect, Select, Textarea } from '../../../src/components/ui';
 import { useToast } from '../../../src/components/ui/Toast';
+import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { consentService, founderService, referenceDataService } from '../../../src/services';
 import type { BusinessStatus, FounderProfile, Instrument } from '../../../src/types';
 import { useAuthStore } from '../../../src/stores/authStore';
@@ -68,6 +69,42 @@ export default function FounderOnboardingScreen() {
   const [suggestedCount, setSuggestedCount] = useState<number | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState<string | null>(null);
+  // Set when she already has a profile: the form opens on it, filled in,
+  // so going through it again can never wipe what she saved or turn off a
+  // consent she gave (FINAL_VERIFICATION 21).
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const [saved, given] = await Promise.all([founderService.getProfile(), consentService.list('founder')]);
+        if (!live) return;
+        setConsents((c) => {
+          const next = { ...c };
+          for (const g of given) if (g.purpose in next) next[g.purpose as keyof typeof next] = g.granted;
+          return next;
+        });
+        if (saved) {
+          setProfile((p) => ({ ...p, ...saved }));
+          setDescription(saved.description ?? '');
+          setEditing(true);
+          setStepState(2);
+          await loadMeta().catch(() => undefined);
+        }
+      } catch {
+        // A first-time founder has nothing to load; the form starts blank.
+      } finally {
+        if (live) setLoading(false);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // Once, when the screen opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setStep = (n: number) => {
     setFailed(null);
@@ -144,7 +181,7 @@ export default function FounderOnboardingScreen() {
         await consentService.set(purpose as keyof typeof consents, granted);
       }
       await markComplete();
-      show(`Profile ${saved.profileCompleteness}% complete`, 'success');
+      show(editing ? 'Your business details are saved' : `Profile ${saved.profileCompleteness}% complete`, 'success');
       router.replace('/(founder)/(tabs)/matches');
     } catch (e) {
       setFailed(messageOf(e, 'We could not save your profile. Check your connection and try again.'));
@@ -162,9 +199,15 @@ export default function FounderOnboardingScreen() {
   );
   const missingNames = REQUIRED.filter(([key]) => errors[key]).map(([, name]) => name);
 
+  // Until her saved profile is in, so a blank form never shows first.
+  if (loading) return <ScreenLoading />;
+
   return (
     <View style={styles.flex}>
-      <Header title="Set up your profile" onBack={step > 1 ? () => setStep(step - 1) : undefined} />
+      <Header
+        title={editing ? 'Your business details' : 'Set up your profile'}
+        onBack={step > 1 && !(editing && step === 2) ? () => setStep(step - 1) : editing ? () => router.back() : undefined}
+      />
       <View style={styles.steps}>
         <Steps names={STEP_NAMES} current={step} />
       </View>
