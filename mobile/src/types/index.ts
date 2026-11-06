@@ -44,7 +44,7 @@ export type BusinessStatus =
   | 'registered_business_name'
   | 'limited_company';
 
-export type Instrument = 'equity' | 'convertible_note' | 'loan';
+export type Instrument = 'equity' | 'convertible_note';
 
 export type FounderStage = 'idea' | 'mvp' | 'early_revenue' | 'growth';
 

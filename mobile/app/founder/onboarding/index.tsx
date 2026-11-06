@@ -21,7 +21,8 @@ const EXAMPLES = [
   'Tunatengeneza app ya kubook clinic visits Nairobi, tunahitaji milioni moja.',
 ];
 
-const INSTRUMENTS = ['equity', 'convertible_note', 'loan'];
+// No loan products or grants: funding comes from investors (TEAM_DECISIONS D11).
+const INSTRUMENTS = ['equity', 'convertible_note'];
 
 const CONSENTS = [
   ['profile_visibility', 'Show my profile', 'Verified investors and members can see your business profile.'],
@@ -87,7 +88,8 @@ export default function FounderOnboardingScreen() {
           return next;
         });
         if (saved) {
-          setProfile((p) => ({ ...p, ...saved }));
+          // A choice no longer offered (a loan) is dropped, so saving it again works.
+          setProfile((p) => ({ ...p, ...saved, instruments: (saved.instruments ?? []).filter((i) => INSTRUMENTS.includes(i)) }));
           setDescription(saved.description ?? '');
           setEditing(true);
           setStepState(2);

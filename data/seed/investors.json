@@ -123,7 +123,7 @@
     "journey_types": ["startup"],
     "sectors": ["other"],
     "stages": ["idea", "mvp"],
-    "instruments": ["equity", "loan"],
+    "instruments": ["equity"],
     "ticket_min_kes": 100000,
     "ticket_max_kes": 800000,
     "is_demo": true
@@ -148,7 +148,7 @@
     "journey_types": ["startup"],
     "sectors": ["climate"],
     "stages": ["mvp", "early_revenue"],
-    "instruments": ["equity", "convertible_note", "loan"],
+    "instruments": ["equity", "convertible_note"],
     "ticket_min_kes": 500000,
     "ticket_max_kes": 3000000,
     "is_demo": true
@@ -160,7 +160,7 @@
     "journey_types": ["startup"],
     "sectors": ["logistics"],
     "stages": ["early_revenue", "growth"],
-    "instruments": ["equity", "loan"],
+    "instruments": ["equity"],
     "ticket_min_kes": 2000000,
     "ticket_max_kes": 20000000,
     "requirements": ["brs_registration", "kra_pin"],

@@ -14,7 +14,9 @@ import { useAuthStore } from '../../src/stores/authStore';
 import type { Deal, DealDocument, Instrument } from '../../src/types';
 import { colors, spacing, touchTargetMin } from '../../src/theme/tokens';
 
-const INSTRUMENT: Record<Instrument, string> = {
+// Read by any key: a deal from before loans were dropped (TEAM_DECISIONS
+// D11) still shows what it says.
+const INSTRUMENT: Record<Instrument, string> & Record<string, string | undefined> = {
   equity: 'Equity',
   convertible_note: 'Convertible note',
   loan: 'Loan',

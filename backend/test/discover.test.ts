@@ -59,7 +59,7 @@ before(async () => {
     mandate_text: "We back health and agriculture businesses anywhere in Kenya.",
     journey_types: ["startup"],
     sectors: ["health", "agri"],
-    instruments: ["equity", "loan"],
+    instruments: ["equity", "convertible_note"],
     ticket_min_kes: 100_000,
     ticket_max_kes: 5_000_000,
   });
