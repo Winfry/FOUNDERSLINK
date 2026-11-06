@@ -58,6 +58,8 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
   const [reason, setReason] = useState("");
+  // What the applicant is told, kept apart from the reason (which stays internal).
+  const [memberMessage, setMemberMessage] = useState("");
   const [checkType, setCheckType] = useState<CheckType | "">("");
   const [checkResult, setCheckResult] = useState<"passed" | "failed">("passed");
   const [checkMethod, setCheckMethod] = useState<CheckMethod>("manual");
@@ -91,6 +93,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
       setDetail(result.detail);
       setToast({ text: done });
       setReason("");
+      setMemberMessage("");
       setChecks([]);
       router.refresh();
     });
@@ -98,7 +101,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
 
   function submit(decision: "approved" | "rejected" | "needs_info") {
     act(
-      () => verificationDecisionAction(detail.id, decision, reason.trim(), checks),
+      () => verificationDecisionAction(detail.id, decision, reason.trim(), checks, memberMessage.trim()),
       decision === "approved"
         ? "Approved. The decision and your reason are in the audit log."
         : decision === "rejected"
@@ -229,7 +232,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           <h2 className="text-xl font-bold text-foreground">Your decision</h2>
           <CardDescription>
             Write your reason first. The three buttons turn on once the reason is at least {MIN_REASON} characters. It is
-            saved in the audit log with your name.
+            saved in the audit log with your name, and is not sent to the applicant.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -252,6 +255,25 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                 : reasonLength === 0
                   ? "The decision buttons are off until you write a reason."
                   : `${MIN_REASON - reasonLength} more ${MIN_REASON - reasonLength === 1 ? "character" : "characters"} needed.`}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="member-message" className="text-sm font-semibold text-foreground">
+              Message to the applicant <span className="font-medium text-muted">(optional)</span>
+            </label>
+            <textarea
+              id="member-message"
+              rows={2}
+              value={memberMessage}
+              onChange={(e) => setMemberMessage(e.target.value)}
+              placeholder="What they should know or do next"
+              className="field resize-y"
+              aria-describedby="member-message-help"
+            />
+            <p id="member-message-help" className="text-xs font-semibold text-muted">
+              If you leave it empty: a rejection sends a standard message that says nothing about our checks, and
+              &quot;Needs more info&quot; sends your reason, so write that reason for them. Never name a risk signal here.
             </p>
           </div>
 

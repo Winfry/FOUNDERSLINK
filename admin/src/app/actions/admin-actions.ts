@@ -44,8 +44,9 @@ export async function verificationDecisionAction(
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
   checks: NewCheck[],
+  memberMessage?: string,
 ): Promise<DecisionResult> {
-  const result = await decided(() => decideVerification(id, decision, reason, checks));
+  const result = await decided(() => decideVerification(id, decision, reason, checks, memberMessage));
   refreshVerificationPages(id);
   return result;
 }

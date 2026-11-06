@@ -332,7 +332,12 @@ model VettingApplication {
   submitted_at         DateTime?
   decided_at           DateTime?
   decided_by           String?   @db.Uuid
+  // The admin's reason, for the audit log. Never sent to the applicant.
   decision_reason      String?
+  // What the applicant is told, when the admin writes it. A rejected
+  // applicant without one gets a standard sentence (TEAM_DECISIONS D7;
+  // FINAL_VERIFICATION section 4, item 12).
+  member_message       String?
   // For an investor, when two admins must approve: the first to do so.
   first_approved_by    String?   @db.Uuid
   // When an approved member is next due to be looked at again, and why.

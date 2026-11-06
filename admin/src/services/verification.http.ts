@@ -170,10 +170,12 @@ export async function decideVerification(
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
   checks: NewCheck[],
+  memberMessage?: string,
 ) {
   await backend("POST", `/admin/vetting/${id}/decision`, {
     decision: DECISION[decision],
     reason,
+    member_message: memberMessage || undefined,
     checks: checks.map((c) => ({ check_type: c.checkType, result: c.result === "passed" ? "pass" : "fail", method: c.method })),
   });
   return fetchVerificationDetail(id);

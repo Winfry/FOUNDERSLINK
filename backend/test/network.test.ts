@@ -5,6 +5,7 @@ import { confirmPhone, runPhone } from "./phone.js";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
 import { prisma } from "../src/shared/db.js";
+import { REJECTED_MESSAGE } from "../src/modules/vetting/vetting.service.js";
 
 // Vetting, investors as users, and profiles, as one story: a founder, a
 // real investor and a fake one apply, an admin decides, and what each
@@ -22,6 +23,7 @@ const emails = {
   investor: `investor-${run}@example.com`,
   fake: `fake-${run}@mailinator.com`,
   claimer: `claimer-${run}@example.com`,
+  asked: `asked-${run}@example.com`,
 };
 
 let base = "";
@@ -173,17 +175,22 @@ test("applications are scored for risk when submitted, and lock after that", asy
   const incomplete = await call("POST", "/vetting/application/submit", "founder");
   assert.equal(incomplete.status, 400);
 
+  // The risk check is for staff, so it is read the way staff see it.
+  const scored = async (who: string) => (await call("GET", `/admin/vetting/${applications[who]}`, "admin")).json;
+
   const founder = await apply("founder", runPhone(run, 1), {
     statement: "I run Afya Booking and want to meet health investors.",
   });
-  assert.equal(founder.risk_level, "low");
+  // What she gets back says nothing about the check.
+  assert.equal(founder.risk_level, undefined);
+  assert.equal((await scored("founder")).risk_level, "low");
 
   const investor = await apply("investor", runPhone(run, 2), {
     organisation_name: "Test Health Angels",
     organisation_website: "https://example.com",
     statement: "Partner at Test Health Angels. We have invested in four clinics.",
   });
-  assert.equal(investor.risk_level, "low");
+  assert.equal((await scored("investor")).risk_level, "low");
 
   // The investor's number, typed the other way, cannot be put on a second
   // account, so it can never be confirmed and sent with an application.
@@ -194,9 +201,16 @@ test("applications are scored for risk when submitted, and lock after that", asy
     organisation_name: "Quick Capital",
     statement: "Guaranteed funding for every founder. Pay a small processing fee to start.",
   });
-  assert.equal(fake.risk_level, "high");
-  assert.ok(fake.risk_signals.includes("Uses a disposable email address"));
-  assert.ok(fake.risk_signals.includes("Mentions a fee that people must pay"));
+  const caught = await scored("fake");
+  assert.equal(caught.risk_level, "high");
+  assert.ok(caught.risk_signals.includes("Uses a disposable email address"));
+  assert.ok(caught.risk_signals.includes("Mentions a fee that people must pay"));
+
+  // FINAL_VERIFICATION section 4, item 12: the applicant never sees which check caught him.
+  const own = JSON.stringify((await call("GET", "/vetting/application", "fake")).json);
+  for (const secret of ["risk_level", "risk_signals", "disposable", "Mentions a fee", "decided_by", "checks"]) {
+    assert.ok(!own.includes(secret), `the applicant can see ${secret}`);
+  }
 
   const edit = await call("PATCH", "/vetting/application", "founder", { statement: "Changed after submitting it." });
   assert.equal(edit.status, 409);
@@ -248,6 +262,36 @@ test("an admin decision needs a reason, is final, and is logged", async () => {
   const actions = await call("GET", "/admin/actions", "admin");
   const mine = actions.json.filter((a: any) => a.target.id === ids.fake);
   assert.deepEqual(mine.map((a: any) => a.action), ["reject"]);
+  // The reason is in the log for staff...
+  assert.equal(mine[0].reason, "Asks founders for a fee and gave no organisation we could check.");
+
+  // ...but he is told only the standard sentence: not the reason, so not which check caught him.
+  const told = (await call("GET", "/vetting/application", "fake")).json;
+  assert.equal(told.status_reason, REJECTED_MESSAGE);
+  const notice = (await call("GET", "/notifications", "fake")).json.notifications.find((n: any) => n.type === "vetting_reject");
+  assert.equal(notice.body, REJECTED_MESSAGE);
+  // Not the reason (his own statement may mention a fee; the reason must not show).
+  assert.ok(!JSON.stringify(told).includes("Asks founders"), "the internal reason reached the applicant");
+});
+
+test("an admin can write the applicant her own message, apart from the internal reason", async () => {
+  // A request for more says what to add: with no message, the reason is what she reads.
+  await signUp("asked", "founder", "Wairimu Asked");
+  await apply("asked", runPhone(run, 4), { statement: "I run a small bakery in Nakuru and want to grow." });
+  await decide("asked", "needs_info", "Say which county the bakery trades in.");
+  assert.equal((await call("GET", "/vetting/application", "asked")).json.status_reason, "Say which county the bakery trades in.");
+
+  // A rejection with a message: she reads the message, and the reason stays internal.
+  await call("PATCH", "/vetting/application", "asked", { statement: "I run a small bakery in Nakuru County and want to grow." });
+  await call("POST", "/vetting/application/submit", "asked");
+  await call("POST", `/admin/vetting/${applications.asked}/decision`, "admin", {
+    decision: "reject",
+    reason: "The registration number belongs to a different business.",
+    member_message: "We could not confirm your business registration. You can apply again with your BRS certificate.",
+  });
+  const told = (await call("GET", "/vetting/application", "asked")).json;
+  assert.equal(told.status_reason, "We could not confirm your business registration. You can apply again with your BRS certificate.");
+  assert.ok(!JSON.stringify(told).includes("different business"), "the internal reason reached the applicant");
 });
 
 test("once the investor is approved, both sides see each other", async () => {

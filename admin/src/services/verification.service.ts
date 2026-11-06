@@ -35,8 +35,9 @@ export async function decideVerification(
   decision: "approved" | "rejected" | "needs_info",
   reason: string,
   checks: NewCheck[],
+  memberMessage?: string,
 ) {
-  if (live) return http.decideVerification(id, decision, reason, checks);
+  if (live) return http.decideVerification(id, decision, reason, checks, memberMessage);
   await delay();
   return submitVerificationDecision(id, decision, reason, checks);
 }

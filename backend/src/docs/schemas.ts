@@ -109,7 +109,8 @@ const vettingApplicationFields = {
   submitted_at: nullable(dateTime),
   decided_at: nullable(dateTime),
   decided_by: nullable(uuid),
-  decision_reason: nullable(str),
+  decision_reason: described(nullable(str), "The admin's reason, for the audit log. Never sent to the applicant."),
+  member_message: described(nullable(str), "What the applicant was told, when the admin wrote it."),
   first_approved_by: nullable(uuid),
   recheck_due_at: nullable(dateTime),
   recheck_reason: nullable(str),
@@ -477,6 +478,20 @@ export const components: Record<string, Schema> = {
   }),
 
   VettingApplication: obj(vettingApplicationFields),
+  // What the applicant sees of her own application.
+  MemberApplication: obj({
+    id: uuid,
+    phone: nullable(str),
+    organisation_name: nullable(str),
+    organisation_website: nullable(url),
+    statement: nullable(str),
+    references: nullable(str),
+    claims_funder_id: nullable(uuid),
+    submitted_at: nullable(dateTime),
+    decided_at: nullable(dateTime),
+    created_at: dateTime,
+    updated_at: dateTime,
+  }),
 
   VettingDocument: obj({
     id: uuid,

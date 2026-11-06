@@ -83,7 +83,7 @@ These need a decision, not only a fix: change the product, or change the documen
 | 9 | **D7:** documents are encrypted; judges were told object storage | Files are on the server's local disk, not encrypted. The app's privacy page says so honestly. | Q6-16 |
 | 10 | **D7:** admins have two-step sign-in; investors need two admins | Two-step is off for the demo admin and cannot be turned on from the dashboard. One admin approves an investor, and nothing says the demo uses one. | Q5-07, Q5-08 |
 | 11 | **D11:** the deal says money moves through the parties' bank | The backend sends the notice; the deal screen shows the sentence only once closed. Terms are not labelled "self-reported, not a legal document". | Q2-11, Q3-08 |
-| 12 | The rejection reason is "saved in the audit log" | It is also sent word for word to the applicant, with the risk signals. A scammer is told which rule caught him. | Q5-14 |
+| 12 | The rejection reason is "saved in the audit log" | It is also sent word for word to the applicant, with the risk signals. A scammer is told which rule caught him. | Q5-14 **Settled:** the product changed. The applicant sees only what she gave and a message written for her; a rejection without one gets a standard sentence. The reason, risk signals and checks stay internal (checked by tests). |
 | 13 | One name | "FounderLink" remains in the docs (64 lines), the AI service's on-screen strings, the READMEs and the browser tab title. | Q6-17 |
 
 ## 5. Promised in the documents, with no screen for it

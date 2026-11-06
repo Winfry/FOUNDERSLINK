@@ -28,7 +28,11 @@ export const applicationSchema = z.object({
 
 export const decisionSchema = z.object({
   decision: z.enum(["approve", "reject", "needs_info"]),
+  // For the audit log and other admins. Not sent to the applicant.
   reason: z.string().trim().min(5, "Give a reason for the decision"),
+  // What the applicant is told. Optional: a rejection without it gets
+  // REJECTED_MESSAGE, and a request for more uses `reason`.
+  member_message: z.string().trim().min(5, "Write a little more for the applicant").max(1000).optional(),
   checks: z
     .array(
       z.object({
@@ -62,12 +66,29 @@ async function statusOf(userId: string) {
 export const REPORTED_REASON =
   "Several members reported this account, so it is paused until someone at FoundersLink has looked at the reports.";
 
+// What a rejected applicant is told when the admin wrote nothing for her.
+// The reason and the risk signals stay with FoundersLink: telling a
+// scammer which check caught him teaches him to pass it next time.
+export const REJECTED_MESSAGE =
+  "Your application was not approved. FoundersLink does not share the details of its checks. If you think this is a mistake, contact support.";
+
+// What the applicant is told about a decision: the admin's message to her
+// if there is one; otherwise, for a request for more, the admin's reason
+// (it says what to add), and for a rejection the standard sentence.
+export function memberMessageOf(decision: "approve" | "reject" | "needs_info", reason: string | null, message: string | null) {
+  if (message) return message;
+  if (decision === "reject") return REJECTED_MESSAGE;
+  if (decision === "needs_info") return reason;
+  return null;
+}
+
 // The words that explain the status she is in now. A vetting decision's
-// reason explains needs_info and rejected; a suspension has its own
+// message explains needs_info and rejected; a suspension has its own
 // reason, never the note an admin wrote when approving her
 // (FINAL_VERIFICATION 11).
-async function statusReason(userId: string, status: string, decisionReason: string | null | undefined) {
-  if (status === "needs_info" || status === "rejected") return decisionReason ?? null;
+async function statusReason(userId: string, status: string, application: { decision_reason: string | null; member_message: string | null } | null) {
+  if (status === "needs_info") return memberMessageOf("needs_info", application?.decision_reason ?? null, application?.member_message ?? null);
+  if (status === "rejected") return memberMessageOf("reject", null, application?.member_message ?? null);
   if (status !== "suspended") return null;
   const last = await prisma.adminAction.findFirst({
     where: { target_user_id: userId, action: { in: ["suspend", "reinstate"] } },
@@ -78,15 +99,35 @@ async function statusReason(userId: string, status: string, decisionReason: stri
   return last?.action === "suspend" ? last.reason : REPORTED_REASON;
 }
 
+// What the applicant sees of her own application: what she gave, and
+// when it was sent and decided. The risk level and signals, the admin's
+// reason, who decided and the checks made are for FoundersLink only.
+type Application = NonNullable<Awaited<ReturnType<typeof prisma.vettingApplication.findUnique>>>;
+export function memberView(a: Application) {
+  return {
+    id: a.id,
+    phone: a.phone,
+    organisation_name: a.organisation_name,
+    organisation_website: a.organisation_website,
+    statement: a.statement,
+    references: a.references,
+    claims_funder_id: a.claims_funder_id,
+    submitted_at: a.submitted_at,
+    decided_at: a.decided_at,
+    created_at: a.created_at,
+    updated_at: a.updated_at,
+  };
+}
+
 export async function getApplication(userId: string) {
   const [user, application] = await Promise.all([
     statusOf(userId),
-    prisma.vettingApplication.findUnique({ where: { user_id: userId }, include: { checks: true } }),
+    prisma.vettingApplication.findUnique({ where: { user_id: userId } }),
   ]);
   return {
     approval_status: user.approval_status,
-    status_reason: await statusReason(userId, user.approval_status, application?.decision_reason),
-    application,
+    status_reason: await statusReason(userId, user.approval_status, application),
+    application: application ? memberView(application) : null,
     documents: application ? await listDocuments(application.id) : [],
     identity_check: "For this demo, identity is reviewed by an admin by hand. No ID number or document is stored.",
   };
@@ -106,11 +147,13 @@ export async function saveApplication(userId: string, input: z.infer<typeof appl
     if (funder.claimed_by_user_id) throw conflict("FUNDER_CLAIMED", "Someone already maintains this record");
   }
 
-  return prisma.vettingApplication.upsert({
-    where: { user_id: userId },
-    create: { ...input, user_id: userId },
-    update: input,
-  });
+  return memberView(
+    await prisma.vettingApplication.upsert({
+      where: { user_id: userId },
+      create: { ...input, user_id: userId },
+      update: input,
+    }),
+  );
 }
 
 const rank: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -171,7 +214,7 @@ export async function submitApplication(userId: string) {
     prisma.user.update({ where: { id: userId }, data: { approval_status: "submitted" } }),
   ]);
 
-  return { approval_status: "submitted", application: saved };
+  return { approval_status: "submitted", application: memberView(saved) };
 }
 
 const applicant = {
@@ -305,6 +348,7 @@ export async function decide(adminId: string, applicationId: string, input: z.in
         decided_at: new Date(),
         decided_by: adminId,
         decision_reason: input.reason,
+        member_message: input.member_message ?? null,
         // A first approval does not carry over to a later application.
         ...(input.decision === "approve" ? {} : { first_approved_by: null }),
         // An approved member is looked at again in a year.
@@ -335,12 +379,10 @@ export async function decide(adminId: string, applicationId: string, input: z.in
   // A final decision starts the 30 days after which the files are deleted.
   if (input.decision !== "needs_info") await scheduleDeletion(applicationId);
 
-  const OUTCOME = {
-    approve: ["You are approved", "You can now see and connect with other members."],
-    reject: ["Your application was not approved", input.reason],
-    needs_info: ["We need a little more from you", input.reason],
-  } as const;
-  const [title, body] = OUTCOME[input.decision];
+  const TITLE = { approve: "You are approved", reject: "Your application was not approved", needs_info: "We need a little more from you" } as const;
+  const title = TITLE[input.decision];
+  const body =
+    memberMessageOf(input.decision, input.reason, input.member_message ?? null) ?? "You can now see and connect with other members.";
   await tellMember(application.user_id, { type: `vetting_${input.decision}`, title, body, link: "/vetting/application" });
 
   return { application_id: applicationId, approval_status: status };

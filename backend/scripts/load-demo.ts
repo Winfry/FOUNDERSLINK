@@ -239,8 +239,10 @@ const brian = await prisma.user.create({
 // Both go through the same submit as a real applicant, so the risk level
 // in the queue is whatever the risk check really says about them.
 for (const applicant of [amina, brian]) {
+  // What the applicant gets back leaves out the risk check, so it is read here.
   const { application } = await submitApplication(applicant.id);
-  console.log(`${applicant.email}: submitted, risk ${application.risk_level}`, application.risk_signals);
+  const scored = await prisma.vettingApplication.findUniqueOrThrow({ where: { id: application.id }, select: { risk_level: true, risk_signals: true } });
+  console.log(`${applicant.email}: submitted, risk ${scored.risk_level}`, scored.risk_signals);
 }
 
 console.log(`Demo accounts loaded: ${NAMES.map(address).join(", ")}`);
