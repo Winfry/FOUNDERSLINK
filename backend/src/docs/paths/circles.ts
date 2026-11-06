@@ -17,7 +17,7 @@ import { person } from "../schemas.js";
 export const tag = {
   name: "Circles",
   description:
-    "Founder circles. **Investors are not members** (TEAM_DECISIONS D13): every circle route answers an investor with `403 NOT_FOR_INVESTORS`.\n\nA money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
+    "Founder circles. **Only founders take part** (TEAM_DECISIONS D14): every circle route answers an investor or an expert with `403 FOUNDERS_ONLY`, for money and learning circles alike. Someone who is not a founder and joined before that rule keeps her history: in a circle's members and reconciliation she shows with `taking_part: false`, her past payments stay, nothing more is due from her, and she is not in the circle's chat.\n\nA money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
 };
 
 const NO_CIRCLE: ErrorCase = [404, "NOT_FOUND", "No such circle, or the caller is not a member."];
@@ -354,8 +354,16 @@ const opsAsWritten: Op[] = [
           "Null when the circle has no contribution frequency. Then every matched payment counts.",
         ),
         collected_kes: int,
-        members: arr(obj({ user_id: uuid, full_name: str, paid_kes: int, due_kes: int })),
-        missing: arr(obj({ user_id: uuid, full_name: str, paid_kes: int, due_kes: int })),
+        members: arr(
+          obj({
+            user_id: uuid,
+            full_name: str,
+            taking_part: described(bool, "False for someone who is not a founder and joined before chamas became founders-only: her payments stay, nothing is due from her."),
+            paid_kes: int,
+            due_kes: int,
+          }),
+        ),
+        missing: arr(obj({ user_id: uuid, full_name: str, taking_part: bool, paid_kes: int, due_kes: int })),
         by_source: obj({ manual: int, statement: int, paybill_callback: int }),
         unmatched_count: int,
         unmatched: described(
@@ -410,7 +418,7 @@ const opsAsWritten: Op[] = [
   },
 ];
 
-// Every circle route but the M-Pesa callback refuses an investor.
-const NOT_FOR_INVESTORS: ErrorCase = [403, "NOT_FOR_INVESTORS", "The caller is an investor. Chamas are for founders."];
-export const ops: Op[] = opsAsWritten.map((op) => (op.access === "approved" ? { ...op, errors: [...(op.errors ?? []), NOT_FOR_INVESTORS] } : op));
+// Every circle route but the M-Pesa callback is for founders only.
+const FOUNDERS_ONLY: ErrorCase = [403, "FOUNDERS_ONLY", "The caller is not a founder. Chamas are for founders saving together."];
+export const ops: Op[] = opsAsWritten.map((op) => (op.access === "approved" ? { ...op, errors: [...(op.errors ?? []), FOUNDERS_ONLY] } : op));
 

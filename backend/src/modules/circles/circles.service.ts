@@ -82,7 +82,12 @@ export const noteSchema = z.object({
 export const decisionSchema = z.object({ question: z.string().trim().min(5).max(300) });
 export const voteSchema = z.object({ choice: z.enum(["yes", "no", "abstain"]) });
 
-const person = { select: { id: true, full_name: true } } as const;
+const person = { select: { id: true, full_name: true, role: true } } as const;
+
+// Only founders take part in a chama (TEAM_DECISIONS D14). Someone else who
+// joined before that rule keeps her history (what she paid stays on the
+// record) but is no longer counted as owing, and is not in the chama's chat.
+export const takesPart = (role: string) => role === "founder";
 
 // Loads the caller's membership. To a non-member, a circle does not exist.
 async function member(userId: string, circleId: string) {
@@ -217,14 +222,16 @@ export async function getCircle(userId: string, circleId: string) {
     members: circle.members.map((m) => {
       const paid = circle.payments.filter((p) => p.member_id === m.user_id);
       const thisPeriod = start ? sum(paid.filter((p) => p.paid_at >= start)) : 0;
+      const active = takesPart(m.user.role);
       return {
         user_id: m.user_id,
         full_name: m.user.full_name,
         role: m.role,
+        taking_part: active,
         contributed_kes: sum(paid),
         // For a money circle with a set contribution: has she paid this
-        // week's or month's amount yet?
-        this_period: amount && start ? { paid_kes: thisPeriod, due_kes: Math.max(0, amount - thisPeriod) } : null,
+        // week's or month's amount yet? Nothing is due from someone no longer taking part.
+        this_period: amount && start ? { paid_kes: thisPeriod, due_kes: active ? Math.max(0, amount - thisPeriod) : 0 } : null,
       };
     }),
     goals: circle.goals.map((g) => {

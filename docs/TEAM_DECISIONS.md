@@ -19,6 +19,7 @@
 | **D11** | **Core scope: founders, investors, experts** | **Funding comes from investors only.** Grants, government funds, bank loans, SACCOs and the SME path are out of scope for now. Money from a deal moves through a bank, never through FoundersLink. |
 | **D12** | **Verification in levels, with AI document pre-checks** | **Join in two minutes; verify when you want to make contact; share documents when a deal reaches due diligence.** The AI reads and pre-checks documents and compiles the due-diligence pack; a person always confirms. |
 | D13 | Groups, join requests and the demo | A group is a money circle, shown as a "Chama". Accepting a join request connects the two, then offers a pre-filled deal. The demo shows both apps. |
+| **D14** | **Chamas are for founders** | **Only founders create, join, invite to or take part in a chama, money or learning.** Investors and experts work with founders through connections, sessions and deals. Enforced by the backend, not only by hiding a tab. FoundersLink records contributions; it never holds or moves money. |
 
 ---
 
@@ -600,3 +601,25 @@ Accepting connects the two, so they can chat. The app then offers **"Start an in
 - **Back to mobile:** chat (a scam message carries a warning) → deal → due diligence with the AI pre-check → closed; the money moves through the bank.
 
 Mobile is connected to the real backend first, since it carries most of the story. A recorded backup of the full demo is made the night before.
+
+---
+
+## D14. Chamas are for founders
+
+**Agreed on 6 November.** Chamas exist to help founders save money together towards shared goals. That purpose is kept clear: a chama is not a networking space for the whole ecosystem.
+
+**The rule**
+
+| Role | Create, join, be invited to or take part in a chama |
+|---|---|
+| Founder | Yes |
+| Investor | No. Investors work with founders through discovery, connections and deals. |
+| Expert | No. Experts help founders through their sessions. |
+
+- It covers money circles and learning circles alike. A mixed space for founders, investors and experts would be a separate feature, with its own name, purpose and access rules, decided on its own.
+- **Enforced by the backend.** Every circle route answers anyone who is not a founder with `403 FOUNDERS_ONLY`. The investor and expert apps have no Chamas tab, but hiding a tab is never the protection: the backend is.
+- **Nothing is deleted.** Someone who is not a founder and joined a chama before this rule keeps her history: her membership and every payment she made stay on the record and count in the chama's totals. She is shown as "No longer taking part", nothing more is due from her, and she is not in the chama's chat. Her past messages stay.
+- **FoundersLink records; it never holds money** (D10, D11). Members pay into the chama's own Paybill, Till or account. FoundersLink records contributions and reconciles them against an uploaded M-Pesa statement. No wallet, balance, deposit, withdrawal or escrow.
+- Everything founders do in a chama stays as it was: create, invite, record contributions, upload statements, reconcile, set goals, keep notes and minutes, and vote.
+
+**Why:** savings and investment are different relationships. Keeping investors out of founders' savings protects trust (founders discuss their money openly), avoids a conflict of interest (an investor learning a founder's finances outside a deal) and keeps the product easy to understand. This replaces the line in D13 that said only that investors are not chama members.

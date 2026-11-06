@@ -49,18 +49,20 @@ import {
 
 export const circlesRouter = Router();
 
-// Investors are not chama members: they work with founders through deals
-// (TEAM_DECISIONS D13; FINAL_VERIFICATION section 4, item 2).
-const notForInvestors = (req: Request, _res: Response, next: NextFunction) => {
-  if (req.user!.role === "investor") {
-    throw new AppError(403, "NOT_FOR_INVESTORS", "Chamas are for founders. Investors work with founders through deals.");
+// Chamas are for founders saving together (TEAM_DECISIONS D14). Only a
+// founder may create, join, invite to or take part in one, money or
+// learning; investors and experts work with founders through connections,
+// sessions and deals. Checked here, at the door, not only by hiding a tab.
+const foundersOnly = (req: Request, _res: Response, next: NextFunction) => {
+  if (req.user!.role !== "founder") {
+    throw new AppError(403, "FOUNDERS_ONLY", "Chamas are for founders saving together.");
   }
   next();
 };
 
 // Circles are between members, so every route needs an approved account.
 // The service then checks the caller's membership and role in the circle.
-const approved = [requireAuth, requireApproved, notForInvestors] as const;
+const approved = [requireAuth, requireApproved, foundersOnly] as const;
 const id = (value: unknown) => z.uuid().parse(value);
 
 circlesRouter.post("/circles", ...approved, async (req, res) => {

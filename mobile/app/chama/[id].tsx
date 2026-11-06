@@ -219,7 +219,11 @@ export default function ChamaDetailScreen() {
             title={m.userId === myId ? `${m.name} (you)` : m.name}
             right={
               <View style={styles.centred}>
-                <Badge label={ROLE_LABEL[m.role] ?? m.role} variant={m.role === 'member' ? 'muted' : 'default'} />
+                {/* Joined before chamas became founders-only: her payments stay on the record (TEAM_DECISIONS D14). */}
+                <Badge
+                  label={m.takingPart === false ? 'No longer taking part' : (ROLE_LABEL[m.role] ?? m.role)}
+                  variant={m.role === 'member' || m.takingPart === false ? 'muted' : 'default'}
+                />
               </View>
             }
             last={i === c.members.length - 1}

@@ -4,6 +4,7 @@ import { after, before, test } from "node:test";
 import bcrypt from "bcrypt";
 import { app } from "../src/app.js";
 import { prisma } from "../src/shared/db.js";
+import { syncCircleRoom } from "../src/modules/messaging/messaging.service.js";
 
 // Founder Circles: a money circle among people who know each other, and
 // a learning circle anyone can find. Runs against DATABASE_URL (with the
@@ -254,32 +255,78 @@ test("a learning circle can be found, suggested with a reason, and joined withou
   assert.equal((await call("POST", "/circles/join", "mumbi", { token: link.token })).status, 200);
 });
 
-test("investors are not chama members: every circle route refuses them", async () => {
-  // TEAM_DECISIONS D13; FINAL_VERIFICATION section 4, item 2.
-  const email = `circle-investor-${run}@example.com`;
-  const investor = await prisma.user.create({
-    data: { email, full_name: "Grace Investor", role: "investor", password_hash: await bcrypt.hash(password, 4), approval_status: "approved" },
-  });
+test("chamas are for founders: investors and experts are refused at every circle route", async () => {
+  // TEAM_DECISIONS D14. Hiding the tab is not enough: the backend refuses them too.
+  const outsiders = [];
+  for (const role of ["investor", "expert"] as const) {
+    const email = `circle-${role}-${run}@example.com`;
+    const user = await prisma.user.create({
+      data: { email, full_name: `A ${role}`, role, password_hash: await bcrypt.hash(password, 4), approval_status: "approved" },
+    });
+    outsiders.push({ role, user, token: (await call("POST", "/auth/login", undefined, { email, password })).json.token as string });
+  }
   try {
-    const token = (await call("POST", "/auth/login", undefined, { email, password })).json.token;
-    const as = (method: string, path: string, body?: unknown) =>
-      fetch(base + path, {
-        method,
-        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      }).then(async (r) => ({ status: r.status, json: (await r.json()) as any }));
+    for (const { role, token } of outsiders) {
+      const as = (method: string, path: string, body?: unknown) =>
+        fetch(base + path, {
+          method,
+          headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        }).then(async (r) => ({ status: r.status, json: (await r.json()) as any }));
 
-    for (const [method, path, body] of [
-      ["POST", "/circles", { name: "Investor savings", type: "money" }],
-      ["GET", "/circles", undefined],
-      ["GET", "/circles/suggested", undefined],
-      ["POST", "/circles/join", { token: "x".repeat(32) }],
-    ] as const) {
-      const res = await as(method, path, body);
-      assert.equal(res.status, 403, `${method} ${path}`);
-      assert.equal(res.json.error.code, "NOT_FOR_INVESTORS", `${method} ${path}`);
+      // Create, list, find, join by invite, open one, join a learning circle,
+      // invite others, record a contribution, vote: all refused.
+      for (const [method, path, body] of [
+        ["POST", "/circles", { name: "Outsider savings", type: "money" }],
+        ["GET", "/circles", undefined],
+        ["GET", "/circles/suggested", undefined],
+        ["POST", "/circles/join", { token: "x".repeat(32) }],
+        ["GET", `/circles/${circle}`, undefined],
+        ["POST", `/circles/${learning}/join`, {}],
+        ["POST", `/circles/${circle}/invites`, {}],
+        ["POST", `/circles/${circle}/contributions`, { member_id: ids.mumbi, amount_kes: 100, paid_at: yesterday }],
+        ["GET", `/circles/${circle}/reconciliation`, undefined],
+      ] as const) {
+        const res = await as(method, path, body);
+        assert.equal(res.status, 403, `${role}: ${method} ${path}`);
+        assert.equal(res.json.error.code, "FOUNDERS_ONLY", `${role}: ${method} ${path}`);
+      }
     }
   } finally {
+    await prisma.user.deleteMany({ where: { id: { in: outsiders.map((o) => o.user.id) } } });
+  }
+});
+
+test("someone not a founder who joined before the rule keeps her history, owes nothing more and leaves the chat", async () => {
+  // As if an investor had joined and paid before chamas became founders-only.
+  const investor = await prisma.user.create({
+    data: { email: `circle-early-${run}@example.com`, full_name: "Early Investor", role: "investor", password_hash: "x", approval_status: "approved" },
+  });
+  try {
+    await prisma.circleMember.create({ data: { circle_id: circle, user_id: investor.id, role: "member" } });
+    await prisma.paymentRecord.create({
+      data: { circle_id: circle, member_id: investor.id, amount_kes: 5000, paid_at: new Date(Date.now() - 60_000), source: "manual", matched_status: "matched", recorded_by: ids.wanjiku! },
+    });
+    await syncCircleRoom(circle);
+
+    // Her contribution is still part of the chama's record...
+    const view = (await call("GET", `/circles/${circle}`, "wanjiku")).json;
+    const her = view.members.find((m: any) => m.user_id === investor.id);
+    assert.equal(her.taking_part, false);
+    assert.equal(her.contributed_kes, 5000);
+    if (her.this_period) assert.equal(her.this_period.due_kes, 0);
+    assert.ok(view.members.filter((m: any) => m.user_id !== investor.id).every((m: any) => m.taking_part));
+
+    // ...but she is not listed as owing, and she is not in the chama's chat.
+    const reconciled = (await call("GET", `/circles/${circle}/reconciliation`, "wanjiku")).json;
+    assert.ok(!reconciled.missing.some((r: any) => r.user_id === investor.id), "listed as owing");
+    assert.equal(reconciled.members.find((r: any) => r.user_id === investor.id).taking_part, false);
+    const room = await prisma.conversation.findUniqueOrThrow({ where: { circle_id: circle }, include: { members: true } });
+    assert.ok(!room.members.some((m) => m.user_id === investor.id), "still in the chama chat");
+    // Nothing of hers was deleted.
+    assert.equal(await prisma.paymentRecord.count({ where: { member_id: investor.id } }), 1);
+  } finally {
+    await prisma.paymentRecord.deleteMany({ where: { member_id: investor.id } });
     await prisma.user.delete({ where: { id: investor.id } });
   }
 });

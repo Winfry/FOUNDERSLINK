@@ -19,6 +19,7 @@ import { z } from "zod";
 import { env } from "../../config/env.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, forbidden, notFound } from "../../shared/errors.js";
+import { takesPart } from "./circles.service.js";
 
 // A statement's date, read the way Kenya writes it. JavaScript's own Date
 // reads "04-10-2026" month first (10 April); an M-Pesa statement means
@@ -288,7 +289,7 @@ export async function reconciliation(userId: string, circleId: string) {
   if (circle.type !== "money") throw conflict("NOT_A_MONEY_CIRCLE", "A learning circle has no contributions");
 
   const [members, payments] = await Promise.all([
-    prisma.circleMember.findMany({ where: { circle_id: circleId }, include: { user: { select: { full_name: true } } }, orderBy: { joined_at: "asc" } }),
+    prisma.circleMember.findMany({ where: { circle_id: circleId }, include: { user: { select: { full_name: true, role: true } } }, orderBy: { joined_at: "asc" } }),
     prisma.paymentRecord.findMany({ where: { circle_id: circleId, matched_status: { not: "ignored" } }, orderBy: { paid_at: "desc" } }),
   ]);
 
@@ -298,7 +299,10 @@ export async function reconciliation(userId: string, circleId: string) {
 
   const rows = members.map((m) => {
     const paid = inPeriod.filter((p) => p.member_id === m.user_id).reduce((t, p) => t + p.amount_kes, 0);
-    return { user_id: m.user_id, full_name: m.user.full_name, paid_kes: paid, due_kes: amount ? Math.max(0, amount - paid) : 0 };
+    // Someone who is not a founder no longer takes part: what she paid
+    // stays on the record, and nothing more is due from her (TEAM_DECISIONS D14).
+    const active = takesPart(m.user.role);
+    return { user_id: m.user_id, full_name: m.user.full_name, taking_part: active, paid_kes: paid, due_kes: amount && active ? Math.max(0, amount - paid) : 0 };
   });
   const unmatched = payments.filter((p) => p.matched_status === "unmatched");
   const keeper = mine.role !== "member";

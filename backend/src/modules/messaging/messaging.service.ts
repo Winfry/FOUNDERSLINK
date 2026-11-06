@@ -105,7 +105,9 @@ export async function syncCircleRoom(circleId: string) {
     create: { type: "circle", circle_id: circleId },
     update: {},
   });
-  const members = await prisma.circleMember.findMany({ where: { circle_id: circleId }, select: { user_id: true } });
+  // Only founders are in a chama's chat (TEAM_DECISIONS D14). Someone else
+  // who joined before that rule is taken out; her past messages stay.
+  const members = await prisma.circleMember.findMany({ where: { circle_id: circleId, user: { role: "founder" } }, select: { user_id: true } });
   const memberIds = members.map((m) => m.user_id);
   await prisma.conversationMember.createMany({
     data: memberIds.map((user_id) => ({ conversation_id: room.id, user_id })),

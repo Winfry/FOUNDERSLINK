@@ -242,6 +242,8 @@ export interface CircleMember {
   name: string;
   role: CircleRole;
   joinedAt: string;
+  /** False for someone who is not a founder and joined before chamas became founders-only (TEAM_DECISIONS D14). */
+  takingPart?: boolean;
 }
 
 export interface CircleDetail extends CircleSummary {

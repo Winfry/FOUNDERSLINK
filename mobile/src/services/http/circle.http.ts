@@ -25,6 +25,7 @@ interface ApiCircle {
     user_id: string;
     full_name: string;
     role: CircleRole;
+    taking_part: boolean;
     contributed_kes: number;
     this_period: { paid_kes: number; due_kes: number } | null;
   }[];
@@ -69,6 +70,7 @@ function toDetail(c: ApiCircle, contributions: ApiContribution[]): CircleDetail 
       role: m.role,
       // The backend does not say when a member joined.
       joinedAt: '',
+      takingPart: m.taking_part !== false,
     })),
     contributions: contributions.map(toContribution),
     // Who has not yet paid this week's or month's amount in full. Empty

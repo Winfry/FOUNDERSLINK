@@ -396,6 +396,7 @@ export const components: Record<string, Schema> = {
         user_id: uuid,
         full_name: str,
         role: oneOf(["organiser", "treasurer", "member"]),
+        taking_part: described(bool, "False for someone who is not a founder and joined before chamas became founders-only. Her contributions stay on the record; nothing more is due from her."),
         contributed_kes: int,
         this_period: described(nullable(obj({ paid_kes: int, due_kes: int })), "Null unless the circle has a set contribution."),
       }),
