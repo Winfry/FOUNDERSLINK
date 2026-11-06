@@ -18,7 +18,10 @@ const messageOf = (e: unknown, fallback: string) => (e as { message?: string })?
 
 export default function VerifyToConnectScreen() {
   const router = useRouter();
-  const isInvestor = useAuthStore((s) => s.user?.role) === 'investor';
+  const role = useAuthStore((s) => s.user?.role);
+  const isInvestor = role === 'investor';
+  // Experts verify too (TEAM_DECISIONS D11, D12), in their own words.
+  const isExpert = role === 'expert';
   // An investor has to say what she funds before she can be checked.
   const [needsSetup, setNeedsSetup] = useState(false);
   const [phone, setPhone] = useState('+254');
@@ -164,7 +167,7 @@ export default function VerifyToConnectScreen() {
           <>
             <Text style={styles.heading}>What is your phone number?</Text>
             <Text style={styles.helper}>
-              {isInvestor ? 'Founders' : 'Investors'} want to know there is a real person behind every profile. We send one code to check the number is yours.
+              {isInvestor || isExpert ? 'Founders' : 'Investors'} want to know there is a real person behind every profile. We send one code to check the number is yours.
             </Text>
             <View style={styles.field}>
               <Input
@@ -219,7 +222,9 @@ export default function VerifyToConnectScreen() {
 
         {step === 'statement' ? (
           <>
-            <Text style={styles.heading}>{isInvestor ? 'Say who you invest for' : 'Say what your business does'}</Text>
+            <Text style={styles.heading}>
+              {isInvestor ? 'Say who you invest for' : isExpert ? 'Say how you help founders' : 'Say what your business does'}
+            </Text>
             <Text style={styles.helper}>
               A person on our team reads this before approving you. Two or three honest sentences are enough.
             </Text>
@@ -261,7 +266,9 @@ export default function VerifyToConnectScreen() {
                 <Text style={styles.exampleText}>
                   {isInvestor
                     ? 'I am a partner at Savanna Angels, a group of angel investors in Nairobi. We have backed six early health and fintech startups since 2021.'
-                    : 'I run Afya Booking, an app that lets patients book visits at small clinics in Nairobi. We started in 2024 and 12 clinics use it today.'}
+                    : isExpert
+                      ? 'I am an advocate of the High Court, registered with the LSK, and I help early startups with company registration and shareholder agreements.'
+                      : 'I run Afya Booking, an app that lets patients book visits at small clinics in Nairobi. We started in 2024 and 12 clinics use it today.'}
                 </Text>
               </View>
             </View>
@@ -278,7 +285,9 @@ export default function VerifyToConnectScreen() {
           <FileText size={20} color={colors.textMuted} />
           <Text style={styles.noteText}>{isInvestor
               ? 'No documents are needed here. Documents are shared later, at due diligence on a deal.'
-              : 'No documents are needed here. Business documents come later, at due diligence on a deal.'}</Text>
+              : isExpert
+                ? 'No documents are needed here. A FoundersLink admin checks your professional register entry.'
+                : 'No documents are needed here. Business documents come later, at due diligence on a deal.'}</Text>
         </View>
       </ScrollView>
     </View>

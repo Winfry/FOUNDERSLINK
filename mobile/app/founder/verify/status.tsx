@@ -90,9 +90,14 @@ export default function VerificationStatusScreen() {
   // The opening screen sends each role to her own home.
   const toMatches = () => router.replace('/');
   const investor = user?.role === 'investor';
+  const expert = user?.role === 'expert';
   // The same screen serves both roles, so the words follow who is reading.
   const forRole = (text: string) =>
-    investor ? text.replace(/investors/g, 'founders').replace(/your business/g, 'what you fund').replace(/See your matches/g, 'See founders') : text;
+    investor
+      ? text.replace(/investors/g, 'founders').replace(/your business/g, 'what you fund').replace(/See your matches/g, 'See founders')
+      : expert
+        ? text.replace(/investors/g, 'founders').replace(/your business/g, 'how you help founders').replace(/See your matches/g, 'Go to my home')
+        : text;
 
   return (
     <ScrollView contentContainerStyle={styles.wrap}>

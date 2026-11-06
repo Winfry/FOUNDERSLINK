@@ -12,8 +12,9 @@ export interface VerificationInvite {
 // member who has never applied is asked to "Start verification". Anyone
 // already decided is sent to the status screen, which says why
 // (FINAL_VERIFICATION 11).
-export function verificationInvite(status: ApprovalStatus | undefined, role: 'founder' | 'investor'): VerificationInvite | null {
+export function verificationInvite(status: ApprovalStatus | undefined, role: 'founder' | 'investor' | 'expert'): VerificationInvite | null {
   const founder = role === 'founder';
+  const expert = role === 'expert';
   const toStatus = '/founder/verify/status' as const;
   switch (status) {
     case 'approved':
@@ -22,9 +23,11 @@ export function verificationInvite(status: ApprovalStatus | undefined, role: 'fo
     case 'in_review':
       return {
         title: "We're checking your details",
-        text: founder
-          ? 'Names and the Connect button open as soon as FoundersLink approves you.'
-          : 'Names and founder pages open as soon as FoundersLink approves you.',
+        text: expert
+          ? 'A FoundersLink admin checks every expert, including your professional register entry. You will be told when it is done.'
+          : founder
+            ? 'Names and the Connect button open as soon as FoundersLink approves you.'
+            : 'Names and founder pages open as soon as FoundersLink approves you.',
         button: founder ? 'See my verification status' : 'See my status',
         route: toStatus,
       };
@@ -38,9 +41,11 @@ export function verificationInvite(status: ApprovalStatus | undefined, role: 'fo
     case 'rejected':
       return {
         title: 'Not approved',
-        text: founder
-          ? 'Your verification was not approved, so investor names and connecting stay closed.'
-          : 'Your verification was not approved, so founder names and pages stay closed.',
+        text: expert
+          ? 'Your verification was not approved, so founders cannot find or book you.'
+          : founder
+            ? 'Your verification was not approved, so investor names and connecting stay closed.'
+            : 'Your verification was not approved, so founder names and pages stay closed.',
         button: 'See why',
         route: toStatus,
       };
@@ -60,10 +65,12 @@ export function verificationInvite(status: ApprovalStatus | undefined, role: 'fo
       };
     default:
       return {
-        title: founder ? 'Verify to connect' : 'Verify to see who they are',
-        text: founder
-          ? 'Verify once to see investor names and send them a request to connect.'
-          : 'Verify once to see founder names, open their pages and ask to join.',
+        title: expert ? 'Verify to start helping founders' : founder ? 'Verify to connect' : 'Verify to see who they are',
+        text: expert
+          ? 'Once you are verified, founders can find you and book your free sessions.'
+          : founder
+            ? 'Verify once to see investor names and send them a request to connect.'
+            : 'Verify once to see founder names, open their pages and ask to join.',
         button: 'Start verification',
         route: '/founder/verify',
       };

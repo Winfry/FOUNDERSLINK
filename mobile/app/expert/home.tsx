@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { verificationInvite } from '../../src/lib/verification-invite';
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +35,9 @@ export default function ExpertHomeScreen() {
   const logout = useAuthStore((s) => s.logout);
   const approved = user?.approvalStatus === 'approved';
   const waiting = user?.approvalStatus === 'submitted' || user?.approvalStatus === 'in_review';
+  // The card for an expert who is not approved: its words follow her status,
+  // so a rejected or paused expert is told why, not asked to verify again.
+  const invite = verificationInvite(user?.approvalStatus, 'expert');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -84,22 +88,31 @@ export default function ExpertHomeScreen() {
           <Avatar name={user?.fullName ?? 'Expert'} size={56} />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{user?.fullName}</Text>
-            <Badge label={approved ? 'Verified expert' : waiting ? 'Being reviewed' : 'Not verified yet'} variant={approved ? 'success' : 'muted'} />
+            <Badge
+              label={
+                approved
+                  ? 'Verified expert'
+                  : waiting
+                    ? 'Being reviewed'
+                    : user?.approvalStatus === 'suspended' || user?.approvalStatus === 'banned'
+                      ? 'Account on hold'
+                      : user?.approvalStatus === 'rejected'
+                        ? 'Not approved'
+                        : 'Not verified yet'
+              }
+              variant={approved ? 'success' : 'muted'}
+            />
           </View>
         </View>
 
-        {!approved ? (
+        {invite ? (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{waiting ? 'We are checking your details' : 'Verify to start helping founders'}</Text>
-            <Text style={styles.muted}>
-              {waiting
-                ? 'A FoundersLink admin checks every expert, including your professional register entry. You will be told when it is done.'
-                : 'Once you are verified, founders can find you and book your free sessions.'}
-            </Text>
+            <Text style={styles.cardTitle}>{invite.title}</Text>
+            <Text style={styles.muted}>{invite.text}</Text>
             <Button
-              title={waiting ? 'See status' : 'Verify now'}
-              variant={waiting ? 'secondary' : 'primary'}
-              onPress={() => router.push(waiting ? '/founder/verify/status' : '/founder/verify')}
+              title={invite.button}
+              variant={invite.route === '/founder/verify' ? 'primary' : 'secondary'}
+              onPress={() => router.push(invite.route)}
             />
           </View>
         ) : (
