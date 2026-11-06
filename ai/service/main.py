@@ -5,10 +5,15 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from ai.service.env_file import load_env_file
 
-from ai.embeddings.model import load_embedder
-from ai.service.routes import compliance, documents, matching, moderation, vetting
+# Before anything reads its settings (the internal key, the LLM).
+load_env_file()
+
+from fastapi import FastAPI  # noqa: E402
+
+from ai.embeddings.model import load_embedder  # noqa: E402
+from ai.service.routes import compliance, documents, matching, moderation, vetting  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)

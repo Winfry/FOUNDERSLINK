@@ -7,6 +7,8 @@ from pathlib import Path
 
 os.environ["EMBEDDING_MODEL"] = "none"
 os.environ["AI_SERVICE_API_KEY"] = "test-key"
+# Tests never read a developer's .env (it may hold a real LLM key).
+os.environ["AI_ENV_FILE"] = "none"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

@@ -49,6 +49,8 @@ export interface ComplianceService {
   listItems(): Promise<ComplianceItem[]>;
   updateItemStatus(itemId: string, status: ComplianceItem['status']): Promise<ComplianceItem>;
   ask(question: string): Promise<ComplianceAskAnswer>;
+  /** Whether an answer helped. Kept with the question so answers can be improved. */
+  giveFeedback(questionId: string, feedback: 'helpful' | 'not_helpful'): Promise<void>;
 }
 
 export interface ConnectionService {

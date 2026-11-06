@@ -51,7 +51,11 @@ export const mockComplianceService: ComplianceService = {
     void question;
     return {
       body: 'Registered companies need a valid KRA PIN before issuing invoices. Source: KRA guide for startups.',
-      citations: [{ title: 'KRA — Starting a business', url: 'https://www.kra.go.ke' }],
+      citations: [{ title: 'KRA — Starting a business', url: 'https://www.kra.go.ke', lastVerified: '2026-10-04' }],
     };
+  },
+
+  async giveFeedback() {
+    await mockDelay(200);
   },
 };

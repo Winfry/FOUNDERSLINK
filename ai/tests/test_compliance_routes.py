@@ -186,3 +186,27 @@ def test_compliance_endpoints_require_the_key(client):
 def test_health_reports_what_is_loaded(client):
     body = client.get("/health").json()
     assert {"status", "embedding_model", "compliance_index", "llm"} <= set(body)
+
+
+def test_the_quote_leaves_out_website_clutter():
+    from ai.service.routes.compliance import _excerpt
+    text = ("How to Register for a KRA PIN [Non-Individual.] - KRA A A A EN SW Learn about KRA PIN "
+            "Step 1 Open the iTax Portal. Step 2 Choose non-individual.")
+    out = _excerpt(text, "How to register for a KRA PIN (non-individual)", "Do I need a KRA PIN?")
+    assert out.startswith("Learn about KRA PIN") and "EN SW" not in out
+
+
+def test_the_quote_starts_where_the_passage_answers_the_question():
+    # The real case: the ODPC note opens with when the regulations started,
+    # and the rule itself comes later.
+    from ai.service.routes.compliance import _excerpt
+    text = ("Title and commencement Pursuant to section 18 of the Act the regulations take effect. "
+            "A data controller must register with the Data Commissioner. Registration lasts two years.")
+    out = _excerpt(text, "", "When must a data controller register?")
+    assert out == "... A data controller must register with the Data Commissioner. Registration lasts two years."
+
+
+def test_the_quote_keeps_the_start_when_nothing_matches_better():
+    from ai.service.routes.compliance import _excerpt
+    assert _excerpt("Every company must register. It is free.", "", "football") == \
+        "Every company must register. It is free."

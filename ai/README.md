@@ -25,7 +25,45 @@ AI_SERVICE_API_KEY=<same value as the AI service's AI_SERVICE_API_KEY>
 | Variable | Default | What it does |
 |---|---|---|
 | `AI_SERVICE_API_KEY` | empty | Shared key the backend sends as `X-Internal-Api-Key`. Empty means no check (local only). |
-| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-small` | Multilingual model for mandate matching. `none` turns embeddings off. |
+| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-small` | Multilingual model for mandate matching and Ask Compliance search. `none` turns embeddings off. |
+| `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | empty | The LLM that writes Ask Compliance answers. Without a key, the best official passage is quoted instead. |
+| `AI_ENV_FILE` | the root `.env` | The settings file the service reads at start. `none` reads no file (the tests do this). |
+
+## Ask Compliance
+
+A founder asks a question in the app ("Do I need a KRA PIN?"). The service finds the passages of the official Kenyan sources in `data/compliance/` that speak to it, and an LLM writes a short answer **from those passages only**, citing each fact with its source and the date FoundersLink last checked it (TEAM_DECISIONS D3). The rules the LLM follows are in `ai/compliance_rag/prompts/answer_with_citations.txt`.
+
+What the founder sees depends on what is set up:
+
+| Set up | The founder sees |
+|---|---|
+| Index and an LLM | A plain answer, every fact cited, with the source's "Checked" date |
+| Index, no LLM (or the LLM fails or is slow) | "From the official source": the closest passage, word for word, with its source, and an expert suggested |
+| Nothing official matches the question | "No official source for this yet". Nothing is guessed |
+| The AI service is not running | The backend's own stand-in, which can only say it cannot confirm |
+
+An LLM's answer is shown only if every fact carries a citation and every number in it appears in the source it cites. Otherwise the founder gets the honest "not found".
+
+### Set it up on a machine (once)
+
+From the repository root, with the venv active:
+
+```bash
+python -m scripts.fetch_compliance_sources   # downloads the official PDFs (git ignores them)
+python -m ai.compliance_rag.ingest           # builds the search index in ai/compliance_rag/index/
+```
+
+Then put the LLM in the root `.env`. The service reads that file itself, and any variable already set in the environment wins. Any provider with an OpenAI-style `/chat/completions` endpoint works:
+
+```
+LLM_BASE_URL=<the provider's OpenAI-compatible URL>
+LLM_API_KEY=<your key>
+LLM_MODEL=<the model name the provider gives>
+```
+
+Start the service and check `GET /health`: `"compliance_index": true` and `"llm": true`. If the embedding model is already downloaded and the machine is offline, start it with `HF_HUB_OFFLINE=1` so it does not wait for the internet.
+
+Every question and answer is stored by the backend (`compliance_questions`), with the founder's "Did this help?" answer, so answers can be checked and improved.
 
 ## Endpoints
 

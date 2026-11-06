@@ -7,11 +7,12 @@ interface ApiChecklist {
 }
 
 interface ApiAnswer {
+  id: string;
   answer: string;
   // False when there is no current official source to answer from.
   confident: boolean;
   suggest_expert: boolean;
-  citations: { source: string; url: string }[];
+  citations: { source: string; url: string; last_verified?: string | null }[];
 }
 
 // The checklist is chosen for her business by the backend, and her own
@@ -51,10 +52,15 @@ export const httpComplianceService: ComplianceService = {
       throw e;
     });
     return {
+      id: answer.id,
       body: answer.answer,
-      citations: answer.citations.map((c) => ({ title: c.source, url: c.url })),
+      citations: answer.citations.map((c) => ({ title: c.source, url: c.url, lastVerified: c.last_verified ?? null })),
       cannotConfirm: !answer.confident,
       expertSuggestions: answer.suggest_expert ? ['Ask a lawyer or accountant to confirm this for your business.'] : undefined,
     };
+  },
+
+  async giveFeedback(questionId, feedback) {
+    await post(`/compliance/questions/${questionId}/feedback`, { feedback });
   },
 };

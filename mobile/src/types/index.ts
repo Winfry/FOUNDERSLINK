@@ -129,8 +129,11 @@ export interface ComplianceItem {
 }
 
 export interface ComplianceAskAnswer {
+  // The asked question's id, for feedback. Missing in the mock.
+  id?: string;
   body: string;
-  citations: { title: string; url: string }[];
+  // lastVerified: when FoundersLink last checked the source (YYYY-MM-DD).
+  citations: { title: string; url: string; lastVerified?: string | null }[];
   cannotConfirm?: boolean;
   expertSuggestions?: string[];
 }

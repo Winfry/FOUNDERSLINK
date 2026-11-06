@@ -119,17 +119,42 @@ def with_english_terms(question: str) -> str:
     return f"{question} ({' '.join(extra)})" if extra else question
 
 
-def _excerpt(text: str, title: str = "") -> str:
-    """Whole sentences from the start of the passage, up to QUOTE_CHARS,
-    without the document title that ingest puts in front of each piece."""
+# Website clutter that comes before the content on some saved pages: the
+# text-size buttons and the language switch ("KRA A A A EN SW").
+_PAGE_CLUTTER = re.compile(r"^.{0,200}?\b(?:A ){2,3}A?\s*EN SW\b\s*")
+# Sentence ends, and the numbered steps of a how-to page.
+_SENTENCE_END = re.compile(r"(?<=[.;?!])\s+(?=[A-Z0-9\"(])|\s+(?=Step \d+\b)")
+
+
+def _sentences(text: str) -> list[str]:
+    return [s for s in _SENTENCE_END.split(text) if s.strip()]
+
+
+def _excerpt(text: str, title: str = "", question: str = "", weights: dict[str, float] | None = None) -> str:
+    """Whole sentences, up to QUOTE_CHARS, starting where the passage first
+    speaks to the question, without the document title that ingest puts in
+    front of each piece or the website's clutter. "..." marks text left out."""
     text = re.sub(r"\s+", " ", text).strip()
     if title and text.lower().startswith(title.lower()):
         text = text[len(title):].lstrip(" :-|,")
-    if len(text) <= QUOTE_CHARS:
-        return text
-    cut = text[:QUOTE_CHARS]
-    end = max(cut.rfind(". "), cut.rfind("; "))
-    return (cut[: end + 1] if end > QUOTE_CHARS // 3 else cut.rsplit(" ", 1)[0]) + " ..."
+    text = _PAGE_CLUTTER.sub("", text, count=1)
+
+    sentences = _sentences(text)
+    first = 0
+    wanted = set(tokenize(expand(question))) if question else set()
+    if wanted and len(sentences) > 1:
+        def score(sentence: str) -> float:
+            return sum((weights or {}).get(w, 1.0) for w in wanted & set(tokenize(sentence)))
+        scores = [score(x) for x in sentences]
+        if max(scores) > 0:
+            first = scores.index(max(scores))
+    picked = " ".join(sentences[first:])
+    lead = "... " if first > 0 else ""
+    if len(picked) <= QUOTE_CHARS:
+        return lead + picked
+    cut = picked[:QUOTE_CHARS]
+    stop = max(cut.rfind(". "), cut.rfind("; "))
+    return lead + (cut[: stop + 1] if stop > QUOTE_CHARS // 3 else cut.rsplit(" ", 1)[0]) + " ..."
 
 
 def _rarest_known_word(question: str, retriever) -> str | None:
@@ -169,7 +194,8 @@ def quoted_answer(question: str, language: str | None, profile: dict | None, ret
     best = max(close, key=lambda p: p.score)
     source = f"{best.source_title}, {best.section}" if best.section else best.source_title
     return ComplianceAnswer(
-        answer=QUOTE_TEXT[lang].format(source=source, excerpt=_excerpt(best.text, best.source_title)),
+        answer=QUOTE_TEXT[lang].format(source=source, excerpt=_excerpt(
+            best.text, best.source_title, question, getattr(getattr(retriever, "bm25", None), "idf", None))),
         citations=[Citation(best.institution or best.source_title, best.url, best.last_verified_at or None)],
         confident=False,
         suggest_expert=True,

@@ -1,8 +1,9 @@
-import { ArrowUp, ExternalLink, MessageCircleQuestion, Scale } from 'lucide-react-native';
+import { ArrowUp, ExternalLink, MessageCircleQuestion, Quote, Scale, ThumbsDown, ThumbsUp } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from '../ui/Text';
 import { complianceService } from '../../services';
+import { answerKind, checkedOn } from '../../lib/compliance-answer';
 import type { ComplianceAskAnswer } from '../../types';
 import { colors, radius, spacing, touchTargetMin } from '../../theme/tokens';
 
@@ -36,6 +37,7 @@ function Sources({ citations }: { citations: ComplianceAskAnswer['citations'] })
           <View style={styles.sourceText}>
             <Text style={styles.sourceTitle}>{c.title}</Text>
             <Text style={styles.sourceUrl} numberOfLines={1}>{c.url}</Text>
+            {checkedOn(c.lastVerified) ? <Text style={styles.sourceChecked}>{checkedOn(c.lastVerified)}</Text> : null}
           </View>
         </Pressable>
       ))}
@@ -43,31 +45,75 @@ function Sources({ citations }: { citations: ComplianceAskAnswer['citations'] })
   );
 }
 
+// "Did this help?": kept with the question so answers can be improved.
+function Feedback({ questionId }: { questionId?: string }) {
+  const [given, setGiven] = useState<'helpful' | 'not_helpful' | null>(null);
+  const [failed, setFailed] = useState(false);
+  if (!questionId) return null;
+  if (given) {
+    return <Text style={styles.feedbackThanks}>Thank you. This helps us improve the answers.</Text>;
+  }
+  const give = (value: 'helpful' | 'not_helpful') => {
+    setFailed(false);
+    complianceService.giveFeedback(questionId, value).then(
+      () => setGiven(value),
+      () => setFailed(true),
+    );
+  };
+  return (
+    <View style={styles.feedback}>
+      <Text style={styles.feedbackLabel}>{failed ? 'Not sent. Try again?' : 'Did this help?'}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Yes, this helped"
+        onPress={() => give('helpful')}
+        style={({ pressed }) => [styles.feedbackButton, pressed && styles.sourcePressed]}
+      >
+        <ThumbsUp size={18} color={colors.primary} />
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="No, this did not help"
+        onPress={() => give('not_helpful')}
+        style={({ pressed }) => [styles.feedbackButton, pressed && styles.sourcePressed]}
+      >
+        <ThumbsDown size={18} color={colors.primary} />
+      </Pressable>
+    </View>
+  );
+}
+
 function AnswerBubble({ answer }: { answer: ComplianceAskAnswer }) {
   const suggestions = answer.expertSuggestions ?? [];
-  if (answer.cannotConfirm) {
-    // Not an error: an honest "we don't have an official source for this".
+  const kind = answerKind(answer);
+  if (kind === 'answered') {
     return (
-      <View style={[styles.bubble, styles.left, styles.unsure]}>
-        <View style={styles.unsureHead}>
-          <Scale size={18} color={colors.primaryDark} />
-          <Text style={styles.unsureTitle}>No official source for this yet</Text>
-        </View>
-        <Text style={styles.bubbleText}>
-          {answer.body?.trim() || "I can't answer this from an official source, so I won't guess."}
-        </Text>
-        <Text style={styles.unsureNext}>{suggestions[0] ?? EXPERT_LINE}</Text>
+      <View style={[styles.bubble, styles.left, styles.answer]}>
+        <Text style={styles.bubbleText}>{answer.body}</Text>
+        {suggestions.map((s) => (
+          <Text key={s} style={styles.suggestion}>{s}</Text>
+        ))}
         <Sources citations={answer.citations} />
+        <Feedback questionId={answer.id} />
       </View>
     );
   }
+  // Quoted: the official words themselves, with their source, but no
+  // written answer, so an expert is suggested to explain how it applies.
+  // No source: nothing official covers it, and nothing is guessed.
+  const quoted = kind === 'quoted';
   return (
-    <View style={[styles.bubble, styles.left, styles.answer]}>
-      <Text style={styles.bubbleText}>{answer.body}</Text>
-      {suggestions.map((s) => (
-        <Text key={s} style={styles.suggestion}>{s}</Text>
-      ))}
+    <View style={[styles.bubble, styles.left, styles.unsure]}>
+      <View style={styles.unsureHead}>
+        {quoted ? <Quote size={18} color={colors.primaryDark} /> : <Scale size={18} color={colors.primaryDark} />}
+        <Text style={styles.unsureTitle}>{quoted ? 'From the official source' : 'No official source for this yet'}</Text>
+      </View>
+      <Text style={styles.bubbleText}>
+        {answer.body?.trim() || "I can't answer this from an official source, so I won't guess."}
+      </Text>
+      <Text style={styles.unsureNext}>{suggestions[0] ?? EXPERT_LINE}</Text>
       <Sources citations={answer.citations} />
+      <Feedback questionId={answer.id} />
     </View>
   );
 }
@@ -240,6 +286,19 @@ const styles = StyleSheet.create({
   sourceText: { flex: 1 },
   sourceTitle: { fontSize: 14, fontWeight: '700', color: colors.primary },
   sourceUrl: { fontSize: 12, color: colors.textMuted },
+  sourceChecked: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+
+  feedback: { flexDirection: 'row', alignItems: 'center', gap: spacing[1], marginTop: spacing[0.5] },
+  feedbackLabel: { flex: 1, fontSize: 14, color: colors.textMuted },
+  feedbackButton: {
+    width: touchTargetMin,
+    height: touchTargetMin,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  feedbackThanks: { fontSize: 14, color: colors.textMuted, marginTop: spacing[0.5] },
 
   composer: {
     paddingHorizontal: spacing[2],

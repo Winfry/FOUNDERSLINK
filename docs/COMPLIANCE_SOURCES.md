@@ -1,7 +1,7 @@
 # FoundersLink — Official Sources for Ask Compliance
 
 **For:** AI/ML 2 and whoever helps collect sources.
-**Why:** Ask Compliance answers only from official documents we have stored (TEAM_DECISIONS D3). Today `data/compliance/sources.json` is empty, so every answer is "we could not confirm this". This page lists exactly which documents to collect, where, and which checklist item each one answers.
+**Why:** Ask Compliance answers only from official documents we have stored (TEAM_DECISIONS D3). `data/compliance/sources.json` holds 27 checked sources (4 October); how to set Ask Compliance up on a machine is in `ai/README.md`. This page lists which documents to collect, where, and which checklist item each one answers.
 
 Scope since D11: **startups only**, so no SME, grant, SACCO or government-fund sources are needed.
 
