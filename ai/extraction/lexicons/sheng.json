@@ -1,6 +1,6 @@
 {
   "_about": [
-    "Sheng and Swahili words FounderLink understands, used by ai/extraction/sheng.py.",
+    "Sheng and Swahili words FoundersLink understands, used by ai/extraction/sheng.py.",
     "Add a word only if you are sure what it means in everyday Nairobi Sheng, then add a test in ai/tests/test_sheng.py.",
     "Keys are lower case. Values in 'words' are the plain Swahili or English word the rest of the AI already knows."
   ],

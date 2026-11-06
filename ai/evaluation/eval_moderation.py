@@ -46,7 +46,7 @@ def main() -> None:
     ours = lambda t: check_message(t)["flagged"]  # noqa: E731
 
     print(f"{len(rows)} labelled messages ({sum(r['scam'] for r in rows)} scam-style)\n")
-    for name, predict in (("FounderLink AI", ours), ("Backend stand-in", standin)):
+    for name, predict in (("FoundersLink AI", ours), ("Backend stand-in", standin)):
         print(f"{name:18} {score(predict, rows)}")
     for lang in ("en", "sw", "sheng"):
         subset = [r for r in rows if r["lang"] == lang]

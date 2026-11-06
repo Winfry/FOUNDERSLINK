@@ -26,7 +26,7 @@ accountRouter.post("/me/consents", requireAuth, async (req, res) => {
 });
 
 accountRouter.get("/me/export", requireAuth, async (req, res) => {
-  res.setHeader("Content-Disposition", 'attachment; filename="founderlink-my-data.json"');
+  res.setHeader("Content-Disposition", 'attachment; filename="founderslink-my-data.json"');
   res.json(await exportData(req.user!.id));
 });
 

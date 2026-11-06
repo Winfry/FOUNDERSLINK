@@ -30,15 +30,15 @@ LANGUAGE_NAMES = {"en": "English", "sw": "Kiswahili"}
 
 MESSAGES = {
     "not_found": {
-        "en": "I couldn't find an answer to this in the official sources FounderLink has checked. "
+        "en": "I couldn't find an answer to this in the official sources FoundersLink has checked. "
               "A verified expert can help with this question.",
-        "sw": "Sikupata jibu la swali hili katika vyanzo rasmi ambavyo FounderLink imethibitisha. "
+        "sw": "Sikupata jibu la swali hili katika vyanzo rasmi ambavyo FoundersLink imethibitisha. "
               "Mtaalamu aliyethibitishwa anaweza kukusaidia na swali hili.",
     },
     "county_not_covered": {
-        "en": "FounderLink doesn't have checked sources for {county} County yet, and rules differ by county, "
+        "en": "FoundersLink doesn't have checked sources for {county} County yet, and rules differ by county, "
               "so please check with the {county} County government. A verified expert can also help.",
-        "sw": "FounderLink bado haina vyanzo vilivyothibitishwa vya Kaunti ya {county}, na sheria hutofautiana "
+        "sw": "FoundersLink bado haina vyanzo vilivyothibitishwa vya Kaunti ya {county}, na sheria hutofautiana "
               "kati ya kaunti, kwa hivyo tafadhali wasiliana na serikali ya Kaunti ya {county}. "
               "Mtaalamu aliyethibitishwa pia anaweza kusaidia.",
     },

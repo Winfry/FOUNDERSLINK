@@ -1,4 +1,4 @@
-# FounderLink — Frontend Integration Guide
+# FoundersLink — Frontend Integration Guide
 
 **The one document for frontend development.** The frontend owner builds from it; the backend owner keeps it true.
 **For:** the frontend owner (mobile and admin apps) and the backend owner.
@@ -22,16 +22,16 @@ Look-ups only: every endpoint's details are in `backend/README.md`, and what is 
 
 Agreed on 4 October:
 
-1. **No wallet, no escrow.** No balance, deposit, withdrawal, release request or approval, and no FounderLink bank account or Paybill, in either app. FounderLink never receives, holds or moves money. Details in section 4.
+1. **No wallet, no escrow.** No balance, deposit, withdrawal, release request or approval, and no FoundersLink bank account or Paybill, in either app. FoundersLink never receives, holds or moves money. Details in section 4.
 2. **No ID collection.** No ID or passport number and no ID document, anywhere. Identity is checked by an admin. Business documents for vetting are allowed (section 3).
 3. **The apps run on the real backend**, following this page.
 4. **New screens first:** funding matches, profile fit, compliance, deals (section 6).
-5. **No "funds raised" or "% raised".** FounderLink does not raise money, and showing it reads like crowdfunding, which is regulated.
+5. **No "funds raised" or "% raised".** FoundersLink does not raise money, and showing it reads like crowdfunding, which is regulated.
 6. **Core scope: founders, investors and experts (D11).** Funding comes from investors only: angels, VC funds and accelerators that invest. No grants, government funds, bank loans or SACCOs, for now.
 7. **Startups only (D11).** No SME onboarding path, for now. Every founder signs up with `journey_type: "startup"`.
-8. **The bank is where the money goes (D11).** When a deal closes, the money moves between investor and founder through a bank, never through FounderLink. Screens that mention money say so.
+8. **The bank is where the money goes (D11).** When a deal closes, the money moves between investor and founder through a bank, never through FoundersLink. Screens that mention money say so.
 9. **Verification in levels (D12).** Join in two minutes; verify when she first tries to connect or message; share documents when a deal reaches due diligence. Section 2.1.
-10. **AI document pre-checks (D12).** Uploaded documents show "AI pre-checked" and then "Confirmed by FounderLink" once an admin confirms. Never "AI-verified".
+10. **AI document pre-checks (D12).** Uploaded documents show "AI pre-checked" and then "Confirmed by FoundersLink" once an admin confirms. Never "AI-verified".
 
 Still open, with recommendations: section 9.
 
@@ -147,7 +147,7 @@ Put "Verify to see who they are and connect" on these cards.
 
 Until `deal_ready` is true, moving to `terms_agreed` returns `409` with code `NOT_DEAL_READY`, and the message names what is missing and from whom: show it as is.
 
-Show each document's `check_label`, which is one of "Uploaded", "AI pre-checked", "Confirmed by FounderLink" or "Not accepted" (with `rejection_reason`). Take the label from the backend and do not write "AI pre-checked" yourself: the AI service cannot read documents yet, so today every document says "Uploaded". Likewise the pack has `engine`: call it AI-compiled only when that is `ai_service`. Today it is `stand_in`.
+Show each document's `check_label`, which is one of "Uploaded", "AI pre-checked", "Confirmed by FoundersLink" or "Not accepted" (with `rejection_reason`). Take the label from the backend and do not write "AI pre-checked" yourself: the AI service cannot read documents yet, so today every document says "Uploaded". Likewise the pack has `engine`: call it AI-compiled only when that is `ai_service`. Today it is `stand_in`.
 
 `approval_status` on the user is one of `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`. It replaces `InvestorApplicationStatus`:
 
@@ -337,13 +337,13 @@ Each has `title`, `body` and a `link` to open.
 | `getDocuments(id)` | Use notes and minutes. No file uploads in a chama | |
 | `getTransactions`, `deposit`, `submitWithdrawal`, `getWithdrawal`, `approveWithdrawal` | **Remove** (team decision 1, section 4) | |
 
-Every chama screen carries: "FounderLink records contributions. It never holds or moves your money."
+Every chama screen carries: "FoundersLink records contributions. It never holds or moves your money."
 
 ---
 
 ## 4. The money screens are removed
 
-Team decision 1: FounderLink never receives, holds or moves money, so these screens are **removed**, not reworded:
+Team decision 1: FoundersLink never receives, holds or moves money, so these screens are **removed**, not reworded:
 
 | Remove | Mobile | Admin |
 |---|---|---|
@@ -351,7 +351,7 @@ Team decision 1: FounderLink never receives, holds or moves money, so these scre
 | Deposit | `group/[id]/deposit.tsx` | |
 | Withdrawal request, tracker and approval | `group/[id]/withdrawal/*`, `group/[id]/withdrawal-approve/*` | `withdrawals` page |
 | Transactions | `GroupService.getTransactions` | `transactions.service.ts` |
-| "FounderLink Escrow" Absa account and Paybill | `ABSA_DEPOSIT_DETAILS` in `kenya-data.ts` | |
+| "FoundersLink Escrow" Absa account and Paybill | `ABSA_DEPOSIT_DETAILS` in `kenya-data.ts` | |
 
 What a money circle's finance tab shows instead, all from the real API:
 
@@ -364,7 +364,7 @@ What a money circle's finance tab shows instead, all from the real API:
 | Goals and progress | `GET /circles/:id` → goals |
 | Decisions about the circle's own money | Votes: `/circles/:id/decisions` |
 
-Every money circle screen carries: "FounderLink records contributions. It never holds or moves your money."
+Every money circle screen carries: "FoundersLink records contributions. It never holds or moves your money."
 
 ---
 

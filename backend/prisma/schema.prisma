@@ -399,7 +399,7 @@ model PortfolioEntry {
   company_consented Boolean  @default(false)
   created_at        DateTime @default(now())
 
-  // Set when the entry was created by a deal closed on FounderLink.
+  // Set when the entry was created by a deal closed on FoundersLink.
   deal_id String? @db.Uuid
 
   investor User @relation(fields: [investor_id], references: [id], onDelete: Cascade)
@@ -455,7 +455,7 @@ model Connection {
 
 // The record of a working relationship, from the first serious
 // conversation to the result (TEAM_DECISIONS D4). It records what the
-// parties tell it. No money moves through FounderLink.
+// parties tell it. No money moves through FoundersLink.
 model Deal {
   id               String    @id @default(uuid(7)) @db.Uuid
   type             String // cofounder_partnership | investment | expert_engagement | joint_venture
@@ -623,7 +623,7 @@ model Block {
 // people who already know each other, saving towards shared goals. A
 // learning circle is for advice and accountability, with no money.
 //
-// FounderLink keeps the circle's records. It never receives, holds or
+// FoundersLink keeps the circle's records. It never receives, holds or
 // forwards money.
 model Circle {
   id                      String   @id @default(uuid(7)) @db.Uuid

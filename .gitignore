@@ -221,7 +221,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# --- FounderLink additions ---
+# --- FoundersLink additions ---
 # Node / frontend
 node_modules/
 .expo/

@@ -1,4 +1,4 @@
-# FounderLink AI service
+# FoundersLink AI service
 
 Internal Python service the Node.js backend calls over HTTP (`docs/TEAM_DECISIONS.md` D8). The contract is `docs/FUNDING_FLOW.md` section 4, checked on the backend side in `backend/src/ai/client.ts`.
 

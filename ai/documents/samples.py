@@ -9,7 +9,7 @@ def _escape(text: str) -> str:
     return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
 
-def make_pdf(lines: list[str], producer: str = "FounderLink sample generator") -> bytes:
+def make_pdf(lines: list[str], producer: str = "FoundersLink sample generator") -> bytes:
     """A one-page PDF with a real text layer, so it reads like a certificate
     downloaded from an online portal."""
     body = "BT /F1 11 Tf 50 800 Td 16 TL " + " ".join(f"({_escape(l)}) Tj T*" for l in lines) + " ET"
@@ -35,7 +35,7 @@ def make_pdf(lines: list[str], producer: str = "FounderLink sample generator") -
 
 
 def business_registration(name: str = "Afya Booking Ltd", number: str = "PVT-DEMO1234",
-                          dated: str = "12/03/2025", producer: str = "FounderLink sample generator") -> bytes:
+                          dated: str = "12/03/2025", producer: str = "FoundersLink sample generator") -> bytes:
     return make_pdf([
         DEMO_STAMP,
         "REPUBLIC OF KENYA",
@@ -50,7 +50,7 @@ def business_registration(name: str = "Afya Booking Ltd", number: str = "PVT-DEM
 
 
 def kra_pin_certificate(name: str = "Afya Booking Ltd", pin: str = "P051234567X",
-                        dated: str = "15/03/2025", producer: str = "FounderLink sample generator") -> bytes:
+                        dated: str = "15/03/2025", producer: str = "FoundersLink sample generator") -> bytes:
     return make_pdf([
         DEMO_STAMP,
         "KENYA REVENUE AUTHORITY",

@@ -1,4 +1,4 @@
-# FounderLink E2E & journey testing
+# FoundersLink E2E & journey testing
 
 ## Shared journey tests (fast, no UI)
 

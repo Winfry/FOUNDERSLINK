@@ -124,7 +124,7 @@ def party(role, documents, required=None, checks=None):
     return {
         "role": role,
         "profile": {"business_name": "Afya Booking Ltd"},
-        "checks": checks if checks is not None else ["Phone verified", "Approved by FounderLink"],
+        "checks": checks if checks is not None else ["Phone verified", "Approved by FoundersLink"],
         "required": required or [],
         "documents": documents,
     }
@@ -159,13 +159,13 @@ def test_pack_sorts_documents_into_verified_waiting_and_missing(client):
     out = call_pack(client, [founder, investor])
 
     f, i = out["parties"]
-    assert "Business registration: confirmed by FounderLink" in f["verified"]
+    assert "Business registration: confirmed by FoundersLink" in f["verified"]
     assert "Phone verified" in f["verified"]
     assert any("KRA PIN certificate: uploaded, AI pre-check found no concerns" in s for s in f["self_reported"])
     assert f["missing"] == []
     assert i["missing"] == ["Proof of organisation"]
     assert out["summary"] == ("Investment deal at due diligence. 1 document still missing before terms can be agreed. "
-                              "1 document waiting for FounderLink to confirm.")
+                              "1 document waiting for FoundersLink to confirm.")
 
 
 def test_pack_surfaces_ai_concerns(client):
@@ -185,7 +185,7 @@ def test_a_rejected_document_counts_as_missing(client):
 def test_everything_confirmed_reads_as_ready(client):
     docs = [{**KRA, "status": "verified", "precheck": None}]
     out = call_pack(client, [party("founder", docs, [KRA]), party("investor", [{**ORG, "status": "verified", "precheck": None}], [ORG])])
-    assert "Every party has shared and FounderLink has confirmed" in out["summary"]
+    assert "Every party has shared and FoundersLink has confirmed" in out["summary"]
 
 
 def test_pack_in_swahili(client):

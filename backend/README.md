@@ -1,4 +1,4 @@
-# FounderLink backend
+# FoundersLink backend
 
 Node + Express + TypeScript + Prisma, on PostgreSQL. Covers auth, onboarding for founders, investors and experts, the funding flow, compliance, vetting, profile pages, connections, deals, messaging, circles, experts and notifications. `docs/FUNDING_FLOW.md` section 7 lists what is and is not built against `docs/TEAM_DECISIONS.md`.
 
@@ -53,7 +53,7 @@ The tables below are the short version, kept by hand.
 
 A guide for the web and mobile apps. Each screen uses the real API; no mock data. Full details of every endpoint are in the tables after this section.
 
-> **Agreed by the team (4 October):** the apps show no wallet, balance, deposit, withdrawal or escrow, and no FounderLink bank account or Paybill. FounderLink never holds or moves money. The apps collect no ID number and no ID or passport document: identity is checked by an admin, and the backend stores only the result.
+> **Agreed by the team (4 October):** the apps show no wallet, balance, deposit, withdrawal or escrow, and no FoundersLink bank account or Paybill. FoundersLink never holds or moves money. The apps collect no ID number and no ID or passport document: identity is checked by an admin, and the backend stores only the result.
 
 ### 1. Sign up, onboarding and approval
 
@@ -69,7 +69,7 @@ A guide for the web and mobile apps. Each screen uses the real API; no mock data
 | The application for approval | `GET /vetting/application`, `PATCH /vetting/application`, `POST /vetting/application/submit` |
 | Where am I? | `GET /me` → `approval_status`: `draft`, `submitted`, `in_review`, `needs_info`, `approved`, `rejected`, `suspended`, `banned` |
 
-The application takes `phone`, `organisation_name`, `organisation_website`, `statement`, `references` and, for an investor taking over an existing funder record, `claims_funder_id`. **There is no ID number or document field.** Show "Your identity is checked by the FounderLink team" in their place.
+The application takes `phone`, `organisation_name`, `organisation_website`, `statement`, `references` and, for an investor taking over an existing funder record, `claims_funder_id`. **There is no ID number or document field.** Show "Your identity is checked by the FoundersLink team" in their place.
 
 ### 2. Funding matches
 
@@ -90,7 +90,7 @@ For an investor viewed by a founder, the response has `fit`: `{ band, components
 - `band` and the first line of `reasons` go at the top ("A good fit, with one thing to check.").
 - `components` are the fit breakdown: one row per signal with a tick or cross and its `text`.
 - The other `reasons` are the "Why it fits", "Check:" and "Add … to your profile" lines.
-- `track_record_highlights` sit above `track_record`. Each entry has a `source_label` badge: "Verified on FounderLink", "Public source" or "Self-reported".
+- `track_record_highlights` sit above `track_record`. Each entry has a `source_label` badge: "Verified on FoundersLink", "Public source" or "Self-reported".
 
 `contact` (email, phone, WhatsApp link) is present only once both have accepted the connection. Never show a profile's contact details any other way. A founder's page has `founder` and `track_record` (her past ventures); an expert's has `expert`.
 
@@ -139,7 +139,7 @@ Show stages as a stepper: `exploring` → `due_diligence` → `terms_agreed` →
 | Goals, notes and minutes, votes | `/circles/:id/goals`, `/circles/:id/notes`, `/circles/:id/decisions` |
 | ~~Group funding the circle could apply for~~ | Out of scope for now (`docs/TEAM_DECISIONS.md` D11): don't build a screen |
 
-The finance tab shows **contributions and who still owes**, never a balance. Money goes from members straight to the circle's own Paybill, Till or bank account, and the screen says so: "FounderLink records contributions. It never holds or moves your money."
+The finance tab shows **contributions and who still owes**, never a balance. Money goes from members straight to the circle's own Paybill, Till or bank account, and the screen says so: "FoundersLink records contributions. It never holds or moves your money."
 
 ### 7. Messages and notifications
 
@@ -165,7 +165,7 @@ A message with `warning` shows `warning.text` above it in a warning colour. The 
 | Audit log | `GET /admin/actions` |
 | Compliance source freshness | `GET /admin/compliance/sources` |
 
-There is no admin withdrawals or transactions screen: no money passes through FounderLink.
+There is no admin withdrawals or transactions screen: no money passes through FoundersLink.
 
 ## Endpoints
 
@@ -286,7 +286,7 @@ Each document has a `check` to show:
 |---|---|---|
 | `uploaded` | Uploaded | Stored. The AI service did not read it |
 | `ai_pre_checked` | AI pre-checked | The AI service read it; `precheck` has what it found (`fields`, `checks`, `concerns`, `readable`) |
-| `confirmed` | Confirmed by FounderLink | An admin confirmed it |
+| `confirmed` | Confirmed by FoundersLink | An admin confirmed it |
 | `rejected` | Not accepted | An admin rejected it, with `rejection_reason`. She needs to share another |
 
 What is true today, so nobody over-claims:
@@ -457,7 +457,7 @@ Emails and phone numbers are removed from the description before it is sent, and
 | Sign in as | Who | State |
 |---|---|---|
 | `admin@founderlink.example` | Demo Admin | Admin, for the review queue |
-| `grace@founderlink.example` | Grace Otieno, Savanna Angels Network | Approved investor. Maintains the Savanna Angels record. Her track record has two health businesses at MVP, one of them "Verified on FounderLink" |
+| `grace@founderlink.example` | Grace Otieno, Savanna Angels Network | Approved investor. Maintains the Savanna Angels record. Her track record has two health businesses at MVP, one of them "Verified on FoundersLink" |
 | `wanjiru@founderlink.example` | Wanjiru Kamau, Daktari Mkononi | Approved founder, the other party to Grace's closed deal |
 | `amina@founderlink.example` | Amina Njeri, Afya Booking | Founder in the queue, low risk. Has registered the business, has no KRA PIN |
 | `brian@founderlink.example` | Brian Mwangi, Global Capital Partners | Investor in the queue, flagged high risk |

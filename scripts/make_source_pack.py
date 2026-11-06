@@ -202,7 +202,7 @@ def footer(canvas, doc):
     canvas.saveState()
     canvas.setFont("Helvetica", 7.5)
     canvas.setFillColor(colors.HexColor("#777777"))
-    canvas.drawString(18 * mm, 10 * mm, "FounderLink - Kenya Founder Compliance Source Pack - official sources only, "
+    canvas.drawString(18 * mm, 10 * mm, "FoundersLink - Kenya Founder Compliance Source Pack - official sources only, "
                                         "not legal advice")
     canvas.drawRightString(A4[0] - 18 * mm, 10 * mm, f"Page {doc.page}")
     canvas.restoreState()
@@ -219,7 +219,7 @@ def build():
 
     story = [
         P("Kenya Founder Compliance Source Pack", "title"),
-        P(f"FounderLink, Ask Compliance knowledge base. {len(sources)} official sources for 10 documents, "
+        P(f"FoundersLink, Ask Compliance knowledge base. {len(sources)} official sources for 10 documents, "
           "downloaded 4 October 2026.", "sub"),
         P("Ask Compliance answers only from these documents and cites the one it used, with the date "
           "someone last checked it. If none of them covers a question, it says so and suggests an expert. "
@@ -286,7 +286,7 @@ def build():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(str(OUT), pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm,
                             topMargin=16 * mm, bottomMargin=16 * mm,
-                            title="Kenya Founder Compliance Source Pack", author="FounderLink")
+                            title="Kenya Founder Compliance Source Pack", author="FoundersLink")
     doc.build(story, onFirstPage=footer, onLaterPages=footer)
     print(f"wrote {OUT}")
 

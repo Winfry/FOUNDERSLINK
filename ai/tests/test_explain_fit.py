@@ -160,7 +160,7 @@ def test_highlight_names_where_the_evidence_comes_from(client, profile, funder):
     out = call(client, profile(), funder("Savanna"), track)
     assert out["track_record_highlights"][0] == (
         "Has backed 2 health businesses at the MVP stage, like yours "
-        "(1 verified on FounderLink, 1 from a public source)"
+        "(1 verified on FoundersLink, 1 from a public source)"
     )
 
 
@@ -190,7 +190,7 @@ def test_verified_deals_elsewhere_are_still_mentioned(client, profile, funder):
     out = call(client, profile(), funder("Savanna"), track)
     assert out["track_record_highlights"] == [
         "Has backed 1 health business at the MVP stage, like yours (1 from a public source)",
-        "Has closed 1 deal on FounderLink",
+        "Has closed 1 deal on FoundersLink",
     ]
 
 
@@ -211,5 +211,5 @@ def test_swahili_highlight(client, profile, funder):
     out = call(client, profile(), funder("Savanna"), track, language="sw")
     assert out["track_record_highlights"][0] == (
         "Wamefadhili biashara 2 za afya katika hatua ya bidhaa ya majaribio, kama yako "
-        "(1 zimethibitishwa kwenye FounderLink, 1 kutoka chanzo cha umma)"
+        "(1 zimethibitishwa kwenye FoundersLink, 1 kutoka chanzo cha umma)"
     )

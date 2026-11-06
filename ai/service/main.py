@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="FounderLink AI service", lifespan=lifespan)
+app = FastAPI(title="FoundersLink AI service", lifespan=lifespan)
 
 
 @app.get("/health")

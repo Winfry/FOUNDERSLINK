@@ -182,7 +182,7 @@ export function approveApplication(id: string): PlatformCredential {
   credentialsByEmail.set(app.email, cred);
   pushNotification(
     app.email,
-    "FounderLink — application approved",
+    "FoundersLink — application approved",
     `Your ${app.kind} application was approved.\nUser ID: ${userId}\nTemporary password: ${tempPassword}\nSign in and set a new password on first login.`,
   );
   return cred;
@@ -195,7 +195,7 @@ export function rejectApplication(id: string, reason: string): void {
   app.rejectionReason = reason;
   pushNotification(
     app.email,
-    "FounderLink — application update",
+    "FoundersLink — application update",
     `Your ${app.kind} application was not approved.\nReason: ${reason}`,
   );
 }

@@ -1,30 +1,30 @@
 # Compiles the due-diligence pack for a deal (TEAM_DECISIONS D12): for
-# each party, what FounderLink has confirmed, what is only uploaded or
+# each party, what FoundersLink has confirmed, what is only uploaded or
 # self-reported, and what is still missing, plus one summary. Built only
 # from what the backend sends, so it never claims anything it can't show.
 
 TEXT = {
     "profile": {"en": "Profile details (business, county, amount), from the profile",
                 "sw": "Maelezo ya wasifu (biashara, kaunti, kiasi), kutoka kwenye wasifu"},
-    "confirmed": {"en": "{title}: confirmed by FounderLink",
-                  "sw": "{title}: imethibitishwa na FounderLink"},
-    "waiting_clean": {"en": "{title}: uploaded, AI pre-check found no concerns, waiting for FounderLink to confirm",
-                      "sw": "{title}: imepakiwa, ukaguzi wa AI haukupata tatizo, inasubiri uthibitisho wa FounderLink"},
+    "confirmed": {"en": "{title}: confirmed by FoundersLink",
+                  "sw": "{title}: imethibitishwa na FoundersLink"},
+    "waiting_clean": {"en": "{title}: uploaded, AI pre-check found no concerns, waiting for FoundersLink to confirm",
+                      "sw": "{title}: imepakiwa, ukaguzi wa AI haukupata tatizo, inasubiri uthibitisho wa FoundersLink"},
     "waiting_flagged": {"en": "{title}: uploaded, AI pre-check flagged: {concern}",
                         "sw": "{title}: imepakiwa, ukaguzi wa AI umeona: {concern}"},
     "waiting_unread": {"en": "{title}: uploaded, could not be read automatically, waiting for an admin",
                        "sw": "{title}: imepakiwa, haikuweza kusomwa, inasubiri msimamizi"},
-    "waiting": {"en": "{title}: uploaded, waiting for FounderLink to confirm",
-                "sw": "{title}: imepakiwa, inasubiri uthibitisho wa FounderLink"},
+    "waiting": {"en": "{title}: uploaded, waiting for FoundersLink to confirm",
+                "sw": "{title}: imepakiwa, inasubiri uthibitisho wa FoundersLink"},
     "rejected": {"en": "{title}: not accepted, please share another",
                  "sw": "{title}: haikukubaliwa, tafadhali tuma nyingine"},
     "deal": {"en": "{deal_type} deal at {stage}.", "sw": "Mkataba wa {deal_type}, hatua ya {stage}."},
-    "ready": {"en": "Every party has shared and FounderLink has confirmed the documents this deal asks for.",
-              "sw": "Kila upande umetuma na FounderLink imethibitisha nyaraka zinazohitajika."},
+    "ready": {"en": "Every party has shared and FoundersLink has confirmed the documents this deal asks for.",
+              "sw": "Kila upande umetuma na FoundersLink imethibitisha nyaraka zinazohitajika."},
     "missing": {"en": "{n} still missing before terms can be agreed.",
                 "sw": "{n} bado zinakosekana kabla ya kukubaliana masharti."},
-    "waiting_total": {"en": "{n} waiting for FounderLink to confirm.",
-                      "sw": "{n} zinasubiri uthibitisho wa FounderLink."},
+    "waiting_total": {"en": "{n} waiting for FoundersLink to confirm.",
+                      "sw": "{n} zinasubiri uthibitisho wa FoundersLink."},
     "flags": {"en": "The AI flagged {n} for an admin to look at.",
               "sw": "AI imeonyesha {n} kwa msimamizi kuangalia."},
 }

@@ -13,7 +13,7 @@ import urllib.request
 from pathlib import Path
 
 DATA = Path("data/compliance")
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FounderLink-source-fetch"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FoundersLink-source-fetch"
 
 
 def fetch(url: str) -> tuple[bytes, str]:

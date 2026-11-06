@@ -183,15 +183,15 @@ MESSAGES = {
         "sw": "Hakuna uwekezaji wa {sector} kwenye rekodi. Uwekezaji wa awali ni katika {sectors}",
     },
     "track.verified_deals": {
-        "en": "Has closed {count} {deals} on FounderLink",
-        "sw": "Wamekamilisha {deals} {count} kwenye FounderLink",
+        "en": "Has closed {count} {deals} on FoundersLink",
+        "sw": "Wamekamilisha {deals} {count} kwenye FoundersLink",
     },
     "verb.has": {"en": "Has backed", "sw": "Wamefadhili"},
     "verb.says": {"en": "Says they have backed", "sw": "Wanasema wamefadhili"},
     "verb_stage.has": {"en": "Has invested", "sw": "Wamewekeza"},
     "verb_stage.says": {"en": "Says they have invested", "sw": "Wanasema wamewekeza"},
     # Evidence, shown after a highlight
-    "source.platform_deal": {"en": "{count} verified on FounderLink", "sw": "{count} zimethibitishwa kwenye FounderLink"},
+    "source.platform_deal": {"en": "{count} verified on FoundersLink", "sw": "{count} zimethibitishwa kwenye FoundersLink"},
     "source.public": {"en": "{count} from a public source", "sw": "{count} kutoka chanzo cha umma"},
     "source.self_reported": {"en": "{count} self-reported", "sw": "{count} wamejitangazia wenyewe"},
     "source.only_self_reported": {"en": "self-reported, not confirmed", "sw": "wamejitangazia wenyewe, haijathibitishwa"},

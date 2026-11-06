@@ -1,4 +1,4 @@
-# FounderLink — What We Are Building
+# FoundersLink — What We Are Building
 
 **Status:** 4 October, after team decisions D1–D12 (`docs/TEAM_DECISIONS.md`).
 **This is the one-page truth about the product.** If any other document disagrees with this one about *what* we build, this one wins. For *how* to connect the frontend, read `docs/FRONTEND_INTEGRATION.md`; for one endpoint's details, `backend/README.md`.
@@ -7,13 +7,13 @@
 
 ## 1. In one sentence
 
-**FounderLink is a vetted network where Kenyan startup founders meet investors and experts, and the AI carries them from the first match to a closed, compliant deal, without FounderLink ever touching the money.**
+**FoundersLink is a vetted network where Kenyan startup founders meet investors and experts, and the AI carries them from the first match to a closed, compliant deal, without FoundersLink ever touching the money.**
 
 ## 2. The problem
 
 A founder without connections doesn't know which investors fit her, can't tell a real investor from a scammer, and doesn't know what paperwork a deal needs. An investor wastes time on pitches outside their mandate and has no quick way to check a founder. Experts (lawyers, accountants, mentors) are hard to reach when it matters.
 
-FounderLink answers three questions:
+FoundersLink answers three questions:
 1. **Who fits me, and why?** Explained matching.
 2. **Can I trust them?** Everyone you talk to has been checked; everyone you do a deal with more deeply.
 3. **What happens next?** A deal room that goes from first chat to closed, with the compliance checklist and documents in one place.
@@ -27,7 +27,7 @@ FounderLink answers three questions:
 | **Founder** | A startup founder in Kenya | Find investors who fit, understand why, connect, close a deal, stay compliant |
 | **Investor** | An angel, a VC fund, a syndicate, or an accelerator that invests | Founders that fit their mandate, already checked, with readiness visible |
 | **Expert** | A verified lawyer, accountant or mentor | Office hours with founders who need them; join deals as an adviser |
-| **Admin** | The FounderLink team | Check members, review documents, handle reports |
+| **Admin** | The FoundersLink team | Check members, review documents, handle reports |
 
 **Not on the platform (for now):** customers and suppliers (D1), small businesses outside the startup path, and grant makers, government funds, banks and SACCOs as funders (D11).
 
@@ -43,7 +43,7 @@ FounderLink answers three questions:
 5. **Chats** with the investor in the app. A message that asks for money carries a warning.
 6. **Opens a deal** when they decide to work together. If an investor sent her a join request with an amount, accepting it connects them and the app offers **"Start an investment deal with these terms?"**, pre-filled; one tap opens the deal (D13). The deal moves through stages: exploring → due diligence → terms agreed → documents and compliance → closed → active.
 7. **At due diligence (level 3)** both sides upload documents. The AI pre-checks them and compiles a **due-diligence pack**; an admin confirms.
-8. **Terms agreed and closed** need every party to confirm. **The money moves between them through a bank, never through FounderLink.** The closed deal becomes a verified entry on the investor's track record. Check-ins follow at 30, 90 and 180 days.
+8. **Terms agreed and closed** need every party to confirm. **The money moves between them through a bank, never through FoundersLink.** The closed deal becomes a verified entry on the investor's track record. Check-ins follow at 30, 90 and 180 days.
 
 ### Investor
 Joins → describes what they fund (sectors, stages, counties, ticket size, instruments) → sees how many founders match → verifies (level 2, the strictest: organisation and website) → sees matching founders with reasons and readiness → receives and sends connection requests (with a pitch, vision, offer and proposed amount) → chats → deals → due diligence (level 3) → closed deal on their verified track record.
@@ -75,7 +75,7 @@ Joins → profession, register, services, office hours per month → verifies ag
 
 ## 6. What we are not building (for now)
 
-- **Any money movement in the app:** no wallet, balance, deposit, withdrawal, escrow, or FounderLink bank account or Paybill (D10).
+- **Any money movement in the app:** no wallet, balance, deposit, withdrawal, escrow, or FoundersLink bank account or Paybill (D10).
 - **Grants, government funds, bank loans, SACCOs, AGPO tenders** (D11).
 - **A separate SME path** (D11).
 - **ID collection:** no ID or passport numbers or documents stored, ever. Identity at level 3 comes from a regulated provider as pass or fail (D10, D12).
@@ -84,7 +84,7 @@ Joins → profession, register, services, office hours per month → verifies ag
 
 ## 7. The money rule
 
-**FounderLink records; the bank moves the money.** When a deal closes, the investor pays the founder through a bank (for example Absa, as a partner). In a money circle, members pay into the circle's own Paybill, Till or account, and FounderLink records the contributions. Any partner-bank integration is shown as a demo until it really exists.
+**FoundersLink records; the bank moves the money.** When a deal closes, the investor pays the founder through a bank (for example Absa, as a partner). In a money circle, members pay into the circle's own Paybill, Till or account, and FoundersLink records the contributions. Any partner-bank integration is shown as a demo until it really exists.
 
 ---
 
@@ -116,7 +116,7 @@ Joins → profession, register, services, office hours per month → verifies ag
 | **Founder** | A startup founder | `role: "founder"`, `journey_type: "startup"` | SME, business owner (as a type) |
 | **Investor** | A person who invests or acts for an investing organisation | `role: "investor"` | Funder (for the person), lender |
 | **Expert** | A verified lawyer, accountant or mentor | `role: "expert"`, `profession` | Consultant |
-| **Admin** | The FounderLink team | `role: "admin"` | Super admin, reviewer |
+| **Admin** | The FoundersLink team | `role: "admin"` | Super admin, reviewer |
 | **Investor record** | What an investor funds: sectors, stages, counties, ticket, instruments | `funder` (`kind`: `angel`, `vc`, `accelerator`) | Grant, loan product |
 | **Investor matches** | The founder's investors in three lists | `GET /funding/matches` → `apply_now`, `apply_after`, `not_for_you`; on screen **Pitch / Pitch after / Don't pitch** | Funding opportunities, grants |
 | **Band** | How well someone fits | `band`: `strong`, `good`, `possible`, `not_a_fit` | Score, %, match percentage |
@@ -148,7 +148,7 @@ Joins → profession, register, services, office hours per month → verifies ag
 
 ```
 Mobile app (founders, investors, experts) ─┐
-Admin dashboard (the FounderLink team) ────┼── REST + WebSocket ──► Node.js backend ──► PostgreSQL
+Admin dashboard (the FoundersLink team) ────┼── REST + WebSocket ──► Node.js backend ──► PostgreSQL
                                            │                         │  internal HTTP + key
                                            │                         ▼
                                            │                   Python AI service
@@ -169,16 +169,16 @@ Admin dashboard (the FounderLink team) ────┼── REST + WebSocket �
 
 1. **Amina**, a health-tech founder in Nairobi, joins in two minutes and types: *"Tunatengeneza app ya kubook clinic visits, tunahitaji milioni moja."* The form fills itself in.
 2. She sees her **investor matches**: Savanna Angels under "Pitch" (Strong fit, with reasons), another under "Pitch after you fix this" (a missing KRA PIN), a VC under "Don't pitch" (their minimum is KSh 10M).
-3. She opens Savanna's profile: fit breakdown, and a track record showing *"Has backed 2 health businesses at the MVP stage (1 verified on FounderLink)"*.
+3. She opens Savanna's profile: fit breakdown, and a track record showing *"Has backed 2 health businesses at the MVP stage (1 verified on FoundersLink)"*.
 4. She presses **Connect** and is asked to **verify**. In the admin dashboard, her application is approved, while a fake investor next to it, flagged high-risk by the AI, is rejected with a reason.
 5. They chat. A message from someone else saying *"tuma processing fee"* carries a warning.
 6. They open a **deal**, reach due diligence, upload documents, and see the **AI pre-checks** and the **due-diligence pack**.
-7. Both confirm terms; the deal closes. *"The money moves through the bank; FounderLink records the deal."* The deal appears as **Verified on FounderLink** on the investor's track record.
-8. *(If time allows)* Amina's **chama**: three founders pooling money into their own Paybill. An uploaded M-Pesa statement shows who has paid and who still owes, and they vote on how to use the pool, without FounderLink ever holding a shilling.
+7. Both confirm terms; the deal closes. *"The money moves through the bank; FoundersLink records the deal."* The deal appears as **Verified on FoundersLink** on the investor's track record.
+8. *(If time allows)* Amina's **chama**: three founders pooling money into their own Paybill. An uploaded M-Pesa statement shows who has paid and who still owes, and they vote on how to use the pool, without FoundersLink ever holding a shilling.
 
 ## 12. What we say, and what we never claim
 
-**Say:** "Everyone you talk to has been checked." "The AI explains every match." "We measured our matching: X of the top 10 were right." "FounderLink never touches the money."
+**Say:** "Everyone you talk to has been checked." "The AI explains every match." "We measured our matching: X of the top 10 were right." "FoundersLink never touches the money."
 
 **Never claim:** "100% scam-free", "AI-verified documents", legal advice, a success percentage, a live bank, M-Pesa or identity integration that is only a demo, or an accuracy figure we didn't measure.
 

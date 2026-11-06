@@ -11,7 +11,7 @@ import {
   submitApplication,
 } from "../application-store";
 
-describe("FounderLink application journeys (shared store)", () => {
+describe("FoundersLink application journeys (shared store)", () => {
   beforeEach(() => resetStoreForTests());
 
   it("rejects duplicate email on second application", () => {

@@ -93,13 +93,13 @@ def main() -> None:
     print(f"{len(labels)} founders, {len(candidates)} investors, "
           f"{sum(len(l['relevant']) for l in labels)} labelled fits\n")
     print(f"{'Sector-only baseline':32} {evaluate(rank_sector_only, founders, candidates, labels)}")
-    print(f"{'FounderLink AI (checks only)':32} {evaluate(rank_ai, founders, candidates, labels, None, args.show)}")
+    print(f"{'FoundersLink AI (checks only)':32} {evaluate(rank_ai, founders, candidates, labels, None, args.show)}")
 
     if args.embed:
         from ai.embeddings.model import load_embedder
         embedder = load_embedder()
         if embedder:
-            label = f"FounderLink AI + {embedder.model_name.split('/')[-1]}"
+            label = f"FoundersLink AI + {embedder.model_name.split('/')[-1]}"
             print(f"{label:32} {evaluate(rank_ai, founders, candidates, labels, embedder, args.show)}")
 
 
