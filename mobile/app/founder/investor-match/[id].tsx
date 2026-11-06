@@ -1,8 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Info, Lock } from 'lucide-react-native';
+import { ChevronRight, Info, Lock, Wrench } from 'lucide-react-native';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
@@ -11,10 +11,12 @@ import { useToast } from '../../../src/components/ui/Toast';
 import { connectionService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import type { MatchBand } from '../../../src/types';
+import { fitVerdict, type FitGap } from '../../../src/lib/fit-verdict';
 import { colors, spacing } from '../../../src/theme/tokens';
 
 type Reason = { signal?: string; fits: boolean; text: string };
 type TrackEntry = { label: string; source: string };
+type Note = { code?: string; text: string };
 
 // The verdict block is the one bold thing on this screen. Orange is kept for a strong fit.
 const HERO: Record<MatchBand, { bg: string; fg: string; sub: string }> = {
@@ -62,7 +64,12 @@ export default function InvestorMatchProfileScreen() {
   const band = ((data.band as MatchBand | null | undefined) ?? 'not_a_fit') as MatchBand;
   const meta = bandMeta[band];
   const hero = HERO[band];
-  const fitCount = reasons.filter((r) => r.fits).length;
+
+  // The page tells the same story as the list it was opened from: what is
+  // still to fix comes with the verdict (FINAL_VERIFICATION 13).
+  const verdict = fitVerdict(band, meta, Array.isArray(data.gaps) ? (data.gaps as FitGap[]) : [], reasons);
+  const { fixFirst, gaps } = verdict;
+  const notes = Array.isArray(data.riskFactors) ? (data.riskFactors as Note[]) : [];
 
   // A record with no name is known by its headline; show its parts, never the sentence.
   const rawName = String(data.displayName ?? 'Investor');
@@ -120,16 +127,48 @@ export default function InvestorMatchProfileScreen() {
 
       <View style={[styles.hero, { backgroundColor: hero.bg }]}>
         <Text style={[styles.heroLabel, { color: hero.sub }]}>How well you fit</Text>
-        <Text style={[styles.heroVerdict, { color: hero.fg }]}>{meta.label}</Text>
-        <Text style={[styles.heroText, { color: hero.sub }]}>{meta.verdict}</Text>
-        {reasons.length > 0 ? (
+        <Text style={[styles.heroVerdict, { color: hero.fg }]}>{verdict.label}</Text>
+        <Text style={[styles.heroText, { color: hero.sub }]}>{verdict.text}</Text>
+        {verdict.count ? (
           <View style={styles.heroCount}>
-            <Text style={[styles.heroCountText, { color: hero.fg }]}>
-              {fitCount} of {reasons.length} things they look for match
-            </Text>
+            <Text style={[styles.heroCountText, { color: hero.fg }]}>{verdict.count}</Text>
           </View>
         ) : null}
       </View>
+
+      {fixFirst ? (
+        <Pressable
+          style={({ pressed }) => [styles.gapBox, pressed && styles.dim]}
+          onPress={() => router.push('/(founder)/(tabs)/readiness')}
+          accessibilityRole="button"
+          accessibilityLabel={`Fix this first: ${gaps.map((g) => g.text).join(', ')}. Open Readiness`}
+        >
+          <View style={styles.gapIcon}>
+            <Wrench size={18} color={colors.primaryDark} />
+          </View>
+          <View style={styles.flexOne}>
+            <Text style={styles.gapLabel}>Fix this first</Text>
+            {gaps.map((g) => (
+              <Text key={g.text} style={styles.gapText}>
+                {g.text}
+              </Text>
+            ))}
+            <Text style={styles.gapLink}>{verdict.answerOnly ? 'Answer it in Readiness' : 'Sort it out in Readiness'}</Text>
+          </View>
+          <ChevronRight size={20} color={colors.primary} />
+        </Pressable>
+      ) : null}
+
+      {notes.length > 0 ? (
+        <View style={styles.notes}>
+          {notes.map((n) => (
+            <View key={n.text} style={styles.noteRow}>
+              <Info size={16} color={n.code === 'demo_data' ? colors.primaryDark : colors.textMuted} />
+              <Text style={[styles.noteText, n.code === 'demo_data' && styles.noteStrong]}>{n.text}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {reasons.length > 0 ? (
         <View style={styles.section}>
@@ -239,6 +278,35 @@ const styles = StyleSheet.create({
   heroText: { fontSize: 16, fontWeight: '500', marginTop: spacing[0.5] },
   heroCount: { marginTop: spacing[1.5] },
   heroCountText: { fontSize: 14, fontWeight: '700' },
+
+  flexOne: { flex: 1 },
+  dim: { opacity: 0.85 },
+  gapBox: {
+    marginTop: spacing[2],
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[1.5],
+    padding: spacing[2],
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    backgroundColor: colors.warningLight,
+  },
+  gapIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  gapLabel: { fontSize: 16, fontWeight: '800', color: colors.text },
+  gapText: { fontSize: 15, fontWeight: '500', color: colors.text, marginTop: spacing[0.5] },
+  gapLink: { fontSize: 14, fontWeight: '700', color: colors.primary, marginTop: spacing[1] },
+
+  notes: { marginTop: spacing[2], gap: spacing[1] },
+  noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1] },
+  noteStrong: { color: colors.primaryDark, fontWeight: '700' },
 
   section: { marginTop: spacing[3], gap: spacing[1.5] },
   sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
