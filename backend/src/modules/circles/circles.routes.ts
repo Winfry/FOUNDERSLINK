@@ -1,6 +1,7 @@
-import { Router } from "express";
+import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { requireApproved, requireAuth } from "../../middlewares/auth.js";
+import { AppError } from "../../shared/errors.js";
 import { syncCircleRoom } from "../messaging/messaging.service.js";
 import {
   checkSecret,
@@ -48,9 +49,18 @@ import {
 
 export const circlesRouter = Router();
 
+// Investors are not chama members: they work with founders through deals
+// (TEAM_DECISIONS D13; FINAL_VERIFICATION section 4, item 2).
+const notForInvestors = (req: Request, _res: Response, next: NextFunction) => {
+  if (req.user!.role === "investor") {
+    throw new AppError(403, "NOT_FOR_INVESTORS", "Chamas are for founders. Investors work with founders through deals.");
+  }
+  next();
+};
+
 // Circles are between members, so every route needs an approved account.
 // The service then checks the caller's membership and role in the circle.
-const approved = [requireAuth, requireApproved] as const;
+const approved = [requireAuth, requireApproved, notForInvestors] as const;
 const id = (value: unknown) => z.uuid().parse(value);
 
 circlesRouter.post("/circles", ...approved, async (req, res) => {

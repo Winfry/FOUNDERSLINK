@@ -17,7 +17,7 @@ import { person } from "../schemas.js";
 export const tag = {
   name: "Circles",
   description:
-    "Founder circles. A money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
+    "Founder circles. **Investors are not members** (TEAM_DECISIONS D13): every circle route answers an investor with `403 NOT_FOR_INVESTORS`.\n\nA money circle is a group of people who already know each other, saving towards shared goals; the only way in is an invite from its organiser. A learning circle has no money and may be found and joined.\n\n**FoundersLink keeps a circle's records. It never receives, holds or forwards money**: members pay into the circle's own account, and the organiser or treasurer records what was paid.\n\nPast joining, the caller must be a member of the circle; to anyone else it returns `404`.\n\n**M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's Daraja sandbox. The column names and confirmation fields were written from memory of Safaricom's formats. Only the matching and reconciliation logic is tested.",
 };
 
 const NO_CIRCLE: ErrorCase = [404, "NOT_FOUND", "No such circle, or the caller is not a member."];
@@ -37,7 +37,7 @@ const note = {
   created_at: dateTime,
 };
 
-export const ops: Op[] = [
+const opsAsWritten: Op[] = [
   {
     method: "post",
     path: "/circles",
@@ -409,3 +409,8 @@ export const ops: Op[] = [
     errors: [[404, "NOT_FOUND", "The secret is wrong, or `MPESA_CALLBACK_SECRET` is not set."]],
   },
 ];
+
+// Every circle route but the M-Pesa callback refuses an investor.
+const NOT_FOR_INVESTORS: ErrorCase = [403, "NOT_FOR_INVESTORS", "The caller is an investor. Chamas are for founders."];
+export const ops: Op[] = opsAsWritten.map((op) => (op.access === "approved" ? { ...op, errors: [...(op.errors ?? []), NOT_FOR_INVESTORS] } : op));
+

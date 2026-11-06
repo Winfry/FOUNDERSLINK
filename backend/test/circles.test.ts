@@ -253,3 +253,33 @@ test("a learning circle can be found, suggested with a reason, and joined withou
   await call("POST", "/circles/join", "achieng", { token: link.token });
   assert.equal((await call("POST", "/circles/join", "mumbi", { token: link.token })).status, 200);
 });
+
+test("investors are not chama members: every circle route refuses them", async () => {
+  // TEAM_DECISIONS D13; FINAL_VERIFICATION section 4, item 2.
+  const email = `circle-investor-${run}@example.com`;
+  const investor = await prisma.user.create({
+    data: { email, full_name: "Grace Investor", role: "investor", password_hash: await bcrypt.hash(password, 4), approval_status: "approved" },
+  });
+  try {
+    const token = (await call("POST", "/auth/login", undefined, { email, password })).json.token;
+    const as = (method: string, path: string, body?: unknown) =>
+      fetch(base + path, {
+        method,
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      }).then(async (r) => ({ status: r.status, json: (await r.json()) as any }));
+
+    for (const [method, path, body] of [
+      ["POST", "/circles", { name: "Investor savings", type: "money" }],
+      ["GET", "/circles", undefined],
+      ["GET", "/circles/suggested", undefined],
+      ["POST", "/circles/join", { token: "x".repeat(32) }],
+    ] as const) {
+      const res = await as(method, path, body);
+      assert.equal(res.status, 403, `${method} ${path}`);
+      assert.equal(res.json.error.code, "NOT_FOR_INVESTORS", `${method} ${path}`);
+    }
+  } finally {
+    await prisma.user.delete({ where: { id: investor.id } });
+  }
+});
