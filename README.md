@@ -20,7 +20,7 @@ With Docker Desktop running (it holds the database), from this folder:
 npm run start:all
 ```
 
-It starts the AI service, the backend, the staff dashboard (http://localhost:3000) and the app, whose QR code you scan with Expo Go. Ctrl+C stops everything. Anything already running in another terminal is left alone. `npm run start:all -- --check` only checks and says what it would start; `-- --no-ai` leaves the AI service out.
+It starts the AI service, the backend, the staff dashboard (http://localhost:3000) and the app, whose QR code you scan with Expo Go. The app also runs in a web browser: http://localhost:8081 on this computer, or `http://<this computer's Wi-Fi address>:8081` on a phone on the same Wi-Fi (the command prints the address). Ctrl+C stops everything. Anything already running in another terminal is left alone. `npm run start:all -- --check` only checks and says what it would start; `-- --no-ai` leaves the AI service out.
 
 Ask Compliance writes answers about a minute after the start, once the line `Ask Compliance is ready` appears (`ai/README.md`).
 

@@ -54,14 +54,14 @@ const children = [];
 
 // Prints a program's output line by line with its name in front, and calls
 // `watch` on each line so readiness can be announced in plain words.
-function run(who, command, args, cwd, watch = () => {}) {
+function run(who, command, args, cwd, watch = () => {}, env = process.env) {
   // No keyboard input: "tsx watch" waits for it when it is a pipe and never
   // starts the backend (found 9 November).
   const child = spawn(command, args, {
     cwd,
     shell: windows,
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, FORCE_COLOR: "1" },
+    env: { ...env, FORCE_COLOR: "1" },
   });
   children.push(child);
   for (const stream of [child.stdout, child.stderr]) {
@@ -186,10 +186,24 @@ if (running.ai) {
   });
 }
 
+// The web version of the app, opened from a phone's browser, comes from
+// this computer's Wi-Fi address; the backend only answers web pages from
+// addresses it is told about (CORS_ORIGIN). Added here, for this run only.
+function backendEnv() {
+  if (!lanAddress) return process.env;
+  let origins = "http://localhost:8081,http://localhost:3000";
+  try {
+    const env = readFileSync(join(root, "backend", ".env"), "utf8");
+    origins = env.match(/^CORS_ORIGIN=(.+)$/m)?.[1]?.trim() || origins;
+  } catch {}
+  const extra = [`http://${lanAddress}:8081`, `http://${lanAddress}:3000`].filter((o) => !origins.split(",").includes(o));
+  return { ...process.env, CORS_ORIGIN: [origins, ...extra].join(",") };
+}
+
 if (!running.backend) {
   run("backend", "npm", ["run", "dev"], join(root, "backend"), (line) => {
     if (/listening on/i.test(line)) say("backend", ">>> Backend is ready.");
-  });
+  }, backendEnv());
 }
 if (!running.dashboard && !dashboardInstalled) {
   say("dashboard", "The staff dashboard is not installed, so it is not started.");
@@ -222,6 +236,8 @@ if (running.app) {
     say("app", "Could not find this computer's Wi-Fi address: the app uses the address in mobile/.env.");
   }
   say("app", "Starting the app. Its QR code appears below: scan it with Expo Go on your phone.");
+  say("app", `>>> Or use it in a web browser: on this computer http://localhost:8081${lanAddress ? `, on your phone http://${lanAddress}:8081` : ""}`);
+  say("app", "    (the first time, the page takes a minute to build)");
   const app = spawn("npx", ["expo", "start"], { cwd: join(root, "mobile"), shell: windows, stdio: "inherit", env: appEnv });
   children.push(app);
   app.on("exit", () => { if (!stopping) stopAll(); });
