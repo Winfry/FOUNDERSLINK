@@ -125,3 +125,30 @@ def _sent_body(**kwargs):
 def test_thinking_is_limited_only_when_asked():
     assert "reasoning_effort" not in _sent_body()
     assert _sent_body(reasoning_effort="low")["reasoning_effort"] == "low"
+
+
+def test_an_address_is_looked_up_once_then_remembered(monkeypatch):
+    # On the laptop every lookup took 20-80 seconds; Ask Compliance has 6.
+    from ai.service import net
+    calls = []
+
+    def slow_lookup(*args, **kwargs):
+        calls.append(args)
+        return [("found", args[0])]
+
+    monkeypatch.setattr(net, "_original", slow_lookup)
+    monkeypatch.setattr(net, "_cache", {})
+    assert net._cached_getaddrinfo("llm.example", 443) == [("found", "llm.example")]
+    assert net._cached_getaddrinfo("llm.example", 443) == [("found", "llm.example")]
+    assert len(calls) == 1, "the second lookup must come from memory"
+    net._cached_getaddrinfo("other.example", 443)
+    assert len(calls) == 2
+
+
+def test_https_trusts_the_system_certificates():
+    # Antivirus that inspects HTTPS (Avast) is trusted by Windows, not by certifi.
+    import ssl
+
+    from ai.service.net import trusted_context
+    ctx = trusted_context()
+    assert ctx.verify_mode == ssl.CERT_REQUIRED and ctx.check_hostname

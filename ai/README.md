@@ -27,7 +27,7 @@ AI_SERVICE_API_KEY=<same value as the AI service's AI_SERVICE_API_KEY>
 | `AI_SERVICE_API_KEY` | empty | Shared key the backend sends as `X-Internal-Api-Key`. Empty means no check (local only). |
 | `EMBEDDING_MODEL` | `intfloat/multilingual-e5-small` | Multilingual model for mandate matching and Ask Compliance search. `none` turns embeddings off. |
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | empty | The LLM that writes Ask Compliance answers. Without a key, the best official passage is quoted instead. |
-| `LLM_REASONING_EFFORT` | empty | For models that think before answering (Gemini 2.5 and later): `low` keeps answers within the time limit. Sent only when set. |
+| `LLM_REASONING_EFFORT` | empty | For models that think before answering. Sent only when set. Leave it empty for `gemini-3.5-flash-lite`: with `low` it dropped its citations. |
 | `AI_ENV_FILE` | the root `.env` | The settings file the service reads at start. `none` reads no file (the tests do this). |
 
 ## Ask Compliance
@@ -62,7 +62,9 @@ LLM_API_KEY=<your key>
 LLM_MODEL=<the model name the provider gives>
 ```
 
-Start the service and check `GET /health`: `"compliance_index": true` and `"llm": true`. If the embedding model is already downloaded and the machine is offline, start it with `HF_HUB_OFFLINE=1` so it does not wait for the internet.
+**Tested on 9 November with Google Gemini's free tier** (`LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/`, `LLM_MODEL=gemini-3.5-flash-lite`): KRA PIN, eTIMS, data protection, business name and a Swahili KRA question were answered in 1 to 3 seconds, every fact cited; the housing levy answer said the sources barely cover it; a football question was declined. `gemini-3.8-flash` was often "503 busy" on the free tier. The free tier may let Google use the questions to improve its products: use a paid key before real users.
+
+Start the service and check `GET /health`: `"compliance_index": true` and `"llm": true`. **Wait about a minute before the first question:** on some Windows laptops looking up an address takes over a minute (antivirus or router), so the service looks the LLM's address up once at start and remembers it (`ai/service/net.py`). It also trusts the Windows certificate store, which antivirus that inspects HTTPS (Avast) relies on. If the embedding model is already downloaded and the machine is offline, start it with `HF_HUB_OFFLINE=1` so it does not wait for the internet.
 
 Every question and answer is stored by the backend (`compliance_questions`), with the founder's "Did this help?" answer, so answers can be checked and improved.
 

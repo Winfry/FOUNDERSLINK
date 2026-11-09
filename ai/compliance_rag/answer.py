@@ -105,8 +105,12 @@ class ChatClient:
         # and only rewrites passages it is given, so little thinking is needed.
         # Sent only when set: providers name the levels differently.
         self.reasoning_effort = reasoning_effort
+        from ai.service.net import trusted_context
+        # Keep the connection open between questions: opening a new one costs
+        # a lookup and a TLS handshake, which a slow network makes seconds.
         self._http = httpx.Client(headers={"Authorization": f"Bearer {api_key}"}, timeout=timeout_s,
-                                  transport=transport)
+                                  transport=transport, verify=trusted_context(),
+                                  limits=httpx.Limits(keepalive_expiry=300))
 
     def complete(self, system: str, user: str) -> str:
         body = {

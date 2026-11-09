@@ -31,7 +31,13 @@ def _load_compliance(embedder):
     except Exception as e:  # IndexNotReady, or chromadb not installed
         log.warning("Ask Compliance index not loaded: %s", e)
         retriever = None
-    return retriever, load_chat_client()
+    llm = load_chat_client()
+    if llm is not None:
+        # A slow address lookup must not cost a founder's question (net.py).
+        from ai.service.net import remember_addresses, warm_up
+        remember_addresses()
+        warm_up(llm.url)
+    return retriever, llm
 
 
 @asynccontextmanager
