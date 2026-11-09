@@ -14,6 +14,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import net from "node:net";
+import { networkInterfaces } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -54,7 +55,14 @@ const children = [];
 // Prints a program's output line by line with its name in front, and calls
 // `watch` on each line so readiness can be announced in plain words.
 function run(who, command, args, cwd, watch = () => {}) {
-  const child = spawn(command, args, { cwd, shell: windows, env: { ...process.env, FORCE_COLOR: "1" } });
+  // No keyboard input: "tsx watch" waits for it when it is a pipe and never
+  // starts the backend (found 9 November).
+  const child = spawn(command, args, {
+    cwd,
+    shell: windows,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, FORCE_COLOR: "1" },
+  });
   children.push(child);
   for (const stream of [child.stdout, child.stderr]) {
     let rest = "";
@@ -115,12 +123,33 @@ if (!(await reachable(db))) {
 }
 say("start", `Database found at ${db.host}:${db.port}.`);
 
-for (const part of ["backend", "admin", "mobile"]) {
-  if (!existsSync(join(root, part, "node_modules"))) {
+// Installed means the program itself is there, not just an empty folder.
+function installed(part, program) {
+  return existsSync(join(root, part, "node_modules", ".bin", windows ? `${program}.cmd` : program));
+}
+for (const [part, program] of [["backend", "tsx"], ["mobile", "expo"]]) {
+  if (!installed(part, program)) {
     say("start", `${part}/ is not installed. Run: cd ${part} && npm install, then try again.`);
     process.exit(1);
   }
 }
+const dashboardInstalled = installed("admin", "next");
+
+// This computer's address on the Wi-Fi, which changes from network to
+// network. The phone reaches the backend there: on a phone, "localhost" is
+// the phone itself. Virtual adapters (WSL, Hyper-V, Docker) are skipped.
+function wifiAddress() {
+  const found = [];
+  for (const [name, addresses] of Object.entries(networkInterfaces())) {
+    if (/vEthernet|WSL|Hyper-V|Docker|VirtualBox|VMware|Loopback|vboxnet|docker|br-|veth/i.test(name)) continue;
+    for (const a of addresses ?? []) {
+      if (a.family === "IPv4" && !a.internal) found.push({ name, address: a.address });
+    }
+  }
+  const lan = found.filter((f) => /^(192\.168\.|10\.)/.test(f.address));
+  return (lan.find((f) => /wi-?fi|wlan|wireless/i.test(f.name)) ?? lan[0] ?? found[0])?.address ?? null;
+}
+const lanAddress = wifiAddress();
 
 const python = join(root, "ai", ".venv", windows ? "Scripts/python.exe" : "bin/python");
 const running = {
@@ -131,6 +160,7 @@ const running = {
 };
 if (checkOnly) {
   say("start", "Check only (--check): nothing was started.");
+  say("start", `Wi-Fi address: ${lanAddress ?? "not found"}. Dashboard installed: ${dashboardInstalled ? "yes" : "no"}.`);
   say("start", `Would start: ${["ai", "backend", "dashboard", "app"].filter((k) => !running[k] && !(k === "ai" && (skipAi || !existsSync(python)))).join(", ") || "nothing"}.`);
   process.exit(0);
 }
@@ -161,10 +191,13 @@ if (!running.backend) {
     if (/listening on/i.test(line)) say("backend", ">>> Backend is ready.");
   });
 }
-if (!running.dashboard) {
+if (!running.dashboard && !dashboardInstalled) {
+  say("dashboard", "The staff dashboard is not installed, so it is not started.");
+  say("dashboard", "To install it once (needs the internet): open another terminal and run: cd admin && npm install");
+} else if (!running.dashboard) {
   run("dashboard", "npm", ["run", "dev"], join(root, "admin"), (line) => {
     if (/https?:\/\/\S+:3000/.test(line)) {
-      say("dashboard", ">>> Staff dashboard is ready: open http://localhost:3000 (on your phone: this computer's address, port 3000).");
+      say("dashboard", `>>> Staff dashboard is ready: open http://localhost:3000${lanAddress ? ` (on your phone: http://${lanAddress}:3000)` : ""}.`);
     }
   });
 }
@@ -179,8 +212,17 @@ if (running.app) {
   }
   say("start", "Press Ctrl+C to stop what this command started.");
 } else {
+  // The app on the phone talks to the backend at this computer's current
+  // address. It wins over mobile/.env, which may hold an old one.
+  const appEnv = { ...process.env };
+  if (lanAddress) {
+    appEnv.EXPO_PUBLIC_API_URL = `http://${lanAddress}:8000`;
+    say("app", `The app will talk to the backend at http://${lanAddress}:8000 (this computer on the Wi-Fi).`);
+  } else {
+    say("app", "Could not find this computer's Wi-Fi address: the app uses the address in mobile/.env.");
+  }
   say("app", "Starting the app. Its QR code appears below: scan it with Expo Go on your phone.");
-  const app = spawn("npx", ["expo", "start"], { cwd: join(root, "mobile"), shell: windows, stdio: "inherit" });
+  const app = spawn("npx", ["expo", "start"], { cwd: join(root, "mobile"), shell: windows, stdio: "inherit", env: appEnv });
   children.push(app);
   app.on("exit", () => { if (!stopping) stopAll(); });
 }
