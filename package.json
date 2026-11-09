@@ -2,6 +2,7 @@
   "name": "founderlink",
   "private": true,
   "scripts": {
+    "start:all": "node scripts/start-all.mjs",
     "test:journeys": "vitest run shared/__tests__",
     "test:admin:e2e": "playwright test --config admin/playwright.config.ts",
     "test:mobile:journeys": "vitest run mobile/src/__tests__"

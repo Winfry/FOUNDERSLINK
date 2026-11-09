@@ -12,4 +12,16 @@ FoundersLink is an AI-powered ecosystem for early-stage and under-networked Afri
 | `scripts/` | Seeding, compliance ingestion, embedding builds | Shared |
 | `docs/` | Spec, Kenya amendments, team decisions | Shared |
 
+## Run it on your computer
+
+With Docker Desktop running (it holds the database), from this folder:
+
+```
+npm run start:all
+```
+
+It starts the AI service, the backend, the staff dashboard (http://localhost:3000) and the app, whose QR code you scan with Expo Go. Ctrl+C stops everything. Anything already running in another terminal is left alone. `npm run start:all -- --check` only checks and says what it would start; `-- --no-ai` leaves the AI service out.
+
+Ask Compliance writes answers about a minute after the start, once the line `Ask Compliance is ready` appears (`ai/README.md`).
+
 Start with `docs/TEAM_DECISIONS.md`. Copy `.env.example` to `.env` for local secrets; never commit `.env`.
