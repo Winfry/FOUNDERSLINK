@@ -79,7 +79,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async logout() {
-    await authService.logout();
+    // Telling the server is best effort: offline, or with the server down,
+    // she is still signed out on this device, never stuck signed in.
+    await authService.logout().catch(() => undefined);
     await persistSession(null);
     setMockSessionUserId(null);
     set({ user: null, tokens: null });

@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
 import { verificationInvite } from '../../src/lib/verification-invite';
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Badge, Button } from '../../src/components/ui';
+import { Avatar, Badge, Button, ConfirmModal } from '../../src/components/ui';
+import { SkeletonCard } from '../../src/components/ui/Skeleton';
+import { useToast } from '../../src/components/ui/Toast';
 import { HeaderPattern } from '../../src/components/ui/HeaderPattern';
 import { ScreenBackdrop } from '../../src/components/ui/ScreenBackdrop';
 import { Text } from '../../src/components/ui/Text';
@@ -40,7 +42,12 @@ export default function ExpertHomeScreen() {
   const invite = verificationInvite(user?.approvalStatus, 'expert');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
+  // Until the first answer, so "No requests" never shows before they load.
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
+  const { show } = useToast();
 
   // Session requests reach an expert only once she is approved.
   const load = useCallback(async () => {
@@ -49,10 +56,13 @@ export default function ExpertHomeScreen() {
     try {
       const all = await get<Session[]>('/me/office-hours');
       setSessions(all.filter((s) => s.role === 'expert'));
+      setLoadError(false);
     } catch {
-      setSessions([]);
+      // Said plainly, never shown as "no requests".
+      setLoadError(true);
     } finally {
       setLoading(false);
+      setLoaded(true);
     }
   }, [approved]);
 
@@ -65,6 +75,8 @@ export default function ExpertHomeScreen() {
     try {
       await patch(`/office-hours/${id}`, { status });
       await load();
+    } catch (e) {
+      show((e as { message?: string })?.message ?? 'That did not save. Check your connection and try again.', 'error');
     } finally {
       setBusy(null);
     }
@@ -128,8 +140,27 @@ export default function ExpertHomeScreen() {
               </View>
             </View>
 
-            <Text style={styles.section}>Session requests</Text>
-            {open.length === 0 ? (
+            <View style={styles.sectionRow}>
+              <Text style={styles.section}>Session requests</Text>
+              {/* Pulling down to refresh does not exist in a web browser. */}
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void load()}
+                disabled={loading}
+                style={({ pressed }) => [styles.refresh, pressed && { opacity: 0.6 }]}
+              >
+                <Text style={styles.refreshText}>{loading ? 'Refreshing…' : 'Refresh'}</Text>
+              </Pressable>
+            </View>
+            {!loaded ? (
+              <SkeletonCard />
+            ) : loadError ? (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Your requests did not load</Text>
+                <Text style={styles.muted}>Check your connection, then try again.</Text>
+                <Button title="Try again" variant="secondary" onPress={() => void load()} />
+              </View>
+            ) : open.length === 0 ? (
               <Text style={styles.muted}>No requests right now. Founders who need your help will appear here.</Text>
             ) : (
               open.map((s) => (
@@ -142,13 +173,13 @@ export default function ExpertHomeScreen() {
                   <Text style={styles.topic}>“{s.topic}”</Text>
                   {s.status === 'requested' ? (
                     <View style={styles.actions}>
-                      <Button title="Accept" loading={busy === s.id + 'accepted'} onPress={() => void answer(s.id, 'accepted')} style={{ flex: 1 }} />
-                      <Button title="Decline" variant="secondary" loading={busy === s.id + 'declined'} onPress={() => void answer(s.id, 'declined')} style={{ flex: 1 }} />
+                      <Button title="Accept" loading={busy === s.id + 'accepted'} disabled={busy !== null} onPress={() => void answer(s.id, 'accepted')} style={{ flex: 1 }} />
+                      <Button title="Decline" variant="secondary" loading={busy === s.id + 'declined'} disabled={busy !== null} onPress={() => void answer(s.id, 'declined')} style={{ flex: 1 }} />
                     </View>
                   ) : (
                     <View style={styles.actions}>
                       <Button title="Message" variant="secondary" onPress={() => router.push('/conversations')} style={{ flex: 1 }} />
-                      <Button title="Mark as done" loading={busy === s.id + 'done'} onPress={() => void answer(s.id, 'done')} style={{ flex: 1 }} />
+                      <Button title="Mark as done" loading={busy === s.id + 'done'} disabled={busy !== null} onPress={() => void answer(s.id, 'done')} style={{ flex: 1 }} />
                     </View>
                   )}
                 </View>
@@ -162,20 +193,30 @@ export default function ExpertHomeScreen() {
           <Button title="Edit expert profile" variant="secondary" onPress={() => router.push('/expert/onboarding')} />
           {approved ? <Button title="Messages" variant="secondary" onPress={() => router.push('/conversations')} /> : null}
           <Button title="Settings" variant="secondary" onPress={() => router.push('/settings')} />
-          <Button
-            title="Sign out"
-            variant="secondary"
-            onPress={() => {
-              void logout().then(() => router.replace('/auth/login'));
-            }}
-          />
+          <Button title="Log out" variant="secondary" onPress={() => setConfirmingLogout(true)} />
         </View>
       </ScrollView>
+      <ConfirmModal
+        visible={confirmingLogout}
+        title="Log out?"
+        message="You will need your email and password to log in again."
+        confirmLabel="Log out"
+        cancelLabel="Stay"
+        destructive
+        onCancel={() => setConfirmingLogout(false)}
+        onConfirm={() => {
+          setConfirmingLogout(false);
+          void logout().then(() => router.replace('/auth/login'));
+        }}
+      />
     </ScreenBackdrop>
   );
 }
 
 const styles = StyleSheet.create({
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  refresh: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing[1] },
+  refreshText: { fontSize: 14, fontWeight: '700', color: colors.primary },
   bar: { paddingHorizontal: spacing[3], paddingBottom: spacing[2], flexDirection: 'row', alignItems: 'baseline', gap: spacing[1], overflow: 'hidden' },
   brand: { fontSize: 18, fontWeight: '800', color: colors.white },
   barSub: { fontSize: 14, fontWeight: '600', color: colors.accent },

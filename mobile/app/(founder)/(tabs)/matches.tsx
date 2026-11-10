@@ -69,6 +69,16 @@ function MatchesScreen() {
       />
     );
   }
+  // Without her consents we cannot tell whether matching is on, so we say
+  // so, instead of wrongly telling her it is off.
+  if (consentQ.isError) {
+    return (
+      <ScreenError
+        message="Your matching settings did not load. Check your connection and try again."
+        onRetry={() => consentQ.refetch()}
+      />
+    );
+  }
 
   const status = user?.approvalStatus;
   const invite = verificationInvite(status, 'founder');

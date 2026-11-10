@@ -5,7 +5,7 @@ import { Building2, Rocket, User, X } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
-import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
+import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { AmountField, FormError, LongSelect, Steps, TextLink } from '../../../src/components/auth/parts';
 import { KindPicker, type KindChoice } from '../../../src/components/investor-setup/KindPicker';
 import { Button, Input, MultiSelect, Textarea } from '../../../src/components/ui';
@@ -41,6 +41,10 @@ export default function InvestorOnboardingScreen() {
   const [cameFromApp] = useState(() => router.canGoBack());
 
   const [ready, setReady] = useState(false);
+  // Set when the saved setup could not be read: the form stays shut, so an
+  // empty one is never saved over it.
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [editing, setEditing] = useState(false);
   const [step, setStepState] = useState(1);
   const [meta, setMeta] = useState<Meta>({ sectors: [], stages: [], instruments: [], counties: [] });
@@ -104,15 +108,16 @@ export default function InvestorOnboardingScreen() {
           setTicketMax(setup.ticketMaxKes);
           setMandateText(setup.mandateText);
         }
-      } catch {
-        // No setup yet, or it could not be read: she starts from an empty form.
+      } catch (e) {
+        // No setup yet comes back as null. An error means it could not be read.
+        if (alive) setLoadError(messageOf(e, 'Check your connection and try again.'));
       }
       if (alive) setReady(true);
     })();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [attempt]);
 
   const next = () => {
     if (organisationName.trim().length < 2) {
@@ -183,6 +188,15 @@ export default function InvestorOnboardingScreen() {
       </View>
       {!ready ? (
         <ScreenLoading />
+      ) : loadError ? (
+        <ScreenError
+          message={`We could not load your saved details, so nothing has been changed. ${loadError}`}
+          onRetry={() => {
+            setReady(false);
+            setLoadError(null);
+            setAttempt((n) => n + 1);
+          }}
+        />
       ) : (
         <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {step === 1 ? (

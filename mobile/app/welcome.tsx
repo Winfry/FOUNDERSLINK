@@ -16,15 +16,14 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const continueToSignup = async () => {
-    await setWelcomeSeen();
-    router.push('/auth/signup');
+  // Remembering that the welcome was seen is a nicety: if storage is not
+  // available (a private browser window), the buttons still work.
+  const go = async (to: '/auth/signup' | '/auth/login') => {
+    await setWelcomeSeen().catch(() => undefined);
+    router.push(to);
   };
-
-  const goLogin = async () => {
-    await setWelcomeSeen();
-    router.push('/auth/login');
-  };
+  const continueToSignup = () => go('/auth/signup');
+  const goLogin = () => go('/auth/login');
 
   return (
     <ScrollView contentContainerStyle={styles.wrap} bounces={false}>

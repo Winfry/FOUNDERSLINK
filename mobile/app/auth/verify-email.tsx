@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../../src/components/ui/Text';
@@ -40,11 +41,23 @@ export default function VerifyEmailScreen() {
     }
   };
 
+  // A new code can be asked for once a minute, so repeated taps do not
+  // send a pile of emails.
+  const [waitSeconds, setWaitSeconds] = useState(0);
+  useEffect(() => {
+    if (waitSeconds <= 0) return;
+    const t = setTimeout(() => setWaitSeconds((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [waitSeconds]);
+
   const resend = async () => {
+    if (waitSeconds > 0) return;
+    setWaitSeconds(60);
     try {
       await authService.resendEmailCode();
       show('We sent a new code', 'success');
     } catch (e: unknown) {
+      setWaitSeconds(0);
       show((e as { message?: string })?.message ?? 'We could not send a new code. Try again in a minute.', 'error');
     }
   };
@@ -67,7 +80,11 @@ export default function VerifyEmailScreen() {
       />
       <View style={styles.resend}>
         <Text style={styles.quiet}>No email yet?</Text>
-        <TextLink title="Send the code again" onPress={() => void resend()} />
+        {waitSeconds > 0 ? (
+          <Text style={styles.quiet}>You can ask again in {waitSeconds}s</Text>
+        ) : (
+          <TextLink title="Send the code again" onPress={() => void resend()} />
+        )}
       </View>
       <View style={styles.actions}>
         <Button title="Verify email" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />

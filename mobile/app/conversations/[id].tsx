@@ -14,6 +14,16 @@ import type { ChatMessage, ConversationSummary } from '../../src/types';
 import { colors, spacing, touchTargetMin } from '../../src/theme/tokens';
 import { useEffect, useRef, useState } from 'react';
 
+// What a member can say is wrong with a message. Sent to FoundersLink's
+// team as the report's reason, so they know what to look for.
+const REPORT_REASONS = [
+  'Asks me for money or a payment',
+  'Looks like a scam or a fake offer',
+  'Rude, threatening or harassing',
+  'Spam or unwanted selling',
+  'Something else is wrong',
+];
+
 export default function ConversationThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [body, setBody] = useState('');
@@ -21,6 +31,8 @@ export default function ConversationThreadScreen() {
   const [inputHeight, setInputHeight] = useState(0);
   // The message whose Report and Block actions are open.
   const [target, setTarget] = useState<ChatMessage | null>(null);
+  // True once "Report this message" is pressed: the sheet then asks why.
+  const [choosingReason, setChoosingReason] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const insets = useSafeAreaInsets();
   // Asked again every few seconds, so a reply shows without leaving the screen.
@@ -71,16 +83,21 @@ export default function ConversationThreadScreen() {
     q.refetch();
   };
 
-  const report = (item: ChatMessage) => {
+  const closeSheet = () => {
     setTarget(null);
+    setChoosingReason(false);
+  };
+
+  const report = (item: ChatMessage, reason: string) => {
+    closeSheet();
     conversationService
-      .reportMessage(item.id, 'Asks for money')
+      .reportMessage(item.id, reason)
       .then(() => show('Reported to FoundersLink', 'success'))
       .catch((e: { message?: string }) => show(e?.message ?? 'Could not report', 'error'));
   };
 
   const block = (item: ChatMessage) => {
-    setTarget(null);
+    closeSheet();
     conversationService
       .blockMember(item.senderId!)
       .then(() => show(`${item.senderName ?? 'This member'} can no longer message you`, 'success'))
@@ -159,8 +176,25 @@ export default function ConversationThreadScreen() {
         </Pressable>
       </View>
 
-      <BottomSheet visible={target !== null} title={target?.senderName ?? 'This message'} onClose={() => setTarget(null)}>
-        {target ? (
+      <BottomSheet
+        visible={target !== null}
+        title={choosingReason ? 'What is wrong with it?' : (target?.senderName ?? 'This message')}
+        onClose={closeSheet}
+      >
+        {target && choosingReason ? (
+          <View>
+            {REPORT_REASONS.map((reason, i) => (
+              <Pressable
+                key={reason}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.sheetRow, i > 0 && styles.sheetDivider, pressed && styles.sheetRowPressed]}
+                onPress={() => report(target, reason)}
+              >
+                <Text style={[styles.sheetTitle, styles.flex]}>{reason}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : target ? (
           <View>
             <Text style={styles.quote} numberOfLines={2}>
               {target.body}
@@ -168,7 +202,7 @@ export default function ConversationThreadScreen() {
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [styles.sheetRow, pressed && styles.sheetRowPressed]}
-              onPress={() => report(target)}
+              onPress={() => setChoosingReason(true)}
             >
               <Flag size={22} color={colors.primaryDark} />
               <View style={styles.flex}>

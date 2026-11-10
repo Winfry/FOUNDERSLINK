@@ -8,7 +8,7 @@ import { Header } from '../../../src/components/layout/Header';
 import { AmountField, Checkbox, FormError, LongSelect, Steps, SuggestedTag } from '../../../src/components/auth/parts';
 import { Button, Input, MultiSelect, Select, Textarea } from '../../../src/components/ui';
 import { useToast } from '../../../src/components/ui/Toast';
-import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
+import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { consentService, founderService, referenceDataService } from '../../../src/services';
 import type { BusinessStatus, FounderProfile, Instrument } from '../../../src/types';
 import { useAuthStore } from '../../../src/stores/authStore';
@@ -75,9 +75,15 @@ export default function FounderOnboardingScreen() {
   // consent she gave (FINAL_VERIFICATION 21).
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Set when her saved profile could not be read. The form then stays shut:
+  // a blank form saved over a profile that failed to load would wipe it.
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let live = true;
+    setLoading(true);
+    setLoadError(null);
     void (async () => {
       try {
         const [saved, given] = await Promise.all([founderService.getProfile(), consentService.list('founder')]);
@@ -95,8 +101,11 @@ export default function FounderOnboardingScreen() {
           setStepState(2);
           await loadMeta().catch(() => undefined);
         }
-      } catch {
-        // A first-time founder has nothing to load; the form starts blank.
+      } catch (e) {
+        // A first-time founder gets null back, not an error: an error means
+        // her details could not be read, so nothing is shown that could
+        // overwrite them.
+        if (live) setLoadError((e as { message?: string })?.message ?? 'Check your connection and try again.');
       } finally {
         if (live) setLoading(false);
       }
@@ -104,9 +113,9 @@ export default function FounderOnboardingScreen() {
     return () => {
       live = false;
     };
-    // Once, when the screen opens.
+    // When the screen opens, and on "Try again".
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
 
   const setStep = (n: number) => {
     setFailed(null);
@@ -203,6 +212,17 @@ export default function FounderOnboardingScreen() {
 
   // Until her saved profile is in, so a blank form never shows first.
   if (loading) return <ScreenLoading />;
+  if (loadError) {
+    return (
+      <View style={styles.flex}>
+        <Header title="Your business details" onBack={() => router.back()} />
+        <ScreenError
+          message={`We could not load your saved details, so nothing has been changed. ${loadError}`}
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.flex}>

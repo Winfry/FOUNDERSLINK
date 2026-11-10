@@ -80,16 +80,24 @@ function ConnectionsScreen() {
   // the kind of investment is for the two of them to agree.
   const startDeal = async (item: ConnectionJoinRequest) => {
     setStarting(true);
+    let deal: { id: string } | null = null;
     try {
-      const deal = await dealService.createInvestment(item.withUserId, `Investment from ${item.withFullName}`);
-      await dealService.updateTerms(deal.id, { amountKes: item.proposedAmountKes });
-      setOffer(null);
-      router.push(`/deal/${deal.id}`);
+      deal = await dealService.createInvestment(item.withUserId, `Investment from ${item.withFullName}`);
     } catch (e) {
       show((e as { message?: string })?.message ?? 'The deal was not opened. Try again.', 'error');
-    } finally {
       setStarting(false);
+      return;
     }
+    // The deal exists now. If the amount does not save, she still goes to
+    // it, so trying again never opens a second deal.
+    try {
+      await dealService.updateTerms(deal.id, { amountKes: item.proposedAmountKes });
+    } catch {
+      show('The deal is open, but the amount was not saved. Add it on the deal.', 'error');
+    }
+    setOffer(null);
+    setStarting(false);
+    router.push(`/deal/${deal.id}`);
   };
 
   const decline = async () => {

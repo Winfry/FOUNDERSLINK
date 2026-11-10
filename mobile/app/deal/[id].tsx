@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Check, CircleAlert, CircleCheck, CircleDashed, Clock, FileText, Landmark, Upload } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
-import { Avatar, Badge, Button, Card } from '../../src/components/ui';
+import { Avatar, Badge, Button, Card, ConfirmModal } from '../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { useToast } from '../../src/components/ui/Toast';
 import { StageStepper, stageLabel } from '../../src/components/deal/StageStepper';
@@ -52,6 +52,8 @@ export default function DealScreen() {
   const q = useQuery({ queryKey: ['deal', id], queryFn: () => dealService.get(String(id)), refetchInterval: 6000 });
   const me = useAuthStore((s) => s.user?.id);
   const [busy, setBusy] = useState<string | null>(null);
+  // Closing a deal is asked twice: it is the one step that cannot be taken back.
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const { show } = useToast();
 
@@ -119,12 +121,24 @@ export default function DealScreen() {
             ? {
                 title: 'Close the deal',
                 help: 'Closing needs every party. The first to press proposes it, and the others confirm.',
-                onPress: () => void run('main', () => dealService.advanceStage(deal.id), moved),
+                onPress: () => setConfirmClose(true),
               }
             : null;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <ConfirmModal
+        visible={confirmClose}
+        title="Close this deal?"
+        message="Closing says the investment is done. Once every party has confirmed, the deal cannot be reopened."
+        confirmLabel="Close the deal"
+        loading={busy === 'main'}
+        onCancel={() => setConfirmClose(false)}
+        onConfirm={() => {
+          setConfirmClose(false);
+          void run('main', () => dealService.advanceStage(deal.id), moved);
+        }}
+      />
       <View style={styles.head}>
         <Text style={styles.title}>{deal.title}</Text>
         {deal.withName ? (
