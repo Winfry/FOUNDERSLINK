@@ -33,7 +33,15 @@ export default function LoginScreen() {
       await login(data.email, data.password);
       router.replace('/');
     } catch (e: unknown) {
-      setRefused((e as { message?: string })?.message ?? 'We could not log you in. Check your email and password and try again.');
+      const err = e as { message?: string; code?: string };
+      // A space copied in with the password is easy to miss and is part of
+      // the password, so say so rather than only "invalid".
+      const refused = err?.code === 'INVALID_CREDENTIALS' || err?.code === 'UNAUTHORIZED';
+      if (refused && /^\s|\s$/.test(data.password)) {
+        setRefused('Your password starts or ends with a space. If you copied it, delete the space and try again.');
+        return;
+      }
+      setRefused(err?.message ?? 'We could not log you in. Check your email and password and try again.');
     }
   };
 
