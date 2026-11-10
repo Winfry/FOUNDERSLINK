@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import { Bell, Sparkles } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { notificationService } from '../../services';
@@ -53,6 +53,17 @@ function Me({ role }: { role: Role }) {
       style={styles.me}
     >
       <Avatar name={name || 'Me'} size={34} />
+    </Pressable>
+  );
+}
+
+// A founder's way to her AI co-pilot from any tab on a phone (the side
+// menu has it on a computer).
+function CopilotButton() {
+  const router = useRouter();
+  return (
+    <Pressable onPress={() => router.navigate('/copilot' as never)} accessibilityLabel="Your AI co-pilot" style={styles.iconButton}>
+      <Sparkles color={colors.accent} size={20} />
     </Pressable>
   );
 }
@@ -111,6 +122,7 @@ export function WorkspaceTabs({ role, screens }: { role: Role; screens: TabScree
               headerLeft: () => <Brand />,
               headerRight: () => (
                 <View style={styles.phoneRight}>
+                  {role === 'founder' ? <CopilotButton /> : null}
                   <NotificationBell role={role} onDark />
                   <Me role={role} />
                 </View>

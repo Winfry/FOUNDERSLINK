@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ClipboardCheck, FileSignature, Gauge, HandCoins, Handshake, ShieldCheck, UserRoundPen, UsersRound } from 'lucide-react-native';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { ChevronRight, ClipboardCheck, FileSignature, Gauge, HandCoins, Handshake, ShieldCheck, Sparkles, UserRoundPen, UsersRound } from 'lucide-react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '../../../src/components/ui';
 import { Column, Columns, Empty, Greeting, initialsOf, kes, Panel, Progress, Row, Stat, Stats, Tag } from '../../../src/components/overview/parts';
 import { greeting } from '../../../src/components/layout/workspace';
@@ -9,7 +9,7 @@ import { circleService, complianceService, connectionService, dealService, found
 import { useAuthStore } from '../../../src/stores/authStore';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 import { verificationInvite } from '../../../src/lib/verification-invite';
-import { spacing } from '../../../src/theme/tokens';
+import { colors, radius, spacing } from '../../../src/theme/tokens';
 import { Text } from '../../../src/components/ui/Text';
 import type { MatchBand } from '../../../src/types';
 
@@ -72,6 +72,21 @@ export default function FounderHome() {
         action={<Button title={next.title} onPress={next.go} />}
       />
 
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.navigate('/copilot' as never)}
+        style={({ pressed }) => [styles.copilot, pressed && { opacity: 0.9 }]}
+      >
+        <View style={styles.copilotIcon}>
+          <Sparkles size={20} color={colors.primaryDark} />
+        </View>
+        <View style={styles.flex}>
+          <Text style={styles.copilotTitle}>Ask your AI co-pilot</Text>
+          <Text style={styles.copilotLine}>“What should I focus on this week?” It reads your profile, checklist and matches, and suggests tasks you approve.</Text>
+        </View>
+        <ChevronRight size={20} color={colors.white} />
+      </Pressable>
+
       <Stats>
         <Stat label="Business profile" value={`${completeness}%`} note={completeness >= 100 ? 'Complete' : 'Keep building it'} icon={Gauge} onPress={() => router.push('/founder/onboarding')} />
         <Stat label="Investors who fit" value={String(fits.length)} note={fits.length ? 'Pitch or fix first' : 'Matches appear here'} icon={Handshake} onPress={() => router.navigate('/matches' as never)} />
@@ -81,6 +96,7 @@ export default function FounderHome() {
 
       <Columns>
         <Column wide>
+          <Text style={styles.engine}>Build & grow</Text>
           <Panel title="Your next steps" sub="Each one you finish opens the door to more investors." link="Checklist" onLink={() => router.navigate('/readiness' as never)}>
             <View style={styles.readiness}>
               <View style={styles.readinessHead}>
@@ -109,6 +125,26 @@ export default function FounderHome() {
             {verified && completeness >= 100 && toDo.length === 0 ? <Empty text="Nothing waiting. Your business is ready for investors." /> : null}
           </Panel>
 
+          <Panel title="Your chamas" sub="Save with founders you trust. FoundersLink keeps the records." link="Chamas" onLink={() => router.navigate('/chamas' as never)}>
+            {(chamasQ.data ?? []).length === 0 ? (
+              <Empty text="You are not in a chama yet. Start one and invite founders you trust." />
+            ) : (
+              (chamasQ.data ?? []).slice(0, 3).map((c, i, all) => (
+                <Row
+                  key={c.id}
+                  icon={c.type === 'money' ? HandCoins : UsersRound}
+                  title={c.name}
+                  line={`${c.memberCount} members · ${c.type === 'money' ? 'Savings' : 'Learning'}`}
+                  onPress={() => router.push(`/chama/${c.id}` as never)}
+                  last={i === all.length - 1}
+                />
+              ))
+            )}
+          </Panel>
+        </Column>
+
+        <Column>
+          <Text style={styles.engine}>Capital & connections</Text>
           {waitingForMe.length > 0 ? (
             <Panel title="Investors who want to connect" sub="Accept to start talking. You choose whether a deal follows." link="Network" onLink={() => router.navigate('/connections' as never)}>
               {waitingForMe.slice(0, 3).map((r, i, all) => (
@@ -124,9 +160,6 @@ export default function FounderHome() {
               ))}
             </Panel>
           ) : null}
-        </Column>
-
-        <Column>
           <Panel title="Investors for you" sub="Sorted by how well they fit your business." link="See all" onLink={() => router.navigate('/matches' as never)}>
             {fits.length === 0 ? (
               <Empty text={matchesQ.isLoading ? 'Finding investors who fit…' : 'Investors who fit your business appear here once your profile is in.'} />
@@ -145,22 +178,6 @@ export default function FounderHome() {
             )}
           </Panel>
 
-          <Panel title="Your chamas" sub="Save with founders you trust. FoundersLink keeps the records." link="Chamas" onLink={() => router.navigate('/chamas' as never)}>
-            {(chamasQ.data ?? []).length === 0 ? (
-              <Empty text="You are not in a chama yet. Start one and invite founders you trust." />
-            ) : (
-              (chamasQ.data ?? []).slice(0, 3).map((c, i, all) => (
-                <Row
-                  key={c.id}
-                  icon={c.type === 'money' ? HandCoins : UsersRound}
-                  title={c.name}
-                  line={`${c.memberCount} members · ${c.type === 'money' ? 'Savings' : 'Learning'}`}
-                  onPress={() => router.push(`/chama/${c.id}` as never)}
-                  last={i === all.length - 1}
-                />
-              ))
-            )}
-          </Panel>
         </Column>
       </Columns>
 
@@ -170,6 +187,13 @@ export default function FounderHome() {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  // The two engines: building the business, and reaching capital and people.
+  engine: { fontSize: 13, fontWeight: '800', color: colors.primary, marginBottom: -4 },
+  copilot: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5], padding: spacing[2], borderRadius: radius.card, backgroundColor: colors.primaryDark },
+  copilotIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  copilotTitle: { fontSize: 16, fontWeight: '800', color: colors.white },
+  copilotLine: { fontSize: 14, color: colors.onDarkMuted, marginTop: 2 },
   page: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[2] },
   readiness: { gap: spacing[1], paddingVertical: spacing[1] },
   readinessHead: { flexDirection: 'row', justifyContent: 'space-between' },

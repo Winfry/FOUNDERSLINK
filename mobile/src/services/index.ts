@@ -43,6 +43,8 @@ import { httpConversationService } from './http/conversation.http';
 import { httpInvestorService, type InvestorService } from './http/investor.http';
 import { httpExpertService, type ExpertService } from './http/expert.http';
 import { mockExpertService } from './mocks/expert.mock';
+import { httpCopilotService, type CopilotService } from './http/copilot.http';
+import { mockCopilotService } from './mocks/copilot.mock';
 import { httpComplianceService } from './http/compliance.http';
 import { httpNotificationService } from './http/notifications.http';
 import { httpReferenceDataService } from './http/reference.http';
@@ -74,8 +76,10 @@ export const groupService = mockGroupAlias;
 export const investorService: InvestorService = live('investor') ? httpInvestorService : mockInvestorStub;
 export const chatService = mockChatAdapter;
 export const expertService: ExpertService = live('expert') ? httpExpertService : mockExpertService;
+export const copilotService: CopilotService = live('copilot') ? httpCopilotService : mockCopilotService;
 
 export * from './types/api';
 
 export type { DiscoverCard, DiscoverResult, FounderPublicProfile, InvestorService, InvestorSetup, JoinRequestRow } from './http/investor.http';
 export type { ExpertService, ExpertSession } from './http/expert.http';
+export type { CopilotActivity, CopilotAnswer, CopilotService, CopilotTask, TaskAction } from './http/copilot.http';

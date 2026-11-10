@@ -42,12 +42,14 @@ export function Sidebar() {
 
       <Text style={styles.section}>{ws.name}</Text>
       <ScrollView style={styles.flex} contentContainerStyle={styles.nav}>
-        {ws.items.map((item) => {
+        {ws.items.map((item, i) => {
           const on = isActive(item, path);
           const Icon = item.icon;
+          const startsGroup = item.group && item.group !== ws.items[i - 1]?.group;
           return (
+            <View key={item.href}>
+            {startsGroup ? <Text style={styles.group}>{item.group}</Text> : null}
             <Pressable
-              key={item.href}
               accessibilityRole="link"
               accessibilityState={{ selected: on }}
               onPress={() => router.navigate(item.href as never)}
@@ -61,6 +63,7 @@ export function Sidebar() {
               <Text style={[styles.itemText, on && styles.itemTextOn]}>{item.label}</Text>
               {on ? <View style={styles.dot} /> : null}
             </Pressable>
+            </View>
           );
         })}
       </ScrollView>
@@ -106,6 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing[1],
   },
   nav: { gap: 4 },
+  group: { fontSize: 11, fontWeight: '800', color: colors.accent, paddingHorizontal: spacing[1.5], marginTop: spacing[2], marginBottom: 4 },
   item: {
     flexDirection: 'row',
     alignItems: 'center',

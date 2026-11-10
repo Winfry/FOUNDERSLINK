@@ -14,3 +14,4 @@ export const Settings = icon;
 export const Compass = icon;
 export const Send = icon;
 export const CalendarCheck = icon;
+export const Sparkles = icon;

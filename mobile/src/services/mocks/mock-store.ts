@@ -9,6 +9,7 @@ import type {
 } from '../../types';
 import type { InvestorSetup, JoinRequestRow } from '../http/investor.http';
 import type { ExpertSession } from '../http/expert.http';
+import type { CopilotActivity, CopilotTask } from '../http/copilot.http';
 import { expertSessions, savannaRequests, savannaSetup } from './demo-people';
 
 export const DEMO_PASSWORD = 'DemoPass2026!';
@@ -27,6 +28,9 @@ export interface MockMemberState {
   joinRequests?: JoinRequestRow[];
   /** An expert's: the help sessions founders asked her for. */
   sessions?: ExpertSession[];
+  /** A founder's: her task list and what the Copilot did. */
+  tasks?: CopilotTask[];
+  copilotLog?: CopilotActivity[];
 }
 
 const members = new Map<string, MockMemberState>();

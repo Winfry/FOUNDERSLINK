@@ -14,6 +14,7 @@ export default function FounderTabsLayout() {
         { name: 'readiness', title: 'Readiness', icon: ClipboardCheck },
         { name: 'connections', title: 'Network', icon: UsersRound },
         { name: 'chamas', title: 'Chamas', icon: HandCoins },
+        { name: 'copilot', title: 'AI Co-pilot', hidden: true },
         { name: 'profile', title: 'Profile', hidden: true },
         { name: 'notifications', title: 'Notifications', hidden: true },
       ]}
