@@ -7,6 +7,9 @@ import type {
   SessionUser,
   VettingApplication,
 } from '../../types';
+import type { InvestorSetup, JoinRequestRow } from '../http/investor.http';
+import type { ExpertSession } from '../http/expert.http';
+import { expertSessions, savannaRequests, savannaSetup } from './demo-people';
 
 export const DEMO_PASSWORD = 'DemoPass2026!';
 
@@ -19,6 +22,11 @@ export interface MockMemberState {
   vetting: VettingApplication;
   matches: FundingMatches;
   deals: Deal[];
+  /** An investor's: what she funds, and the requests she sent. */
+  investorSetup?: InvestorSetup;
+  joinRequests?: JoinRequestRow[];
+  /** An expert's: the help sessions founders asked her for. */
+  sessions?: ExpertSession[];
 }
 
 const members = new Map<string, MockMemberState>();
@@ -198,6 +206,61 @@ function init() {
       statusReason: 'Please clarify your business registration status and resubmit.',
     },
   });
+
+  // An approved investor: what she funds, businesses that fit it, two
+  // requests (one accepted, with the deal Amina is in on the other side).
+  seedMember('grace@savanna.demo', {
+    id: 'inv-savanna',
+    role: 'investor',
+    email: 'grace@savanna.demo',
+    fullName: 'Grace Njoroge',
+    phone: '+254722000444',
+    emailVerified: true,
+    approvalStatus: 'approved',
+    preferredLanguage: 'en',
+    founderOnboardingComplete: false,
+    investorOnboardingComplete: true,
+  }, {
+    vetting: { approvalStatus: 'approved', phone: '+254722000444', statement: 'Savanna Angels backs early health and fintech startups.' },
+    investorSetup: savannaSetup,
+    joinRequests: savannaRequests,
+    deals: [
+      {
+        id: 'deal-1',
+        type: 'investment',
+        title: 'ClinicBook — seed with Savanna Angels',
+        stage: 'exploring',
+        withUserId: 'u-amina',
+        withName: 'Amina Wanjiru',
+        terms: { amountKes: 1_000_000, instrument: 'equity', equityPercent: 12, notes: 'Board observer seat' },
+        confirmations: [
+          { userId: 'inv-savanna', name: 'Savanna Angels', confirmed: false },
+          { userId: 'u-amina', name: 'Amina Wanjiru', confirmed: false },
+        ],
+        checklist: [{ id: 'c1', label: 'Align on instrument', done: true }],
+        timeline: [{ id: 't1', title: 'Deal opened', at: new Date().toISOString() }],
+        documents: [],
+      },
+    ],
+  });
+
+  // An approved expert, with founders asking for her help.
+  seedMember('wanjiku@expert.demo', {
+    id: 'exp-wanjiku',
+    role: 'expert',
+    email: 'wanjiku@expert.demo',
+    fullName: 'Wanjiku Kamau',
+    phone: '+254700000555',
+    emailVerified: true,
+    approvalStatus: 'approved',
+    preferredLanguage: 'en',
+    founderOnboardingComplete: false,
+    investorOnboardingComplete: false,
+    expertOnboardingComplete: true,
+  }, {
+    vetting: { approvalStatus: 'approved', phone: '+254700000555', statement: 'Advocate of the High Court, helping startups with company law and data protection.' },
+    sessions: expertSessions,
+  });
 }
 
 init();
@@ -226,5 +289,7 @@ export function listDemoAccounts() {
     { email: 'new@founder.demo', label: 'New founder — onboarding', password: DEMO_PASSWORD },
     { email: 'waiting@founder.demo', label: 'Verification in review', password: DEMO_PASSWORD },
     { email: 'needsinfo@founder.demo', label: 'Verification needs more info', password: DEMO_PASSWORD },
+    { email: 'grace@savanna.demo', label: 'Verified investor — matched businesses + deal', password: DEMO_PASSWORD },
+    { email: 'wanjiku@expert.demo', label: 'Verified expert — session requests', password: DEMO_PASSWORD },
   ];
 }

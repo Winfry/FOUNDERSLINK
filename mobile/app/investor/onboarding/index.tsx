@@ -163,7 +163,7 @@ export default function InvestorOnboardingScreen() {
       void queryClient.invalidateQueries({ queryKey: ['investor-setup'] });
       void queryClient.invalidateQueries({ queryKey: ['discover'] });
       show(editing ? 'What you fund is updated' : 'Saved. Here are founders that fit.', 'success');
-      router.replace('/(investor)/(tabs)/discover');
+      router.replace('/(investor)/(tabs)/overview' as never);
     } catch (e) {
       setFailed(messageOf(e, 'We could not save this. Check your connection and try again.'));
     } finally {

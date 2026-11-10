@@ -27,7 +27,7 @@ export default function Index() {
     if (!user.founderOnboardingComplete) {
       return <Redirect href="/founder/onboarding" />;
     }
-    return <Redirect href="/(founder)/(tabs)/matches" />;
+    return <Redirect href={'/(founder)/(tabs)/home' as never} />;
   }
 
   if (user.role === 'investor') {
@@ -35,7 +35,7 @@ export default function Index() {
     if (!user.investorOnboardingComplete) {
       return <Redirect href="/investor/onboarding" />;
     }
-    return <Redirect href="/(investor)/(tabs)/discover" />;
+    return <Redirect href={'/(investor)/(tabs)/overview' as never} />;
   }
 
   if (user.role === 'expert') {
@@ -43,7 +43,7 @@ export default function Index() {
     if (!user.expertOnboardingComplete) {
       return <Redirect href="/expert/onboarding" />;
     }
-    return <Redirect href="/expert/home" />;
+    return <Redirect href={'/(expert)/(tabs)/sessions' as never} />;
   }
 
   return <Redirect href="/welcome" />;

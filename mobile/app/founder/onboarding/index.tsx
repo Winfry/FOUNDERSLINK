@@ -193,7 +193,7 @@ export default function FounderOnboardingScreen() {
       }
       await markComplete();
       show(editing ? 'Your business details are saved' : `Profile ${saved.profileCompleteness}% complete`, 'success');
-      router.replace('/(founder)/(tabs)/matches');
+      router.replace('/(founder)/(tabs)/home' as never);
     } catch (e) {
       setFailed(messageOf(e, 'We could not save your profile. Check your connection and try again.'));
     } finally {

@@ -10,7 +10,10 @@ export function Header({
   subtitle,
   onBack,
   right,
+  insetX,
 }: {
+  /** Extra side space, to line the title up with a page centred on a computer. */
+  insetX?: number;
   title: string;
   subtitle?: string;
   onBack?: () => void;
@@ -18,7 +21,7 @@ export function Header({
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.wrap, { paddingTop: insets.top + spacing[1] }]}>
+    <View style={[styles.wrap, { paddingTop: insets.top + spacing[1] }, insetX ? { paddingHorizontal: insetX + spacing[2] } : null]}>
       <View style={styles.row}>
         {onBack ? (
           <Pressable onPress={onBack} style={styles.back} accessibilityLabel="Go back">

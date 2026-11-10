@@ -63,7 +63,7 @@ export default function ExpertOnboardingScreen() {
         });
       }
       await patchUser({ expertOnboardingComplete: true });
-      router.replace('/expert/home');
+      router.replace('/(expert)/(tabs)/sessions' as never);
     } catch (e) {
       setError((e as { message?: string }).message ?? 'Your profile could not be saved. Try again.');
     } finally {

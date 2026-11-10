@@ -4,6 +4,8 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Header } from '../src/components/layout/Header';
+import { Sidebar } from '../src/components/layout/Sidebar';
+import { useCentredPadding, useWideLayout } from '../src/hooks/useWideLayout';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useLiveUpdates } from '../src/hooks/useLiveUpdates';
 import { useAuthStore } from '../src/stores/authStore';
@@ -31,15 +33,22 @@ function SessionGuard() {
       return;
     }
 
-    // Each role has its own screens. Two of them share an address
+    // Each role has its own workspace. Two of them share an address
     // ("/profile", "/notifications"), and a notification or a shared
-    // screen can point at the other role's, so anyone who lands on the
+    // screen can point at another role's, so anyone who lands on the
     // wrong side is sent to her own home. Verification is shared.
     const verify = area === 'founder' && segments[1] === 'verify';
     const foundersOnly = (area === '(founder)' || area === 'founder') && !verify;
     const investorsOnly = area === '(investor)' || area === 'investor';
-    if (role === 'investor' && foundersOnly) router.replace('/(investor)/(tabs)/discover');
-    if (role === 'founder' && investorsOnly) router.replace('/(founder)/(tabs)/matches');
+    const expertsOnly = area === '(expert)' || area === 'expert';
+    const home = {
+      founder: '/(founder)/(tabs)/home',
+      investor: '/(investor)/(tabs)/overview',
+      expert: '/(expert)/(tabs)/sessions',
+    } as const;
+    if (role !== 'founder' && foundersOnly && role in home) router.replace(home[role as keyof typeof home] as never);
+    if (role !== 'investor' && investorsOnly && role in home) router.replace(home[role as keyof typeof home] as never);
+    if (role !== 'expert' && expertsOnly && role in home) router.replace(home[role as keyof typeof home] as never);
   }, [hydrated, role, area, segments, router]);
 
   useEffect(() => {
@@ -59,7 +68,9 @@ function SessionGuard() {
 function BackHeader({ title }: { title: string }) {
   const router = useRouter();
   // After a reload or a link there is nothing to go back to, so it goes home.
-  return <Header title={title} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
+  // On a computer, the title lines up with the page, centred beside the side menu.
+  const inset = useCentredPadding(DETAIL_MAX);
+  return <Header title={title} insetX={inset || undefined} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
 }
 
 const withBack = (title: string) => ({
@@ -67,30 +78,70 @@ const withBack = (title: string) => ({
   header: () => <BackHeader title={title} />,
 });
 
+/** The widest a page opened from a workspace (a deal, a chat, settings) gets on a computer. */
+const DETAIL_MAX = 820;
+
+const OPEN_AREAS = new Set([undefined, 'auth', 'welcome', 'splash']);
+
+function Screens({ wide }: { wide: boolean }) {
+  const inset = useCentredPadding(DETAIL_MAX);
+  return (
+    <Stack
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        // Workspaces ("(founder)", ...) lay themselves out; pages opened
+        // from them are centred at a reading width on a computer.
+        contentStyle:
+          wide && !route.name.startsWith('(')
+            ? { backgroundColor: colors.background, paddingHorizontal: inset }
+            : { backgroundColor: wide ? colors.background : colors.white },
+      })}
+    >
+      <Stack.Screen name="founder/investor-match/[id]" options={withBack('Investor')} />
+      <Stack.Screen name="founder/verify/status" options={withBack('Verification')} />
+      <Stack.Screen name="deal/[id]" options={withBack('Deal')} />
+      <Stack.Screen name="chama/[id]" options={withBack('Chama')} />
+      <Stack.Screen name="conversations/index" options={withBack('Messages')} />
+      <Stack.Screen name="conversations/[id]" options={withBack('Chat')} />
+    </Stack>
+  );
+}
+
+/**
+ * Signed in on a computer: the side menu, and the workspace beside it.
+ * Otherwise (a phone, or the welcome and login screens) the app is a
+ * phone-width column, centred on a wide window.
+ */
+function Shell() {
+  const wide = useWideLayout();
+  const signedIn = useAuthStore((s) => s.user !== null);
+  const area = (useSegments() as string[])[0];
+  if (wide && signedIn && !OPEN_AREAS.has(area)) {
+    return (
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.background }}>
+        <Sidebar />
+        <View style={{ flex: 1 }}>
+          <Screens wide />
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={{ flex: 1, alignItems: 'center', backgroundColor: colors.grey100 }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: 480, backgroundColor: colors.white }}>
+        <Screens wide={false} />
+      </View>
+    </View>
+  );
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AppProviders>
           <SessionGuard />
-          {/* On a wide browser window the app keeps a phone's width, centred. */}
-          <View style={{ flex: 1, alignItems: 'center', backgroundColor: colors.grey100 }}>
-            <View style={{ flex: 1, width: '100%', maxWidth: 480, backgroundColor: colors.white }}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.white },
-                }}
-              >
-                <Stack.Screen name="founder/investor-match/[id]" options={withBack('Investor')} />
-                <Stack.Screen name="founder/verify/status" options={withBack('Verification')} />
-                <Stack.Screen name="deal/[id]" options={withBack('Deal')} />
-                <Stack.Screen name="chama/[id]" options={withBack('Chama')} />
-                <Stack.Screen name="conversations/index" options={withBack('Messages')} />
-                <Stack.Screen name="conversations/[id]" options={withBack('Chat')} />
-              </Stack>
-            </View>
-          </View>
+          <Shell />
         </AppProviders>
       </SafeAreaProvider>
     </GestureHandlerRootView>
