@@ -4,20 +4,37 @@ import { ChevronRight } from 'lucide-react-native';
 import { useWideLayout } from '../../hooks/useWideLayout';
 import { colors, radius, shadows, spacing } from '../../theme/tokens';
 import { Text } from '../ui/Text';
+import { Illustration, type IllustrationName } from '../illustrations/People';
 
 type Icon = ComponentType<{ color?: string; size?: number; strokeWidth?: number }>;
 
-/** "Founder workspace" / "Good morning, Amina" / a line about today, and the one next step. */
-export function Greeting({ eyebrow, title, line, action }: { eyebrow: string; title: string; line: string; action?: ReactNode }) {
+/**
+ * "Good morning, Amina", a line about today, and the one next step. On a
+ * computer it is a welcome card with a drawing of people for the role; on
+ * a phone it stays compact, so the numbers are still in view.
+ */
+export function Greeting({ eyebrow, title, line, action, art }: { eyebrow: string; title: string; line: string; action?: ReactNode; art?: IllustrationName }) {
   const wide = useWideLayout();
+  if (wide) {
+    return (
+      <View style={[styles.card, styles.welcome]}>
+        <View style={[styles.flex, styles.welcomeWords]}>
+          <Text style={styles.hello} accessibilityRole="header">{title}</Text>
+          <Text style={styles.helloLine}>{line}</Text>
+          {action ? <View style={styles.welcomeAction}>{action}</View> : null}
+        </View>
+        {art ? <Illustration name={art} width={230} /> : null}
+      </View>
+    );
+  }
   return (
-    <View style={[styles.greeting, wide && styles.greetingWide]}>
-      <View style={styles.flex}>
+    <View style={styles.greeting}>
+      <View>
         <Text style={styles.eyebrow}>{eyebrow}</Text>
         <Text style={styles.hello} accessibilityRole="header">{title}</Text>
         <Text style={styles.helloLine}>{line}</Text>
       </View>
-      {action ? <View style={wide ? null : styles.greetingAction}>{action}</View> : null}
+      {action ? <View style={styles.greetingAction}>{action}</View> : null}
     </View>
   );
 }
@@ -176,7 +193,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   pressed: { opacity: 0.85 },
   greeting: { gap: spacing[2], paddingTop: spacing[2], paddingBottom: spacing[2] },
-  greetingWide: { flexDirection: 'row', alignItems: 'flex-end', paddingTop: spacing[3] },
+  welcome: { flexDirection: 'row', alignItems: 'center', gap: spacing[3], paddingVertical: spacing[2], paddingLeft: spacing[4], paddingRight: spacing[3], marginTop: spacing[2], backgroundColor: colors.white },
+  welcomeWords: { gap: spacing[0.5] },
+  welcomeAction: { flexDirection: 'row', marginTop: spacing[2] },
   greetingAction: { alignSelf: 'stretch' },
   eyebrow: { fontSize: 12, fontWeight: '800', color: colors.primary },
   hello: { fontSize: 28, fontWeight: '800', color: colors.text, marginTop: spacing[0.5] },

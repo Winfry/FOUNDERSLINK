@@ -1,4 +1,5 @@
-import { ArrowUp, ExternalLink, MessageCircleQuestion, Quote, Scale, ThumbsDown, ThumbsUp } from 'lucide-react-native';
+import { ArrowUp, ExternalLink, Quote, Scale, ThumbsDown, ThumbsUp } from 'lucide-react-native';
+import { Illustration } from '../illustrations/People';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from '../ui/Text';
@@ -157,9 +158,7 @@ export function AskCompliance() {
       >
         {turns.length === 0 ? (
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <MessageCircleQuestion size={24} color={colors.primary} />
-            </View>
+            <Illustration name="mentor" width={190} />
             <Text style={styles.emptyTitle}>Ask about the rules for your business</Text>
             <Text style={styles.emptyBody}>
               Answers come from official sources. When there isn't one, we say so instead of guessing.

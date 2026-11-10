@@ -142,6 +142,7 @@ function MatchesScreen() {
       <View style={styles.flex}>
         {header}
         <ScreenEmpty
+          illustration="search"
           title="Matching is off"
           description="You have not allowed FoundersLink to use your business details for matching, so there are no investors to show. You can turn it on in your consents; nothing else about your profile changes."
           actionLabel="Open my consents"
@@ -162,6 +163,7 @@ function MatchesScreen() {
       ListHeaderComponent={header}
       ListEmptyComponent={
         <ScreenEmpty
+          illustration="search"
           title="No investors in this list"
           description={current.empty}
           actionLabel="Check my readiness"

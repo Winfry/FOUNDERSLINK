@@ -41,7 +41,7 @@ function ReadinessScreen() {
       await q.refetch();
       // Closing an item can move an investor from "fix this first" to "pitch".
       void qc.invalidateQueries({ queryKey: ['funding-matches'] });
-      toast.show(`${label} marked as done`, 'success');
+      toast.show(`Nice work. ${label} is done.`, 'success');
     } catch (e) {
       toast.show((e as { message?: string })?.message ?? 'Could not save that. Try again.', 'error');
     } finally {
@@ -75,6 +75,7 @@ function ReadinessScreen() {
           ListHeaderComponentStyle={styles.hero}
           ListEmptyComponent={
             <ScreenEmpty
+              illustration="growth"
               title="No checklist yet"
               description="Your checklist is built from your business profile. In the meantime you can ask a compliance question."
               actionLabel="Ask Compliance"

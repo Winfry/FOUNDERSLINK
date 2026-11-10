@@ -13,6 +13,7 @@ import { useAuthStore } from '../../../src/stores/authStore';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 import { verificationInvite } from '../../../src/lib/verification-invite';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
+import { Illustration } from '../../../src/components/illustrations/People';
 
 const when = (iso: string) => {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -57,6 +58,7 @@ export default function ExpertOverview() {
     <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl {...pull} />}>
       <Greeting
         eyebrow="Expert workspace"
+        art="mentor"
         title={`${greeting()}${first ? `, ${first}` : ''}`}
         line={approved ? 'Founders who asked for your help, and the sessions you are running.' : 'Once you are verified, founders can find you and ask for a session.'}
         action={
@@ -90,7 +92,10 @@ export default function ExpertOverview() {
                   <Button title="Try again" variant="secondary" onPress={() => void q.refetch()} />
                 </View>
               ) : asked.length === 0 ? (
-                <Empty text="No new requests. Founders who need your help will appear here." />
+                <View style={styles.quiet}>
+                  <Illustration name="mentor" width={180} />
+                  <Empty text="No new requests. Founders who need your help will appear here." />
+                </View>
               ) : (
                 asked.map((s) => (
                   <View key={s.id} style={styles.request}>
@@ -133,5 +138,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: spacing[1] },
   running: { gap: spacing[1], paddingBottom: spacing[1] },
   error: { gap: spacing[1] },
+  quiet: { alignItems: 'center', gap: spacing[0.5] },
   errorText: { fontSize: 14, color: colors.textMuted },
 });

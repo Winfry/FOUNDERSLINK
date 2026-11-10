@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ChevronRight, Handshake, Send } from 'lucide-react-native';
+import { ChevronRight, Handshake } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card, ConfirmModal, useToast } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
@@ -15,6 +15,7 @@ import type { ApiError } from '../../../src/types';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { SkeletonCard } from '../../../src/components/ui/Skeleton';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
+import { Illustration } from '../../../src/components/illustrations/People';
 
 const ksh = (amount: number) => `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
 
@@ -103,10 +104,8 @@ function InvestorRequestsTab() {
 
       {rows.length === 0 ? (
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <Send size={28} color={colors.primary} />
-          </View>
-          <Text style={styles.emptyTitle}>You have not asked to connect yet</Text>
+          <Illustration name="meet" width={210} />
+          <Text style={styles.emptyTitle}>Your first connection starts here</Text>
           <Text style={styles.emptyBody}>
             Find a founder that fits in Discover and send them a request with the amount you have in mind. When they accept, you can chat and start a deal.
           </Text>

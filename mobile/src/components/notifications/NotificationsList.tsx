@@ -11,6 +11,7 @@ import { notificationService } from '../../services';
 import type { ApiError, AppNotification } from '../../types';
 import { colors, spacing, touchTargetMin } from '../../theme/tokens';
 import { PageTitle } from '../layout/PageTitle';
+import { Illustration } from '../illustrations/People';
 
 /** The picture for a notification, worked out from its words. */
 function iconFor(n: AppNotification): { Icon: LucideIcon; bg: string; fg: string } {
@@ -122,10 +123,8 @@ export function NotificationsList() {
       ListHeaderComponent={header}
       ListEmptyComponent={
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <Bell size={28} color={colors.primary} />
-          </View>
-          <Text style={styles.emptyTitle}>Nothing new yet</Text>
+          <Illustration name="waiting" width={200} />
+          <Text style={styles.emptyTitle}>You're all caught up</Text>
           <Text style={styles.emptyBody}>
             When someone asks to connect, sends a message, or your verification moves, you will see it here.
           </Text>

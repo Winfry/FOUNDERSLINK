@@ -8,6 +8,7 @@ import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { vettingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
+import { Illustration } from '../../../src/components/illustrations/People';
 
 interface State {
   icon: LucideIcon;
@@ -102,9 +103,16 @@ export default function VerificationStatusScreen() {
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
       <View style={styles.middle}>
-        <View style={[styles.circle, { backgroundColor: state.tint }]}>
-          <Icon size={56} color={state.ink} strokeWidth={1.75} />
-        </View>
+        {/* A person for the moments that matter: waiting to be checked, and approved. */}
+        {status === 'approved' ? (
+          <Illustration name="celebrate" width={230} />
+        ) : status === 'submitted' || status === 'in_review' ? (
+          <Illustration name="waiting" width={230} />
+        ) : (
+          <View style={[styles.circle, { backgroundColor: state.tint }]}>
+            <Icon size={56} color={state.ink} strokeWidth={1.75} />
+          </View>
+        )}
         <Text style={styles.title} accessibilityRole="header">
           {state.title}
         </Text>

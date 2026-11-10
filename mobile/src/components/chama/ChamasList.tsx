@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { ChevronRight, HandCoins, UsersRound } from 'lucide-react-native';
+import { ChevronRight, UsersRound } from 'lucide-react-native';
 import { Text } from '../ui/Text';
 import { Badge, Button, Card, Input, useToast } from '../ui';
 import { ScreenError, ScreenLoading } from '../layout/ScreenStates';
@@ -11,6 +11,7 @@ import { circleService } from '../../services';
 import { colors, radius, spacing } from '../../theme/tokens';
 import type { ApiError } from '../../types';
 import { PageTitle } from '../layout/PageTitle';
+import { Illustration } from '../illustrations/People';
 
 type CircleType = 'money' | 'learning';
 
@@ -106,10 +107,8 @@ export function ChamasList() {
       ListEmptyComponent={
         creating ? null : (
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <HandCoins size={28} color={colors.primary} />
-            </View>
-            <Text style={styles.emptyTitle}>You're not in a chama yet</Text>
+            <Illustration name="savings" width={210} />
+            <Text style={styles.emptyTitle}>Save together with founders you trust</Text>
             <Text style={styles.emptyBody}>
               A chama is a group of people who save or learn together. FoundersLink only records contributions: the money stays in
               the chama's own Paybill or account.

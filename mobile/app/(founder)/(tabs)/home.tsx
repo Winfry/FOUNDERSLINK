@@ -66,6 +66,7 @@ export default function FounderHome() {
     <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl {...pull} />}>
       <Greeting
         eyebrow="Founder workspace"
+        art="growth"
         title={`${greeting()}${first ? `, ${first}` : ''}`}
         line={line}
         action={<Button title={next.title} onPress={next.go} />}

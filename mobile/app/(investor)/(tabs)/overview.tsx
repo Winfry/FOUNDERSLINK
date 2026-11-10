@@ -64,6 +64,7 @@ export default function InvestorOverview() {
     <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl {...pull} />}>
       <Greeting
         eyebrow="Investor workspace"
+        art="meet"
         title={`${greeting()}${first ? `, ${first}` : ''}`}
         line={setup ? `Businesses that fit ${setup.organisationName}, and where your conversations stand.` : 'Tell us what you fund, and we will find the businesses that fit.'}
         action={<Button title={next.title} onPress={next.go} />}

@@ -1,7 +1,7 @@
 import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Inbox, MessageCircle } from 'lucide-react-native';
+import { ChevronRight, MessageCircle } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
@@ -15,6 +15,7 @@ import type { ConnectionJoinRequest } from '../../../src/types';
 import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
+import { Illustration } from '../../../src/components/illustrations/People';
 
 function sentStatus(status: ConnectionJoinRequest['status']): { label: string; variant: 'default' | 'success' | 'muted' } {
   if (status === 'accepted') return { label: 'Accepted', variant: 'success' };
@@ -149,7 +150,7 @@ function ConnectionsScreen() {
 
         {waiting.length === 0 ? (
           <View style={styles.empty}>
-            <Inbox size={28} color={colors.textMuted} strokeWidth={1.5} />
+            <Illustration name="meet" width={190} />
             <Text style={styles.emptyTitle}>No requests waiting</Text>
             <Text style={styles.emptyText}>
               When an investor asks to join your business, their pitch and the amount they propose show here for you to

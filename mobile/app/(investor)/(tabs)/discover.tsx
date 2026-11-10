@@ -63,6 +63,7 @@ function DiscoverScreen() {
           <PageTitle title="Founders for you" />
         </View>
         <ScreenEmpty
+          illustration="search"
           title="First, say what you fund"
           description="Tell us the sectors, stages and amounts you invest in. We use that to find the founders who fit you."
           actionLabel="Describe what I fund"
@@ -153,14 +154,16 @@ function DiscoverScreen() {
       ListEmptyComponent={
         filtering ? (
           <ScreenEmpty
-            title="No founders match these filters"
+            illustration="search"
+            title="No businesses match these filters"
             description="Try a different word or sector, or clear the filters to see everyone who fits your fund."
             actionLabel="Clear filters"
             onAction={clear}
           />
         ) : (
           <ScreenEmpty
-            title="No founders fit your fund yet"
+            illustration="together"
+            title="No businesses fit your fund yet"
             description="New founders join every week. Widening what you fund can also bring more of them here."
             actionLabel="Review what I fund"
             onAction={() => router.push('/investor/onboarding')}

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { Handshake, MessageCircle, UsersRound } from 'lucide-react-native';
+import { Handshake, UsersRound } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
 import { Avatar } from '../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
@@ -90,8 +90,8 @@ export default function ConversationsScreen() {
   if (!q.data?.length) {
     return (
       <ScreenEmpty
-        icon={MessageCircle}
-        title="No chats yet"
+        illustration="messages"
+        title="No conversations yet"
         description={
           isFounder
             ? 'A chat opens when an investor accepts your join request. Start by finding investors that fit.'

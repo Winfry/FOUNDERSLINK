@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Header } from '../src/components/layout/Header';
 import { Sidebar } from '../src/components/layout/Sidebar';
+import { AuthPhoto } from '../src/components/auth/AuthPhoto';
 import { useCentredPadding, useWideLayout } from '../src/hooks/useWideLayout';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useLiveUpdates } from '../src/hooks/useLiveUpdates';
@@ -122,6 +123,17 @@ function Shell() {
         <Sidebar />
         <View style={{ flex: 1 }}>
           <Screens wide />
+        </View>
+      </View>
+    );
+  }
+  // Signing in or up on a computer: real people on the left, the form on the right.
+  if (wide && area === 'auth') {
+    return (
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.white }}>
+        <AuthPhoto />
+        <View style={{ width: 520, backgroundColor: colors.white, paddingHorizontal: 20 }}>
+          <Screens wide={false} />
         </View>
       </View>
     );
