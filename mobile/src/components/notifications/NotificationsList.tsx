@@ -10,6 +10,7 @@ import { ScreenError, ScreenLoading } from '../layout/ScreenStates';
 import { notificationService } from '../../services';
 import type { ApiError, AppNotification } from '../../types';
 import { colors, spacing, touchTargetMin } from '../../theme/tokens';
+import { PageTitle } from '../layout/PageTitle';
 
 /** The picture for a notification, worked out from its words. */
 function iconFor(n: AppNotification): { Icon: LucideIcon; bg: string; fg: string } {
@@ -95,10 +96,10 @@ export function NotificationsList() {
   const header = (
     <View style={styles.head}>
       <View style={styles.headText}>
-        <Text style={styles.heading}>Notifications</Text>
-        {notifications.length ? (
-          <Text style={styles.sub}>{unread > 0 ? `${unread} unread` : "You're all caught up"}</Text>
-        ) : null}
+        <PageTitle
+          title="Notifications"
+          subtitle={notifications.length ? (unread > 0 ? `${unread} unread` : "You're all caught up") : undefined}
+        />
       </View>
       {unread > 0 ? (
         <Pressable
@@ -160,8 +161,6 @@ const styles = StyleSheet.create({
   list: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[6] },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing[2], paddingBottom: spacing[1] },
   headText: { flex: 1 },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
   markAll: { minHeight: touchTargetMin, justifyContent: 'center', paddingLeft: spacing[1] },
   markAllText: { fontSize: 14, fontWeight: '700', color: colors.primary },
   dim: { opacity: 0.5 },

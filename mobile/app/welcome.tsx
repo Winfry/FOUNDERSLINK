@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ImageBackground, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { HandCoins, ShieldCheck, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../src/components/ui/Text';
@@ -29,13 +29,15 @@ export default function WelcomeScreen() {
     <ScrollView contentContainerStyle={styles.wrap} bounces={false}>
       {/* The one bold thing on this screen: a photo of two people closing a
           deal, under a navy tint so the headline stays readable. */}
-      <ImageBackground
-        source={require('../assets/images/welcome-photo.jpg')}
-        style={styles.block}
-        imageStyle={styles.photo}
-        resizeMode="cover"
-        accessibilityLabel="Two business people shaking hands"
-      >
+      <View style={styles.block}>
+        {/* Fills the whole block at any height. As a background image it
+            stopped part-way on tall screens and in browsers, leaving a line. */}
+        <Image
+          source={require('../assets/images/welcome-photo.jpg')}
+          style={styles.photo}
+          resizeMode="cover"
+          accessibilityLabel="Two business people shaking hands"
+        />
         <View style={styles.tint} />
         <View style={[styles.blockContent, { paddingTop: insets.top + spacing[3] }]}>
           <Text style={styles.wordmark}>FoundersLink</Text>
@@ -43,7 +45,7 @@ export default function WelcomeScreen() {
             Meet investors who fit. Close deals you can trust.
           </Text>
         </View>
-      </ImageBackground>
+      </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing[3] }]}>
         <View style={styles.promises}>
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 32,
     overflow: 'hidden',
   },
-  photo: { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
+  photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   // An even navy tint over the photo, so the white text reads on it.
   tint: { ...StyleSheet.absoluteFill, backgroundColor: colors.primaryDark, opacity: 0.55 },
   blockContent: {

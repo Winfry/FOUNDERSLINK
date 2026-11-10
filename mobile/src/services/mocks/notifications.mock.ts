@@ -6,7 +6,7 @@ let notifications: AppNotification[] = [
   {
     id: 'n1',
     title: 'New join request',
-    body: 'Savanna Angels sent a join request with a proposed amount of KES 1,000,000.',
+    body: 'Savanna Angels sent a join request with a proposed amount of KSh 1,000,000.',
     read: false,
     createdAt: new Date().toISOString(),
     link: '/(founder)/(tabs)/connections',

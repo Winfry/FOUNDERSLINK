@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Button, Card } from '../../../src/components/ui';
+import { useToast } from '../../../src/components/ui/Toast';
 import { Header } from '../../../src/components/layout/Header';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { kes, words } from '../../../src/components/matches/parts';
@@ -12,6 +13,7 @@ import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
 export default function FounderProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { show } = useToast();
   const q = useQuery({ queryKey: ['founder-profile', id], queryFn: () => investorService.getFounderPublicProfile(String(id)) });
   const metaQ = useQuery({ queryKey: ['meta-options'], queryFn: () => referenceDataService.getMetaOptions() });
 
@@ -89,7 +91,7 @@ export default function FounderProfileScreen() {
                     <Text style={styles.factLabel}>{f.label}</Text>
                     {href ? (
                       <Pressable
-                        onPress={() => void Linking.openURL(href)}
+                        onPress={() => void Linking.openURL(href).catch(() => show('That link did not open. Try it in your browser.', 'error'))}
                         accessibilityRole="link"
                         accessibilityLabel={`Open ${f.value}`}
                         style={styles.linkPress}
@@ -126,7 +128,7 @@ export default function FounderProfileScreen() {
         <View style={styles.action}>
           {status === 'accepted' ? (
             <>
-              <Button title="Open chats" onPress={() => router.push('/conversations')} />
+              <Button title="Open messages" onPress={() => router.push('/conversations')} />
               <Text style={styles.actionHint}>You are connected with {p.founderName}.</Text>
             </>
           ) : status === 'pending' ? (

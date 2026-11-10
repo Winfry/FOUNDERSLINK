@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ChevronRight, Lock, Search, ShieldCheck } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from '../../../src/components/ui/Text';
 import { Badge, Button, Card } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
@@ -13,6 +13,8 @@ import type { DiscoverCard } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { verificationInvite } from '../../../src/lib/verification-invite';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
+import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 
 function DiscoverScreen() {
   const router = useRouter();
@@ -34,6 +36,7 @@ function DiscoverScreen() {
     queryFn: () => investorService.discover({ search, sector }),
     placeholderData: keepPreviousData,
   });
+  const pull = usePullToRefresh(q.refetch);
 
   const labels = (metaQ.data?.labels as Record<string, string> | undefined) ?? {};
   const label = (id: string | null) => (id ? (labels[id] ?? words(id)) : '');
@@ -57,7 +60,7 @@ function DiscoverScreen() {
     return (
       <View style={styles.flex}>
         <View style={styles.header}>
-          <Text style={styles.heading}>Founders for you</Text>
+          <PageTitle title="Founders for you" />
         </View>
         <ScreenEmpty
           title="First, say what you fund"
@@ -80,8 +83,7 @@ function DiscoverScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Text style={styles.heading}>Founders for you</Text>
-      {data.message ? <Text style={styles.sub}>{data.message}</Text> : null}
+      <PageTitle title="Founders for you" subtitle={data.message || undefined} />
 
       {invite ? (
         <View style={styles.invite}>
@@ -141,6 +143,7 @@ function DiscoverScreen() {
 
   return (
     <FlatList
+      refreshControl={<RefreshControl {...pull} />}
       style={styles.flex}
       contentContainerStyle={styles.list}
       data={data.founders}
@@ -228,13 +231,13 @@ function FounderCard({
       {item.anonymised ? (
         <View style={styles.quietRow}>
           <Lock size={16} color={colors.textMuted} />
-          <Text style={styles.quietText}>Her name shows once you are verified</Text>
+          <Text style={styles.quietText}>Their name shows once you are verified</Text>
         </View>
       ) : null}
 
       {onPress ? (
         <View style={styles.more}>
-          <Text style={styles.moreText}>See her business</Text>
+          <Text style={styles.moreText}>See the business</Text>
           <ChevronRight size={18} color={colors.primary} />
         </View>
       ) : null}
@@ -248,7 +251,7 @@ function FounderCard({
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${title}, ${band.label}. Open her page`}
+        accessibilityLabel={`${title}, ${band.label}. Open their page`}
         style={({ pressed }) => [styles.cardPress, pressed && styles.dim]}
       >
         {body}
@@ -261,9 +264,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: 'transparent' },
   flexOne: { flex: 1 },
   list: { paddingBottom: spacing[6] },
-  header: { paddingHorizontal: spacing[2], paddingTop: spacing[2], paddingBottom: spacing[2] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 16, fontWeight: '500', color: colors.textMuted, marginTop: spacing[0.5] },
+  header: { paddingHorizontal: spacing[2], paddingBottom: spacing[2] },
 
   invite: {
     marginTop: spacing[2],

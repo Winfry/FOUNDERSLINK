@@ -11,6 +11,7 @@ import { founderService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
 import type { ApprovalStatus } from '../../../src/types';
+import { SkeletonCard } from '../../../src/components/ui/Skeleton';
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'muted';
 
@@ -107,9 +108,7 @@ function FounderProfileTab() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your business</Text>
         {profileQ.isLoading ? (
-          <Card>
-            <Text style={styles.muted}>Loading your business...</Text>
-          </Card>
+          <SkeletonCard />
         ) : profileQ.isError ? (
           <Card style={styles.cardGap}>
             <Text style={styles.muted}>We couldn't load your business details. Check your connection and try again.</Text>

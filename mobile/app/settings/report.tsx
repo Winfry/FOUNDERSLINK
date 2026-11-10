@@ -8,6 +8,8 @@ import { connectionService } from '../../src/services';
 import { reportMember } from '../../src/services/http/account.http';
 import { API_URL } from '../../src/services/http/client';
 import { colors, spacing } from '../../src/theme/tokens';
+import { SkeletonCard } from '../../src/components/ui/Skeleton';
+import { ScreenError } from '../../src/components/layout/ScreenStates';
 
 export default function ReportScreen() {
   const back = useSettingsBack();
@@ -50,7 +52,14 @@ export default function ReportScreen() {
       intro="Report anyone who asks for a fee, pressures you, or does not seem to be who they say they are. A person at FoundersLink reads every report."
     >
       <View>
-        {options.length === 0 && !people.isLoading ? (
+        {people.isLoading ? (
+          <SkeletonCard />
+        ) : people.isError ? (
+          <ScreenError
+            message="The people you can report did not load. Check your connection and try again."
+            onRetry={() => void people.refetch()}
+          />
+        ) : options.length === 0 ? (
           <Note>
             You can report someone here once you have a connection or a request with them. To report a message, open the chat and use
             the menu beside the message: that sends us the message itself.

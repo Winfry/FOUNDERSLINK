@@ -2,7 +2,7 @@ import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ChevronRight, Handshake, Send } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card, ConfirmModal, useToast } from '../../../src/components/ui';
@@ -12,6 +12,9 @@ import { stageLabel } from '../../../src/components/deal/StageStepper';
 import { dealService, investorService, type JoinRequestRow } from '../../../src/services';
 import { colors, spacing } from '../../../src/theme/tokens';
 import type { ApiError } from '../../../src/types';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
+import { SkeletonCard } from '../../../src/components/ui/Skeleton';
+import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 
 const ksh = (amount: number) => `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
 
@@ -27,6 +30,7 @@ function InvestorRequestsTab() {
   const toast = useToast();
   // Asked again every few seconds, so a founder's answer shows without a reload.
   const q = useQuery({ queryKey: ['join-requests'], queryFn: () => investorService.getJoinRequests(), refetchInterval: 8000 });
+  const pull = usePullToRefresh(q.refetch);
   const dealsQ = useQuery({ queryKey: ['deals'], queryFn: () => dealService.list(), refetchInterval: 8000 });
   const [withdrawing, setWithdrawing] = useState<JoinRequestRow | null>(null);
   const [busy, setBusy] = useState(false);
@@ -84,7 +88,7 @@ function InvestorRequestsTab() {
       {r.status === 'declined' ? (
         <View style={styles.reason}>
           <Text style={styles.reasonTitle}>Reason given</Text>
-          <Text style={styles.reasonText}>{r.declineReason || 'She did not give a reason.'}</Text>
+          <Text style={styles.reasonText}>{r.declineReason || 'No reason was given.'}</Text>
         </View>
       ) : null}
       {sentOn(r.createdAt) ? <Text style={styles.date}>{sentOn(r.createdAt)}</Text> : null}
@@ -94,11 +98,8 @@ function InvestorRequestsTab() {
   );
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.wrap}>
-      <View style={styles.head}>
-        <Text style={styles.heading}>Requests</Text>
-        <Text style={styles.sub}>The founders you asked to connect with, and the deals that followed.</Text>
-      </View>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.wrap} refreshControl={<RefreshControl {...pull} />}>
+      <PageTitle title="Requests" subtitle="The founders you asked to connect with, and the deals that followed." />
 
       {rows.length === 0 ? (
         <View style={styles.empty}>
@@ -107,7 +108,7 @@ function InvestorRequestsTab() {
           </View>
           <Text style={styles.emptyTitle}>You have not asked to connect yet</Text>
           <Text style={styles.emptyBody}>
-            Find a founder that fits in Discover and send her a request with the amount you have in mind. When she accepts, you can chat and start a deal.
+            Find a founder that fits in Discover and send them a request with the amount you have in mind. When they accept, you can chat and start a deal.
           </Text>
           <Button title="Find founders" onPress={toDiscover} style={styles.emptyBtn} />
         </View>
@@ -137,7 +138,7 @@ function InvestorRequestsTab() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your deals</Text>
         {dealsQ.isLoading ? (
-          <Text style={styles.meta}>Loading your deals...</Text>
+          <SkeletonCard />
         ) : dealsQ.isError ? (
           <Card style={styles.card}>
             <Text style={styles.meta}>
@@ -184,7 +185,7 @@ function InvestorRequestsTab() {
         title="Withdraw this request?"
         message={
           withdrawing
-            ? `${withdrawing.founderName} will no longer see your request. You can send her a new one later.`
+            ? `${withdrawing.founderName} will no longer see your request. You can send them a new one later.`
             : ''
         }
         confirmLabel="Withdraw"
@@ -200,10 +201,7 @@ function InvestorRequestsTab() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: 'transparent' },
-  wrap: { flexGrow: 1, padding: spacing[2], paddingBottom: spacing[4], gap: spacing[3] },
-  head: { gap: spacing[0.5] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 16, fontWeight: '500', color: colors.textMuted },
+  wrap: { flexGrow: 1, padding: spacing[2], paddingTop: 0, paddingBottom: spacing[4], gap: spacing[3] },
   section: { gap: spacing[1.5] },
   sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
   card: { gap: spacing[1.5] },

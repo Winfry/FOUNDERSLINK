@@ -12,6 +12,7 @@ import { investorService, referenceDataService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
 import type { ApprovalStatus } from '../../../src/types';
+import { SkeletonCard } from '../../../src/components/ui/Skeleton';
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'muted';
 
@@ -108,9 +109,7 @@ function InvestorProfileTab() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>What you fund</Text>
         {setupQ.isLoading ? (
-          <Card>
-            <Text style={styles.muted}>Loading what you fund...</Text>
-          </Card>
+          <SkeletonCard />
         ) : setupQ.isError ? (
           <Card style={styles.cardGap}>
             <Text style={styles.muted}>We couldn't load what you fund. Check your connection and try again.</Text>

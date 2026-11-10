@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from './Text';
 import { colors, radius, spacing, shadows } from '../../theme/tokens';
 
@@ -19,6 +20,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastItem | null>(null);
+  const insets = useSafeAreaInsets();
 
   const show = useCallback((message: string, type: ToastType = 'info') => {
     const id = Date.now();
@@ -30,16 +32,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ show }}>
       {children}
       {toast ? (
-        <Animated.View
-          style={[
-            styles.toast,
-            toast.type === 'success' && styles.success,
-            toast.type === 'error' && styles.error,
-          ]}
-          accessibilityLiveRegion="polite"
-        >
-          <Text style={styles.text}>{toast.message}</Text>
-        </Animated.View>
+        // Centred, and no wider than the app's column, so on a wide browser
+        // window it sits over the app, not across the whole screen.
+        <View style={[styles.place, { bottom: 96 + insets.bottom }]} pointerEvents="box-none">
+          <Animated.View
+            style={[
+              styles.toast,
+              toast.type === 'success' && styles.success,
+              toast.type === 'error' && styles.error,
+            ]}
+            accessibilityLiveRegion="polite"
+          >
+            <Text style={styles.text}>{toast.message}</Text>
+          </Animated.View>
+        </View>
       ) : null}
     </ToastContext.Provider>
   );
@@ -52,12 +58,12 @@ export function useToast() {
 }
 
 const styles = StyleSheet.create({
+  // High enough to clear the bottom menu and a chat's message box.
+  place: { position: 'absolute', left: 0, right: 0, alignItems: 'center', paddingHorizontal: spacing[2] },
   toast: {
-    position: 'absolute',
-    // High enough to clear the bottom menu and a chat's message box.
-    bottom: 96,
-    left: spacing[2],
-    right: spacing[2],
+    width: '100%',
+    // The app's column is 480 wide; this keeps the usual side margins in it.
+    maxWidth: 448,
     backgroundColor: colors.text,
     padding: spacing[2],
     borderRadius: radius.card,

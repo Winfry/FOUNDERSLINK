@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Inbox, MessageCircle } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Avatar, Badge, Button, Card, Textarea } from '../../../src/components/ui';
 import { ConfirmModal } from '../../../src/components/ui/ConfirmModal';
@@ -13,6 +13,8 @@ import { useToast } from '../../../src/components/ui/Toast';
 import { connectionService, dealService } from '../../../src/services';
 import type { ConnectionJoinRequest } from '../../../src/types';
 import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
+import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 
 function sentStatus(status: ConnectionJoinRequest['status']): { label: string; variant: 'default' | 'success' | 'muted' } {
   if (status === 'accepted') return { label: 'Accepted', variant: 'success' };
@@ -30,6 +32,7 @@ function ConnectionsScreen() {
   const router = useRouter();
   const { show } = useToast();
   const q = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list(), refetchInterval: 8000 });
+  const pull = usePullToRefresh(q.refetch);
   // Which request is being answered, and how, so only that button spins.
   const [busy, setBusy] = useState<{ id: string; action: 'accept' | 'decline' } | null>(null);
   // After accepting a request with an amount: the offer to open a deal on
@@ -119,9 +122,8 @@ function ConnectionsScreen() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Connections</Text>
-      <Text style={styles.sub}>Investors who want to join you, and the people you already talk to.</Text>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content} refreshControl={<RefreshControl {...pull} />}>
+      <PageTitle title="Your network" subtitle="Investors who want to connect with you, and the people you already talk to." />
 
       <Pressable
         style={({ pressed }) => [styles.chatRow, pressed && styles.pressed]}
@@ -133,7 +135,7 @@ function ConnectionsScreen() {
           <MessageCircle size={20} color={colors.primary} />
         </View>
         <View style={styles.flexOne}>
-          <Text style={styles.chatTitle}>Your chats</Text>
+          <Text style={styles.chatTitle}>Messages</Text>
           <Text style={styles.meta}>Message the people you are connected with.</Text>
         </View>
         <ChevronRight size={20} color={colors.primary} />
@@ -255,10 +257,15 @@ function ConnectionsScreen() {
                   {/* An investor who proposed an amount: the deal can be opened any time. */}
                   {item.direction === 'received' && item.proposedAmountKes > 0 ? (
                     <Pressable
-                      onPress={() => setOffer(item)}
+                      onPress={(e) => {
+                        // It sits inside the row, which opens Messages: the
+                        // press stops here, or a browser would do both.
+                        e.stopPropagation?.();
+                        setOffer(item);
+                      }}
                       accessibilityRole="button"
                       accessibilityLabel={`Start an investment deal with ${item.withFullName}`}
-                      hitSlop={8}
+                      style={({ pressed }) => [styles.startDeal, pressed && styles.pressed]}
                     >
                       <Text style={styles.linkText}>Start a deal</Text>
                     </Pressable>
@@ -340,13 +347,11 @@ function ConnectionsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: spacing[2], paddingTop: spacing[1], paddingBottom: spacing[6] },
+  content: { padding: spacing[2], paddingTop: 0, paddingBottom: spacing[6] },
   flexOne: { flex: 1 },
   stretch: { alignSelf: 'stretch', marginTop: spacing[1] },
   pressed: { backgroundColor: colors.grey100 },
 
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 16, fontWeight: '500', color: colors.textMuted, marginTop: spacing[0.5] },
 
   chatRow: {
     marginTop: spacing[2],
@@ -414,6 +419,8 @@ const styles = StyleSheet.create({
   connectedActions: { alignItems: 'flex-end', gap: spacing[1] },
   messageLink: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
   linkText: { fontSize: 14, fontWeight: '700', color: colors.primary },
+  // A full-size target of its own: browsers ignore the extra touch area (hitSlop).
+  startDeal: { minHeight: touchTargetMin, justifyContent: 'center' },
 
   sentRow: { padding: spacing[2], gap: spacing[1] },
   sentTop: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5] },

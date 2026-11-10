@@ -38,7 +38,7 @@ export default function JoinRequestScreen() {
   const pitchError =
     tried && pitchLength < PITCH_MIN
       ? pitchLength === 0
-        ? 'Say why you are a good fit. She reads this first.'
+        ? 'Say why you are a good fit. The founder reads this first.'
         : `Add a little more: at least ${PITCH_MIN} characters (${pitchLength} so far).`
       : undefined;
 
@@ -79,7 +79,7 @@ export default function JoinRequestScreen() {
         <View style={styles.infoBox}>
           <Info size={20} color={colors.primaryDark} />
           <Text style={styles.infoText}>
-            She sees your request and decides. If she accepts, you are connected and she can open a deal with this amount.
+            The founder sees your request and decides. If they accept, you are connected and they can open a deal with this amount.
           </Text>
         </View>
 

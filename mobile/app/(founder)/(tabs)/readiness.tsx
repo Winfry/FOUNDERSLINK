@@ -1,7 +1,7 @@
 import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useToast } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { AskCompliance } from '../../../src/components/readiness/AskCompliance';
@@ -10,6 +10,8 @@ import { ProgressHero } from '../../../src/components/readiness/ProgressHero';
 import { SegmentedControl } from '../../../src/components/readiness/SegmentedControl';
 import { complianceService } from '../../../src/services';
 import { colors, spacing } from '../../../src/theme/tokens';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
+import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 
 type Tab = 'checklist' | 'ask';
 
@@ -25,6 +27,7 @@ function ReadinessScreen() {
   const qc = useQueryClient();
   const toast = useToast();
   const q = useQuery({ queryKey: ['compliance'], queryFn: () => complianceService.listItems() });
+  const pull = usePullToRefresh(q.refetch);
 
   const items = q.data ?? [];
   const done = items.filter((i) => i.status === 'complete').length;
@@ -48,6 +51,9 @@ function ReadinessScreen() {
 
   return (
     <View style={styles.flex}>
+      <View style={styles.titleWrap}>
+        <PageTitle title="Readiness" subtitle="What to finish before investors look closely, and answers on the rules." />
+      </View>
       <View style={styles.switch}>
         <SegmentedControl options={TABS} value={tab} onChange={setTab} />
       </View>
@@ -61,6 +67,7 @@ function ReadinessScreen() {
         <ScreenError message="We could not load your checklist. Check your connection and try again." onRetry={() => q.refetch()} />
       ) : (
         <FlatList
+          refreshControl={<RefreshControl {...pull} />}
           data={sorted}
           keyExtractor={(i) => i.id}
           contentContainerStyle={styles.list}
@@ -90,7 +97,8 @@ function ReadinessScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: 'transparent' },
   hidden: { display: 'none' },
-  switch: { paddingHorizontal: spacing[2], paddingTop: spacing[0.5], paddingBottom: spacing[1.5] },
+  titleWrap: { paddingHorizontal: spacing[2] },
+  switch: { paddingHorizontal: spacing[2], paddingBottom: spacing[1.5] },
   list: { paddingHorizontal: spacing[2], paddingBottom: spacing[3], gap: spacing[1.5] },
   hero: { marginBottom: spacing[1.5] },
 });

@@ -76,7 +76,7 @@ const aminaMatches: FundingMatches = {
       investorUserId: 'inv-north',
       displayName: 'VC fund, Nairobi, growth',
       band: 'not_a_fit',
-      reasons: [{ signal: 'ticket', fits: false, text: 'Their minimum ticket is KES 10M' }],
+      reasons: [{ signal: 'ticket', fits: false, text: 'Their minimum investment is KSh 10M' }],
       gaps: [],
       riskFactors: [{ text: 'They charge an application fee before diligence — check terms carefully' }],
       anonymised: true,

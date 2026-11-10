@@ -27,7 +27,9 @@ export default function ExportDataScreen() {
         link.href = url;
         link.download = FILE_NAME;
         link.click();
-        URL.revokeObjectURL(url);
+        // Freed a moment later: freeing it at once cancels the download in
+        // some browsers (Safari, Firefox).
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         show('Your data is downloaded', 'success');
       } else {
         await Share.share({ title: FILE_NAME, message: text });

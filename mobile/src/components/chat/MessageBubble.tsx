@@ -63,8 +63,8 @@ export function MessageBubble({
             accessibilityRole="button"
             accessibilityLabel={`More actions for this message from ${message.senderName ?? 'this member'}`}
             onPress={onMore}
-            hitSlop={8}
-            style={({ pressed }) => [styles.more, pressed && styles.morePressed]}
+            // A full 44-point target: browsers ignore the extra touch area (hitSlop).
+            style={({ pressed }) => [styles.more, styles.moreTarget, pressed && styles.morePressed]}
           >
             <Ellipsis size={18} color={colors.textMuted} />
           </Pressable>
@@ -76,6 +76,7 @@ export function MessageBubble({
 }
 
 const styles = StyleSheet.create({
+  moreTarget: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   wrap: { maxWidth: '86%', gap: 4 },
   wrapMine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
   wrapTheirs: { alignSelf: 'flex-start', alignItems: 'flex-start' },

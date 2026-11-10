@@ -1,9 +1,9 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Header } from '../src/components/layout/Header';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useLiveUpdates } from '../src/hooks/useLiveUpdates';
 import { useAuthStore } from '../src/stores/authStore';
@@ -54,28 +54,17 @@ function SessionGuard() {
 
 // Screens opened from a tab sit on top of the tabs, so the bottom menu
 // is not there. Each gets a header with a back button instead, so
-// nobody is left on a screen with no way out.
-function BackButton() {
+// nobody is left on a screen with no way out. It is the same Header the
+// settings and setup screens use, so every header in the app looks alike.
+function BackHeader({ title }: { title: string }) {
   const router = useRouter();
-  return (
-    <Pressable
-      accessibilityLabel="Go back"
-      // After a reload or a link there is nothing to go back to, so it goes home.
-      onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-      style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }}
-    >
-      <ChevronLeft size={24} color={colors.primaryDark} />
-    </Pressable>
-  );
+  // After a reload or a link there is nothing to go back to, so it goes home.
+  return <Header title={title} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
 }
 
 const withBack = (title: string) => ({
   headerShown: true,
-  title,
-  headerLeft: () => <BackButton />,
-  headerTitleStyle: { fontFamily: 'PlusJakartaSans_700Bold', fontSize: 17, color: colors.text },
-  headerShadowVisible: false,
-  headerStyle: { backgroundColor: colors.white },
+  header: () => <BackHeader title={title} />,
 });
 
 export default function RootLayout() {

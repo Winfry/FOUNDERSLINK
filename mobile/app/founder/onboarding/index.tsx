@@ -371,10 +371,11 @@ export default function FounderOnboardingScreen() {
                     <Text style={styles.consentTitle}>{title}</Text>
                     <Text style={styles.consentLine}>{line}</Text>
                   </View>
-                  <Switch
-                    value={consents[key]}
-                    onValueChange={(on) => setConsents((c) => ({ ...c, [key]: on }))}
-                  />
+                  {/* The whole row is the switch. This one only shows the state:
+                      if it took clicks too, a browser would toggle twice. */}
+                  <View pointerEvents="none" importantForAccessibility="no-hide-descendants">
+                    <Switch value={consents[key]} />
+                  </View>
                 </Pressable>
               ))}
             </View>

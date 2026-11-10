@@ -10,6 +10,7 @@ import { ROLE_LABEL, TYPE_LABEL } from './parts';
 import { circleService } from '../../services';
 import { colors, radius, spacing } from '../../theme/tokens';
 import type { ApiError } from '../../types';
+import { PageTitle } from '../layout/PageTitle';
 
 type CircleType = 'money' | 'learning';
 
@@ -89,8 +90,7 @@ export function ChamasList() {
 
   const header = (
     <View style={styles.head}>
-      <Text style={styles.heading}>Chamas</Text>
-      <Text style={styles.sub}>Save or learn with people you trust.</Text>
+      <PageTitle title="Chamas" subtitle="Save or learn with other founders you trust." />
       {creating ? form : circles.length > 0 ? <Button title="Start a chama" onPress={() => setCreating(true)} style={styles.start} /> : null}
     </View>
   );
@@ -152,8 +152,6 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: 'transparent' },
   list: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[4], gap: spacing[2] },
   head: { gap: spacing[0.5] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 16, fontWeight: '500', color: colors.textMuted },
   start: { marginTop: spacing[2] },
   form: { gap: spacing[1.5], marginTop: spacing[2] },
   formTitle: { fontSize: 17, fontWeight: '700', color: colors.text },

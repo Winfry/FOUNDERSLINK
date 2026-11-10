@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ActivityIndicator } from 'react-native';
 import { Switch } from '../../src/components/ui';
 import { ScreenError } from '../../src/components/layout/ScreenStates';
 import { useToast } from '../../src/components/ui/Toast';
@@ -8,7 +7,7 @@ import { Note, Row, RowGroup, Section, SettingsPage } from '../../src/components
 import { consentService } from '../../src/services';
 import { useAuthStore } from '../../src/stores/authStore';
 import type { ConsentPurpose } from '../../src/types';
-import { colors } from '../../src/theme/tokens';
+import { SkeletonCard } from '../../src/components/ui/Skeleton';
 
 // Each consent on its own, changed on its own (FINAL_VERIFICATION 21:
 // changing one meant redoing onboarding from a blank form, which then
@@ -54,8 +53,13 @@ export default function ConsentsScreen() {
       intro="Each one is separate. Turn any of them on or off at any time."
     >
       <Section>
-        {q.isLoading || !q.data ? (
-          <ActivityIndicator color={colors.primary} />
+        {q.isLoading ? (
+          <SkeletonCard />
+        ) : q.isError || !q.data ? (
+          <ScreenError
+            message="Your consents did not load, so nothing has been changed. Check your connection and try again."
+            onRetry={() => void q.refetch()}
+          />
         ) : (
           <RowGroup>
             {q.data.map((c, i) => (

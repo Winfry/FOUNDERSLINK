@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Info, Lock, ShieldCheck, Wrench } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Badge, Button, Card } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading, ScreenOffline } from '../../../src/components/layout/ScreenStates';
@@ -14,6 +14,8 @@ import { useAuthStore } from '../../../src/stores/authStore';
 import { verificationInvite } from '../../../src/lib/verification-invite';
 import type { InvestorMatchCard } from '../../../src/types';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
+import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
 
 type Segment = 'pitch' | 'pitchAfter' | 'dontPitch';
 
@@ -49,6 +51,7 @@ function MatchesScreen() {
 
   const consentQ = useQuery({ queryKey: ['consents'], queryFn: () => consentService.list() });
   const matchesQ = useQuery({ queryKey: ['funding-matches'], queryFn: () => fundingService.getMatches() });
+  const pull = usePullToRefresh(matchesQ.refetch);
 
   const aiMatchingOn = consentQ.data?.find((c) => c.purpose === 'ai_matching')?.granted ?? false;
 
@@ -87,8 +90,7 @@ function MatchesScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Text style={styles.heading}>Investors for you</Text>
-      <Text style={styles.sub}>Sorted by how well they fit your business.</Text>
+      <PageTitle title="Investors for you" subtitle="Sorted by how well they fit your business." />
 
       {invite ? (
         <View style={styles.invite}>
@@ -152,6 +154,7 @@ function MatchesScreen() {
 
   return (
     <FlatList
+      refreshControl={<RefreshControl {...pull} />}
       style={styles.flex}
       contentContainerStyle={styles.list}
       data={list}
@@ -284,9 +287,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: 'transparent' },
   flexOne: { flex: 1 },
   list: { paddingBottom: spacing[6] },
-  header: { paddingHorizontal: spacing[2], paddingTop: spacing[1], paddingBottom: spacing[2] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 16, fontWeight: '500', color: colors.textMuted, marginTop: spacing[0.5] },
+  header: { paddingHorizontal: spacing[2], paddingBottom: spacing[2] },
 
   invite: {
     marginTop: spacing[2],

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { Handshake, MessageCircle, UsersRound } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
 import { Avatar } from '../../src/components/ui';
@@ -9,6 +9,7 @@ import { conversationService } from '../../src/services';
 import { useAuthStore } from '../../src/stores/authStore';
 import type { ConversationSummary } from '../../src/types';
 import { colors, radius, spacing } from '../../src/theme/tokens';
+import { usePullToRefresh } from '../../src/hooks/usePullToRefresh';
 
 const AVATAR = 48;
 
@@ -79,6 +80,7 @@ export default function ConversationsScreen() {
   const router = useRouter();
   const isFounder = useAuthStore((s) => s.user?.role) === 'founder';
   const q = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list(), refetchInterval: 15000 });
+  const pull = usePullToRefresh(q.refetch);
 
   if (q.isLoading) return <ScreenLoading />;
   if (q.isError && !q.data) {
@@ -103,6 +105,7 @@ export default function ConversationsScreen() {
 
   return (
     <FlatList
+      refreshControl={<RefreshControl {...pull} />}
       style={styles.screen}
       contentContainerStyle={styles.list}
       data={q.data}
