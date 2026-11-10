@@ -20,6 +20,9 @@ export default function VerifyToConnectScreen() {
   const router = useRouter();
   const role = useAuthStore((s) => s.user?.role);
   const isInvestor = role === 'investor';
+  // Updated the moment she confirms her email, so coming back from that
+  // screen clears the "confirm your email" prompts at once.
+  const emailConfirmed = useAuthStore((s) => s.user?.emailVerified === true);
   // Experts verify too (TEAM_DECISIONS D11, D12), in their own words.
   const isExpert = role === 'expert';
   // An investor has to say what she funds before she can be checked.
@@ -35,6 +38,15 @@ export default function VerifyToConnectScreen() {
   const [loading, setLoading] = useState(false);
   // What is wrong with the field on screen, said under it.
   const [error, setError] = useState<string | null>(null);
+  // Set when submitting was refused for an unconfirmed email: the way to
+  // confirm it is offered right there, not only at the top of the screen.
+  const [needsEmail, setNeedsEmail] = useState(false);
+  useEffect(() => {
+    if (emailConfirmed && needsEmail) {
+      setNeedsEmail(false);
+      setError(null);
+    }
+  }, [emailConfirmed, needsEmail]);
 
   // What she has already done, so she picks up where she left off: a
   // confirmed phone is not asked for again, and her statement is kept.
@@ -128,6 +140,11 @@ export default function VerifyToConnectScreen() {
     } catch (e) {
       // Her number is no longer confirmed (she changed it in Settings, say):
       // back to the phone step, with her statement kept.
+      if ((e as { code?: string })?.code === 'EMAIL_NOT_VERIFIED') {
+        setNeedsEmail(true);
+        setError('Confirm your email first. Your statement is kept, so you can submit straight after.');
+        return;
+      }
       if ((e as { code?: string })?.code === 'PHONE_NOT_VERIFIED') {
         setStep('phone');
         setError('Confirm your phone number with a code first. Your statement is kept.');
@@ -151,7 +168,7 @@ export default function VerifyToConnectScreen() {
         <Steps names={STEP_NAMES} current={STEP_NAMES.indexOf(step === 'phone' ? 'Phone' : step === 'code' ? 'Code' : 'Statement') + 1} />
       </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {saved.data && saved.data.emailVerified === false ? (
+        {!emailConfirmed && (saved.data?.emailVerified === false || needsEmail) ? (
           <View style={styles.example}>
             <Text style={styles.exampleTitle}>First, confirm your email</Text>
             <Text style={styles.exampleText}>
@@ -273,7 +290,15 @@ export default function VerifyToConnectScreen() {
               </View>
             </View>
             <View style={styles.actions}>
-              <Button title="Submit for review" loading={loading} onPress={() => void submit()} />
+              {needsEmail && !emailConfirmed ? (
+                <Button title="Confirm my email" onPress={() => router.push('/auth/verify-email')} />
+              ) : null}
+              <Button
+                title="Submit for review"
+                variant={needsEmail && !emailConfirmed ? 'secondary' : 'primary'}
+                loading={loading}
+                onPress={() => void submit()}
+              />
               {needsSetup ? (
                 <Button title="Say what I fund" variant="secondary" onPress={() => router.push('/investor/onboarding')} />
               ) : null}

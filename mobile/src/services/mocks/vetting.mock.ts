@@ -10,7 +10,8 @@ export const mockVettingService: VettingService = {
     await mockDelay();
     const uid = getMockSessionUserId();
     const member = uid ? getMemberById(uid) : null;
-    return member?.vetting ?? { approvalStatus: 'draft' };
+    const vetting = member?.vetting ?? { approvalStatus: 'draft' as const };
+    return { ...vetting, emailVerified: member?.user.emailVerified ?? false };
   },
 
   async saveDraft(data) {

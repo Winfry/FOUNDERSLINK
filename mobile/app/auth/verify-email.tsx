@@ -33,7 +33,8 @@ export default function VerifyEmailScreen() {
       await authService.verifyEmailOtp(data.otp);
       await markEmailVerified();
       show('Email verified', 'success');
-      router.replace('/');
+      if (router.canGoBack()) router.back();
+      else router.replace('/');
     } catch (e: unknown) {
       setError('otp', {
         message: (e as { message?: string })?.message ?? 'That code is not right. Check it, or send a new one.',

@@ -3,7 +3,8 @@ import type { SessionUser, SignupInput } from '../../types';
 import { mockDelay } from './delay';
 import { DEMO_CODE } from './demo-code';
 import { showDemoCode } from '../http/demo-code';
-import { getMemberByEmail, upsertMember, type MockMemberState } from './mock-store';
+import { getMemberByEmail, getMemberById, upsertMember, type MockMemberState } from './mock-store';
+import { getMockSessionUserId } from './mock-session';
 
 function tokensFor(userId: string) {
   return {
@@ -70,6 +71,13 @@ export const mockAuthService: AuthService = {
   async verifyEmailOtp(code) {
     await mockDelay();
     if (code !== DEMO_CODE) throw { code: 'WRONG_CODE', message: 'That code is not right.' };
+    // Recorded on the member, as the backend does, so verification can be submitted.
+    const uid = getMockSessionUserId();
+    const member = uid ? getMemberById(uid) : null;
+    if (member) {
+      member.user.emailVerified = true;
+      upsertMember(member);
+    }
     pendingEmailCodeFor = null;
   },
 
