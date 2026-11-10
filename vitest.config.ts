@@ -11,6 +11,7 @@ export default defineConfig({
       "react-native": fileURLToPath(new URL("./mobile/src/__tests__/react-native.stub.ts", import.meta.url)),
       "expo-secure-store": fileURLToPath(new URL("./mobile/src/__tests__/expo.stub.ts", import.meta.url)),
       "expo-document-picker": fileURLToPath(new URL("./mobile/src/__tests__/expo.stub.ts", import.meta.url)),
+      "lucide-react-native": fileURLToPath(new URL("./mobile/src/__tests__/icons.stub.ts", import.meta.url)),
     },
   },
   test: {
