@@ -1,6 +1,8 @@
 import type { AuthService } from '../types/api';
 import type { SessionUser, SignupInput } from '../../types';
 import { mockDelay } from './delay';
+import { DEMO_CODE } from './demo-code';
+import { showDemoCode } from '../http/demo-code';
 import { getMemberByEmail, upsertMember, type MockMemberState } from './mock-store';
 
 function tokensFor(userId: string) {
@@ -60,27 +62,31 @@ export const mockAuthService: AuthService = {
     };
     upsertMember(state);
     pendingEmailCodeFor = user.email;
+    // Demo data sends no email, so the code is shown, as the backend's demo does.
+    showDemoCode({ dev_code: DEMO_CODE }, 'email');
     return { user, tokens: tokensFor(user.id) };
   },
 
   async verifyEmailOtp(code) {
     await mockDelay();
-    if (code !== '123456') throw { code: 'WRONG_CODE', message: 'That code is not right.' };
+    if (code !== DEMO_CODE) throw { code: 'WRONG_CODE', message: 'That code is not right.' };
     pendingEmailCodeFor = null;
   },
 
   async resendEmailCode() {
     await mockDelay(300);
+    showDemoCode({ dev_code: DEMO_CODE }, 'email');
   },
 
   async requestPasswordReset(email) {
     await mockDelay();
     void email;
+    showDemoCode({ dev_code: DEMO_CODE }, 'email');
   },
 
   async resetPassword(email, code, newPassword) {
     await mockDelay();
-    if (code !== '123456') throw { code: 'WRONG_CODE', message: 'That code is not right.' };
+    if (code !== DEMO_CODE) throw { code: 'WRONG_CODE', message: 'That code is not right.' };
     const member = getMemberByEmail(email);
     if (!member) throw { code: 'NOT_FOUND', message: 'No account for this email.' };
     member.password = newPassword;

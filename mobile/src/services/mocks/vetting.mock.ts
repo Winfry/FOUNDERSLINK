@@ -1,5 +1,7 @@
 import type { VettingService } from '../types/api';
 import { mockDelay } from './delay';
+import { DEMO_CODE } from './demo-code';
+import { showDemoCode } from '../http/demo-code';
 import { getMemberById, upsertMember } from './mock-store';
 import { getMockSessionUserId } from './mock-session';
 
@@ -38,10 +40,12 @@ export const mockVettingService: VettingService = {
   async verifyPhoneSend(phone) {
     await mockDelay();
     void phone;
+    // Demo data sends no SMS, so the code is shown, as the backend's demo does.
+    showDemoCode({ dev_code: DEMO_CODE }, 'SMS');
   },
 
   async verifyPhoneConfirm(code) {
     await mockDelay();
-    if (code !== '123456') throw { code: 'WRONG_CODE', message: 'That code is not right.' };
+    if (code !== DEMO_CODE) throw { code: 'WRONG_CODE', message: 'That code is not right.' };
   },
 };
