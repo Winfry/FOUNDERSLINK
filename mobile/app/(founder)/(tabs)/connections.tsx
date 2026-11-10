@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
 
   amount: { padding: spacing[2], borderRadius: 12, backgroundColor: colors.primaryDark, gap: spacing[0.5] },
-  amountLabel: { fontSize: 14, fontWeight: '600', color: '#D6E4FB' },
+  amountLabel: { fontSize: 14, fontWeight: '600', color: colors.primaryBorder },
   amountValue: { fontSize: 24, fontWeight: '800', color: colors.white },
 
   block: { gap: spacing[0.5] },

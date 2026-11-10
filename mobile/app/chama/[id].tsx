@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     marginTop: spacing[1.5],
     paddingTop: spacing[1.5],
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
+    borderTopColor: colors.onDarkLine,
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing[2],

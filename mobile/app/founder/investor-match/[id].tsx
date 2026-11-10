@@ -21,7 +21,7 @@ type Note = { code?: string; text: string };
 // The verdict block is the one bold thing on this screen. Orange is kept for a strong fit.
 const HERO: Record<MatchBand, { bg: string; fg: string; sub: string }> = {
   strong: { bg: colors.accent, fg: colors.primaryDark, sub: colors.primaryDark },
-  good: { bg: colors.primaryDark, fg: colors.white, sub: '#D6E4FB' },
+  good: { bg: colors.primaryDark, fg: colors.white, sub: colors.primaryBorder },
   possible: { bg: colors.primaryLight, fg: colors.primaryDark, sub: colors.text },
   not_a_fit: { bg: colors.grey100, fg: colors.text, sub: colors.textMuted },
 };

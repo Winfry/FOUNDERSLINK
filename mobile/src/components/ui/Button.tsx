@@ -44,7 +44,7 @@ const variantStyles: Record<
   destructive: {
     container: { backgroundColor: colors.error, borderWidth: 0 },
     text: { color: colors.white },
-    pressed: { backgroundColor: '#B91C1C' },
+    pressed: { backgroundColor: colors.errorDark },
   },
 };
 

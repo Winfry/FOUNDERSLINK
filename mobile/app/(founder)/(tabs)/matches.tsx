@@ -329,14 +329,14 @@ const styles = StyleSheet.create({
   // A white pill on the chosen side, its label in orange: "you are here".
   segmentOn: {
     backgroundColor: colors.white,
-    shadowColor: '#0F172A',
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
   },
   segmentText: { fontSize: 14, fontWeight: '600', color: colors.textMuted, flexShrink: 1 },
-  segmentTextOn: { color: colors.accent, fontWeight: '800' },
+  segmentTextOn: { color: colors.primary, fontWeight: '800' },
   count: {
     minWidth: 22,
     height: 22,

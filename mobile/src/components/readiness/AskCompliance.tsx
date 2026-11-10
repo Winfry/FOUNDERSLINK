@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   suggestion: { fontSize: 14, color: colors.textMuted },
   thinking: { fontSize: 14, color: colors.textMuted },
 
-  unsure: { backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: '#C9DBFB' },
+  unsure: { backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primaryBorder },
   unsureHead: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
   unsureTitle: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.primaryDark },
   unsureNext: { fontSize: 14, fontWeight: '600', color: colors.primaryDark },

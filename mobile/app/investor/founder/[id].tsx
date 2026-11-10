@@ -157,9 +157,9 @@ const styles = StyleSheet.create({
   person: { fontSize: 16, fontWeight: '500', color: colors.textMuted, marginTop: spacing[0.5] },
 
   hero: { marginTop: spacing[2], padding: spacing[3], borderRadius: 20, backgroundColor: colors.primaryDark, gap: spacing[0.5] },
-  heroLabel: { fontSize: 14, fontWeight: '600', color: '#D6E4FB' },
+  heroLabel: { fontSize: 14, fontWeight: '600', color: colors.primaryBorder },
   heroAmount: { fontSize: 24, fontWeight: '800', color: colors.white },
-  heroSubLabel: { fontSize: 14, fontWeight: '600', color: '#D6E4FB', marginTop: spacing[1.5] },
+  heroSubLabel: { fontSize: 14, fontWeight: '600', color: colors.primaryBorder, marginTop: spacing[1.5] },
   heroText: { fontSize: 16, lineHeight: 24, fontWeight: '500', color: colors.white },
 
   section: { marginTop: spacing[3], gap: spacing[1.5] },

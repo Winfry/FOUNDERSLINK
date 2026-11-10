@@ -403,16 +403,16 @@ const styles = StyleSheet.create({
 
   // The one bold block on the screen: the money.
   terms: { backgroundColor: colors.primaryDark, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
-  termsLabel: { fontSize: 14, fontWeight: '600', color: '#C7D7F5' },
+  termsLabel: { fontSize: 14, fontWeight: '600', color: colors.onDarkMuted },
   termsFine: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
   moneyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1], marginTop: spacing[1] },
   moneyText: { flex: 1, fontSize: 13, fontWeight: '500', color: colors.textMuted },
   amount: { fontSize: 32, fontWeight: '800', color: colors.white },
   termFacts: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3], marginTop: spacing[0.5] },
   termFact: { gap: 2 },
-  termFactLabel: { fontSize: 12, fontWeight: '600', color: '#C7D7F5' },
+  termFactLabel: { fontSize: 12, fontWeight: '600', color: colors.onDarkMuted },
   termFactValue: { fontSize: 16, fontWeight: '700', color: colors.white },
-  termNote: { fontSize: 14, color: '#E3EBFA' },
+  termNote: { fontSize: 14, color: colors.onDarkMuted },
 
   section: { gap: spacing[1.5] },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },

@@ -48,5 +48,5 @@ const styles = StyleSheet.create({
   },
   segmentOn: { backgroundColor: colors.white, ...shadows.md },
   label: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-  labelOn: { fontWeight: '800', color: colors.accent },
+  labelOn: { fontWeight: '800', color: colors.primary },
 });

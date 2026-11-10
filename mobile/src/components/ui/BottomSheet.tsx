@@ -31,7 +31,7 @@ export function BottomSheet({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: colors.overlay,
   },
   sheet: {
     width: '100%',

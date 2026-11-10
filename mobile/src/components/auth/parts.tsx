@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   pickValue: { fontSize: 16, color: colors.text },
   pickPlaceholder: { fontSize: 16, color: colors.textMuted },
   pickChosen: { fontWeight: '700', color: colors.primary },
-  pickBackdrop: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)' },
+  pickBackdrop: { flex: 1, backgroundColor: colors.overlay },
   pickSheet: {
     width: '100%',
     maxWidth: 480,

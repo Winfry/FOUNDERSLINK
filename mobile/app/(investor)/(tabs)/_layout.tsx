@@ -63,7 +63,7 @@ export default function InvestorTabsLayout() {
         headerShadowVisible: false,
         sceneStyle: { backgroundColor: colors.white, paddingTop: 12 },
         // The tab she is on is orange: icon and label.
-        tabBarActiveTintColor: colors.accent,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: { borderTopColor: colors.border, minHeight: 64, paddingTop: 6 },
         tabBarLabelStyle: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold' },
