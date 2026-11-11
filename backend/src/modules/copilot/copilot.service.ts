@@ -9,7 +9,7 @@ import { prisma } from "../../shared/db.js";
 import { AppError, notFound } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
 import { complete, llmConfigured, type ChatMessage, type ToolSpec } from "./llm.js";
-import { planWithRules } from "./planner.js";
+import { detectLanguage, planWithRules } from "./planner.js";
 import { TOOLS, toolByName, type ToolContext } from "./tools.js";
 
 export const askSchema = z.object({ message: z.string().trim().min(2, "Ask a question").max(1000) });
@@ -111,6 +111,7 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
   await log(userId, "asked", { message: input.message });
 
   const ctx: ToolContext = { userId, proposed: [] };
+  const lang = detectLanguage(input.message);
   // Her details go to an outside AI model only if she agreed to that.
   const mayUseModel = llmConfigured() && (await hasConsent(userId, "ai_matching"));
   let engine: "model" | "rules" = "rules";
@@ -121,10 +122,10 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
       engine = "model";
     } catch (e) {
       await log(userId, "fallback", { reason: (e as Error).message.slice(0, 200) });
-      reply = await planWithRules(ctx, runTool, firstName);
+      reply = await planWithRules(ctx, runTool, firstName, lang);
     }
   } else {
-    reply = await planWithRules(ctx, runTool, firstName);
+    reply = await planWithRules(ctx, runTool, firstName, lang);
   }
 
   const proposals = ctx.proposed.length
@@ -137,7 +138,12 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
     reply,
     engine,
     proposals: proposals.map(publicTask),
-    note: engine === "rules" && !mayUseModel && llmConfigured() ? "Planned from your FoundersLink data without an outside AI model, because AI use of your details is off in your consents." : null,
+    note:
+      engine === "rules" && !mayUseModel && llmConfigured()
+        ? lang === "sw"
+          ? "Mpango huu umetokana na taarifa zako za FoundersLink bila kutumia AI ya nje, kwa sababu umezima matumizi ya AI kwa taarifa zako kwenye ridhaa zako."
+          : "Planned from your FoundersLink data without an outside AI model, because AI use of your details is off in your consents."
+        : null,
   };
 }
 

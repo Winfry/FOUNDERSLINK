@@ -6,6 +6,7 @@ import { app } from "../src/app.js";
 import { prisma } from "../src/shared/db.js";
 import { ASKS_PER_HOUR, plainText } from "../src/modules/copilot/copilot.service.js";
 import { TOOLS } from "../src/modules/copilot/tools.js";
+import { detectLanguage } from "../src/modules/copilot/planner.js";
 
 // The Founder Copilot (phase 1). Runs without a language model (setup.ts),
 // so the Copilot plans with its rules from the founder's own data. Runs
@@ -119,6 +120,22 @@ test("a founder with no business profile is pointed to set one up", async () => 
   assert.equal(again.json.proposals.length, 0, "the same task is not suggested again");
   assert.doesNotMatch(again.json.reply, /I have suggested/, "so it does not claim a new suggestion");
   assert.match(again.json.reply, /already on your task list/, "it says the task is already there");
+});
+
+test("the planner answers in the language she asked in", async () => {
+  assert.equal(detectLanguage("Nifanye nini kwanza ili nipate mwekezaji?"), "sw");
+  assert.equal(detectLanguage("Habari, nisaidie na biashara yangu"), "sw");
+  assert.equal(detectLanguage("Nifanye nini this week?"), "sw", "mixed, with as much Kiswahili, is Kiswahili");
+  assert.equal(detectLanguage("What should I focus on this week?"), "en");
+  assert.equal(detectLanguage("Help me get ready for investors"), "en");
+  assert.equal(detectLanguage("BRS?"), "en", "nothing to go on: English");
+
+  const res = await call("POST", "/copilot/ask", "amina", { message: "Nifanye nini wiki hii ili nipate mwekezaji?" });
+  assert.equal(res.status, 200);
+  assert.equal(res.json.engine, "rules");
+  assert.match(res.json.reply, /^Habari Amina\./, "she is greeted in Kiswahili");
+  assert.match(res.json.reply, /Thibitishwa kwanza/, "the steps are in Kiswahili");
+  assert.doesNotMatch(res.json.reply, /Here is what|Get verified|I have suggested|already on your/, "with no English sentences");
 });
 
 test("Markdown from the model is turned into plain text for the app", () => {
