@@ -1,4 +1,10 @@
-import "dotenv/config";
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
+
+// backend/.env first; then the project's root .env, for settings shared
+// with the AI service (the LLM). A value already set is never replaced.
+config();
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
 import { z } from "zod";
 
 const schema = z.object({
@@ -13,6 +19,13 @@ const schema = z.object({
   AI_SERVICE_URL: z.string().optional(),
   // Shared secret sent to the AI service on every call.
   AI_SERVICE_API_KEY: z.string().optional(),
+  // The language model behind the Founder Copilot (modules/copilot). Any
+  // provider with an OpenAI-style /chat/completions endpoint and tool calls.
+  // Without a key the Copilot plans with its own rules instead.
+  LLM_BASE_URL: z.string().default("https://api.openai.com/v1"),
+  LLM_API_KEY: z.string().optional(),
+  LLM_MODEL: z.string().optional(),
+  COPILOT_LLM_TIMEOUT_MS: z.coerce.number().default(25000),
   // SMS through Africa's Talking. Without the key and username nothing is sent.
   SMS_PROVIDER_USERNAME: z.string().optional(),
   SMS_PROVIDER_API_KEY: z.string().optional(),

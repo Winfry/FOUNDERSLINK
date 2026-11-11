@@ -10,6 +10,7 @@ import * as admin from "./paths/admin.js";
 import * as auth from "./paths/auth.js";
 import * as circles from "./paths/circles.js";
 import * as compliance from "./paths/compliance.js";
+import * as copilot from "./paths/copilot.js";
 import * as deals from "./paths/deals.js";
 import * as experts from "./paths/experts.js";
 import * as funding from "./paths/funding.js";
@@ -36,6 +37,7 @@ const modules: { tag: { name: string; description: string }; ops: Op[] }[] = [
   messaging,
   circles,
   experts,
+  copilot,
   notifications,
 ];
 
@@ -58,7 +60,7 @@ Every error is \`{ "error": { "code", "message" } }\`. Branch on \`code\`. A val
 
 Stated here once, and again on the operations concerned:
 
-- **AI.** Matching, profile extraction, the compliance checklist and answers, vetting risk signals and the message scam check call a separate AI service. When none is configured (\`AI_SERVICE_URL\`), or a call fails, times out or returns something invalid, a rule-based stand-in in \`src/ai/standin.ts\` answers instead. It is plain rules, not AI. Responses that carry an \`engine\` field say which one answered: \`ai_service\` or \`stand_in\`.
+- **AI.** Matching, profile extraction, the compliance checklist and answers, vetting risk signals and the message scam check call a separate AI service. When none is configured (\`AI_SERVICE_URL\`), or a call fails, times out or returns something invalid, a rule-based stand-in in \`src/ai/standin.ts\` answers instead. It is plain rules, not AI. Responses that carry an \`engine\` field say which one answered: \`ai_service\` or \`stand_in\`. The Founder Copilot is the exception: it calls a chat model directly (\`LLM_BASE_URL\`, \`LLM_API_KEY\`, \`LLM_MODEL\`), only for founders who gave the \`ai_matching\` consent, and falls back to its own rule-based planner; its \`engine\` is \`model\` or \`rules\`.
 - **SMS.** No SMS provider is configured. Phone codes and SMS notifications are not sent. With \`SHOW_DEMO_CODES\` on (never in production), the response that would have sent a code returns it as \`dev_code\`.
 - **Email** goes through Resend and, until a sending domain is verified there, reaches only the address that owns the Resend account. Unsent email codes are also returned as \`dev_code\` when \`SHOW_DEMO_CODES\` is on.
 - **M-Pesa.** The statement import and the Paybill confirmation endpoint have never been run against a real M-Pesa statement or Safaricom's sandbox.

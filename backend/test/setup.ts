@@ -14,5 +14,8 @@ process.env.SHOW_DEMO_CODES = "true";
 // And no email provider, so a test run never sends a real email.
 // (email.test.ts points these at its own fake provider.)
 process.env.RESEND_API_KEY = "";
+// No language model either: the Copilot plans with its own rules, and a
+// developer's real key in the root .env is never used by a test.
+process.env.LLM_API_KEY = "";
 // Uploaded files go to a temporary folder, not the project.
 process.env.UPLOAD_DIR = `${process.env.TMPDIR ?? "/tmp"}/founderlink-test-uploads`;

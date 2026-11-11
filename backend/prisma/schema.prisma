@@ -82,6 +82,8 @@ model User {
   compliance_updates   ComplianceStatus[]
   compliance_deadlines ComplianceDeadline[]
   compliance_questions ComplianceQuestion[]
+  founder_tasks        FounderTask[]
+  copilot_events       CopilotEvent[]
   connections_sent     Connection[]         @relation("requester")
   connections_received Connection[]         @relation("addressee")
   deal_parties         DealParty[]
@@ -939,4 +941,41 @@ model DealDocument {
 
   @@index([deal_id])
   @@map("deal_documents")
+}
+
+// The founder's own to-do list. The Copilot may only suggest a task
+// ("proposed"); it becomes real ("open") when she approves it.
+model FounderTask {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  user_id     String    @db.Uuid
+  title       String
+  detail      String?
+  due_date    DateTime? @db.Date
+  status      String    @default("proposed") // proposed | open | done | dismissed
+  source      String    @default("copilot") // copilot | founder
+  // Where in the app the task is done, e.g. "/readiness".
+  link        String?
+  created_at  DateTime  @default(now())
+  decided_at  DateTime?
+  done_at     DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, status])
+  @@map("founder_tasks")
+}
+
+// What the Copilot did, step by step: what she asked, each tool it used
+// and what came back, what it suggested and what she decided.
+model CopilotEvent {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  user_id    String   @db.Uuid
+  kind       String // asked | tool | proposed | answered | approved | dismissed | done
+  detail     Json
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+  @@map("copilot_events")
 }
