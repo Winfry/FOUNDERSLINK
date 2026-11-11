@@ -10,6 +10,7 @@
 import { z } from "zod";
 import { prisma } from "../../shared/db.js";
 import { getChecklist } from "../compliance/compliance.service.js";
+import { itemText, type Lang } from "../compliance/language.js";
 import { suggestExperts } from "../experts/experts.service.js";
 import { getMatches } from "../funding/funding.service.js";
 
@@ -17,6 +18,8 @@ export interface ToolContext {
   userId: string;
   /** Tasks proposed during this request, so the reply can show them for approval. */
   proposed: string[];
+  /** The language of her question: readiness items are named in it. */
+  lang?: Lang;
 }
 
 export interface Tool {
@@ -70,11 +73,18 @@ export const TOOLS: Tool[] = [
     parameters: { type: "object", properties: {}, additionalProperties: false },
     async run(ctx) {
       try {
-        const c = await getChecklist(ctx.userId);
+        const c = await getChecklist(ctx.userId, ctx.lang);
+        // Task titles stay in English (so a task is recognised however she asked); title_en gives it.
+        const english =
+          ctx.lang === "sw"
+            ? new Map((await prisma.complianceItem.findMany({ where: { id: { in: c.items.map((i) => i.id) } }, select: { id: true, title: true } })).map((i) => [i.id, i.title]))
+            : null;
         return {
           done: c.progress.done,
           total: c.progress.total,
-          to_do: c.items.filter((i) => i.status !== "complete").map((i) => ({ id: i.id, title: i.title, status: i.status, why: i.why })),
+          to_do: c.items
+            .filter((i) => i.status !== "complete")
+            .map((i) => ({ id: i.id, title: i.title, ...(english ? { title_en: english.get(i.id) ?? i.title } : {}), status: i.status, why: i.why })),
           county_note: c.county.message,
         };
       } catch {
@@ -95,13 +105,17 @@ export const TOOLS: Tool[] = [
       try {
         const m = await getMatches(ctx.userId);
         const name = (c: (typeof m.apply_now)[number]) => (c.anonymised ? c.headline : (c.funder.name ?? c.headline));
+        // What to fix first is a readiness item: named in the language of the question.
+        const refs = [...m.apply_now, ...m.apply_after].flatMap((c) => c.gaps.filter((g) => g.kind === "requirement").map((g) => g.ref));
+        const items = refs.length ? await prisma.complianceItem.findMany({ where: { id: { in: refs } } }) : [];
+        const titleOf = new Map(items.map((i) => [i.id, itemText(i, ctx.lang ?? "en").title]));
         const pick = (list: typeof m.apply_now, group: string) =>
           list.map((c) => ({
             investor: name(c),
             group,
             band: c.band,
             fits_because: c.reasons.filter((r) => r.fits).map((r) => r.text).slice(0, 2),
-            fix_first: c.gaps.map((g) => g.title).slice(0, 2),
+            fix_first: c.gaps.map((g) => (g.kind === "requirement" ? (titleOf.get(g.ref) ?? g.title) : g.title)).slice(0, 2),
           }));
         return {
           approval_status: m.approval_status,

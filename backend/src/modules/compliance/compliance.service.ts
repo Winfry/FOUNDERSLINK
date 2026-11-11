@@ -13,6 +13,7 @@ import { conflict, notFound } from "../../shared/errors.js";
 import { hasConsent } from "../account/consents.js";
 import { suggestExperts } from "../experts/experts.service.js";
 import { toMatchProfile } from "../funding/funding.service.js";
+import { itemText, languageOf, type Lang } from "./language.js";
 import { setStatus } from "./status.js";
 
 export const STATUSES = ["not_started", "in_progress", "complete"] as const;
@@ -42,14 +43,17 @@ const DISCLAIMER = "This is general information to help you find your way. It is
 const needsReview = (item: ComplianceItem, now = new Date()) =>
   item.next_review_at !== null && item.next_review_at < now;
 
-function publicItem(item: ComplianceItem) {
+// In her language (Settings > Language): the Kiswahili wording where an
+// item has it, the English otherwise.
+function publicItem(item: ComplianceItem, lang: Lang) {
+  const text = itemText(item, lang);
   return {
     id: item.id,
-    title: item.title,
-    why: item.why,
+    title: text.title,
+    why: text.why,
     institution: item.institution,
     documents_needed: item.documents_needed,
-    when_to_get_help: item.when_to_get_help,
+    when_to_get_help: text.when_to_get_help,
     jurisdiction_level: item.jurisdiction_level,
     recurrence: item.recurrence,
     source_url: item.source_url,
@@ -66,11 +70,14 @@ async function founderProfile(userId: string) {
 }
 
 // The items that apply to this founder's business, with her progress.
-export async function getChecklist(userId: string) {
+// In her chosen language, unless the caller asks for one (the Copilot
+// answers in the language of the question).
+export async function getChecklist(userId: string, language?: Lang) {
   const profile = await founderProfile(userId);
-  const [items, statuses] = await Promise.all([
+  const [items, statuses, lang] = await Promise.all([
     prisma.complianceItem.findMany({ where: { scope: "business" }, orderBy: { title: "asc" } }),
     prisma.complianceStatus.findMany({ where: { entity_type: "business", entity_id: userId } }),
+    language ?? languageOf(userId),
   ]);
 
   const useAi = await hasConsent(userId, "ai_matching");
@@ -81,7 +88,7 @@ export async function getChecklist(userId: string) {
   const checklist = items
     .filter((i) => applies.has(i.id))
     .map((i) => ({
-      ...publicItem(i),
+      ...publicItem(i, lang),
       status: statusOf.get(i.id)?.status ?? "not_started",
       note: statusOf.get(i.id)?.note ?? null,
     }));
@@ -115,12 +122,13 @@ async function businessItem(itemId: string) {
 export async function getItem(userId: string, itemId: string) {
   const item = await businessItem(itemId);
   const key = { entity_type: "business", entity_id: userId, item_id: itemId };
-  const [status, deadline] = await Promise.all([
+  const [status, deadline, lang] = await Promise.all([
     prisma.complianceStatus.findUnique({ where: { entity_type_entity_id_item_id: key } }),
     prisma.complianceDeadline.findUnique({ where: { entity_type_entity_id_item_id: key } }),
+    languageOf(userId),
   ]);
   return {
-    ...publicItem(item),
+    ...publicItem(item, lang),
     status: status?.status ?? "not_started",
     note: status?.note ?? null,
     due_date: deadline?.due_date ?? null,
@@ -151,14 +159,17 @@ export async function setDeadline(userId: string, itemId: string, input: z.infer
 }
 
 export async function listDeadlines(userId: string, now = new Date()) {
-  const deadlines = await prisma.complianceDeadline.findMany({
-    where: { entity_type: "business", entity_id: userId },
-    include: { item: true },
-    orderBy: { due_date: "asc" },
-  });
+  const [deadlines, lang] = await Promise.all([
+    prisma.complianceDeadline.findMany({
+      where: { entity_type: "business", entity_id: userId },
+      include: { item: true },
+      orderBy: { due_date: "asc" },
+    }),
+    languageOf(userId),
+  ]);
   return deadlines.map((d) => ({
     item_id: d.item_id,
-    title: d.item.title,
+    title: itemText(d.item, lang).title,
     due_date: d.due_date,
     recurrence: d.recurrence,
     overdue: d.due_date < now,

@@ -110,8 +110,8 @@ export async function ask(userId: string, input: z.infer<typeof askSchema>) {
   const firstName = user.full_name.split(/\s+/)[0] || "there";
   await log(userId, "asked", { message: input.message });
 
-  const ctx: ToolContext = { userId, proposed: [] };
   const lang = detectLanguage(input.message);
+  const ctx: ToolContext = { userId, proposed: [], lang };
   // Her details go to an outside AI model only if she agreed to that.
   const mayUseModel = llmConfigured() && (await hasConsent(userId, "ai_matching"));
   let engine: "model" | "rules" = "rules";

@@ -2,22 +2,29 @@
   {
     "id": "brs_registration",
     "title": "Business registration with the Business Registration Service",
+    "title_sw": "Usajili wa biashara kwa Huduma ya Usajili wa Biashara (BRS)",
     "why": "A registered business can open a business bank account and sign contracts in its own name, and many funders ask for it.",
+    "why_sw": "Biashara iliyosajiliwa inaweza kufungua akaunti ya benki ya biashara na kutia sahihi mikataba kwa jina lake, na wafadhili wengi huiomba.",
     "institution": "Business Registration Service",
     "when_to_get_help": "If you are choosing between a business name and a limited company, an accountant or lawyer can explain the difference.",
+    "when_to_get_help_sw": "Ikiwa unachagua kati ya jina la biashara na kampuni yenye dhima ndogo, mhasibu au wakili anaweza kukueleza tofauti.",
     "is_demo": true
   },
   {
     "id": "kra_pin",
     "title": "KRA PIN for the business",
+    "title_sw": "KRA PIN ya biashara",
     "why": "The business needs its own PIN to pay tax, and funders and banks often ask for it.",
+    "why_sw": "Biashara inahitaji PIN yake yenyewe ili kulipa kodi, na wafadhili na benki mara nyingi huiomba.",
     "institution": "Kenya Revenue Authority",
     "is_demo": true
   },
   {
     "id": "tax_compliance_certificate",
     "title": "Tax compliance certificate",
+    "title_sw": "Cheti cha kufuata sheria za kodi (Tax Compliance Certificate)",
     "why": "Some funders and tenders ask for proof that the business is up to date with its taxes.",
+    "why_sw": "Baadhi ya wafadhili na zabuni huomba uthibitisho kwamba biashara imelipa kodi zake zote kwa wakati.",
     "institution": "Kenya Revenue Authority",
     "recurrence": "annual",
     "is_demo": true
@@ -25,6 +32,7 @@
   {
     "id": "etims",
     "title": "eTIMS invoicing",
+    "title_sw": "Ankara kupitia eTIMS",
     "institution": "Kenya Revenue Authority",
     "applies_when": {
       "business_statuses": [
@@ -37,7 +45,9 @@
   {
     "id": "county_business_permit",
     "title": "County business permit",
+    "title_sw": "Kibali cha biashara cha kaunti",
     "why": "Counties require a permit to trade from a premises, and it is renewed regularly.",
+    "why_sw": "Kaunti zinahitaji kibali ili kufanya biashara kutoka kwenye eneo la biashara, na kibali hicho hufanywa upya mara kwa mara.",
     "institution": "County government",
     "jurisdiction_level": "county",
     "applies_when": {
@@ -54,18 +64,23 @@
   {
     "id": "employer_registrations",
     "title": "Employer registrations (NSSF, SHIF, Housing Levy)",
+    "title_sw": "Usajili kama mwajiri (NSSF, SHIF, Housing Levy)",
     "why": "A business with employees has to register as an employer and make deductions for them.",
+    "why_sw": "Biashara yenye wafanyakazi inapaswa kujisajili kama mwajiri na kuwakata makato yao.",
     "applies_when": {
       "has_employees": true
     },
     "recurrence": "monthly",
     "when_to_get_help": "An accountant can set up payroll deductions correctly.",
+    "when_to_get_help_sw": "Mhasibu anaweza kuweka makato ya mishahara ipasavyo.",
     "is_demo": true
   },
   {
     "id": "odpc_registration",
     "title": "Data protection registration with the ODPC",
+    "title_sw": "Usajili wa ulinzi wa data kwa ODPC",
     "why": "A business that collects or stores personal data may need to register as a data controller or processor.",
+    "why_sw": "Biashara inayokusanya au kuhifadhi taarifa za watu binafsi huenda ikahitaji kujisajili kama mdhibiti au mchakataji wa data.",
     "institution": "Office of the Data Protection Commissioner",
     "applies_when": {
       "handles_personal_data": true
@@ -75,21 +90,27 @@
   {
     "id": "business_bank_account",
     "title": "Bank account in the business name",
+    "title_sw": "Akaunti ya benki kwa jina la biashara",
     "why": "Keeps business money separate from personal money, and lenders ask for it.",
+    "why_sw": "Hutenganisha pesa za biashara na pesa zako binafsi, na wakopeshaji huiomba.",
     "is_demo": true
   },
   {
     "id": "deal_cofounder_agreement",
     "title": "Founders' or shareholders' agreement",
+    "title_sw": "Makubaliano ya waanzilishi au ya wanahisa",
     "scope": "deal",
     "deal_type": "cofounder_partnership",
     "is_demo": true,
     "why": "Sets out who owns what and what happens if someone leaves.",
-    "when_to_get_help": "A lawyer should draft or review this before anyone signs."
+    "why_sw": "Yanaeleza nani anamiliki nini, na nini kitatokea mtu akiondoka.",
+    "when_to_get_help": "A lawyer should draft or review this before anyone signs.",
+    "when_to_get_help_sw": "Wakili anapaswa kuyaandaa au kuyapitia kabla mtu yeyote hajatia sahihi."
   },
   {
     "id": "deal_cofounder_equity_vesting",
     "title": "Equity split and vesting recorded",
+    "title_sw": "Mgawanyo wa hisa na ratiba ya kuzipata (vesting) umerekodiwa",
     "scope": "deal",
     "deal_type": "cofounder_partnership",
     "is_demo": true
@@ -97,6 +118,7 @@
   {
     "id": "deal_cofounder_company_registration",
     "title": "Company registered with BRS, if not yet a company",
+    "title_sw": "Kampuni imesajiliwa na BRS, ikiwa bado si kampuni",
     "scope": "deal",
     "deal_type": "cofounder_partnership",
     "is_demo": true
@@ -104,6 +126,7 @@
   {
     "id": "deal_cofounder_directors_update",
     "title": "Directors and shareholders updated with BRS",
+    "title_sw": "Wakurugenzi na wanahisa wamesasishwa BRS",
     "scope": "deal",
     "deal_type": "cofounder_partnership",
     "is_demo": true
@@ -111,6 +134,7 @@
   {
     "id": "deal_cofounder_beneficial_ownership",
     "title": "Beneficial ownership information filed",
+    "title_sw": "Taarifa za wamiliki halisi (beneficial ownership) zimewasilishwa",
     "scope": "deal",
     "deal_type": "cofounder_partnership",
     "is_demo": true
@@ -118,23 +142,29 @@
   {
     "id": "deal_investment_term_sheet",
     "title": "Term sheet",
+    "title_sw": "Hati ya masharti (term sheet)",
     "scope": "deal",
     "deal_type": "investment",
     "is_demo": true,
     "why": "Records the main terms both sides have agreed before the full agreement is drafted.",
-    "when_to_get_help": "A lawyer should draft or review this before anyone signs."
+    "why_sw": "Inarekodi masharti makuu ambayo pande zote mbili zimekubaliana kabla ya makubaliano kamili kuandikwa.",
+    "when_to_get_help": "A lawyer should draft or review this before anyone signs.",
+    "when_to_get_help_sw": "Wakili anapaswa kuiandaa au kuipitia kabla mtu yeyote hajatia sahihi."
   },
   {
     "id": "deal_investment_agreement",
     "title": "Investment agreement or shareholders' agreement",
+    "title_sw": "Makubaliano ya uwekezaji au ya wanahisa",
     "scope": "deal",
     "deal_type": "investment",
     "is_demo": true,
-    "when_to_get_help": "A lawyer should draft or review this before anyone signs."
+    "when_to_get_help": "A lawyer should draft or review this before anyone signs.",
+    "when_to_get_help_sw": "Wakili anapaswa kuyaandaa au kuyapitia kabla mtu yeyote hajatia sahihi."
   },
   {
     "id": "deal_investment_share_allotment",
     "title": "Share allotment and register updates with BRS",
+    "title_sw": "Ugawaji wa hisa na kusasisha rejista BRS",
     "scope": "deal",
     "deal_type": "investment",
     "is_demo": true
@@ -142,6 +172,7 @@
   {
     "id": "deal_investment_beneficial_ownership",
     "title": "Beneficial ownership update",
+    "title_sw": "Kusasisha taarifa za wamiliki halisi (beneficial ownership)",
     "scope": "deal",
     "deal_type": "investment",
     "is_demo": true
@@ -149,14 +180,17 @@
   {
     "id": "deal_investment_tax_stamp_duty",
     "title": "Tax and stamp duty questions referred to an accountant",
+    "title_sw": "Maswali ya kodi na ushuru wa stempu yamepelekwa kwa mhasibu",
     "scope": "deal",
     "deal_type": "investment",
     "is_demo": true,
-    "when_to_get_help": "An accountant should advise on tax and stamp duty for this deal."
+    "when_to_get_help": "An accountant should advise on tax and stamp duty for this deal.",
+    "when_to_get_help_sw": "Mhasibu anapaswa kushauri kuhusu kodi na ushuru wa stempu kwa mkataba huu."
   },
   {
     "id": "deal_investment_investor_checks",
     "title": "Investor's own checks (KYC)",
+    "title_sw": "Ukaguzi wa mwekezaji mwenyewe (KYC)",
     "scope": "deal",
     "deal_type": "investment",
     "is_demo": true
@@ -164,6 +198,7 @@
   {
     "id": "deal_expert_engagement_letter",
     "title": "Engagement letter with scope and fees",
+    "title_sw": "Barua ya makubaliano ya kazi, yenye wigo wa kazi na ada",
     "scope": "deal",
     "deal_type": "expert_engagement",
     "is_demo": true
@@ -171,6 +206,7 @@
   {
     "id": "deal_expert_confidentiality",
     "title": "Confidentiality agreement, where needed",
+    "title_sw": "Makubaliano ya usiri, inapohitajika",
     "scope": "deal",
     "deal_type": "expert_engagement",
     "is_demo": true

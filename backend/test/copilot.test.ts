@@ -136,6 +136,28 @@ test("the planner answers in the language she asked in", async () => {
   assert.match(res.json.reply, /^Habari Amina\./, "she is greeted in Kiswahili");
   assert.match(res.json.reply, /Thibitishwa kwanza/, "the steps are in Kiswahili");
   assert.doesNotMatch(res.json.reply, /Here is what|Get verified|I have suggested|already on your/, "with no English sentences");
+  assert.match(res.json.reply, /Akaunti ya benki kwa jina la biashara|Usajili wa biashara/, "readiness items are named in Kiswahili");
+  assert.doesNotMatch(res.json.reply, /Bank account in the business name|Business registration with/, "not in English");
+  const tasks = (await call("GET", "/copilot/tasks", "amina")).json as any[];
+  assert.ok(tasks.filter((t) => t.title.startsWith("Complete:")).every((t) => !/Akaunti|Usajili/.test(t.title)), "task titles stay in English");
+});
+
+test("readiness items come in the language she chose", async () => {
+  const english = (await call("GET", "/compliance", "amina")).json;
+  const bank = english.items.find((i: any) => i.id === "business_bank_account");
+  assert.equal(bank?.title, "Bank account in the business name", "English by default");
+
+  assert.equal((await call("PATCH", "/me", "amina", { preferred_language: "sw" })).status, 200);
+  try {
+    const kiswahili = (await call("GET", "/compliance", "amina")).json;
+    const sw = kiswahili.items.find((i: any) => i.id === "business_bank_account");
+    assert.equal(sw.title, "Akaunti ya benki kwa jina la biashara", "the title is in Kiswahili");
+    assert.match(sw.why, /Hutenganisha pesa za biashara/, "and so is why it matters");
+    assert.equal(kiswahili.items.length, english.items.length, "the same items apply");
+    assert.equal((await call("GET", "/compliance/business_bank_account", "amina")).json.title, "Akaunti ya benki kwa jina la biashara", "one item too");
+  } finally {
+    await call("PATCH", "/me", "amina", { preferred_language: "en" });
+  }
 });
 
 test("Markdown from the model is turned into plain text for the app", () => {

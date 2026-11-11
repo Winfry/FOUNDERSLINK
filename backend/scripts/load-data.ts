@@ -28,6 +28,10 @@ const itemSchema = z.object({
   institution: optionalText,
   documents_needed: optionalText,
   when_to_get_help: optionalText,
+  // The same in Kiswahili. Left out, Kiswahili readers see the English.
+  title_sw: optionalText,
+  why_sw: optionalText,
+  when_to_get_help_sw: optionalText,
   // business: a founder's business. deal: a deal of `deal_type`. group: a circle.
   scope: z.enum(["business", "deal", "group"]).default("business"),
   deal_type: optionalText,

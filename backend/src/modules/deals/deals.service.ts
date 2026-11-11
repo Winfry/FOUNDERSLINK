@@ -12,6 +12,7 @@ import { INSTRUMENTS } from "../../shared/constants.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { shareCircle } from "../circles/circles.service.js";
+import { itemText, languageOf } from "../compliance/language.js";
 import { setEntityStatus } from "../compliance/status.js";
 import { announceDealEvents } from "../messaging/messaging.service.js";
 import { areConnected } from "../network/connections.js";
@@ -447,17 +448,17 @@ export async function setSharing(userId: string, dealId: string, share: boolean)
 // The checklist for this type of deal (TEAM_DECISIONS D3.3).
 export async function getDealChecklist(userId: string, dealId: string) {
   const deal = await loadDeal(userId, dealId);
-  const [items, statuses] = await Promise.all([
+  const [items, statuses, lang] = await Promise.all([
     prisma.complianceItem.findMany({ where: { scope: "deal", deal_type: deal.type }, orderBy: { id: "asc" } }),
     prisma.complianceStatus.findMany({ where: { entity_type: "deal", entity_id: dealId } }),
+    languageOf(userId),
   ]);
   const statusOf = new Map(statuses.map((s) => [s.item_id, s]));
 
+  // Each side reads the checklist in their own language.
   const checklist = items.map((i) => ({
     id: i.id,
-    title: i.title,
-    why: i.why,
-    when_to_get_help: i.when_to_get_help,
+    ...itemText(i, lang),
     source_url: i.source_url,
     last_verified_at: i.last_verified_at,
     is_demo: i.is_demo,

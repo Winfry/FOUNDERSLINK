@@ -162,6 +162,11 @@ model ComplianceItem {
   institution        String?
   documents_needed   String?
   when_to_get_help   String?
+  // The same three in Kiswahili, shown to members who chose Kiswahili.
+  // Left empty, the English is shown.
+  title_sw            String?
+  why_sw              String?
+  when_to_get_help_sw String?
   // business: applies to a founder's business. deal: applies to a deal of `deal_type`.
   scope              String    @default("business")
   deal_type          String?

@@ -3,18 +3,20 @@
 // when the founder has not agreed to her details going to an AI model, or
 // when the model fails. It never guesses: every line comes from her data.
 //
-// It answers in the language she asked in, English or Kiswahili. Task
-// titles stay in English, so the same task is recognised however she
-// asked, and the readiness items and investor names it quotes come from
-// the data as they are.
+// It answers in the language she asked in, English or Kiswahili, and its
+// tools name readiness items in that language too. Task titles stay in
+// English, so the same task is recognised however she asked. Investor
+// names are quoted as they are.
 
+import type { Lang } from "../compliance/language.js";
 import type { ToolContext } from "./tools.js";
 
+export type { Lang };
 type Run = (ctx: ToolContext, name: string, args?: unknown) => Promise<unknown>;
-export type Lang = "en" | "sw";
 
 interface Profile { has_profile: boolean; business_name?: string | null; profile_complete_percent?: number; missing_fields?: string[] }
-interface Readiness { done: number; total: number; to_do: { id: string; title: string; status: string }[] }
+// title is in the language of the question; title_en is there when that is not English.
+interface Readiness { done: number; total: number; to_do: { id: string; title: string; title_en?: string; status: string }[] }
 interface Matches { approval_status?: string; matches: { investor: string; group: string; fits_because: string[]; fix_first: string[] }[] }
 interface Experts { experts: { name: string; profession: string | null; sessions_left_this_month: number }[] }
 
@@ -130,7 +132,7 @@ export async function planWithRules(ctx: ToolContext, run: Run, firstName: strin
   if (next.length > 0) {
     step(t.readiness(readiness.done, readiness.total, next.map((i) => i.title).join(t.and)));
     for (const item of next) {
-      await run(ctx, "propose_task", { title: `Complete: ${item.title}`.slice(0, 80), due_in_days: 7, link: "/readiness" });
+      await run(ctx, "propose_task", { title: `Complete: ${item.title_en ?? item.title}`.slice(0, 80), due_in_days: 7, link: "/readiness" });
     }
   }
 

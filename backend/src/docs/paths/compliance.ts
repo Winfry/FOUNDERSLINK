@@ -17,7 +17,7 @@ export const ops: Op[] = [
     path: "/compliance",
     summary: "My compliance checklist",
     description:
-      "The items that apply to her business, with her status on each. Which items apply is decided by the AI service when she has agreed to `ai_matching` and the service answers; otherwise by the backend's own rules, and `engine` is `stand_in`.\n\n`county.covered` is false when there are no county-level items for her county, so she is not left to assume another county's rules apply.",
+      "The items that apply to her business, with her status on each. Which items apply is decided by the AI service when she has agreed to `ai_matching` and the service answers; otherwise by the backend's own rules, and `engine` is `stand_in`.\n\n`county.covered` is false when there are no county-level items for her county, so she is not left to assume another county's rules apply.\n\n`title`, `why` and `when_to_get_help` are in her `preferred_language`: in Kiswahili where the item has Kiswahili wording, in English otherwise. The same holds for an item, her deadlines and a deal's checklist.",
     access: "founder",
     ok: {
       description: "The checklist.",
