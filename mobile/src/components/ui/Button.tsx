@@ -9,53 +9,59 @@ import {
 import { Text } from './Text';
 import { colors, radius, spacing, touchTargetMin } from '../../theme/tokens';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+/**
+ * - primary: purple, the main action on a screen.
+ * - secondary: a purple outline, the second choice beside it.
+ * - soft: lavender, a quiet way on ("See all investors").
+ * - gold: gold on deep purple, for the one action on a purple surface.
+ * - ghost: words only.
+ * - destructive: for deleting and leaving.
+ */
+type Variant = 'primary' | 'secondary' | 'soft' | 'gold' | 'ghost' | 'destructive';
+type Size = 'md' | 'sm';
 
 interface ButtonProps extends PressableProps {
   title: string;
   variant?: Variant;
+  size?: Size;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-const variantStyles: Record<
-  Variant,
-  { container: ViewStyle; text: { color: string }; pressed: ViewStyle }
-> = {
+const variantStyles: Record<Variant, { container: ViewStyle; text: { color: string }; pressed: ViewStyle }> = {
   primary: {
-    container: { backgroundColor: colors.primary, borderWidth: 0 },
+    container: { backgroundColor: colors.primary, borderColor: colors.primary },
     text: { color: colors.white },
-    pressed: { backgroundColor: colors.primaryDark },
+    pressed: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
   },
   secondary: {
-    container: {
-      backgroundColor: colors.white,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    text: { color: colors.text },
+    container: { backgroundColor: colors.white, borderColor: colors.primaryLine },
+    text: { color: colors.primary },
     pressed: { backgroundColor: colors.primaryLight },
   },
+  soft: {
+    container: { backgroundColor: colors.primaryLight, borderColor: colors.primaryLight },
+    text: { color: colors.primary },
+    pressed: { backgroundColor: colors.primaryBorder, borderColor: colors.primaryBorder },
+  },
+  gold: {
+    container: { backgroundColor: colors.accent, borderColor: colors.accent },
+    text: { color: colors.primaryDark },
+    pressed: { opacity: 0.85 },
+  },
   ghost: {
-    container: { backgroundColor: 'transparent', borderWidth: 0 },
+    container: { backgroundColor: 'transparent', borderColor: 'transparent' },
     text: { color: colors.primary },
     pressed: { backgroundColor: colors.primaryLight },
   },
   destructive: {
-    container: { backgroundColor: colors.error, borderWidth: 0 },
+    container: { backgroundColor: colors.error, borderColor: colors.error },
     text: { color: colors.white },
-    pressed: { backgroundColor: colors.errorDark },
+    pressed: { backgroundColor: colors.errorDark, borderColor: colors.errorDark },
   },
 };
 
-export function Button({
-  title,
-  variant = 'primary',
-  loading,
-  disabled,
-  style,
-  ...rest
-}: ButtonProps) {
+export function Button({ title, variant = 'primary', size = 'md', loading, disabled, style, ...rest }: ButtonProps) {
   const v = variantStyles[variant];
   return (
     <Pressable
@@ -63,6 +69,7 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
+        size === 'sm' && styles.small,
         v.container,
         (disabled || loading) && styles.disabled,
         pressed && v.pressed,
@@ -75,7 +82,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={v.text.color} />
       ) : (
-        <Text style={[styles.label, v.text]}>{title}</Text>
+        <Text style={[styles.label, size === 'sm' && styles.labelSmall, v.text]} numberOfLines={1}>
+          {title}
+        </Text>
       )}
     </Pressable>
   );
@@ -84,20 +93,16 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     minHeight: touchTargetMin,
-    borderRadius: 14,
+    borderRadius: radius.full,
+    borderWidth: 1,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  pressed: {
-    transform: [{ scale: 0.97 }],
-  },
-  disabled: {
-    opacity: 0.5,
-  },
+  small: { minHeight: 36, paddingHorizontal: spacing[2], paddingVertical: 6 },
+  label: { fontSize: 15, fontWeight: '500' },
+  labelSmall: { fontSize: 13 },
+  pressed: { transform: [{ scale: 0.98 }] },
+  disabled: { opacity: 0.5 },
 });

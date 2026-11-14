@@ -245,6 +245,52 @@ function init() {
         timeline: [{ id: 't1', title: 'Deal opened', at: new Date().toISOString() }],
         documents: [],
       },
+      // Two closed investments, for "My investments": one going well,
+      // one with a goal that is late.
+      {
+        id: 'deal-pesaplan',
+        type: 'investment',
+        title: 'PesaPlan seed round',
+        stage: 'active',
+        withUserId: 'u-faith',
+        withName: 'Faith Achieng',
+        terms: { amountKes: 2_000_000, instrument: 'convertible_note', notes: 'Converts at the next priced round' },
+        confirmations: [
+          { userId: 'inv-savanna', name: 'Savanna Angels', confirmed: true },
+          { userId: 'u-faith', name: 'Faith Achieng', confirmed: true },
+        ],
+        checklist: [],
+        timeline: [{ id: 't1', title: 'Deal closed', at: '2026-03-02T09:00:00.000Z' }],
+        documents: [],
+        closedAt: '2026-03-02T09:00:00.000Z',
+        milestones: [
+          { id: 'm1', title: 'Reach 5,000 active traders', dueDate: '2026-06-30T00:00:00.000Z', status: 'done' },
+          { id: 'm2', title: 'Open in Nakuru and Eldoret', dueDate: '2026-09-30T00:00:00.000Z', status: 'pending' },
+        ],
+        sharesTrackRecord: false,
+      },
+      {
+        id: 'deal-shambafresh',
+        type: 'investment',
+        title: 'Shamba Fresh growth round',
+        stage: 'active',
+        withUserId: 'u-njeri',
+        withName: 'Njeri Mwangi',
+        terms: { amountKes: 1_500_000, instrument: 'equity', equityPercent: 10 },
+        confirmations: [
+          { userId: 'inv-savanna', name: 'Savanna Angels', confirmed: true },
+          { userId: 'u-njeri', name: 'Njeri Mwangi', confirmed: true },
+        ],
+        checklist: [],
+        timeline: [{ id: 't1', title: 'Deal closed', at: '2025-10-20T09:00:00.000Z' }],
+        documents: [],
+        closedAt: '2025-10-20T09:00:00.000Z',
+        milestones: [
+          { id: 'm1', title: 'Supply 50 Nairobi restaurants', dueDate: '2026-02-28T00:00:00.000Z', status: 'done' },
+          { id: 'm2', title: 'Open a second collection centre', dueDate: '2026-08-31T00:00:00.000Z', status: 'done' },
+        ],
+        sharesTrackRecord: true,
+      },
     ],
   });
 

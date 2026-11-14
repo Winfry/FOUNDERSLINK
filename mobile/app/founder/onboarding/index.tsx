@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Switch } from '../../../src/components/ui/Switch';
-import { Sparkles } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
 import { AmountField, Checkbox, FormError, LongSelect, Steps, SuggestedTag } from '../../../src/components/auth/parts';
@@ -284,7 +283,6 @@ export default function FounderOnboardingScreen() {
             <Text style={styles.helper}>Investors are matched to you on these, so make sure they are right.</Text>
             {suggestedCount !== null ? (
               <View style={styles.notice}>
-                <Sparkles size={20} color={colors.primaryDark} />
                 <Text style={styles.noticeText}>
                   {suggestedCount > 0
                     ? `We filled in ${suggestedCount} ${suggestedCount === 1 ? 'field' : 'fields'} from your description. Check the ones marked "Suggested".`
@@ -396,10 +394,10 @@ const styles = StyleSheet.create({
   steps: { paddingHorizontal: spacing[2], paddingTop: spacing[2], paddingBottom: spacing[1.5], borderBottomWidth: 1, borderBottomColor: colors.border },
   haves: { marginTop: spacing[1] },
   content: { padding: spacing[2], paddingTop: spacing[3], paddingBottom: spacing[6] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
+  heading: { fontSize: 28, fontWeight: '300', color: colors.primaryDark, letterSpacing: -0.5 },
   helper: { fontSize: 16, color: colors.textMuted, marginTop: spacing[1] },
   section: { marginTop: spacing[3] },
-  group: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: spacing[2] },
+  group: { fontSize: 18, fontWeight: '500', color: colors.primaryDark, marginBottom: spacing[2] },
   heroBox: { minHeight: 168, borderColor: colors.primary, borderWidth: 1.5, backgroundColor: colors.white },
   small: { fontSize: 14, color: colors.textMuted },
   examples: { gap: spacing[1], marginTop: spacing[1] },
@@ -414,14 +412,12 @@ const styles = StyleSheet.create({
   examplePressed: { opacity: 0.7 },
   exampleText: { fontSize: 14, color: colors.primaryDark },
   notice: {
-    flexDirection: 'row',
-    gap: spacing[1],
     backgroundColor: colors.primaryLight,
     borderRadius: radius.card,
     padding: spacing[1.5],
     marginTop: spacing[2],
   },
-  noticeText: { flex: 1, fontSize: 14, color: colors.primaryDark },
+  noticeText: { fontSize: 14, color: colors.primaryDark },
   actions: { marginTop: spacing[4], gap: spacing[1] },
   consents: { marginTop: spacing[3], gap: spacing[1.5] },
   consent: {
@@ -430,12 +426,12 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: radius.card,
     padding: spacing[2],
     backgroundColor: colors.white,
   },
   consentOn: { borderColor: colors.primary },
   consentWords: { flex: 1 },
-  consentTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
+  consentTitle: { fontSize: 16, fontWeight: '500', color: colors.text },
   consentLine: { fontSize: 14, color: colors.textMuted, marginTop: spacing[0.5] },
 });

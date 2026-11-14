@@ -2,9 +2,9 @@ import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../ui/Text';
 import { useRouter } from 'expo-router';
-import { CloudOff, RefreshCw, AlertCircle, ShieldCheck } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { colors, spacing } from '../../theme/tokens';
+import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { SkeletonCard } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
@@ -33,8 +33,9 @@ export function ScreenError({ message, code, onRetry }: { message: string; code?
     const waiting = status === 'submitted' || status === 'in_review';
     return (
       <View style={styles.center}>
-        <View style={[styles.icon, { backgroundColor: colors.primaryLight }]}>
-          <ShieldCheck size={28} color={colors.primary} />
+        {/* Its own box, so the badge sits centred like the words under it. */}
+        <View>
+          <Badge label={waiting ? 'Being checked' : 'Not verified yet'} variant={waiting ? 'default' : 'muted'} />
         </View>
         <Text style={styles.title}>{waiting ? "We're checking your details" : 'Verify to open this'}</Text>
         <Text style={styles.desc}>
@@ -53,9 +54,6 @@ export function ScreenError({ message, code, onRetry }: { message: string; code?
 
   return (
     <View style={styles.center}>
-      <View style={[styles.icon, { backgroundColor: colors.errorLight }]}>
-        <AlertCircle size={28} color={colors.error} />
-      </View>
       <Text style={styles.title}>We couldn't load this</Text>
       <Text style={styles.desc}>{message}</Text>
       {onRetry ? <Button title="Try again" variant="secondary" onPress={onRetry} style={styles.btn} /> : null}
@@ -66,7 +64,9 @@ export function ScreenError({ message, code, onRetry }: { message: string; code?
 export function ScreenOffline({ onRetry }: { onRetry?: () => void }) {
   return (
     <View style={styles.center}>
-      <CloudOff size={40} color={colors.textMuted} />
+      <View>
+        <Badge label="Offline" variant="muted" />
+      </View>
       <Text style={styles.title}>You are offline</Text>
       <Text style={styles.desc}>Check your connection and try again.</Text>
       {onRetry ? (
@@ -88,7 +88,6 @@ export function ScreenEmpty(props: ComponentProps<typeof EmptyState>) {
 export function InlineRefreshHint() {
   return (
     <View style={styles.refreshRow}>
-      <RefreshCw size={14} color={colors.textMuted} />
       <Text style={styles.refreshText}>Pull to refresh</Text>
     </View>
   );
@@ -103,10 +102,9 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     gap: spacing[1],
   },
-  icon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: spacing[1] },
-  title: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  desc: { fontSize: 16, color: colors.textMuted, textAlign: 'center', maxWidth: 320 },
-  btn: { marginTop: spacing[2], alignSelf: 'stretch' },
-  refreshRow: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', padding: 8 },
+  title: { fontSize: 24, color: colors.primaryDark, textAlign: 'center', marginTop: spacing[0.5] },
+  desc: { fontSize: 14, color: colors.textMuted, textAlign: 'center', maxWidth: 360 },
+  btn: { marginTop: spacing[2], alignSelf: 'stretch', maxWidth: 360, width: '100%' },
+  refreshRow: { alignItems: 'center', justifyContent: 'center', padding: 8 },
   refreshText: { fontSize: 12, color: colors.textMuted },
 });

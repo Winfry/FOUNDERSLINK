@@ -1,12 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Info, Lock, Wrench } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Badge, Button, Card } from '../../../src/components/ui';
+import { Avatar, Badge, Button, Card, Fit } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
-import { bandMeta, Chip, kes, ReasonRow, splitHeadline, words } from '../../../src/components/matches/parts';
+import { bandBars, bandMeta, Chip, kes, ReasonRow, splitHeadline, words } from '../../../src/components/matches/parts';
 import { useToast } from '../../../src/components/ui/Toast';
 import { connectionService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
@@ -17,14 +16,6 @@ import { colors, spacing } from '../../../src/theme/tokens';
 type Reason = { signal?: string; fits: boolean; text: string };
 type TrackEntry = { label: string; source: string };
 type Note = { code?: string; text: string };
-
-// The verdict block is the one bold thing on this screen. Orange is kept for a strong fit.
-const HERO: Record<MatchBand, { bg: string; fg: string; sub: string }> = {
-  strong: { bg: colors.accent, fg: colors.primaryDark, sub: colors.primaryDark },
-  good: { bg: colors.primaryDark, fg: colors.white, sub: colors.primaryBorder },
-  possible: { bg: colors.primaryLight, fg: colors.primaryDark, sub: colors.text },
-  not_a_fit: { bg: colors.grey100, fg: colors.text, sub: colors.textMuted },
-};
 
 function sourceBadge(source: string): { label: string; variant: 'success' | 'default' | 'muted' } {
   if (source === 'platform_deal') return { label: 'Verified on FoundersLink', variant: 'success' };
@@ -63,7 +54,6 @@ export default function InvestorMatchProfileScreen() {
   const anonymised = data.anonymised === true;
   const band = ((data.band as MatchBand | null | undefined) ?? 'not_a_fit') as MatchBand;
   const meta = bandMeta[band];
-  const hero = HERO[band];
 
   // The page tells the same story as the list it was opened from: what is
   // still to fix comes with the verdict (FINAL_VERIFICATION 13).
@@ -115,76 +105,76 @@ export default function InvestorMatchProfileScreen() {
     }
   };
 
+  const fitLabel = fixFirst ? `${meta.label} after one fix` : meta.label;
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.name}>{name}</Text>
-      {anonymised ? (
-        <View style={styles.note}>
-          <Lock size={16} color={colors.textMuted} />
-          <Text style={styles.noteText}>Their name shows once you are verified.</Text>
-        </View>
-      ) : null}
-
-      <View style={[styles.hero, { backgroundColor: hero.bg }]}>
-        <Text style={[styles.heroLabel, { color: hero.sub }]}>How well you fit</Text>
-        <Text style={[styles.heroVerdict, { color: hero.fg }]}>{verdict.label}</Text>
-        <Text style={[styles.heroText, { color: hero.sub }]}>{verdict.text}</Text>
-        {verdict.count ? (
-          <View style={styles.heroCount}>
-            <Text style={[styles.heroCountText, { color: hero.fg }]}>{verdict.count}</Text>
+      <Card>
+        <View style={styles.person}>
+          <Avatar name={name} size={64} />
+          <View style={styles.flexOne}>
+            <Text style={styles.name} accessibilityRole="header">
+              {name}
+            </Text>
+            {ticket ? <Text style={styles.sub}>{ticket}</Text> : null}
+            {anonymised ? <Text style={styles.sub}>Their name shows once you are verified.</Text> : null}
+            <View style={styles.fitGap}>
+              <Fit label={fitLabel} filled={bandBars[band]} fix={fixFirst} />
+            </View>
           </View>
-        ) : null}
-      </View>
+        </View>
+        <View style={styles.verdict}>
+          <Text style={styles.verdictLabel}>{verdict.label}</Text>
+          <Text style={styles.verdictText}>{verdict.text}</Text>
+          {verdict.count ? <Text style={styles.count}>{verdict.count}</Text> : null}
+        </View>
+      </Card>
 
       {fixFirst ? (
-        <Pressable
-          style={({ pressed }) => [styles.gapBox, pressed && styles.dim]}
-          onPress={() => router.push('/(founder)/(tabs)/readiness')}
-          accessibilityRole="button"
-          accessibilityLabel={`Fix this first: ${gaps.map((g) => g.text).join(', ')}. Open Readiness`}
-        >
-          <View style={styles.gapIcon}>
-            <Wrench size={18} color={colors.primaryDark} />
-          </View>
-          <View style={styles.flexOne}>
-            <Text style={styles.gapLabel}>Fix this first</Text>
-            {gaps.map((g) => (
-              <Text key={g.text} style={styles.gapText}>
-                {g.text}
-              </Text>
+        <Card style={styles.block}>
+          <Text style={styles.label}>Fix this first</Text>
+          <View style={styles.list}>
+            {gaps.map((g, i) => (
+              <View key={g.text} style={[styles.row, i > 0 && styles.rowDivider]}>
+                <ReasonRow n={i + 1} fits text={g.text} />
+              </View>
             ))}
-            <Text style={styles.gapLink}>{verdict.answerOnly ? 'Answer it in Readiness' : 'Sort it out in Readiness'}</Text>
           </View>
-          <ChevronRight size={20} color={colors.primary} />
-        </Pressable>
+          <Button
+            title={verdict.answerOnly ? 'Answer it in Readiness' : 'Sort it out in Readiness'}
+            variant="soft"
+            onPress={() => router.push('/(founder)/(tabs)/readiness')}
+            accessibilityLabel={`Fix this first: ${gaps.map((g) => g.text).join(', ')}. Open Readiness`}
+            style={styles.blockButton}
+          />
+        </Card>
       ) : null}
 
       {notes.length > 0 ? (
         <View style={styles.notes}>
           {notes.map((n) => (
-            <View key={n.text} style={styles.noteRow}>
-              <Info size={16} color={n.code === 'demo_data' ? colors.primaryDark : colors.textMuted} />
-              <Text style={[styles.noteText, n.code === 'demo_data' && styles.noteStrong]}>{n.text}</Text>
-            </View>
+            <Text key={n.text} style={[styles.note, n.code === 'demo_data' && styles.noteStrong]}>
+              {n.text}
+            </Text>
           ))}
         </View>
       ) : null}
 
       {reasons.length > 0 ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Why</Text>
-          <Card style={styles.card}>
+        <Card style={styles.block}>
+          <Text style={styles.label}>{band === 'not_a_fit' ? 'Why not' : 'Why they fit'}</Text>
+          <View style={styles.list}>
             {reasons.map((r, i) => (
               <View key={r.text} style={[styles.row, i > 0 && styles.rowDivider]}>
-                <ReasonRow fits={r.fits} text={r.text} />
+                <ReasonRow n={i + 1} fits={r.fits} text={r.text} />
               </View>
             ))}
-          </Card>
-        </View>
+          </View>
+        </Card>
       ) : null}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>What they fund</Text>
+      <Card style={styles.block}>
+        <Text style={styles.label}>What they fund</Text>
         {mandate ? <Text style={styles.body}>{mandate}</Text> : null}
         {sectorChips.length > 0 ? (
           <View style={styles.fact}>
@@ -215,12 +205,12 @@ export default function InvestorMatchProfileScreen() {
           </View>
         ) : null}
         {!mandate && !hasFacts ? <Text style={styles.body}>They have not described what they fund yet.</Text> : null}
-      </View>
+      </Card>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Track record</Text>
+      <Card style={styles.block}>
+        <Text style={styles.label}>Track record</Text>
         {track.length > 0 ? (
-          <Card style={styles.card}>
+          <View style={styles.list}>
             {track.map((t, i) => {
               const badge = sourceBadge(t.source);
               // The label arrives as "Company, stage, year"; the company leads and the rest is detail.
@@ -228,7 +218,7 @@ export default function InvestorMatchProfileScreen() {
               const detail = rest.map((part) => (/^\d{4}$/.test(part) ? part : `${words(part)} stage`)).join(', ');
               return (
                 <View key={`${t.label}-${i}`} style={[styles.trackRow, i > 0 && styles.rowDivider]}>
-                  <View>
+                  <View style={styles.flexOne}>
                     <Text style={styles.trackLabel}>{company}</Text>
                     {detail ? <Text style={styles.trackDetail}>{detail}</Text> : null}
                   </View>
@@ -236,23 +226,20 @@ export default function InvestorMatchProfileScreen() {
                 </View>
               );
             })}
-          </Card>
+          </View>
         ) : (
           <Text style={styles.body}>No track record shared yet.</Text>
         )}
-      </View>
+      </Card>
 
       <View style={styles.action}>
         {!personId && verified ? (
-          <View style={styles.infoBox}>
-            <Info size={20} color={colors.primaryDark} />
-            <Text style={styles.infoText}>
-              This investor is not on FoundersLink yet, so there is nobody to connect with here.
-            </Text>
-          </View>
+          <Text style={styles.infoText}>
+            This investor is not on FoundersLink yet, so there is nobody to connect with here.
+          </Text>
         ) : (
           <>
-            <Button title={verified ? 'Connect' : 'Verify to connect'} loading={sending} onPress={() => void connect()} />
+            <Button title={verified ? 'Ask to connect' : 'Verify to connect'} loading={sending} onPress={() => void connect()} />
             <Text style={styles.actionHint}>
               {verified
                 ? 'They get a request from you. You can chat once they accept.'
@@ -266,72 +253,41 @@ export default function InvestorMatchProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  content: { padding: spacing[2], paddingBottom: spacing[6] },
-  name: { fontSize: 20, fontWeight: '700', color: colors.text },
-  note: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1], marginTop: spacing[1] },
-  noteText: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  screen: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing[2], paddingBottom: spacing[6], width: '100%', maxWidth: 760, alignSelf: 'center' },
+  flexOne: { flex: 1, minWidth: 0 },
 
-  hero: { marginTop: spacing[2], padding: spacing[3], borderRadius: 20, gap: spacing[0.5] },
-  heroLabel: { fontSize: 14, fontWeight: '600' },
-  heroVerdict: { fontSize: 24, fontWeight: '800' },
-  heroText: { fontSize: 16, fontWeight: '500', marginTop: spacing[0.5] },
-  heroCount: { marginTop: spacing[1.5] },
-  heroCountText: { fontSize: 14, fontWeight: '700' },
+  person: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
+  name: { fontSize: 22, fontWeight: '500', color: colors.primaryDark },
+  sub: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  fitGap: { marginTop: spacing[1] },
 
-  flexOne: { flex: 1 },
-  dim: { opacity: 0.85 },
-  gapBox: {
-    marginTop: spacing[2],
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[1.5],
-    padding: spacing[2],
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.warning,
-    backgroundColor: colors.warningLight,
-  },
-  gapIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.white,
-  },
-  gapLabel: { fontSize: 16, fontWeight: '800', color: colors.text },
-  gapText: { fontSize: 15, fontWeight: '500', color: colors.text, marginTop: spacing[0.5] },
-  gapLink: { fontSize: 14, fontWeight: '700', color: colors.primary, marginTop: spacing[1] },
+  verdict: { marginTop: spacing[2], paddingTop: spacing[1.5], borderTopWidth: 1, borderTopColor: colors.border, gap: 4 },
+  verdictLabel: { fontSize: 18, color: colors.primaryDark },
+  verdictText: { fontSize: 14, lineHeight: 20, color: colors.textMuted },
+  count: { fontSize: 13, color: colors.text, marginTop: 4 },
 
-  notes: { marginTop: spacing[2], gap: spacing[1] },
-  noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1] },
-  noteStrong: { color: colors.primaryDark, fontWeight: '700' },
-
-  section: { marginTop: spacing[3], gap: spacing[1.5] },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
-  card: { borderRadius: 16, paddingVertical: spacing[0.5] },
-  row: { paddingVertical: spacing[1.5] },
+  block: { marginTop: spacing[1.5] },
+  blockButton: { marginTop: spacing[1.5] },
+  label: { fontSize: 12, color: colors.textMuted },
+  list: { marginTop: spacing[1] },
+  row: { paddingVertical: spacing[1] },
   rowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '500', color: colors.text },
 
-  fact: { gap: spacing[1] },
-  factLabel: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+  notes: { marginTop: spacing[1.5], gap: spacing[1], paddingHorizontal: 4 },
+  note: { fontSize: 13, color: colors.textMuted },
+  noteStrong: { color: colors.primaryDark, fontWeight: '500' },
+
+  body: { fontSize: 15, lineHeight: 22, color: colors.text, marginTop: spacing[1] },
+  fact: { gap: spacing[1], marginTop: spacing[1.5] },
+  factLabel: { fontSize: 12, color: colors.textDim },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1] },
 
-  trackRow: { paddingVertical: spacing[1.5], gap: spacing[1] },
-  trackLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
-  trackDetail: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  trackRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[1.5], gap: spacing[1.5] },
+  trackLabel: { fontSize: 15, fontWeight: '500', color: colors.text },
+  trackDetail: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
 
-  action: { marginTop: spacing[4], gap: spacing[1] },
-  actionHint: { fontSize: 14, fontWeight: '500', color: colors.textMuted, textAlign: 'center' },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[1.5],
-    padding: spacing[2],
-    borderRadius: 16,
-    backgroundColor: colors.primaryLight,
-  },
-  infoText: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text },
+  action: { marginTop: spacing[3], gap: spacing[1] },
+  actionHint: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
+  infoText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
 });

@@ -1,11 +1,9 @@
 import { Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Mail } from 'lucide-react-native';
 import { Button } from '../../src/components/ui';
 import { useToast } from '../../src/components/ui/Toast';
 import { SUPPORT_EMAIL } from '../../src/lib/support';
 import { Note, Row, RowGroup, Section, SettingsPage } from '../../src/components/settings/SettingsPage';
-import { colors } from '../../src/theme/tokens';
 
 export default function SupportScreen() {
   const router = useRouter();
@@ -20,7 +18,7 @@ export default function SupportScreen() {
     <SettingsPage title="Contact support" heading="We are here to help" intro="Write to us about your account, a member, or anything that is not working.">
       <Section>
         <RowGroup>
-          <Row label="Email" line={SUPPORT_EMAIL} right={<Mail size={24} color={colors.primary} />} />
+          <Row label="Email" line={SUPPORT_EMAIL} />
           <Row label="Hours" line="Monday to Friday, 8am to 6pm, Nairobi time" last />
         </RowGroup>
         <Button title="Email support" onPress={() => void email()} />

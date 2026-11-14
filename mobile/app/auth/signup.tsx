@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import { BriefcaseBusiness, Rocket, TrendingUp } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
 import { AuthShell } from '../../src/components/auth/AuthShell';
 import { Checkbox, ChoiceCards, FormError, PasswordRules, TextLink, type Choice } from '../../src/components/auth/parts';
@@ -16,9 +15,9 @@ import type { z } from 'zod';
 type Form = z.infer<typeof signupSchema>;
 
 const ROLES: Choice[] = [
-  { value: 'founder', title: 'Founder', line: 'I am raising money for my business.', icon: Rocket },
-  { value: 'investor', title: 'Investor', line: 'I am looking for businesses to back.', icon: TrendingUp },
-  { value: 'expert', title: 'Expert', line: 'I am a lawyer, accountant or mentor who helps founders.', icon: BriefcaseBusiness },
+  { value: 'founder', title: 'Founder', line: 'I am raising money for my business.' },
+  { value: 'investor', title: 'Investor', line: 'I am looking for businesses to back.' },
+  { value: 'expert', title: 'Expert', line: 'I am a lawyer, accountant or mentor who helps founders.' },
 ];
 
 export default function SignupScreen() {
@@ -145,5 +144,5 @@ const styles = StyleSheet.create({
   action: { marginTop: spacing[3] },
   switch: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', columnGap: spacing[1], marginTop: spacing[2] },
   switchText: { fontSize: 16, color: colors.textMuted },
-  link: { color: colors.primary, fontWeight: '700', textDecorationLine: 'underline' },
+  link: { color: colors.primary, fontWeight: '500', textDecorationLine: 'underline' },
 });

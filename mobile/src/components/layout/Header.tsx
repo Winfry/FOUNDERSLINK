@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../ui/Text';
-import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, touchTargetMin } from '../../theme/tokens';
 
@@ -24,8 +23,8 @@ export function Header({
     <View style={[styles.wrap, { paddingTop: insets.top + spacing[1] }, insetX ? { paddingHorizontal: insetX + spacing[2] } : null]}>
       <View style={styles.row}>
         {onBack ? (
-          <Pressable onPress={onBack} style={styles.back} accessibilityLabel="Go back">
-            <ChevronLeft size={24} color={colors.text} />
+          <Pressable onPress={onBack} style={styles.back} accessibilityRole="button" accessibilityLabel="Go back">
+            <Text style={styles.backText}>← Back</Text>
           </Pressable>
         ) : (
           null
@@ -56,14 +55,13 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', alignItems: 'center' },
   back: {
-    minWidth: touchTargetMin,
     minHeight: touchTargetMin,
     justifyContent: 'center',
-    marginLeft: -8,
+    paddingRight: spacing[2],
   },
-  backPlaceholder: { width: touchTargetMin - 8 },
+  backText: { fontSize: 14, fontWeight: '500', color: colors.primary },
   titles: { flex: 1 },
-  title: { fontSize: 18, fontWeight: '700', color: colors.text },
+  title: { fontSize: 17, fontWeight: '500', color: colors.primaryDark },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   right: { minWidth: touchTargetMin, alignItems: 'flex-end' },
 });

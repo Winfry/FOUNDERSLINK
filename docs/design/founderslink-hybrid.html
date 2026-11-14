@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FoundersLink Hybrid Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #28184E;
+    --purple: #5634A5;
+    --lav: #F0ECF8;
+    --lav2: #E4DDF3;
+    --gold: #E3B65D;
+    --gold-text: #8A6516;
+    --gold-light: #FBF4E4;
+    --paper: #F7F5F1;
+    --surface: #FFFFFF;
+    --text: #251B3D;
+    --muted: #716A7D;
+    --dim: #9A93A5;
+    --line: rgba(40,24,78,.09);
+    --line2: rgba(40,24,78,.16);
+    --pos: #28765D;
+    --pos-light: #E7F3EE;
+    --late: #A93A4F;
+    --late-light: #FAEBEE;
+    --shadow: 0 6px 20px rgba(40,24,78,.05);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--paper); color: var(--text); font-family: 'Inter Tight', system-ui, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  button { font-family: inherit; cursor: pointer; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Shared parts ---------- */
+  .pill { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 99px; padding: 13px 22px; font-size: 15px; font-weight: 500; border: 1px solid transparent; white-space: nowrap; transition: transform .15s, box-shadow .15s; }
+  .pill:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(40,24,78,.12); }
+  .pill.solid { background: var(--purple); color: #fff; }
+  .pill.gold { background: var(--gold); color: var(--deep); }
+  .pill.line { background: transparent; color: var(--purple); border-color: rgba(86,52,165,.28); }
+  .pill.sm { padding: 8px 14px; font-size: 13px; }
+  .arrow { display: inline-block; width: 14px; height: 1px; background: currentColor; position: relative; }
+  .arrow::after { content: ""; position: absolute; right: 0; top: -3px; width: 6px; height: 6px; border-top: 1px solid currentColor; border-right: 1px solid currentColor; transform: rotate(45deg); }
+  .chip { display: inline-flex; align-items: center; gap: 8px; border-radius: 99px; padding: 6px 14px; font-size: 13px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+  .label { font-size: 12px; color: var(--muted); letter-spacing: .01em; }
+  .num { font-weight: 300; letter-spacing: -0.025em; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  /* People: a photo when there is one, otherwise initials. */
+  .av { border-radius: 50%; overflow: hidden; position: relative; flex-shrink: 0; display: inline-grid; place-items: center; background: var(--lav); color: var(--purple); font-weight: 500; letter-spacing: .02em; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(40,24,78,.12); }
+  .av img { position: absolute; max-width: none; display: block; }
+  .meter { display: inline-flex; gap: 3px; }
+  .meter i { width: 12px; height: 3px; border-radius: 2px; background: var(--line2); }
+  .meter i.on { background: var(--purple); }
+  .meter.fix i.on { background: #D19B3C; }
+  .fitw { display: inline-flex; align-items: center; gap: 8px; font-size: .8em; color: var(--muted); font-weight: 500; }
+
+  /* ---------- Section heads ---------- */
+  .sec { padding: 72px 0 24px; }
+  .sec-head { display: grid; grid-template-columns: 140px 1fr; gap: 24px; margin-bottom: 36px; border-top: 1px solid var(--line2); padding-top: 20px; }
+  .sec-head .no { color: var(--dim); font-size: 14px; }
+  .sec-head h2 { margin: 0; font-weight: 500; color: var(--deep); font-size: clamp(28px, 3.4vw, 42px); line-height: 1.1; letter-spacing: -0.025em; }
+  .sec-head h2 span { color: var(--dim); }
+  .sec-head p { margin: 12px 0 0; color: var(--muted); max-width: 680px; font-size: 16px; }
+
+  /* ---------- 01 Website ---------- */
+  .pagebar { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; font-size: 13px; color: var(--muted); }
+  .pagebar b { color: var(--deep); font-weight: 600; }
+  .hero { background: linear-gradient(118deg, #28184E 0%, #5634A5 60%, #765BB8 100%); color: #fff; border-radius: 28px; overflow: hidden; position: relative; min-height: 600px; display: grid; grid-template-rows: auto 1fr; box-shadow: 0 28px 70px rgba(40,24,78,.2); }
+  .hero::before { content: ""; position: absolute; width: 460px; height: 460px; border-radius: 50%; right: 22%; top: -230px; background: rgba(227,182,93,.12); }
+  .hero-nav { display: flex; align-items: center; gap: 40px; padding: 30px 56px 0; position: relative; z-index: 2; }
+  .wordmark { font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
+  .wordmark span { color: var(--gold); }
+  .hero-nav nav { display: flex; gap: 32px; font-size: 15px; color: rgba(255,255,255,.8); }
+  .hero-nav .pill { margin-left: auto; }
+  .hero-body { display: grid; grid-template-columns: 1.15fr 360px .7fr; align-items: center; gap: 28px; padding: 0 56px 56px; position: relative; }
+  .hero h1 { font-weight: 500; font-size: clamp(38px, 4.8vw, 64px); line-height: 1.04; letter-spacing: -0.035em; margin: 22px 0 18px; max-width: 600px; }
+  .hero h1 span { color: #D9CCF5; font-weight: 300; }
+  .hero .sub { color: rgba(255,255,255,.8); font-size: 17px; margin: 0 0 34px; max-width: 440px; }
+  .arch { height: 480px; border-radius: 200px 200px 22px 22px; overflow: hidden; position: relative; box-shadow: 0 24px 55px rgba(0,0,0,.25); }
+  .arch img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; display: block; }
+  .stats { display: grid; gap: 28px; justify-self: end; }
+  .stats .num { font-size: 40px; line-height: 1; font-weight: 400; }
+  .stats .label { margin-top: 6px; font-size: 14px; color: rgba(255,255,255,.75); }
+
+  /* ---------- 02 Interactive prototype ---------- */
+  .proto { display: grid; grid-template-columns: 250px 390px 1fr; gap: 32px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); }
+  .panel h4 { margin: 0 0 10px; font-size: 13px; color: var(--muted); font-weight: 500; }
+  .seg { display: flex; background: var(--lav); border-radius: 99px; padding: 3px; margin-bottom: 20px; }
+  .seg button { flex: 1; border: 0; background: transparent; padding: 9px 6px; border-radius: 99px; font-weight: 500; font-size: 13px; color: var(--muted); }
+  .seg button.on { background: var(--purple); color: #fff; }
+  .jump { display: flex; flex-direction: column; gap: 6px; }
+  .jump button { text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 11px 14px; font-weight: 500; font-size: 14px; color: var(--text); }
+  .jump button.on { border-color: var(--purple); color: var(--purple); background: var(--lav); }
+  .notes { position: sticky; top: 16px; }
+  .notes h3 { margin: 0 0 6px; font-size: 22px; line-height: 1.25; font-weight: 500; color: var(--deep); letter-spacing: -0.01em; }
+  .notes .sub { color: var(--muted); margin: 0 0 18px; }
+  .notes ol { margin: 0; padding: 0; list-style: none; }
+  .notes li { display: grid; grid-template-columns: 34px 1fr; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .notes li i { font-style: normal; color: var(--dim); font-size: 13px; padding-top: 2px; }
+  .notes li b { display: block; font-weight: 500; }
+  .notes li span { color: var(--muted); }
+
+  .phone { width: 390px; height: 800px; border-radius: 50px; background: linear-gradient(145deg, #28184E, #5634A5); padding: 11px; box-shadow: 0 30px 60px rgba(40,24,78,.22); margin: 0 auto; }
+  .screen { width: 100%; height: 100%; border-radius: 40px; overflow: hidden; background: #FBFAFD; display: flex; flex-direction: column; position: relative; font-size: 15px; }
+  .screen.large { font-size: 17.5px; }
+  .top { background: var(--deep); color: #fff; padding: 16px 20px 22px; flex-shrink: 0; position: relative; }
+  .top::after { content: ""; position: absolute; right: -60px; top: -80px; width: 200px; height: 200px; border-radius: 50%; background: rgba(227,182,93,.08); pointer-events: none; }
+  .status { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.7); margin: -2px 4px 14px; }
+  .top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; position: relative; z-index: 1; }
+  .top .wordmark { font-size: 15px; }
+  .top-right { display: flex; align-items: center; gap: 10px; }
+  .msg-pill { border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.07); color: #fff; border-radius: 99px; padding: 6px 12px; font-weight: 500; font-size: .8em; display: flex; align-items: center; gap: 6px; }
+  .msg-pill .count { background: var(--gold); color: var(--deep); border-radius: 99px; padding: 0 7px; font-size: .9em; font-weight: 600; }
+  .greet { margin-top: 18px; position: relative; z-index: 1; }
+  .greet .date { color: rgba(255,255,255,.6); font-size: .82em; }
+  .greet h1 { margin: 4px 0 0; font-size: 1.75em; line-height: 1.12; font-weight: 300; letter-spacing: -0.03em; }
+  .greet h1 b { font-weight: 500; }
+  .top h1.title { margin: 18px 0 0; font-size: 1.55em; line-height: 1.15; font-weight: 400; letter-spacing: -0.025em; position: relative; z-index: 1; }
+  .top .tsub { color: rgba(255,255,255,.65); font-size: .86em; margin-top: 4px; position: relative; z-index: 1; }
+
+  .body { flex: 1; overflow-y: auto; padding: 16px 16px 24px; scrollbar-width: none; }
+  .body::-webkit-scrollbar { display: none; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .h { font-weight: 500; font-size: 1.08em; line-height: 1.3; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .p { color: var(--muted); margin: 0 0 12px; font-size: .93em; }
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid transparent; border-radius: 99px; padding: 12px 16px; font-weight: 500; font-size: .95em; min-height: 48px; transition: transform .1s; }
+  .btn:active { transform: scale(.98); }
+  .btn.primary { background: var(--purple); color: #fff; }
+  .btn.soft { background: var(--lav); color: var(--purple); }
+  .btn.ghost { background: #fff; color: var(--purple); border-color: rgba(86,52,165,.25); }
+  .btns { display: grid; gap: 8px; }
+  .btns.two { grid-template-columns: 1fr 1fr; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: .75em; font-weight: 600; color: var(--gold-text); margin-bottom: 8px; }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+  .time { display: inline-block; background: var(--gold-light); color: var(--gold-text); font-weight: 500; font-size: .76em; border-radius: 99px; padding: 3px 10px; margin-bottom: 10px; }
+  .segbar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 10px; }
+  .segbar i { height: 5px; border-radius: 3px; background: var(--lav2); transition: background .3s; }
+  .segbar i.on { background: var(--purple); }
+  .bignum { display: flex; align-items: baseline; gap: 6px; }
+  .bignum .num { font-size: 2.2em; line-height: 1; color: var(--deep); }
+
+  .person { display: flex; gap: 12px; align-items: flex-start; }
+  .person + .person { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .pname { font-weight: 500; line-height: 1.25; }
+  .porg { color: var(--muted); font-size: .86em; }
+  .why { margin: 10px 0 12px; padding: 0; list-style: none; counter-reset: w; }
+  .why li { counter-increment: w; display: grid; grid-template-columns: 26px 1fr; padding: 8px 0; border-top: 1px solid var(--line); font-size: .92em; }
+  .why li::before { content: "0" counter(w); color: var(--dim); font-size: .85em; padding-top: 1px; }
+  .sent { background: var(--pos-light); color: var(--pos); border-radius: 14px; padding: 12px 14px; font-weight: 500; font-size: .9em; }
+  .tabsrow { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
+  .tabsrow button { flex-shrink: 0; border: 1px solid var(--line2); background: #fff; border-radius: 99px; padding: 8px 13px; font-weight: 500; font-size: .84em; color: var(--muted); }
+  .tabsrow button.on { background: var(--deep); border-color: var(--deep); color: #fff; }
+
+  .path { position: relative; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; position: relative; padding-bottom: 10px; }
+  .step:not(:last-child)::before { content: ""; position: absolute; left: 16px; top: 36px; bottom: 0; width: 1px; background: var(--line2); }
+  .stone { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; font-size: .85em; background: #fff; border: 1px solid var(--line2); color: var(--muted); position: relative; z-index: 1; }
+  .step.isdone .stone { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .step.next .stone { border-color: var(--purple); color: var(--purple); background: var(--lav); }
+  .step.late .stone { border-color: var(--late); color: var(--late); background: var(--late-light); }
+  .step-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px; text-align: left; width: 100%; font-size: 1em; color: var(--text); cursor: pointer; }
+  .step.open .step-card { border-color: rgba(86,52,165,.35); box-shadow: 0 6px 16px rgba(86,52,165,.08); }
+  .step-title { font-weight: 500; line-height: 1.3; }
+  .step-state { font-size: .78em; color: var(--muted); margin-top: 2px; }
+  .step.isdone .step-state { color: var(--pos); }
+  .step.late .step-state { color: var(--late); }
+  .step.next .step-state { color: var(--purple); }
+  .step-more { margin-top: 10px; }
+
+  .chat { display: flex; flex-direction: column; gap: 10px; }
+  .bubble { max-width: 86%; padding: 12px 14px; border-radius: 18px; font-size: .93em; white-space: pre-line; animation: pop .25s ease-out; }
+  .bubble.guide { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 6px; align-self: flex-start; }
+  .bubble.me { background: var(--purple); color: #fff; border-bottom-right-radius: 6px; align-self: flex-end; }
+  .typing { display: inline-flex; gap: 4px; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); animation: blink 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .ai-mark { width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: var(--deep); display: grid; place-items: center; font-weight: 600; font-size: 13px; flex-shrink: 0; }
+  .ai-note { font-size: .78em; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; margin-bottom: 12px; }
+  .chips { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .chipq { text-align: left; border: 1px solid rgba(86,52,165,.22); background: #fff; color: var(--purple); border-radius: 14px; padding: 11px 14px; font-weight: 500; font-size: .9em; }
+  .task { border: 1px solid rgba(227,182,93,.6); background: var(--gold-light); border-radius: 16px; padding: 14px; align-self: stretch; animation: pop .25s ease-out; }
+  .composer { flex-shrink: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 14px 14px; background: #fff; border-top: 1px solid var(--line); }
+  .composer .field { border: 1px solid var(--line2); border-radius: 99px; padding: 11px 16px; color: var(--dim); font-size: .9em; }
+  .speak { border: 0; background: var(--deep); color: #fff; font-weight: 500; border-radius: 99px; padding: 0 16px; font-size: .85em; }
+
+  .money { font-size: 1.6em; font-weight: 300; line-height: 1.15; letter-spacing: -0.025em; color: var(--deep); }
+  .bar { height: 6px; border-radius: 99px; background: var(--lav2); overflow: hidden; margin: 12px 0 8px; }
+  .bar > div { height: 100%; background: var(--purple); border-radius: 99px; transition: width .5s; }
+  .member { display: flex; align-items: center; gap: 10px; padding: 9px 0; }
+  .member + .member { border-top: 1px solid var(--line); }
+  .member .n { flex: 1; font-weight: 500; font-size: .95em; }
+  .tag { font-size: .76em; font-weight: 500; border-radius: 99px; padding: 3px 10px; white-space: nowrap; }
+  .tag.paid { background: var(--pos-light); color: var(--pos); }
+  .tag.not { background: #F3F1F6; color: var(--muted); }
+  .tag.late { background: var(--late-light); color: var(--late); }
+  .tag.strong { background: var(--pos-light); color: var(--pos); }
+  .tag.good { background: var(--lav); color: var(--purple); }
+  .tag.fix { background: var(--gold-light); color: var(--gold-text); }
+  .tag.no { background: #F3F1F6; color: var(--muted); }
+  .faces { display: flex; margin: 10px 0 12px; }
+  .faces .av + .av { margin-left: -10px; }
+  .backlink { border: 0; background: none; color: var(--purple); font-weight: 500; font-size: .92em; padding: 2px 0 12px; }
+  .update { border-left: 2px solid var(--gold); padding: 2px 0 2px 12px; margin-bottom: 12px; }
+  .update .when { font-size: .76em; color: var(--muted); }
+  .update p { margin: 2px 0 0; font-size: .93em; }
+  .invest { cursor: pointer; }
+  .invest:hover { border-color: var(--line2); }
+  .more { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--purple); font-weight: 500; font-size: .88em; }
+
+  .nav { flex-shrink: 0; display: grid; background: #fff; border-top: 1px solid var(--line); padding: 4px 6px 16px; }
+  .nav button { border: 0; background: none; padding: 12px 2px 6px; font-weight: 500; font-size: .78em; color: var(--dim); position: relative; line-height: 1.2; min-height: 48px; }
+  .nav button.on { color: var(--purple); }
+  .nav button.on::before { content: ""; position: absolute; top: 0; left: 50%; width: 18px; height: 3px; margin-left: -9px; background: var(--gold); border-radius: 0 0 3px 3px; }
+  .toast { position: absolute; left: 16px; right: 16px; bottom: 82px; background: var(--deep); color: #fff; padding: 13px 16px; border-radius: 99px; font-weight: 500; font-size: .9em; display: flex; gap: 10px; align-items: center; box-shadow: 0 12px 28px rgba(0,0,0,.25); animation: pop .25s ease-out; z-index: 5; }
+
+  /* ---------- 03 Web app ---------- */
+  .browser { border-radius: 18px; border: 1px solid var(--line2); background: #fff; overflow: hidden; box-shadow: 0 24px 65px rgba(40,24,78,.1); }
+  .browser-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #F1EEF6; }
+  .browser-bar i { width: 10px; height: 10px; border-radius: 50%; background: #C8C0D6; }
+  .browser-bar .url { margin: 0 auto; font-size: 12px; color: var(--muted); background: #fff; padding: 4px 16px; border-radius: 8px; }
+  .scroller { overflow-x: auto; }
+  .app { display: grid; grid-template-columns: 232px 1fr; min-width: 1180px; min-height: 680px; background: #F7F5FB; }
+  .side { background: var(--deep); color: #fff; padding: 26px 16px; display: flex; flex-direction: column; }
+  .side .wordmark { font-size: 17px; padding: 0 12px 28px; }
+  .side a { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; color: rgba(255,255,255,.72); font-size: 14px; }
+  .side a.on { background: rgba(255,255,255,.12); color: #fff; box-shadow: inset 3px 0 var(--gold); }
+  .side a small { color: rgba(255,255,255,.5); }
+  .side .grp { margin: 22px 12px 8px; font-size: 11px; color: #B9ACD4; }
+  .side .me { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.16); font-size: 13px; }
+  .side .me small { display: block; color: #C8BEDB; font-size: 12px; }
+  .main { padding: 34px 40px; }
+  .main-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 26px; }
+  .main-head h3 { margin: 0; font-weight: 300; font-size: 40px; letter-spacing: -0.03em; line-height: 1.05; color: var(--deep); }
+  .main-head h3 b { font-weight: 500; }
+  .main-head p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; box-shadow: var(--shadow); }
+  .kpi .num { font-size: 34px; line-height: 1; margin-top: 10px; color: var(--purple); font-weight: 400; }
+  .kpi .num small { font-size: 17px; color: var(--dim); }
+  .kpi .note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; }
+  .wpanel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); }
+  .wpanel + .wpanel { margin-top: 18px; }
+  .wpanel-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .wpanel-head h4 { margin: 0; font-weight: 500; font-size: 16px; color: var(--deep); }
+  .wpanel-head a { font-size: 13px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 400; color: var(--dim); font-size: 12px; padding: 0 0 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 13px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  th, td { padding-right: 18px; }
+  th:last-child, td:last-child { padding-right: 0; }
+  td:nth-child(1), td:nth-child(2), td:nth-child(3), td:nth-child(5) { white-space: nowrap; }
+  .grid2 { grid-template-columns: 1.75fr 1fr; }
+  .who { display: flex; gap: 12px; align-items: center; }
+  .who small { display: block; color: var(--muted); font-size: 12.5px; }
+  .stages { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 14px 0 10px; }
+  .stages i { height: 4px; border-radius: 2px; background: var(--lav2); }
+  .stages i.on { background: var(--purple); }
+  .stages i.now { background: var(--gold); }
+  .rule { height: 1px; background: var(--line); margin: 14px 0; }
+
+  /* ---------- 04 System ---------- */
+  .sys { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .sw { border-radius: 14px; height: 88px; padding: 10px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11.5px; border: 1px solid var(--line); }
+  .type-row { display: grid; grid-template-columns: 110px 1fr; gap: 16px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .type-row:last-child { border-bottom: 0; }
+  .mix { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .mix th { font-size: 12px; padding: 0 12px 10px 0; }
+  .mix td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .mix td:first-child { font-weight: 500; width: 22%; }
+  .mix .from { display: inline-block; font-size: 11.5px; padding: 2px 9px; border-radius: 99px; background: var(--lav); color: var(--purple); font-weight: 500; }
+  .mix .from.b { background: var(--gold-light); color: var(--gold-text); }
+  .mix .from.new { background: var(--pos-light); color: var(--pos); }
+  footer { padding: 56px 0 64px; color: var(--dim); font-size: 13px; }
+
+  @media (max-width: 1150px) {
+    .proto { grid-template-columns: 1fr; }
+    .notes { position: static; }
+    .controls .jump { flex-direction: row; flex-wrap: wrap; }
+    .hero-body { grid-template-columns: 1fr 300px; }
+    .stats { grid-column: 1 / -1; grid-template-columns: repeat(3, auto); justify-self: start; gap: 40px; }
+    .hero-nav nav { display: none; }
+    .sys { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .wrap { padding: 0 16px; }
+    .hero-nav { padding: 24px 24px 0; }
+    .hero-body { grid-template-columns: 1fr; padding: 0 24px 32px; }
+    .arch { display: none; }
+    .stats { grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .stats .num { font-size: 26px; }
+    .sec-head { grid-template-columns: 1fr; gap: 6px; }
+    .swatches { grid-template-columns: repeat(2, 1fr); }
+    .phone { width: 100%; padding: 8px; border-radius: 42px; }
+    .screen { border-radius: 34px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="pagebar">
+    <div><b>FoundersLink</b> · Design direction 03 · The hybrid</div>
+    <div>14 November 2026</div>
+  </div>
+
+  <!-- 01 Website -->
+  <section class="hero">
+    <div class="hero-nav">
+      <div class="wordmark">FoundersLink<span>.</span></div>
+      <nav><span>Investors</span><span>Founders</span><span>Deal rooms</span><span>Insights</span></nav>
+      <span class="pill gold sm">Apply to join</span>
+    </div>
+    <div class="hero-body">
+      <div>
+        <span class="chip"><span class="dot"></span>Every member is verified</span>
+        <h1><span>Kenya's vetted</span> founders &amp; investors network</h1>
+        <p class="sub">No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</p>
+        <span class="pill gold">Request an invitation <span class="arrow"></span></span>
+      </div>
+      <div class="arch"><img src="../../mobile/assets/images/welcome-photo.jpg" alt="Two professionals shaking hands"></div>
+      <div class="stats">
+        <div><div class="num">1,200+</div><div class="label">Verified members</div></div>
+        <div><div class="num">340</div><div class="label">Active investors</div></div>
+        <div><div class="num">KES 480M+</div><div class="label">Deals recorded</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Interactive -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="no">02 — The app</div>
+      <div>
+        <h2>Warm words, professional look. <span>Try it.</span></h2>
+        <p>The phone from the first design, with every interaction kept, restyled the professional way. Switch between Amina (founder) and Grace (investor), change the language or the text size, and tap anything.</p>
+      </div>
+    </div>
+    <div class="proto">
+      <div class="controls panel">
+        <h4>Whose app</h4>
+        <div class="seg" id="roleSeg"><button data-role="founder" class="on">Founder</button><button data-role="investor">Investor</button></div>
+        <h4>Language</h4>
+        <div class="seg" id="langSeg"><button data-lang="en" class="on">English</button><button data-lang="sw">Kiswahili</button></div>
+        <h4>Text size</h4>
+        <div class="seg" id="sizeSeg"><button data-size="normal" class="on">Normal</button><button data-size="large">Larger</button></div>
+        <h4>Go to a screen</h4>
+        <div class="jump" id="jump"></div>
+      </div>
+      <div><div class="phone"><div class="screen" id="screen"></div></div></div>
+      <div class="notes panel" id="notes"></div>
+    </div>
+  </section>
+
+  <!-- 03 Web app -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="no">03 — Web app</div>
+      <div>
+        <h2>The founder's desk. <span>The same voice, on a big screen.</span></h2>
+        <p>On a computer the founder gets a working dashboard: who fits, what to fix, and where the deal stands. People are shown with photos or initials, never cartoons.</p>
+      </div>
+    </div>
+    <div class="browser">
+      <div class="browser-bar"><i></i><i></i><i></i><span class="url">app.founderslink.co.ke/overview</span></div>
+      <div class="scroller">
+        <div class="app">
+          <aside class="side">
+            <div class="wordmark">FoundersLink<span>.</span></div>
+            <a class="on">Home</a>
+            <a>Investors <small>9</small></a>
+            <a>Get ready <small>4 of 7</small></a>
+            <a>Deal rooms <small>1</small></a>
+            <a>Messages <small>2</small></a>
+            <div class="grp">Community</div>
+            <a>Network</a>
+            <a>Chamas</a>
+            <div class="grp">Assistant</div>
+            <a>Guide (AI)</a>
+            <div class="me" id="sideMe"></div>
+          </aside>
+          <main class="main">
+            <div class="main-head">
+              <div>
+                <h3>Good evening, <b>Amina.</b></h3>
+                <p>Saturday, 14 November · Three investors are ready for your pitch.</p>
+              </div>
+              <div style="display:flex;gap:10px">
+                <span class="pill line sm">Ask the guide</span>
+                <span class="pill solid sm">Find investors <span class="arrow"></span></span>
+              </div>
+            </div>
+            <div class="kpis">
+              <div class="kpi"><div class="label">Getting ready</div><div class="num">4<small> of 7</small></div><div class="note">Bank account is next</div></div>
+              <div class="kpi"><div class="label">Ready to pitch</div><div class="num">3</div><div class="note">2 more after one fix</div></div>
+              <div class="kpi"><div class="label">Conversations</div><div class="num">2</div><div class="note">1 reply waiting for you</div></div>
+              <div class="kpi"><div class="label">Deal in progress</div><div class="num">1</div><div class="note">Due diligence, day 6</div></div>
+            </div>
+            <div class="grid2">
+              <div class="wpanel">
+                <div class="wpanel-head"><h4>Investors who fit ClinicBook</h4><a>View all 9</a></div>
+                <table>
+                  <thead><tr><th>Investor</th><th>Ticket</th><th>Fit</th><th>Where you are</th><th></th></tr></thead>
+                  <tbody id="webRows"></tbody>
+                </table>
+              </div>
+              <div>
+                <div class="wpanel">
+                  <div class="wpanel-head"><h4>Your next step</h4><span class="label">About a week</span></div>
+                  <div style="font-size:18px;letter-spacing:-0.01em">Open a bank account in the business name</div>
+                  <p class="muted small" style="margin:8px 0 16px">It keeps business money apart from your own. Fatuma Hassan needs it before you can pitch her.</p>
+                  <div style="display:flex;gap:8px"><span class="pill solid sm">I've done this</span><span class="pill line sm">Talk to an expert</span></div>
+                </div>
+                <div class="wpanel">
+                  <div class="wpanel-head"><h4>Deal room</h4><span class="label">Day 6</span></div>
+                  <div style="font-size:16px">ClinicBook × Savanna Angels</div>
+                  <div class="stages"><i class="on"></i><i class="now"></i><i></i><i></i><i></i><i></i></div>
+                  <div class="small muted">Due diligence · 5 of 8 documents shared · KES 1,000,000 proposed</div>
+                  <div class="rule"></div>
+                  <div class="small"><span class="muted">Waiting on you:</span> CR12 and the latest bank statement.</div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 System and how the hybrid was made -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="no">04 — The hybrid</div>
+      <div>
+        <h2>What came from where. <span>And what was left behind.</span></h2>
+        <p>The first design had the right heart: plain words, a guide, both roles, Kiswahili. The second had the right face: purple and gold, light type, pill buttons, real photos. This takes each one's strengths and drops what made them childish or cold.</p>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:20px">
+      <table class="mix">
+        <thead><tr><th>Part</th><th>Source</th><th>How it looks now</th></tr></thead>
+        <tbody>
+          <tr><td>Voice and words</td><td><span class="from">First design</span></td><td>Greetings by name, reasons in full sentences, "Your next step" with how long it takes. Words on every tab and button.</td></tr>
+          <tr><td>Interactions</td><td><span class="from">First design</span></td><td>Founder and investor views, Kiswahili, larger text, the guide, My investments, check-ins and chamas, all kept.</td></tr>
+          <tr><td>Colour</td><td><span class="from b">Second design</span></td><td>Deep purple for the top bar and sidebar, FoundersLink purple for actions, warm paper behind, gold for one detail per screen.</td></tr>
+          <tr><td>Type</td><td><span class="from b">Second design</span></td><td>Inter Tight: light for big headings and numbers, medium for names and buttons. No more heavy bold (800).</td></tr>
+          <tr><td>People</td><td><span class="from b">Second design</span></td><td>Real photos where we have them, clean initials in a lavender circle where we don't. No cartoon faces.</td></tr>
+          <tr><td>Progress</td><td><span class="from new">New</span></td><td>The gold beads became a thin segmented bar, still read in words: "4 of 7".</td></tr>
+          <tr><td>The AI guide</td><td><span class="from new">New</span></td><td>A gold circle marked "AI" instead of a drawn diamond, so it reads as a tool, not a person.</td></tr>
+          <tr><td>Left behind</td><td>Both</td><td>Cartoon people and scenes, the beadwork pattern, coloured cards everywhere, black-and-white filters, and the dark theme that did not match the brand.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sys">
+      <div class="panel">
+        <h4>Colour</h4>
+        <div class="swatches">
+          <div class="sw" style="background:#28184E;color:#fff">Deep purple<br>#28184E</div>
+          <div class="sw" style="background:#5634A5;color:#fff">Purple<br>#5634A5</div>
+          <div class="sw" style="background:#F7F5F1;color:#251B3D">Warm paper<br>#F7F5F1</div>
+          <div class="sw" style="background:#E3B65D;color:#28184E">Gold<br>#E3B65D</div>
+        </div>
+        <div class="rule"></div>
+        <h4>Parts</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center" id="parts"></div>
+      </div>
+      <div class="panel">
+        <h4>Type: Inter Tight</h4>
+        <div class="type-row"><span class="label">Display · 300</span><span class="num" style="font-size:38px;line-height:1.05;color:var(--deep)">Good evening, <b style="font-weight:500">Amina.</b></span></div>
+        <div class="type-row"><span class="label">Number · 300</span><span class="num" style="font-size:30px;color:var(--deep)">KES 1,000,000</span></div>
+        <div class="type-row"><span class="label">Heading · 500</span><span style="font-size:17px;font-weight:500">Investors who fit ClinicBook</span></div>
+        <div class="type-row"><span class="label">Body · 400</span><span style="font-size:15px">It keeps business money apart from your own.</span></div>
+        <div class="type-row"><span class="label">Label · 400</span><span class="label">Ticket · Deals closed · Investing since</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Names and figures are illustrative. The photographs are the two already in the app (mobile/assets/images). Everyone without a photo is shown by initials; for launch, real portraits of Kenyan founders and investors would replace them.</footer>
+</div>
+
+<script>
+(() => {
+  // ---------------- People: photos where we have them, otherwise initials ----------------
+  // The two in-app photos are cropped to faces: Amina is the woman at the desk in
+  // background-all.jpg, David the man beside her. fx/fy: the face's centre in the
+  // photo (0 to 1); k: how big the photo is drawn, relative to the circle.
+  const PHOTO = '../../mobile/assets/images/background-all.jpg';
+  const PEOPLE = {
+    amina:   { n: 'Amina Wanjiru', photo: { fx: 0.715, fy: 0.50, k: 3.6 } },
+    david:   { n: 'David Otieno', photo: { fx: 0.505, fy: 0.17, k: 3.9 } },
+    grace:   { n: 'Grace Mwangi' },
+    fatuma:  { n: 'Fatuma Hassan' },
+    peter:   { n: 'Peter Kamau' },
+    wanjiku: { n: 'Wanjiku Maina' },
+    achieng: { n: 'Achieng Otieno' },
+    halima:  { n: 'Halima Abdi' },
+    njeri:   { n: 'Njeri Kariuki' },
+    wairimu: { n: 'Wairimu Kimani' },
+  };
+  const initials = (n) => n.split(' ').map((w) => w[0]).join('').slice(0, 2);
+  function av(id, size = 44) {
+    const p = PEOPLE[id];
+    const box = `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.34)}px`;
+    if (!p.photo) return `<span class="av" style="${box}">${initials(p.n)}</span>`;
+    const w = size * p.photo.k, h = w * 500 / 612;
+    return `<span class="av" style="${box}"><img src="${PHOTO}" alt="${p.n}" style="width:${w}px;height:${h}px;left:${size / 2 - p.photo.fx * w}px;top:${size / 2 - p.photo.fy * h}px"></span>`;
+  }
+  const FULL = Object.fromEntries(Object.entries(PEOPLE).map(([k, v]) => [k, v.n]));
+
+  // ---------------- Words ----------------
+  const T = {
+    en: {
+      nav: { home: 'Home', investors: 'Investors', ready: 'Get ready', guide: 'Guide', chamas: 'Chamas' },
+      date: 'Saturday, 14 November', hello: 'Good evening,', name: 'Amina.', messages: 'Messages',
+      nextStep: 'Your next step', showHow: 'Show me how', doneIt: "I've done this",
+      allDone: "You've done everything on your list. Investors can see you're ready.",
+      progress: (n) => `${n} of 7 things investors look for.`, progressLabel: 'Getting ready',
+      fundYou: 'People who may fund you', seeAll: 'See all investors',
+      askGuide: 'Ask the guide', askHint: 'Not sure what to do? Ask in your own words.', askBtn: 'Ask a question',
+      invTitle: 'Investors who fit you', invSub: 'Picked for ClinicBook: health, Nairobi, KES 1 million.',
+      tabReady: 'Ready to pitch', tabFix: 'After one fix', tabNo: 'Not a fit',
+      whyFits: 'Why they fit you', connect: 'Ask to connect', sent: "Request sent. We'll tell you when they reply.",
+      fixFirst: 'Fix this first', goFix: 'Go to Get ready', whyNot: 'Why not',
+      readyTitle: 'Getting ready for investors', whyMatters: 'Why it matters', markDone: 'Mark as done',
+      notDone: "It's not done yet", stDone: 'Done', stTodo: 'To do', expert: 'Talk to an expert',
+      toastDone: 'Well done. One step closer.',
+      guideTitle: 'Your guide', guideSub: 'Ask anything about getting funded.',
+      aiNote: 'This guide is AI. It reads your profile and checklist, and it can make mistakes, so check before you act.',
+      tryAsking: 'You could ask', typeHere: 'Type your question…', speak: 'Speak',
+      taskLabel: 'Suggested for your list', taskTitle: 'Open a bank account in the business name',
+      add: 'Add to my list', notNow: 'Not now', added: "Added to your list. You'll see it on Home.", dismissed: 'Okay, not now.',
+      chamaTitle: 'Your chamas', chamaSub: 'Saving together with other founders.',
+      saved: (a) => `KES ${a}`, savedOf: 'saved of KES 100,000', goal: 'Goal: a shared office by March',
+      thisMonth: 'This month · KES 5,000 each', paid: 'Paid', notYet: 'Not yet', you: '(you)',
+      record: 'Record my contribution', recorded: 'Your KES 5,000 is recorded. Thank you.', meeting: 'Next meeting: Saturday 15 November, 10 am',
+      openChat: 'Open the group chat', noMoney: "Money goes to the chama's own account. FoundersLink never holds it.",
+    },
+    sw: {
+      nav: { home: 'Nyumbani', investors: 'Wawekezaji', ready: 'Jiandae', guide: 'Mwongozo', chamas: 'Chama' },
+      date: 'Jumamosi, 14 Novemba', hello: 'Habari za jioni,', name: 'Amina.', messages: 'Ujumbe',
+      nextStep: 'Hatua yako inayofuata', showHow: 'Nionyeshe jinsi', doneIt: 'Nimeshafanya',
+      allDone: 'Umekamilisha kila kitu kwenye orodha yako. Wawekezaji wanaona uko tayari.',
+      progress: (n) => `${n} kati ya mambo 7 ambayo wawekezaji huangalia.`, progressLabel: 'Kujiandaa',
+      fundYou: 'Watu wanaoweza kukufadhili', seeAll: 'Ona wawekezaji wote',
+      askGuide: 'Uliza mwongozo', askHint: 'Huna uhakika ufanye nini? Uliza kwa maneno yako.', askBtn: 'Uliza swali',
+      invTitle: 'Wawekezaji wanaokufaa', invSub: 'Wamechaguliwa kwa ClinicBook: afya, Nairobi, KES milioni 1.',
+      tabReady: 'Tayari kuwasilisha', tabFix: 'Baada ya kurekebisha', tabNo: 'Hawafai',
+      whyFits: 'Kwa nini wanakufaa', connect: 'Omba kuunganishwa', sent: 'Ombi limetumwa. Tutakujulisha wakijibu.',
+      fixFirst: 'Rekebisha hili kwanza', goFix: 'Nenda kwa Jiandae', whyNot: 'Kwa nini hawafai',
+      readyTitle: 'Kujiandaa kwa wawekezaji', whyMatters: 'Kwa nini ni muhimu', markDone: 'Weka kama imekamilika',
+      notDone: 'Bado haijakamilika', stDone: 'Imekamilika', stTodo: 'Kufanya', expert: 'Ongea na mtaalamu',
+      toastDone: 'Hongera. Hatua moja karibu zaidi.',
+      guideTitle: 'Mwongozo wako', guideSub: 'Uliza chochote kuhusu kupata ufadhili.',
+      aiNote: 'Mwongozo huu ni AI. Unasoma wasifu na orodha yako, na unaweza kukosea, kwa hivyo hakikisha kabla ya kuchukua hatua.',
+      tryAsking: 'Unaweza kuuliza', typeHere: 'Andika swali lako…', speak: 'Ongea',
+      taskLabel: 'Pendekezo kwa orodha yako', taskTitle: 'Fungua akaunti ya benki kwa jina la biashara',
+      add: 'Ongeza kwenye orodha', notNow: 'Si sasa', added: 'Imeongezwa kwenye orodha yako. Utaiona Nyumbani.', dismissed: 'Sawa, si sasa.',
+      chamaTitle: 'Chama zako', chamaSub: 'Kuweka akiba pamoja na waanzilishi wengine.',
+      saved: (a) => `KES ${a}`, savedOf: 'zimehifadhiwa kati ya KES 100,000', goal: 'Lengo: ofisi ya pamoja kufikia Machi',
+      thisMonth: 'Mwezi huu · KES 5,000 kila mmoja', paid: 'Amelipa', notYet: 'Bado', you: '(wewe)',
+      record: 'Rekodi mchango wangu', recorded: 'KES 5,000 yako imerekodiwa. Asante.', meeting: 'Mkutano ujao: Jumamosi 15 Novemba, saa nne asubuhi',
+      openChat: 'Fungua mazungumzo ya kikundi', noMoney: 'Pesa huenda kwenye akaunti ya chama yenyewe. FoundersLink haishikilii.',
+    },
+  };
+  const TI = {
+    en: {
+      nav: { ihome: 'Home', ibiz: 'Businesses', ireq: 'Requests', iport: 'My investments' },
+      name: 'Grace.',
+      attention: 'Needs your attention', attnText: "MamaCare's 180-day check-in is late. Achieng hasn't sent her update yet.", attnBtn: 'See MamaCare',
+      summaryLabel: 'Your investments', summary: '3 businesses backed through FoundersLink.', nextCheck: 'Next check-in: ClinicBook, 10 February 2027.', seeInv: 'See my investments',
+      newFits: (n) => `${n} new businesses fit what you fund`, newFitsSub: 'Health, in Nairobi and Kiambu, KES 500,000 to 2 million.', seeBiz: 'See businesses',
+      reqWaiting: 'One founder is deciding on your request.', seeReq: 'See requests',
+      portTitle: 'My investments', portSub: 'How the businesses you backed are doing.',
+      total: 'Put in through FoundersLink', backed: (n) => `in ${n} businesses`, open: 'Open',
+      moneyNote: 'Money moved between your bank and theirs. FoundersLink keeps the record, never the money.',
+      back: 'Back to my investments', howGoing: "How it's going", latestFrom: (n) => `Latest from ${n}`,
+      goals: 'Goals you agreed', checkins: 'Check-ins',
+      ci30: '30 days after closing', ci90: '90 days after closing', ci180: '180 days after closing',
+      ciDone: 'Done', ciNext: 'Next', ciLate: 'Late', notYet: 'Not yet', due: 'Due',
+      message: (n) => `Message ${n}`, askUpdate: 'Ask for an update', asked: (n) => `We've asked ${n} for an update.`,
+      trackLabel: 'On your profile', trackOn: 'Shown on your track record as a verified deal.', trackOff: 'Hidden from your track record. Only you and the founder see it.',
+      show: 'Show it on my profile', hide: 'Hide it from my profile',
+      status: { onTrack: 'On track', call: 'Worth a call', well: 'Going well' },
+      bizTitle: 'Businesses for you', bizSub: 'Founders who fit what you fund, already checked.',
+      connect: 'Ask to connect', sent: "Request sent. We'll tell you when they reply.",
+      reqTitle: 'Your requests', reqSub: 'The founders you asked to connect with.',
+      waiting: 'Deciding', connected: 'Connected', proposed: (a) => `You proposed ${a}`, openChat: 'Open the chat',
+    },
+    sw: {
+      nav: { ihome: 'Nyumbani', ibiz: 'Biashara', ireq: 'Maombi', iport: 'Uwekezaji wangu' },
+      name: 'Grace.',
+      attention: 'Inahitaji umakini wako', attnText: 'Ukaguzi wa siku 180 wa MamaCare umechelewa. Achieng bado hajatuma taarifa yake.', attnBtn: 'Ona MamaCare',
+      summaryLabel: 'Uwekezaji wako', summary: 'Biashara 3 ulizofadhili kupitia FoundersLink.', nextCheck: 'Ukaguzi unaofuata: ClinicBook, 10 Februari 2027.', seeInv: 'Ona uwekezaji wangu',
+      newFits: (n) => `Biashara ${n} mpya zinafaa unachofadhili`, newFitsSub: 'Afya, Nairobi na Kiambu, KES 500,000 hadi milioni 2.', seeBiz: 'Ona biashara',
+      reqWaiting: 'Mwanzilishi mmoja anafikiria ombi lako.', seeReq: 'Ona maombi',
+      portTitle: 'Uwekezaji wangu', portSub: 'Jinsi biashara ulizofadhili zinavyoendelea.',
+      total: 'Uliyoweka kupitia FoundersLink', backed: (n) => `katika biashara ${n}`, open: 'Fungua',
+      moneyNote: 'Pesa zilihamishwa kati ya benki yako na yao. FoundersLink huhifadhi rekodi tu, si pesa.',
+      back: 'Rudi kwa uwekezaji wangu', howGoing: 'Inavyoendelea', latestFrom: (n) => `Taarifa mpya kutoka kwa ${n}`,
+      goals: 'Malengo mliyokubaliana', checkins: 'Ukaguzi',
+      ci30: 'Siku 30 baada ya kufunga', ci90: 'Siku 90 baada ya kufunga', ci180: 'Siku 180 baada ya kufunga',
+      ciDone: 'Imefanyika', ciNext: 'Unaofuata', ciLate: 'Umechelewa', notYet: 'Bado', due: 'Tarehe',
+      message: (n) => `Mtumie ${n} ujumbe`, askUpdate: 'Omba taarifa mpya', asked: (n) => `Tumemwomba ${n} taarifa mpya.`,
+      trackLabel: 'Kwenye wasifu wako', trackOn: 'Inaonyeshwa kwenye rekodi yako kama mkataba uliothibitishwa.', trackOff: 'Imefichwa kwenye rekodi yako. Ni wewe na mwanzilishi tu mnaoiona.',
+      show: 'Ionyeshe kwenye wasifu', hide: 'Ifiche kwenye wasifu',
+      status: { onTrack: 'Iko kwenye mstari', call: 'Inafaa kupiga simu', well: 'Inaendelea vizuri' },
+      bizTitle: 'Biashara zinazokufaa', bizSub: 'Waanzilishi wanaofaa unachofadhili, tayari wamekaguliwa.',
+      connect: 'Omba kuunganishwa', sent: 'Ombi limetumwa. Tutakujulisha wakijibu.',
+      reqTitle: 'Maombi yako', reqSub: 'Waanzilishi uliowaomba kuunganishwa.',
+      waiting: 'Anafikiria', connected: 'Mmeunganishwa', proposed: (a) => `Ulipendekeza ${a}`, openChat: 'Fungua mazungumzo',
+    },
+  };
+
+  // ---------------- Data ----------------
+  const ITEMS = [
+    { id: 'kra', en: 'KRA PIN for the business', sw: 'KRA PIN ya biashara', why: { en: 'You need it to pay tax and to send invoices.', sw: 'Unaihitaji kulipa kodi na kutuma ankara.' }, time: { en: 'About a day', sw: 'Takriban siku moja' } },
+    { id: 'brs', en: 'Business registration (BRS)', sw: 'Usajili wa biashara (BRS)', why: { en: 'It shows your business is real and legally yours.', sw: 'Inaonyesha biashara yako ni halali na ni yako kisheria.' }, time: { en: 'About 3 days', sw: 'Takriban siku 3' } },
+    { id: 'permit', en: 'County business permit', sw: 'Kibali cha biashara cha kaunti', why: { en: 'Nairobi County asks every business to hold one.', sw: 'Kaunti ya Nairobi inataka kila biashara iwe nacho.' }, time: { en: 'About a week', sw: 'Takriban wiki moja' } },
+    { id: 'bank', en: 'Bank account in the business name', sw: 'Akaunti ya benki kwa jina la biashara', why: { en: 'It keeps business money apart from your own, and lenders ask for it.', sw: 'Hutenganisha pesa za biashara na pesa zako binafsi, na wakopeshaji huiomba.' }, time: { en: 'About a week', sw: 'Takriban wiki moja' } },
+    { id: 'cr12', en: 'CR12: who runs and owns the company', sw: 'Cheti cha CR12 (wakurugenzi na wanahisa)', why: { en: 'Investors check who owns the company before they put money in.', sw: 'Wawekezaji huangalia wamiliki wa kampuni kabla ya kuweka pesa.' }, time: { en: '2 to 3 days', sw: 'Siku 2 hadi 3' } },
+    { id: 'tax', en: 'Tax compliance certificate', sw: 'Cheti cha kufuata sheria za kodi', why: { en: 'It proves your taxes are up to date.', sw: 'Inathibitisha kodi zako zimelipwa kwa wakati.' }, time: { en: 'About 3 days', sw: 'Takriban siku 3' } },
+    { id: 'data', en: 'Data protection registration (ODPC)', sw: 'Usajili wa ulinzi wa data (ODPC)', why: { en: "You keep patients' details, so the law asks you to register.", sw: 'Unahifadhi taarifa za wagonjwa, kwa hivyo sheria inakutaka ujisajili.' }, time: { en: 'About 2 weeks', sw: 'Takriban wiki 2' } },
+  ];
+  const INVESTORS = [
+    { id: 'david', list: 'ready', org: 'Lakeside Ventures', fit: 'strong', n: 3, ticket: 'KES 1–5M',
+      fitText: { en: 'Strong fit', sw: 'Inakufaa sana' },
+      line: { en: 'Backs early health and tech businesses across Kenya.', sw: 'Huunga mkono biashara changa za afya na teknolojia kote Kenya.' },
+      why: { en: ['He invests in health technology', 'Your KES 1 million is in his range', 'He backs products already in use'], sw: ['Huwekeza katika teknolojia ya afya', 'KES milioni 1 yako iko ndani ya kiwango chake', 'Huunga mkono bidhaa zinazotumika tayari'] } },
+    { id: 'grace', list: 'ready', org: 'Savanna Angels', fit: 'strong', n: 3, ticket: 'KES 0.5–2M',
+      fitText: { en: 'Strong fit', sw: 'Inakufaa sana' },
+      line: { en: 'Funds health businesses in Nairobi.', sw: 'Hufadhili biashara za afya Nairobi.' },
+      why: { en: ['She funds health, like ClinicBook', 'She invests in Nairobi', 'She backs businesses at your stage'], sw: ['Hufadhili afya, kama ClinicBook', 'Huwekeza Nairobi', 'Huunga mkono biashara katika hatua yako'] } },
+    { id: 'fatuma', list: 'fix', org: 'Pwani Impact Fund', fit: 'fix', n: 1, ticket: 'KES 0.3–1.5M',
+      fitText: { en: 'Fits after one fix', sw: 'Inafaa baada ya kurekebisha' },
+      line: { en: 'Funds businesses that serve women and families.', sw: 'Hufadhili biashara zinazohudumia wanawake na familia.' }, fixItem: 'bank' },
+    { id: 'peter', list: 'no', org: 'Shamba Capital', fit: 'no', n: 0, ticket: 'KES 2–10M',
+      fitText: { en: 'Not a fit', sw: 'Hafai' },
+      line: { en: 'Only funds farming businesses.', sw: 'Hufadhili biashara za kilimo pekee.' },
+      whyNot: { en: 'ClinicBook is in health, and he only funds farming. No need to pitch him.', sw: 'ClinicBook iko kwenye afya, na yeye hufadhili kilimo pekee. Huhitaji kumwasilishia.' } },
+  ];
+  const QUESTIONS = [
+    { id: 'week', q: { en: 'What should I do this week?', sw: 'Nifanye nini wiki hii?' },
+      a: { en: "Two things will help most this week:\n1. Open a bank account in ClinicBook's name. Fatuma at Pwani Impact Fund needs it before you pitch.\n2. Ask David Otieno to connect. He funds health businesses like yours.",
+           sw: 'Mambo mawili yatakusaidia zaidi wiki hii:\n1. Fungua akaunti ya benki kwa jina la ClinicBook. Fatuma wa Pwani Impact Fund anaihitaji kabla hujawasilisha.\n2. Omba kuunganishwa na David Otieno. Yeye hufadhili biashara za afya kama yako.' }, task: true },
+    { id: 'who', q: { en: 'Who should I talk to first?', sw: 'Nizungumze na nani kwanza?' },
+      a: { en: 'Start with David Otieno. He fits you strongly: he invests in health technology, and your KES 1 million is in his range.', sw: 'Anza na David Otieno. Anakufaa sana: huwekeza katika teknolojia ya afya, na KES milioni 1 yako iko ndani ya kiwango chake.' } },
+    { id: 'cr12', q: { en: 'Explain CR12 simply', sw: 'Nieleze CR12 kwa urahisi' },
+      a: { en: 'A CR12 is a letter from the Business Registration Service listing who runs and owns your company. Investors ask for it so they know exactly who they are dealing with.', sw: 'CR12 ni barua kutoka Huduma ya Usajili wa Biashara inayoorodhesha wanaoendesha na kumiliki kampuni yako. Wawekezaji huiomba ili wajue hasa wanashughulika na nani.' } },
+  ];
+  const MEMBERS = [
+    { id: 'amina', you: true }, { id: 'wanjiku', paid: true }, { id: 'achieng', paid: true }, { id: 'halima', paid: false }, { id: 'njeri', paid: true },
+  ];
+  const INVESTMENTS = [
+    { id: 'clinicbook', founder: 'amina', first: 'Amina', biz: 'ClinicBook', amount: 'KES 1,000,000',
+      inst: { en: 'Equity, 8%', sw: 'Hisa, 8%' }, date: { en: '14 August 2026', sw: '14 Agosti 2026' }, status: 'onTrack', tone: 'strong',
+      line: { en: 'Patients book clinic visits and get SMS reminders.', sw: 'Wagonjwa huweka miadi ya kliniki na kupata vikumbusho kwa SMS.' },
+      going: { en: 'Growing as planned: 40 clinics now, up from 18 when you invested.', sw: 'Inakua kama ilivyopangwa: kliniki 40 sasa, kutoka 18 ulipowekeza.' },
+      updates: [
+        { date: { en: '12 November', sw: '12 Novemba' }, text: { en: 'We now serve 40 clinics in Nairobi and Kiambu, and bookings have doubled since August.', sw: 'Sasa tunahudumia kliniki 40 Nairobi na Kiambu, na miadi imeongezeka maradufu tangu Agosti.' } },
+        { date: { en: '3 October', sw: '3 Oktoba' }, text: { en: 'M-Pesa payments are live. 1,200 bookings in September.', sw: 'Malipo ya M-Pesa yanafanya kazi. Miadi 1,200 mwezi Septemba.' } },
+      ],
+      goals: [
+        { t: { en: 'Sign up 25 clinics', sw: 'Kusajili kliniki 25' }, done: true },
+        { t: { en: 'Launch M-Pesa payments', sw: 'Kuzindua malipo ya M-Pesa' }, done: true },
+        { t: { en: 'Hire a sales lead', sw: 'Kuajiri kiongozi wa mauzo' }, done: false, due: { en: 'December 2026', sw: 'Desemba 2026' } },
+      ],
+      checks: [{ k: 'ci30', date: { en: '13 September 2026', sw: '13 Septemba 2026' }, s: 'done' }, { k: 'ci90', date: { en: '12 November 2026', sw: '12 Novemba 2026' }, s: 'done' }, { k: 'ci180', date: { en: '10 February 2027', sw: '10 Februari 2027' }, s: 'next' }],
+      share: true },
+    { id: 'mamacare', founder: 'achieng', first: 'Achieng', biz: 'MamaCare', amount: 'KES 600,000',
+      inst: { en: 'Convertible note', sw: 'Noti inayobadilika kuwa hisa' }, date: { en: '2 March 2026', sw: '2 Machi 2026' }, status: 'call', tone: 'fix',
+      line: { en: 'SMS advice for expectant mothers, in Kiswahili and English.', sw: 'Ushauri kwa SMS kwa akina mama wajawazito, kwa Kiswahili na Kiingereza.' },
+      going: { en: 'Mothers keep signing up, but the county hospital partnership is late, and so is her 180-day check-in.', sw: 'Akina mama wanaendelea kujisajili, lakini ushirikiano na hospitali ya kaunti umechelewa, na ukaguzi wake wa siku 180 pia.' },
+      updates: [{ date: { en: '2 September', sw: '2 Septemba' }, text: { en: 'The county partnership is taking longer than we hoped. We meet the health officer on 20 November.', sw: 'Ushirikiano na kaunti unachukua muda mrefu kuliko tulivyotarajia. Tunakutana na afisa wa afya tarehe 20 Novemba.' } }],
+      goals: [
+        { t: { en: 'Reach 5,000 mothers', sw: 'Kufikia akina mama 5,000' }, done: true },
+        { t: { en: 'Partner with a county hospital', sw: 'Kushirikiana na hospitali ya kaunti' }, done: false, late: true, due: { en: 'September 2026, now late', sw: 'Septemba 2026, sasa imechelewa' } },
+      ],
+      checks: [{ k: 'ci30', date: { en: '1 April 2026', sw: '1 Aprili 2026' }, s: 'done' }, { k: 'ci90', date: { en: '31 May 2026', sw: '31 Mei 2026' }, s: 'done' }, { k: 'ci180', date: { en: '29 August 2026', sw: '29 Agosti 2026' }, s: 'late' }],
+      share: false },
+    { id: 'dawa', founder: 'wanjiku', first: 'Wanjiku', biz: 'Dawa Express', amount: 'KES 1,500,000',
+      inst: { en: 'Equity, 10%', sw: 'Hisa, 10%' }, date: { en: '20 October 2025', sw: '20 Oktoba 2025' }, status: 'well', tone: 'strong',
+      line: { en: 'Medicine delivered from local pharmacies within the hour.', sw: 'Dawa hufikishwa kutoka maduka ya dawa ya karibu ndani ya saa moja.' },
+      going: { en: 'Every goal met and every check-in done. Now in three counties.', sw: 'Kila lengo limefikiwa na kila ukaguzi umefanyika. Sasa iko katika kaunti tatu.' },
+      updates: [{ date: { en: '1 November', sw: '1 Novemba' }, text: { en: 'We opened in Nakuru, our third county. Monthly orders passed 9,000.', sw: 'Tumefungua Nakuru, kaunti yetu ya tatu. Oda za kila mwezi zimepita 9,000.' } }],
+      goals: [{ t: { en: 'Partner with 50 pharmacies', sw: 'Kushirikiana na maduka ya dawa 50' }, done: true }, { t: { en: 'Open in a second county', sw: 'Kufungua katika kaunti ya pili' }, done: true }],
+      checks: [{ k: 'ci30', date: { en: '19 November 2025', sw: '19 Novemba 2025' }, s: 'done' }, { k: 'ci90', date: { en: '18 January 2026', sw: '18 Januari 2026' }, s: 'done' }, { k: 'ci180', date: { en: '18 April 2026', sw: '18 Aprili 2026' }, s: 'done' }],
+      share: true },
+  ];
+  const BUSINESSES = [
+    { id: 'halima', biz: 'Afya Bora Labs', fit: 'strong', fitText: { en: 'Strong fit', sw: 'Inakufaa sana' },
+      line: { en: 'Home blood tests booked by phone, in Kiambu. Asking for KES 1.2 million.', sw: 'Vipimo vya damu nyumbani vinavyoagizwa kwa simu, Kiambu. Inaomba KES milioni 1.2.' } },
+    { id: 'njeri', biz: 'Tiba Rides', fit: 'good', fitText: { en: 'Good fit', sw: 'Inakufaa' },
+      line: { en: 'Rides to the clinic for older patients, in Nairobi. Asking for KES 800,000.', sw: 'Usafiri wa kwenda kliniki kwa wagonjwa wazee, Nairobi. Inaomba KES 800,000.' } },
+  ];
+
+  const NOTES = {
+    home: { title: 'Home: one next step', sub: 'The first thing Amina sees tells her what to do, and why.', items: [
+      ['A greeting in light type', 'Large, light and calm. Her name in medium weight, so it reads like a letter, not a banner.'],
+      ['One next step, in a sentence', 'With how long it takes and two clear choices. "I\'ve done this" brings up the next one.'],
+      ['Progress as a thin bar and in words', 'Seven segments, purple when done, and "4 of 7 things investors look for".'],
+      ['Investors as people', 'A photo or initials, the firm, one plain line, and the fit in words.'],
+      ['"Messages 2" instead of a bell', 'The top bar says what it is. The tabs are words, with a small gold mark on the one you\'re on.'],
+    ] },
+    investors: { title: 'Investors: reasons, not scores', sub: 'Three lists with names that say what to do.', items: [
+      ['"Ready to pitch", "After one fix", "Not a fit"', 'The number in each list sits beside the name.'],
+      ['Fit in words, with a quiet marker', '"Strong fit" plus three short bars. Never a percentage.'],
+      ['Numbered reasons', '01, 02, 03: each one about her business, so she can check it.'],
+      ['"After one fix" links to the fix', 'It names the missing item and goes straight to it.'],
+    ] },
+    ready: { title: 'Get ready: a clear path', sub: 'The checklist as numbered steps, with the why in plain words.', items: [
+      ['Numbered steps on a thin line', 'Done steps fill in purple. No beads, no cartoons.'],
+      ['Tap a step to open it', 'Why it matters, how long it takes, and one button to mark it done.'],
+      ['A short word of praise', '"Well done. One step closer." Small, and in the same calm voice.'],
+      ['Kiswahili works here today', 'These translations are the ones already in the backend.'],
+    ] },
+    guide: { title: 'Guide: ask, don\'t hunt', sub: 'The AI Co-pilot as a tab called "Guide".', items: [
+      ['Clearly an AI', 'A gold circle marked "AI" and a plain note that it can make mistakes. No human face or name.'],
+      ['Questions ready to tap', 'Full questions she would actually ask.'],
+      ['It suggests, she decides', '"Add to my list" or "Not now", exactly as the backend works today.'],
+      ['A "Speak" button', 'For people who would rather talk than type. A later step.'],
+    ] },
+    chamas: { title: 'Chamas: who has paid, by name', sub: 'Like the treasurer\'s notebook, but shared.', items: [
+      ['Money in light, large numbers', '"KES 45,000 saved of KES 100,000", with the goal in a sentence.'],
+      ['Every member by photo or initials', '"Paid" or "Not yet" in words.'],
+      ['One clear action', '"Record my contribution", with a thank-you.'],
+      ['The money rule, stated', 'FoundersLink never holds the money.'],
+    ] },
+    ihome: { title: 'Investor home: what needs Grace first', sub: 'The same idea as the founder\'s Home.', items: [
+      ['"Needs your attention" at the top', 'A late check-in, said in a sentence, with one button.'],
+      ['Her investments in one line', 'The total, the faces of the founders, and the next check-in date.'],
+      ['Four tabs, all words', 'Home, Businesses, Requests, My investments.'],
+    ] },
+    ibiz: { title: 'Businesses: founders as people', sub: 'Today\'s "Discover", renamed so it says what it is.', items: [
+      ['What the business does, where, and what it asks', 'One sentence each.'],
+      ['Fit in words', 'The same as on the founder\'s side.'],
+      ['One button', '"Ask to connect".'],
+    ] },
+    ireq: { title: 'Requests: where each conversation stands', sub: 'Who she asked, what she proposed, and what they said.', items: [
+      ['Status in words', '"Deciding" or "Connected".'],
+      ['Her proposed amount, written out', 'So she remembers what she offered.'],
+    ] },
+    iport: { title: 'My investments', sub: 'New. Today the app stops at "This deal is closed".', items: [
+      ['The total, on deep purple', 'A record of what she put in, not a balance.'],
+      ['Each business with its founder', 'Amount, a sentence on how it\'s going, and a status in words.'],
+      ['Open one for the full story', 'Goals, check-ins, the founder\'s news and the track record.'],
+    ] },
+    idetail: { title: 'One investment', sub: 'What an investor wants to know after the money has moved.', items: [
+      ['Latest from the founder', 'Short updates in their own words. Needs new backend work.'],
+      ['Goals you agreed', '"Done" or "Not yet". The backend already has these as milestones.'],
+      ['Check-ins at 30, 90 and 180 days', 'The same numbered steps as "Get ready". A late one turns red. Needs new backend work.'],
+      ['Track record, her choice', 'Show or hide the deal on her profile. Already in the backend.'],
+    ] },
+  };
+
+  // ---------------- State ----------------
+  const S = {
+    role: 'founder', screen: 'home', lang: 'en', large: false,
+    done: new Set(['kra', 'brs', 'permit', 'data']), openStep: null, invTab: 'ready', requested: new Set(), openInv: 'david',
+    chat: [], typing: false, task: null, paidMe: false, toast: null,
+    inv: null, asked: new Set(), iRequested: new Set(['njeri']),
+    share: Object.fromEntries(INVESTMENTS.map((i) => [i.id, i.share])),
+  };
+  const t = () => T[S.lang];
+  const ti = () => TI[S.lang];
+  const L = (o) => o[S.lang];
+  let toastTimer;
+  function toast(msg) {
+    S.toast = msg; render();
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { S.toast = null; render(); }, 2400);
+  }
+  const meter = (n, fix) => `<span class="meter ${fix ? 'fix' : ''}">${[0, 1, 2].map((i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
+  const segbar = () => `<div class="segbar">${ITEMS.map((it) => `<i class="${S.done.has(it.id) ? 'on' : ''}"></i>`).join('')}</div>`;
+
+  function top(inner) {
+    const me = S.role === 'investor' ? 'grace' : 'amina';
+    return `<div class="top">
+      <div class="status"><span>9:41</span><span>5G</span></div>
+      <div class="top-row">
+        <div class="wordmark">FoundersLink<span>.</span></div>
+        <div class="top-right">
+          <button class="msg-pill" data-act="noop">${t().messages} <span class="count">2</span></button>
+          ${av(me, 32)}
+        </div>
+      </div>
+      ${inner}
+    </div>`;
+  }
+  const greet = (name) => `<div class="greet"><div class="date">${t().date}</div><h1>${t().hello} <b>${name}</b></h1></div>`;
+
+  // ---------------- Founder screens ----------------
+  function home() {
+    const next = ITEMS.find((it) => !S.done.has(it.id));
+    const inv = INVESTORS.filter((i) => i.list === 'ready');
+    return top(greet(t().name)) + `<div class="body">
+      ${next ? `<div class="card">
+        <div class="eyebrow">${t().nextStep}</div>
+        <p class="h">${L(next)}</p>
+        <span class="time">${L(next.time)}</span>
+        <p class="p">${L(next.why)}</p>
+        <div class="btns two">
+          <button class="btn primary" data-act="go" data-to="ready" data-open="${next.id}">${t().showHow}</button>
+          <button class="btn ghost" data-act="done" data-id="${next.id}">${t().doneIt}</button>
+        </div></div>` : `<div class="card"><p class="h">${t().allDone}</p></div>`}
+      <div class="card">
+        <div class="label">${t().progressLabel}</div>
+        <div class="bignum" style="margin-top:6px"><span class="num">${S.done.size}</span><span class="muted">/ 7</span></div>
+        ${segbar()}
+        <p class="p" style="margin:0">${t().progress(S.done.size)}</p>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom:12px">${t().fundYou}</div>
+        ${inv.map((i) => `<div class="person">${av(i.id, 48)}<div style="flex:1"><div class="pname">${FULL[i.id]}</div><div class="porg">${i.org} · ${i.ticket}</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${L(i.line)}</div><span class="fitw">${meter(i.n)}${L(i.fitText)}</span></div></div>`).join('')}
+        <div style="margin-top:14px"><button class="btn soft" data-act="go" data-to="investors">${t().seeAll}</button></div>
+      </div>
+      <div class="card">
+        <div class="person"><span class="ai-mark">AI</span><div><div class="pname">${t().askGuide}</div><div class="porg">${t().askHint}</div></div></div>
+        <div style="margin-top:12px"><button class="btn primary" data-act="go" data-to="guide">${t().askBtn}</button></div>
+      </div>
+    </div>`;
+  }
+
+  function investors() {
+    const counts = { ready: 3, fix: 2, no: 4 };
+    const list = INVESTORS.filter((i) => i.list === S.invTab);
+    const cards = list.map((i) => {
+      const open = S.openInv === i.id;
+      let more = '';
+      if (i.list === 'ready') {
+        more = `<div class="label" style="margin-top:14px">${t().whyFits}</div><ol class="why">${L(i.why).map((w) => `<li>${w}</li>`).join('')}</ol>` +
+          (S.requested.has(i.id) ? `<div class="sent">${t().sent}</div>` : `<button class="btn primary" data-act="connect" data-id="${i.id}">${t().connect}</button>`);
+      } else if (i.list === 'fix') {
+        const item = ITEMS.find((x) => x.id === i.fixItem);
+        const fixed = S.done.has(item.id);
+        more = `<div class="label" style="margin-top:14px">${t().fixFirst}</div><ol class="why"><li>${L(item)}</li></ol>` +
+          (fixed ? (S.requested.has(i.id) ? `<div class="sent">${t().sent}</div>` : `<button class="btn primary" data-act="connect" data-id="${i.id}">${t().connect}</button>`)
+                 : `<button class="btn soft" data-act="go" data-to="ready" data-open="${item.id}">${t().goFix}</button>`);
+      } else {
+        more = `<div class="label" style="margin-top:14px">${t().whyNot}</div><p class="p" style="margin-top:4px">${L(i.whyNot)}</p>`;
+      }
+      return `<div class="card" data-act="openinv" data-id="${i.id}" style="cursor:pointer">
+        <div class="person">${av(i.id, 52)}<div style="flex:1"><div class="pname">${FULL[i.id]}</div><div class="porg">${i.org} · ${i.ticket}</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${L(i.line)}</div><span class="fitw">${meter(i.n, i.list === 'fix')}${L(i.fitText)}</span></div></div>
+        ${open ? more : ''}
+      </div>`;
+    }).join('');
+    return top(`<h1 class="title">${t().invTitle}</h1><div class="tsub">${t().invSub}</div>`) + `<div class="body">
+      <div class="tabsrow">
+        ${['ready', 'fix', 'no'].map((k) => `<button class="${S.invTab === k ? 'on' : ''}" data-act="invtab" data-tab="${k}">${t()[{ ready: 'tabReady', fix: 'tabFix', no: 'tabNo' }[k]]} · ${counts[k]}</button>`).join('')}
+      </div>
+      ${cards}
+    </div>`;
+  }
+
+  function ready() {
+    return top(`<h1 class="title">${t().readyTitle}</h1><div class="tsub">${t().progress(S.done.size)}</div>`) + `<div class="body">
+      <div class="card"><div class="bignum"><span class="num">${S.done.size}</span><span class="muted">/ 7</span></div>${segbar()}</div>
+      <div class="path">
+        ${ITEMS.map((it, n) => {
+          const isDone = S.done.has(it.id), open = S.openStep === it.id;
+          return `<div class="step ${isDone ? 'isdone' : ''} ${open ? 'open' : ''}">
+            <div class="stone">${n + 1}</div>
+            <div class="step-card" data-act="step" data-id="${it.id}" role="button" tabindex="0">
+              <div class="step-title">${L(it)}</div>
+              <div class="step-state">${isDone ? t().stDone : t().stTodo} · ${L(it.time)}</div>
+              ${open ? `<div class="step-more">
+                <div class="label">${t().whyMatters}</div>
+                <p class="p" style="margin-top:2px">${L(it.why)}</p>
+                <div class="btns">
+                  ${isDone ? `<button class="btn ghost" data-act="undo" data-id="${it.id}">${t().notDone}</button>` : `<button class="btn primary" data-act="done" data-id="${it.id}">${t().markDone}</button>`}
+                  <button class="btn soft" data-act="noop">${t().expert}</button>
+                </div></div>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  function guide() {
+    const intro = S.lang === 'sw'
+      ? 'Habari Amina. Mimi ni mwongozo wako wa FoundersLink. Nimesoma wasifu wa ClinicBook na orodha yako. Naweza kupendekeza mambo ya kufanya, lakini wewe ndiye unayeamua.'
+      : "Hello Amina. I'm your FoundersLink guide. I've read ClinicBook's profile and your checklist. I can suggest things to do, but you decide.";
+    const asked = new Set(S.chat.filter((m) => m.from === 'me').map((m) => m.q));
+    const left = QUESTIONS.filter((q) => !asked.has(q.id));
+    const msgs = S.chat.map((m) => {
+      const q = QUESTIONS.find((x) => x.id === m.q);
+      if (m.from === 'me') return `<div class="bubble me">${L(q.q)}</div>`;
+      if (m.from === 'guide') return `<div class="bubble guide">${L(q.a)}</div>`;
+      if (S.task === 'added') return `<div class="sent">${t().added}</div>`;
+      if (S.task === 'dismissed') return `<div class="bubble guide" style="color:var(--muted)">${t().dismissed}</div>`;
+      return `<div class="task"><div class="eyebrow">${t().taskLabel}</div><p class="h">${t().taskTitle}</p>
+        <div class="btns two"><button class="btn primary" data-act="task" data-v="added">${t().add}</button><button class="btn ghost" data-act="task" data-v="dismissed">${t().notNow}</button></div></div>`;
+    }).join('');
+    return top(`<div class="person" style="margin-top:18px;position:relative;z-index:1"><span class="ai-mark">AI</span><div><h1 class="title" style="margin:0">${t().guideTitle}</h1><div class="tsub" style="margin:0">${t().guideSub}</div></div></div>`) + `
+      <div class="body">
+        <div class="ai-note">${t().aiNote}</div>
+        <div class="chat">
+          <div class="bubble guide">${intro}</div>
+          ${msgs}
+          ${S.typing ? `<div class="bubble guide"><span class="typing"><i></i><i></i><i></i></span></div>` : ''}
+          ${!S.typing && left.length ? `<div class="label" style="margin-top:6px">${t().tryAsking}</div><div class="chips">${left.map((q) => `<button class="chipq" data-act="ask" data-q="${q.id}">${L(q.q)}</button>`).join('')}</div>` : ''}
+        </div>
+      </div>
+      <div class="composer"><div class="field">${t().typeHere}</div><button class="speak" data-act="noop">${t().speak}</button></div>`;
+  }
+
+  function chamas() {
+    const total = 45000 + (S.paidMe ? 5000 : 0);
+    return top(`<h1 class="title">${t().chamaTitle}</h1><div class="tsub">${t().chamaSub}</div>`) + `<div class="body">
+      <div class="card">
+        <div class="pname">Nairobi Health Founders</div>
+        <div class="faces">${MEMBERS.map((m) => av(m.id, 34)).join('')}</div>
+        <div class="money">${t().saved(total.toLocaleString('en-KE'))}</div>
+        <div class="porg">${t().savedOf}</div>
+        <div class="bar"><div style="width:${total / 1000}%"></div></div>
+        <p class="p" style="margin:0;color:var(--text)">${t().goal}</p>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom:4px">${t().thisMonth}</div>
+        ${MEMBERS.map((m) => {
+          const paid = m.you ? S.paidMe : m.paid;
+          return `<div class="member">${av(m.id, 36)}<span class="n">${FULL[m.id]} ${m.you ? `<span class="porg">${t().you}</span>` : ''}</span><span class="tag ${paid ? 'paid' : 'not'}">${paid ? t().paid : t().notYet}</span></div>`;
+        }).join('')}
+        <div class="btns" style="margin-top:12px">
+          ${S.paidMe ? `<div class="sent">${t().recorded}</div>` : `<button class="btn primary" data-act="pay">${t().record}</button>`}
+          <button class="btn soft" data-act="noop">${t().openChat}</button>
+        </div>
+      </div>
+      <div class="card" style="background:var(--lav);border-color:transparent;box-shadow:none">
+        <p class="h" style="font-size:1em">${t().meeting}</p>
+        <p class="p" style="margin:0">${t().noMoney}</p>
+      </div>
+    </div>`;
+  }
+
+  // ---------------- Investor screens ----------------
+  function ihome() {
+    const tt = ti();
+    return top(greet(tt.name)) + `<div class="body">
+      <div class="card" style="border-color:rgba(227,182,93,.55)">
+        <div class="eyebrow">${tt.attention}</div>
+        <div class="person">${av('achieng', 44)}<div style="flex:1"><p class="h" style="margin:0 0 4px">MamaCare</p><p class="p">${tt.attnText}</p></div></div>
+        <button class="btn primary" data-act="openinvest" data-id="mamacare">${tt.attnBtn}</button>
+      </div>
+      <div class="card">
+        <div class="label">${tt.summaryLabel}</div>
+        <div class="money" style="margin-top:4px">KES 3,100,000</div>
+        <div class="faces">${INVESTMENTS.map((i) => av(i.founder, 34)).join('')}</div>
+        <p class="p" style="color:var(--text);margin-bottom:4px">${tt.summary}</p>
+        <p class="p">${tt.nextCheck}</p>
+        <button class="btn soft" data-act="go" data-to="iport">${tt.seeInv}</button>
+      </div>
+      <div class="card">
+        <p class="h">${tt.newFits(4)}</p>
+        <p class="p">${tt.newFitsSub}</p>
+        <button class="btn soft" data-act="go" data-to="ibiz">${tt.seeBiz}</button>
+      </div>
+      <div class="card">
+        <div class="person">${av('njeri', 40)}<div style="flex:1"><p class="h" style="margin:0;font-size:1em">${tt.reqWaiting}</p></div></div>
+        <div style="margin-top:12px"><button class="btn ghost" data-act="go" data-to="ireq">${tt.seeReq}</button></div>
+      </div>
+    </div>`;
+  }
+  function ibiz() {
+    const tt = ti();
+    return top(`<h1 class="title">${tt.bizTitle}</h1><div class="tsub">${tt.bizSub}</div>`) + `<div class="body">
+      ${BUSINESSES.map((b) => `<div class="card">
+        <div class="person">${av(b.id, 52)}<div style="flex:1"><div class="pname">${b.biz}</div><div class="porg">${FULL[b.id]}</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${L(b.line)}</div><span class="tag ${b.fit}">${L(b.fitText)}</span></div></div>
+        <div style="margin-top:12px">${S.iRequested.has(b.id) ? `<div class="sent">${tt.sent}</div>` : `<button class="btn primary" data-act="iconnect" data-id="${b.id}">${tt.connect}</button>`}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+  function ireq() {
+    const tt = ti();
+    const rows = [
+      { id: 'njeri', biz: 'Tiba Rides', state: 'waiting', amount: 'KES 800,000' },
+      ...(S.iRequested.has('halima') ? [{ id: 'halima', biz: 'Afya Bora Labs', state: 'waiting', amount: 'KES 1,200,000' }] : []),
+      { id: 'amina', biz: 'ClinicBook', state: 'connected', amount: 'KES 1,000,000' },
+    ];
+    return top(`<h1 class="title">${tt.reqTitle}</h1><div class="tsub">${tt.reqSub}</div>`) + `<div class="body">
+      ${rows.map((r) => `<div class="card">
+        <div class="person">${av(r.id, 48)}<div style="flex:1"><div class="pname">${FULL[r.id]}</div><div class="porg">${r.biz}</div><div class="porg" style="color:var(--text);margin-top:4px">${tt.proposed(r.amount)}</div></div>
+        <span class="tag ${r.state === 'connected' ? 'paid' : 'not'}">${r.state === 'connected' ? tt.connected : tt.waiting}</span></div>
+        ${r.state === 'connected' ? `<div style="margin-top:12px"><button class="btn soft" data-act="noop">${tt.openChat}</button></div>` : ''}
+      </div>`).join('')}
+    </div>`;
+  }
+  const TONE = { onTrack: 'strong', well: 'strong', call: 'fix' };
+  function iport() {
+    const tt = ti();
+    if (S.inv) return idetail(INVESTMENTS.find((i) => i.id === S.inv));
+    return top(`<h1 class="title">${tt.portTitle}</h1><div class="tsub">${tt.portSub}</div>`) + `<div class="body">
+      <div class="card" style="background:var(--deep);border-color:var(--deep);color:#fff">
+        <div class="label" style="color:rgba(255,255,255,.65)">${tt.total}</div>
+        <div class="money" style="color:#fff">KES 3,100,000</div>
+        <div style="color:rgba(255,255,255,.65);font-size:.9em">${tt.backed(INVESTMENTS.length)}</div>
+      </div>
+      ${INVESTMENTS.map((i) => `<div class="card invest" data-act="openinvest" data-id="${i.id}">
+        <div class="person">${av(i.founder, 52)}<div style="flex:1">
+          <div class="pname">${i.biz}</div>
+          <div class="porg">${FULL[i.founder]} · ${i.amount}</div>
+          <div class="porg" style="color:var(--text);margin:6px 0 8px">${L(i.going)}</div>
+          <span class="tag ${TONE[i.status]}">${tt.status[i.status]}</span>
+        </div></div>
+        <span class="more">${tt.open} ${i.biz} <span class="arrow"></span></span>
+      </div>`).join('')}
+      <p class="p" style="text-align:center;font-size:.82em">${tt.moneyNote}</p>
+    </div>`;
+  }
+  function idetail(i) {
+    const tt = ti();
+    const ciTag = { done: tt.ciDone, next: tt.ciNext, late: tt.ciLate };
+    return top(`<h1 class="title">${i.biz}</h1><div class="tsub">${FULL[i.founder]} · ${L(i.line)}</div>`) + `<div class="body">
+      <button class="backlink" data-act="closeinvest">← ${tt.back}</button>
+      <div class="card">
+        <div class="person">${av(i.founder, 52)}<div style="flex:1">
+          <div class="money" style="font-size:1.35em">${i.amount}</div>
+          <div class="porg" style="margin-bottom:6px">${L(i.inst)} · ${L(i.date)}</div>
+          <span class="tag ${TONE[i.status]}">${tt.status[i.status]}</span>
+        </div></div>
+        <div class="label" style="margin-top:14px">${tt.howGoing}</div>
+        <p class="p" style="margin:2px 0 0;color:var(--text)">${L(i.going)}</p>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom:10px">${tt.latestFrom(i.first)}</div>
+        ${i.updates.map((u) => `<div class="update"><div class="when">${L(u.date)}</div><p>${L(u.text)}</p></div>`).join('')}
+        <div class="btns">
+          ${S.asked.has(i.id) ? `<div class="sent">${tt.asked(i.first)}</div>` : `<button class="btn primary" data-act="askupdate" data-id="${i.id}">${tt.askUpdate}</button>`}
+          <button class="btn ghost" data-act="noop">${tt.message(i.first)}</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom:4px">${tt.goals}</div>
+        ${i.goals.map((g) => `<div class="member"><span class="n">${L(g.t)}${g.due ? `<div class="porg" style="font-weight:400">${tt.due}: ${L(g.due)}</div>` : ''}</span><span class="tag ${g.done ? 'paid' : g.late ? 'late' : 'not'}">${g.done ? tt.ciDone : tt.notYet}</span></div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom:12px">${tt.checkins}</div>
+        <div class="path">
+          ${i.checks.map((c) => `<div class="step ${c.s === 'done' ? 'isdone' : c.s}">
+            <div class="stone" style="font-size:.75em">${c.k.slice(2)}</div>
+            <div class="step-card" style="cursor:default"><div class="step-title">${tt[c.k]}</div><div class="step-state">${ciTag[c.s]} · ${L(c.date)}</div></div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="card" style="background:var(--lav);border-color:transparent;box-shadow:none">
+        <div class="label">${tt.trackLabel}</div>
+        <p class="p" style="color:var(--text);margin-top:2px">${S.share[i.id] ? tt.trackOn : tt.trackOff}</p>
+        <button class="btn ghost" data-act="share" data-id="${i.id}">${S.share[i.id] ? tt.hide : tt.show}</button>
+      </div>
+    </div>`;
+  }
+
+  const SCREENS = { home, investors, ready, guide, chamas, ihome, ibiz, ireq, iport };
+  const ORDERS = { founder: ['home', 'investors', 'ready', 'guide', 'chamas'], investor: ['ihome', 'ibiz', 'ireq', 'iport'] };
+  const navName = (k, lang = S.lang) => (T[lang].nav[k] ?? TI[lang].nav[k]);
+
+  function render() {
+    const el = document.getElementById('screen');
+    const prevBody = el.querySelector('.body');
+    const view = S.screen + (S.inv ?? '');
+    const keep = prevBody && el.dataset.view === view ? prevBody.scrollTop : 0;
+    const ORDER = ORDERS[S.role];
+    el.className = 'screen' + (S.large ? ' large' : '');
+    el.dataset.view = view;
+    el.innerHTML = SCREENS[S.screen]() +
+      `<nav class="nav" style="grid-template-columns:repeat(${ORDER.length},1fr)">${ORDER.map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-act="go" data-to="${k}">${navName(k)}</button>`).join('')}</nav>` +
+      (S.toast ? `<div class="toast"><span class="dot"></span>${S.toast}</div>` : '');
+    const body = el.querySelector('.body');
+    if (body) body.scrollTop = S.screen === 'guide' ? body.scrollHeight : keep;
+    document.getElementById('jump').innerHTML = ORDER.map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-to="${k}">${navName(k, 'en')}${S.lang === 'sw' ? ` · ${navName(k, 'sw')}` : ''}</button>`).join('');
+    const n = NOTES[S.screen === 'iport' && S.inv ? 'idetail' : S.screen];
+    document.getElementById('notes').innerHTML = `<h3>${n.title}</h3><p class="sub">${n.sub}</p><ol>${n.items.map(([b, s], i) => `<li><i>0${i + 1}</i><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>`;
+  }
+
+  // ---------------- Actions ----------------
+  document.getElementById('screen').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    switch (b.dataset.act) {
+      case 'go': S.screen = b.dataset.to; S.inv = null; if (b.dataset.open) S.openStep = b.dataset.open; render(); break;
+      case 'done': S.done.add(b.dataset.id); S.openStep = null; toast(t().toastDone); break;
+      case 'undo': S.done.delete(b.dataset.id); render(); break;
+      case 'step': if (e.target.closest('button')) return; S.openStep = S.openStep === b.dataset.id ? null : b.dataset.id; render(); break;
+      case 'invtab': S.invTab = b.dataset.tab; S.openInv = INVESTORS.find((i) => i.list === S.invTab)?.id; render(); break;
+      case 'openinv': if (e.target.closest('button')) return; S.openInv = S.openInv === b.dataset.id ? null : b.dataset.id; render(); break;
+      case 'connect': S.requested.add(b.dataset.id); render(); break;
+      case 'ask': {
+        const q = QUESTIONS.find((x) => x.id === b.dataset.q);
+        S.chat.push({ from: 'me', q: q.id }); S.typing = true; render();
+        setTimeout(() => {
+          S.typing = false; S.chat.push({ from: 'guide', q: q.id });
+          if (q.task && !S.task) { S.task = 'open'; S.chat.push({ from: 'task' }); }
+          render();
+        }, 1100);
+        break;
+      }
+      case 'task': S.task = b.dataset.v; render(); break;
+      case 'pay': S.paidMe = true; toast(t().recorded); break;
+      case 'openinvest': S.screen = 'iport'; S.inv = b.dataset.id; render(); break;
+      case 'closeinvest': S.inv = null; render(); break;
+      case 'askupdate': { const inv = INVESTMENTS.find((i) => i.id === b.dataset.id); S.asked.add(inv.id); toast(ti().asked(inv.first)); break; }
+      case 'share': S.share[b.dataset.id] = !S.share[b.dataset.id]; render(); break;
+      case 'iconnect': S.iRequested.add(b.dataset.id); render(); break;
+    }
+  });
+  document.getElementById('screen').addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.step-card')) { e.preventDefault(); e.target.click(); }
+  });
+  const segment = (id, key, apply) => document.getElementById(id).addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    apply(b.dataset[key]);
+    document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle('on', x === b));
+    render();
+  });
+  segment('roleSeg', 'role', (v) => { S.role = v; S.screen = v === 'investor' ? 'ihome' : 'home'; S.inv = null; });
+  segment('langSeg', 'lang', (v) => { S.lang = v; });
+  segment('sizeSeg', 'size', (v) => { S.large = v === 'large'; });
+  document.getElementById('jump').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.screen = b.dataset.to; S.inv = null; render();
+  });
+
+  // ---------------- Web app and system parts ----------------
+  const WEB = [
+    ['david', 'Lakeside Ventures', 'KES 1–5M', 3, 'Strong', 'Not contacted', '<span class="pill solid sm">Request intro</span>'],
+    ['grace', 'Savanna Angels', 'KES 0.5–2M', 3, 'Strong', 'In the deal room', '<span class="pill line sm">Open</span>'],
+    ['wairimu', 'Nairobi Health Syndicate', 'KES 0.3–1M', 2, 'Good', 'Replied yesterday', '<span class="pill line sm">Reply</span>'],
+    ['fatuma', 'Pwani Impact Fund', 'KES 0.3–1.5M', 1, 'After one fix', 'Needs a bank account', '<span class="pill line sm">See the fix</span>'],
+  ];
+  document.getElementById('webRows').innerHTML = WEB.map(([id, org, ticket, n, fit, where, btn]) =>
+    `<tr><td><div class="who">${av(id, 40)}<div>${FULL[id]}<small>${org}</small></div></div></td><td>${ticket}</td><td><span class="fitw" style="font-size:13px">${meter(n, n === 1)}${fit}</span></td><td class="muted small">${where}</td><td style="text-align:right">${btn}</td></tr>`).join('');
+  document.getElementById('sideMe').innerHTML = `${av('amina', 36)}<div>Amina Wanjiru<small>ClinicBook · Seed</small></div>`;
+  document.getElementById('parts').innerHTML = `
+    <span class="pill solid sm">Request introduction <span class="arrow"></span></span>
+    <span class="pill line sm">Talk to an expert</span>
+    <span class="pill gold sm">Apply to join</span>
+    ${av('david', 40)}${av('amina', 40)}${av('grace', 40)}
+    <span class="ai-mark" style="width:36px;height:36px">AI</span>
+    <span class="fitw" style="font-size:13px">${meter(3)}Strong fit</span>
+    <span class="tag fix" style="font-size:12px">Worth a call</span>
+    <span class="tag paid" style="font-size:12px">Done</span>`;
+
+  // Open a screen from the address, e.g. #investor, #investor/mamacare or #founder/guide.
+  const [role, where] = decodeURIComponent(location.hash.slice(1)).split('/');
+  if (role === 'investor' || role === 'founder') {
+    document.querySelector(`#roleSeg [data-role="${role}"]`).click();
+    if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
+    else if (where && SCREENS[where] && ORDERS[role].includes(where)) S.screen = where;
+  }
+  render();
+})();
+</script>
+</body>
+</html>

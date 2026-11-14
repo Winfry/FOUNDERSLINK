@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { AlertCircle, Check, ChevronDown, Sparkles, type LucideIcon } from 'lucide-react-native';
+import { Check, ChevronDown } from 'lucide-react-native';
 import { Text, TextInput } from '../ui/Text';
 import { colors, radius, spacing, touchTargetMin } from '../../theme/tokens';
 
@@ -20,7 +20,6 @@ export function Steps({ names, current }: { names: string[]; current: number }) 
           <View key={name} style={styles.step}>
             <View style={[styles.stepBar, done && styles.stepBarDone, active && styles.stepBarActive]} />
             <View style={styles.stepLabelRow}>
-              {done ? <Check size={14} color={colors.primary} strokeWidth={3} /> : null}
               <Text style={[styles.stepLabel, (done || active) && styles.stepLabelOn]} numberOfLines={1}>
                 {done ? name : `${n}. ${name}`}
               </Text>
@@ -109,10 +108,11 @@ export interface Choice {
   value: string;
   title: string;
   line: string;
-  icon: LucideIcon;
+  /** No longer drawn: the title and line say it. Accepted so older lists still compile. */
+  icon?: unknown;
 }
 
-/** A choice between a few things, each a card she can read before picking. */
+/** A choice between a few things, each a card she can read before picking. The chosen one has a purple border and a lavender fill. */
 export function ChoiceCards({
   label,
   choices,
@@ -128,7 +128,7 @@ export function ChoiceCards({
     <View style={styles.choiceWrap} accessibilityRole="radiogroup" accessibilityLabel={label}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <View style={styles.choiceRow}>
-        {choices.map(({ value: v, title, line, icon: Icon }) => {
+        {choices.map(({ value: v, title, line }) => {
           const on = v === value;
           return (
             <Pressable
@@ -139,11 +139,7 @@ export function ChoiceCards({
               accessibilityLabel={`${title}. ${line}`}
               style={[styles.choice, on && styles.choiceOn]}
             >
-              <View style={styles.choiceTop}>
-                <Icon size={24} color={on ? colors.primary : colors.textMuted} />
-                <View style={[styles.radio, on && styles.radioOn]}>{on ? <View style={styles.radioDot} /> : null}</View>
-              </View>
-              <Text style={styles.choiceTitle}>{title}</Text>
+              <Text style={[styles.choiceTitle, on && styles.choiceTitleOn]}>{title}</Text>
               <Text style={styles.choiceLine}>{line}</Text>
             </Pressable>
           );
@@ -188,7 +184,6 @@ export function FormError({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
     <View style={styles.formError} accessibilityRole="alert">
-      <AlertCircle size={20} color={colors.error} />
       <Text style={styles.formErrorText}>{message}</Text>
     </View>
   );
@@ -216,7 +211,6 @@ export function TextLink({ title, onPress, align = 'center' }: { title: string; 
 export function SuggestedTag() {
   return (
     <View style={styles.tag}>
-      <Sparkles size={12} color={colors.primaryDark} />
       <Text style={styles.tagText}>Suggested</Text>
     </View>
   );
@@ -317,7 +311,6 @@ export function LongSelect({
                 accessibilityRole="button"
               >
                 <Text style={[styles.pickValue, opt === value && styles.pickChosen]}>{opt}</Text>
-                {opt === value ? <Check size={20} color={colors.primary} /> : null}
               </Pressable>
             ))}
           </ScrollView>
@@ -341,7 +334,7 @@ const styles = StyleSheet.create({
   },
   pickValue: { fontSize: 16, color: colors.text },
   pickPlaceholder: { fontSize: 16, color: colors.textMuted },
-  pickChosen: { fontWeight: '700', color: colors.primary },
+  pickChosen: { fontWeight: '500', color: colors.primary },
   pickBackdrop: { flex: 1, backgroundColor: colors.overlay },
   pickSheet: {
     width: '100%',
@@ -357,7 +350,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   pickHandle: { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: spacing[2] },
-  pickTitle: { fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing[1] },
+  pickTitle: { fontSize: 17, fontWeight: '500', color: colors.text, marginBottom: spacing[1] },
   pickList: { flexGrow: 0 },
   pickOption: {
     minHeight: touchTargetMin,
@@ -372,8 +365,8 @@ const styles = StyleSheet.create({
   stepBar: { height: 4, borderRadius: 2, backgroundColor: colors.border },
   stepBarDone: { backgroundColor: colors.primary },
   stepBarActive: { backgroundColor: colors.accent },
-  stepLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5], marginTop: spacing[1] },
-  stepLabel: { fontSize: 14, fontWeight: '600', color: colors.textMuted, flexShrink: 1 },
+  stepLabelRow: { marginTop: spacing[1] },
+  stepLabel: { fontSize: 13, fontWeight: '500', color: colors.textMuted, flexShrink: 1 },
   stepLabelOn: { color: colors.text },
 
   fieldLabel: { fontSize: 14, fontWeight: '500', color: colors.text, marginBottom: spacing[1] },
@@ -395,7 +388,7 @@ const styles = StyleSheet.create({
   codeCellFilled: { borderColor: colors.primaryDark },
   codeCellActive: { borderColor: colors.primary, borderWidth: 2 },
   codeCellError: { borderColor: colors.error },
-  codeDigit: { fontSize: 24, fontWeight: '800', color: colors.text },
+  codeDigit: { fontSize: 24, fontWeight: '300', color: colors.text },
   // Invisible, but it covers the boxes: a tap anywhere on them opens the keyboard.
   codeInput: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, opacity: 0.01, color: 'transparent' },
 
@@ -421,7 +414,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 140,
     minHeight: touchTargetMin,
-    borderRadius: 16,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.white,
@@ -430,20 +423,8 @@ const styles = StyleSheet.create({
     margin: 1,
   },
   choiceOn: { borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.primaryLight, margin: 0 },
-  choiceTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[1.5] },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.grey300,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.white,
-  },
-  radioOn: { borderColor: colors.primary },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  choiceTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
+  choiceTitle: { fontSize: 16, fontWeight: '500', color: colors.text },
+  choiceTitleOn: { color: colors.primary },
   choiceLine: { fontSize: 14, color: colors.textMuted, marginTop: spacing[0.5] },
 
   checkWrap: {},
@@ -463,18 +444,15 @@ const styles = StyleSheet.create({
   checkText: { flex: 1, fontSize: 14, color: colors.text, paddingVertical: spacing[1] },
 
   formError: {
-    flexDirection: 'row',
-    gap: spacing[1],
-    alignItems: 'flex-start',
     backgroundColor: colors.errorLight,
     borderRadius: radius.card,
     padding: spacing[1.5],
     marginBottom: spacing[2],
   },
-  formErrorText: { flex: 1, fontSize: 14, color: colors.text },
+  formErrorText: { fontSize: 14, color: colors.error },
 
   link: { minHeight: touchTargetMin, justifyContent: 'center', alignSelf: 'center' },
-  linkText: { fontSize: 16, fontWeight: '600', color: colors.primary },
+  linkText: { fontSize: 15, fontWeight: '500', color: colors.primary },
 
   tag: {
     position: 'absolute',
@@ -482,13 +460,12 @@ const styles = StyleSheet.create({
     top: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[0.5],
     backgroundColor: colors.primaryLight,
     borderRadius: radius.full,
     paddingHorizontal: spacing[1],
     height: 20,
   },
-  tagText: { fontSize: 12, fontWeight: '600', color: colors.primaryDark },
+  tagText: { fontSize: 12, fontWeight: '500', color: colors.primary },
 
   amountWrap: { marginBottom: spacing[2] },
   amountBox: {
@@ -510,6 +487,6 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: colors.border,
   },
-  amountPrefixText: { fontSize: 16, fontWeight: '700', color: colors.text },
-  amountInput: { flex: 1, minWidth: 0, paddingHorizontal: spacing[2], fontSize: 16, fontWeight: '600', color: colors.text },
+  amountPrefixText: { fontSize: 16, fontWeight: '500', color: colors.text },
+  amountInput: { flex: 1, minWidth: 0, paddingHorizontal: spacing[2], fontSize: 16, fontWeight: '500', color: colors.text },
 });

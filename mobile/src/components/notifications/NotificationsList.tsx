@@ -2,26 +2,26 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { Bell, CalendarClock, FileText, MessageCircle, ShieldCheck, UserPlus, type LucideIcon } from 'lucide-react-native';
 import { Text } from '../ui/Text';
 import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
 import { ScreenError, ScreenLoading } from '../layout/ScreenStates';
 import { notificationService } from '../../services';
 import type { ApiError, AppNotification } from '../../types';
-import { colors, spacing, touchTargetMin } from '../../theme/tokens';
+import { colors, radius, shadows, spacing } from '../../theme/tokens';
 import { PageTitle } from '../layout/PageTitle';
-import { Illustration } from '../illustrations/People';
+import { useWideLayout } from '../../hooks/useWideLayout';
+import { Tag, type Tone } from '../overview/parts';
 
-/** The picture for a notification, worked out from its words. */
-function iconFor(n: AppNotification): { Icon: LucideIcon; bg: string; fg: string } {
+/** What a notification is about, in one small word, worked out from its words. */
+function kindOf(n: AppNotification): { label: string; tone: Tone } | null {
   const t = `${n.title} ${n.body}`.toLowerCase();
-  if (/deadline|due |overdue|remind|expires/.test(t)) return { Icon: CalendarClock, bg: colors.warningLight, fg: colors.warning };
-  if (/verif|approved|vetting|more information/.test(t)) return { Icon: ShieldCheck, bg: colors.successLight, fg: colors.success };
-  if (/document|agreement|term sheet|file|compliance|signed/.test(t)) return { Icon: FileText, bg: colors.primaryLight, fg: colors.primaryDark };
-  if (/message|chat|replied/.test(t)) return { Icon: MessageCircle, bg: colors.primaryLight, fg: colors.primary };
-  if (/request|connect|join|invite/.test(t)) return { Icon: UserPlus, bg: colors.primaryLight, fg: colors.primary };
-  return { Icon: Bell, bg: colors.grey100, fg: colors.textMuted };
+  if (/deadline|due |overdue|remind|expires/.test(t)) return { label: 'Deadline', tone: 'waiting' };
+  if (/verif|approved|vetting|more information/.test(t)) return { label: 'Verification', tone: 'done' };
+  if (/document|agreement|term sheet|file|compliance|signed/.test(t)) return { label: 'Document', tone: 'quiet' };
+  if (/message|chat|replied/.test(t)) return { label: 'Message', tone: 'todo' };
+  if (/request|connect|join|invite/.test(t)) return { label: 'Request', tone: 'todo' };
+  return null;
 }
 
 /** "2 min ago", "Yesterday", "3 Oct". */
@@ -53,6 +53,7 @@ export function NotificationsList() {
   const toast = useToast();
   const q = useQuery({ queryKey: ['notifications'], queryFn: () => notificationService.list() });
   const [marking, setMarking] = useState(false);
+  const wide = useWideLayout();
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['notifications'] });
@@ -95,24 +96,16 @@ export function NotificationsList() {
   };
 
   const header = (
-    <View style={styles.head}>
-      <View style={styles.headText}>
-        <PageTitle
-          title="Notifications"
-          subtitle={notifications.length ? (unread > 0 ? `${unread} unread` : "You're all caught up") : undefined}
-        />
-      </View>
-      {unread > 0 ? (
-        <Pressable
-          onPress={() => void markAll()}
-          disabled={marking}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.markAll, (pressed || marking) && styles.dim]}
-        >
-          <Text style={styles.markAllText}>Mark all read</Text>
-        </Pressable>
-      ) : null}
-    </View>
+    <PageTitle
+      title="Notifications"
+      subtitle={notifications.length ? (unread > 0 ? `${unread} unread` : "You're all caught up") : undefined}
+      right={
+        unread > 0 ? (
+          // Gold is the one action on the deep purple band; on a computer the title sits on white.
+          <Button title="Mark all read" size="sm" variant={wide ? 'secondary' : 'gold'} loading={marking} onPress={() => void markAll()} />
+        ) : undefined
+      }
+    />
   );
 
   return (
@@ -123,7 +116,6 @@ export function NotificationsList() {
       ListHeaderComponent={header}
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Illustration name="waiting" width={200} />
           <Text style={styles.emptyTitle}>You're all caught up</Text>
           <Text style={styles.emptyBody}>
             When someone asks to connect, sends a message, or your verification moves, you will see it here.
@@ -131,24 +123,33 @@ export function NotificationsList() {
           <Button title="Back to home" variant="secondary" onPress={() => router.replace('/')} style={styles.emptyBtn} />
         </View>
       }
-      renderItem={({ item }) => {
-        const { Icon, bg, fg } = iconFor(item);
+      renderItem={({ item, index }) => {
+        const kind = kindOf(item);
         return (
           <Pressable
             onPress={() => void open(item)}
             accessibilityRole="button"
             accessibilityLabel={`${item.read ? '' : 'Unread. '}${item.title}. ${item.body}`}
-            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+            style={({ pressed }) => [
+              styles.row,
+              index === 0 && styles.first,
+              index === notifications.length - 1 && styles.last,
+              index > 0 && styles.line,
+              !item.read && styles.unread,
+              pressed && styles.rowPressed,
+            ]}
           >
-            <View style={[styles.icon, { backgroundColor: bg }]}>
-              <Icon size={20} color={fg} />
-            </View>
             <View style={styles.body}>
-              <Text style={[styles.title, !item.read && styles.titleUnread]}>{item.title}</Text>
+              <View style={styles.top}>
+                <Text style={[styles.title, !item.read && styles.titleUnread]}>{item.title}</Text>
+                {!item.read ? <Tag label="New" tone="new" /> : null}
+              </View>
               <Text style={styles.text}>{item.body}</Text>
-              <Text style={styles.time}>{timeAgo(item.createdAt)}</Text>
+              <View style={styles.meta}>
+                {kind ? <Tag label={kind.label} tone={kind.tone} /> : null}
+                <Text style={styles.time}>{timeAgo(item.createdAt)}</Text>
+              </View>
             </View>
-            {!item.read ? <View style={styles.dot} /> : null}
           </Pressable>
         );
       }}
@@ -158,39 +159,30 @@ export function NotificationsList() {
 
 const styles = StyleSheet.create({
   list: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[6] },
-  head: { flexDirection: 'row', alignItems: 'center', gap: spacing[2], paddingBottom: spacing[1] },
-  headText: { flex: 1 },
-  markAll: { minHeight: touchTargetMin, justifyContent: 'center', paddingLeft: spacing[1] },
-  markAllText: { fontSize: 14, fontWeight: '700', color: colors.primary },
-  dim: { opacity: 0.5 },
+  // The list reads as one white card: rounded at the top and bottom, a hairline between rows.
   row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[1.5],
-    minHeight: touchTargetMin,
-    paddingVertical: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing[2],
+    paddingVertical: 14,
+    minHeight: 56,
   },
+  first: { borderTopWidth: 1, borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card },
+  last: { borderBottomWidth: 1, borderBottomLeftRadius: radius.card, borderBottomRightRadius: radius.card, ...shadows.sm },
+  line: { borderTopWidth: 1, borderTopColor: colors.border },
+  unread: { backgroundColor: colors.primaryLight },
   rowPressed: { backgroundColor: colors.grey100 },
-  icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  body: { flex: 1, gap: spacing[0.5] },
-  title: { fontSize: 16, fontWeight: '500', color: colors.text },
-  titleUnread: { fontWeight: '700' },
-  text: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  time: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent, marginTop: 6 },
+  body: { flex: 1, gap: 4 },
+  top: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1] },
+  title: { flex: 1, fontSize: 15, color: colors.text },
+  titleUnread: { fontWeight: '500' },
+  text: { fontSize: 13, color: colors.textMuted },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: spacing[1], marginTop: 2 },
+  time: { fontSize: 12, color: colors.textDim },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing[3], gap: spacing[1] },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing[1],
-  },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  emptyBody: { fontSize: 16, fontWeight: '500', color: colors.textMuted, textAlign: 'center', maxWidth: 320 },
-  emptyBtn: { marginTop: spacing[2], alignSelf: 'stretch' },
+  emptyTitle: { fontSize: 24, color: colors.primaryDark, textAlign: 'center' },
+  emptyBody: { fontSize: 14, color: colors.textMuted, textAlign: 'center', maxWidth: 360 },
+  emptyBtn: { marginTop: spacing[2], alignSelf: 'stretch', maxWidth: 360, width: '100%' },
 });

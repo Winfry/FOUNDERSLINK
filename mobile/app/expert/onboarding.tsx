@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { BookOpen, Calculator, Scale } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChoiceCards, FormError, type Choice } from '../../src/components/auth/parts';
 import { Button, Input, Textarea } from '../../src/components/ui';
@@ -11,9 +10,9 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { colors, spacing } from '../../src/theme/tokens';
 
 const PROFESSIONS: Choice[] = [
-  { value: 'lawyer', title: 'Lawyer', line: 'Agreements, incorporation, contracts.', icon: Scale },
-  { value: 'accountant', title: 'Accountant', line: 'Tax, eTIMS, bookkeeping.', icon: Calculator },
-  { value: 'mentor', title: 'Mentor', line: 'Product, pitch, fundraising.', icon: BookOpen },
+  { value: 'lawyer', title: 'Lawyer', line: 'Agreements, incorporation, contracts.' },
+  { value: 'accountant', title: 'Accountant', line: 'Tax, eTIMS, bookkeeping.' },
+  { value: 'mentor', title: 'Mentor', line: 'Product, pitch, fundraising.' },
 ];
 
 // The register a profession is checked against (TEAM_DECISIONS D12).
@@ -124,7 +123,7 @@ export default function ExpertOnboardingScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   wrap: { paddingHorizontal: spacing[3], gap: spacing[2] },
-  title: { fontSize: 28, fontWeight: '800', color: colors.text },
+  title: { fontSize: 30, fontWeight: '300', color: colors.primaryDark, letterSpacing: -0.5 },
   lede: { fontSize: 16, color: colors.textMuted, marginBottom: spacing[1] },
   action: { marginTop: spacing[2], gap: spacing[1] },
 });

@@ -2,7 +2,6 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ban, Flag, MessageCircle, SendHorizontal } from 'lucide-react-native';
 import { Text, TextInput } from '../../src/components/ui/Text';
 import { BottomSheet } from '../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
@@ -125,7 +124,6 @@ export default function ConversationThreadScreen() {
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           <View style={styles.empty}>
-            <MessageCircle size={32} color={colors.textMuted} strokeWidth={1.5} />
             <Text style={styles.emptyTitle}>No messages yet</Text>
             <Text style={styles.emptyText}>Say hello and tell them what you would like to talk about.</Text>
           </View>
@@ -172,7 +170,7 @@ export default function ConversationThreadScreen() {
           onPress={() => void send()}
           style={({ pressed }) => [styles.send, !canSend && styles.sendOff, pressed && styles.sendPressed]}
         >
-          <SendHorizontal size={22} color={canSend ? colors.white : colors.textMuted} />
+          <Text style={[styles.sendText, !canSend && styles.sendTextOff]}>Send</Text>
         </Pressable>
       </View>
 
@@ -190,7 +188,7 @@ export default function ConversationThreadScreen() {
                 style={({ pressed }) => [styles.sheetRow, i > 0 && styles.sheetDivider, pressed && styles.sheetRowPressed]}
                 onPress={() => report(target, reason)}
               >
-                <Text style={[styles.sheetTitle, styles.flex]}>{reason}</Text>
+                <Text style={[styles.sheetTitle, styles.sheetWords]}>{reason}</Text>
               </Pressable>
             ))}
           </View>
@@ -204,11 +202,11 @@ export default function ConversationThreadScreen() {
               style={({ pressed }) => [styles.sheetRow, pressed && styles.sheetRowPressed]}
               onPress={() => setChoosingReason(true)}
             >
-              <Flag size={22} color={colors.primaryDark} />
-              <View style={styles.flex}>
+              <View style={styles.sheetWords}>
                 <Text style={styles.sheetTitle}>Report this message</Text>
                 <Text style={styles.sheetHint}>FoundersLink's team will look at it.</Text>
               </View>
+              <Text style={styles.sheetAction}>Report</Text>
             </Pressable>
             {target.senderId ? (
               <Pressable
@@ -216,11 +214,11 @@ export default function ConversationThreadScreen() {
                 style={({ pressed }) => [styles.sheetRow, styles.sheetDivider, pressed && styles.sheetRowPressed]}
                 onPress={() => block(target)}
               >
-                <Ban size={22} color={colors.error} />
-                <View style={styles.flex}>
+                <View style={styles.sheetWords}>
                   <Text style={styles.sheetTitle}>Block {target.senderName ?? 'this member'}</Text>
                   <Text style={styles.sheetHint}>They will no longer be able to message you.</Text>
                 </View>
+                <Text style={[styles.sheetAction, styles.sheetActionDanger]}>Block</Text>
               </Pressable>
             ) : null}
           </View>
@@ -238,7 +236,7 @@ const styles = StyleSheet.create({
   runGap: { marginTop: spacing[2] },
 
   empty: { alignItems: 'center', gap: spacing[1], padding: spacing[3] },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
+  emptyTitle: { fontSize: 24, color: colors.primaryDark },
   emptyText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', maxWidth: 280 },
 
   composer: {
@@ -258,7 +256,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 24,
-    backgroundColor: colors.grey100,
+    backgroundColor: colors.white,
     paddingHorizontal: spacing[2],
     paddingTop: 12,
     paddingBottom: 12,
@@ -266,27 +264,33 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   send: {
-    width: touchTargetMin,
+    minWidth: 72,
     height: touchTargetMin,
+    paddingHorizontal: spacing[2],
     borderRadius: touchTargetMin / 2,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendOff: { backgroundColor: colors.grey100 },
+  sendOff: { backgroundColor: colors.primaryLight },
+  sendText: { fontSize: 15, fontWeight: '500', color: colors.white },
+  sendTextOff: { color: colors.textDim },
   sendPressed: { backgroundColor: colors.primaryDark, transform: [{ scale: 0.95 }] },
 
   quote: {
     fontSize: 14,
     color: colors.textMuted,
-    backgroundColor: colors.grey100,
-    borderRadius: 12,
+    backgroundColor: colors.primaryLight,
+    borderRadius: 14,
     padding: spacing[1.5],
     marginBottom: spacing[1],
   },
   sheetRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5], minHeight: 64, paddingVertical: spacing[1] },
-  sheetRowPressed: { backgroundColor: colors.grey100 },
+  sheetRowPressed: { backgroundColor: colors.primaryLight },
   sheetDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  sheetTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  sheetWords: { flex: 1 },
+  sheetTitle: { fontSize: 16, fontWeight: '500', color: colors.text },
   sheetHint: { fontSize: 14, color: colors.textMuted },
+  sheetAction: { fontSize: 14, fontWeight: '500', color: colors.primary },
+  sheetActionDanger: { color: colors.error },
 });

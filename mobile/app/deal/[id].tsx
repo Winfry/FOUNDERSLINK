@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Check, CircleAlert, CircleCheck, CircleDashed, Clock, FileText, Landmark, Upload } from 'lucide-react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../src/components/ui/Text';
 import { Avatar, Badge, Button, Card, ConfirmModal } from '../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
@@ -12,7 +11,7 @@ import { dealService } from '../../src/services';
 import { formatKes } from '../../src/services/mocks/kenya-data';
 import { useAuthStore } from '../../src/stores/authStore';
 import type { Deal, DealDocument, Instrument } from '../../src/types';
-import { colors, spacing, touchTargetMin } from '../../src/theme/tokens';
+import { colors, radius, spacing } from '../../src/theme/tokens';
 
 // Read by any key: a deal from before loans were dropped (TEAM_DECISIONS
 // D11) still shows what it says.
@@ -140,30 +139,29 @@ export default function DealScreen() {
         }}
       />
       <View style={styles.head}>
-        <Text style={styles.title}>{deal.title}</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          {deal.title}
+        </Text>
         {deal.withName ? (
           <View style={styles.withRow}>
-            <Avatar name={deal.withName} size={28} />
+            <Avatar name={deal.withName} size={32} />
             <Text style={styles.withText}>With {deal.withName}</Text>
           </View>
         ) : null}
       </View>
 
-      <Card>
+      <Card style={styles.card}>
+        <Text style={styles.label}>Where the deal stands</Text>
         <StageStepper stage={deal.stage} />
       </Card>
 
       {isClosed ? (
         <View style={styles.closed}>
-          <View style={styles.closedIcon}>
-            <Landmark size={20} color={colors.success} />
-          </View>
-          <View style={styles.flex}>
-            <Text style={styles.closedTitle}>This deal is closed</Text>
-            <Text style={styles.closedCopy}>
-              The money moves between the parties through their bank. FoundersLink records the deal and never holds the money.
-            </Text>
-          </View>
+          <Badge label="Closed" variant="success" />
+          <Text style={styles.closedTitle}>This deal is closed</Text>
+          <Text style={styles.closedCopy}>
+            The money moves between the parties through their bank. FoundersLink records the deal and never holds the money.
+          </Text>
         </View>
       ) : null}
 
@@ -186,12 +184,8 @@ export default function DealScreen() {
         </View>
         {deal.terms.roles ? <Text style={styles.termNote}>Roles: {deal.terms.roles}</Text> : null}
         {deal.terms.notes ? <Text style={styles.termNote}>{deal.terms.notes}</Text> : null}
-        <View style={styles.moneyRow}>
-          <Landmark size={16} color={colors.textMuted} />
-          <Text style={styles.moneyText}>
-            The money moves between the parties through their bank, never through FoundersLink.
-          </Text>
-        </View>
+        <View style={styles.termsRule} />
+        <Text style={styles.moneyText}>The money moves between the parties through their bank, never through FoundersLink.</Text>
       </View>
 
       {showDiligence ? (
@@ -203,39 +197,37 @@ export default function DealScreen() {
               <Text style={styles.groupTitle}>Documents this deal asks of you</Text>
               {required.map((doc, i) => (
                 <View key={doc.type} style={[styles.row, i > 0 && styles.rowDivider]}>
-                  {doc.provided ? <CircleCheck size={22} color={colors.success} /> : <CircleDashed size={22} color={colors.textMuted} />}
                   <View style={styles.flex}>
                     <Text style={styles.rowTitle}>{doc.title}</Text>
-                    <Text style={[styles.rowMeta, doc.provided && { color: colors.success }]}>
+                    <Text style={styles.rowMeta}>
                       {doc.confirmed ? 'Confirmed by FoundersLink' : doc.provided ? 'Shared' : 'Not shared yet'}
                     </Text>
                   </View>
+                  <Badge label={doc.provided ? 'Done' : 'Not yet'} variant={doc.provided ? 'success' : 'muted'} />
                   {/* A confirmed copy stays; anything else can be replaced with a new copy. */}
                   {doc.confirmed ? null : (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={doc.provided ? `Replace ${doc.title}` : `Upload ${doc.title}`}
-                    disabled={busy !== null}
-                    onPress={() =>
-                      void run(
-                        doc.type,
-                        () => dealService.uploadDocument(deal.id, doc.type),
-                        // Closing the file picker without choosing shares nothing. A new
-                        // copy replaces the earlier one, so look for a new document,
-                        // not a longer list.
-                        (after) =>
-                          after.documents.some((d) => !deal.documents.some((before) => before.id === d.id))
-                            ? doc.provided
-                              ? `New copy of ${doc.title} shared. It replaces the earlier one.`
-                              : `${doc.title} shared in this deal`
-                            : null,
-                      )
-                    }
-                    style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed, busy !== null && styles.dim]}
-                  >
-                    <Upload size={16} color={colors.primary} />
-                    <Text style={styles.uploadText}>{busy === doc.type ? 'Sharing' : doc.provided ? 'Replace' : 'Upload'}</Text>
-                  </Pressable>
+                    <Button
+                      size="sm"
+                      variant={doc.provided ? 'secondary' : 'primary'}
+                      title={busy === doc.type ? 'Sharing' : doc.provided ? 'Replace' : 'Upload'}
+                      accessibilityLabel={doc.provided ? `Replace ${doc.title}` : `Upload ${doc.title}`}
+                      disabled={busy !== null}
+                      onPress={() =>
+                        void run(
+                          doc.type,
+                          () => dealService.uploadDocument(deal.id, doc.type),
+                          // Closing the file picker without choosing shares nothing. A new
+                          // copy replaces the earlier one, so look for a new document,
+                          // not a longer list.
+                          (after) =>
+                            after.documents.some((d) => !deal.documents.some((before) => before.id === d.id))
+                              ? doc.provided
+                                ? `New copy of ${doc.title} shared. It replaces the earlier one.`
+                                : `${doc.title} shared in this deal`
+                              : null,
+                        )
+                      }
+                    />
                   )}
                 </View>
               ))}
@@ -244,10 +236,10 @@ export default function DealScreen() {
 
           {missing.length > 0 ? (
             <View style={styles.needed}>
-              <Text style={styles.neededTitle}>Still needed</Text>
+              <Text style={styles.neededLabel}>Still needed</Text>
               {missing.map((line) => (
                 <View key={line} style={styles.neededRow}>
-                  <CircleAlert size={16} color={colors.warning} style={styles.neededIcon} />
+                  <View style={[styles.bullet, styles.bulletGold]} />
                   <Text style={styles.neededText}>{line}</Text>
                 </View>
               ))}
@@ -257,12 +249,12 @@ export default function DealScreen() {
           {/* Terms wait for a person at FoundersLink to confirm what was shared (TEAM_DECISIONS D12). */}
           {awaiting.length > 0 ? (
             <View style={styles.awaitingBox}>
-              <Text style={styles.neededTitle}>Waiting for FoundersLink to check</Text>
+              <Text style={styles.awaitingLabel}>Waiting for FoundersLink to check</Text>
               <Text style={styles.neededText}>Terms can be agreed once these are confirmed. You do not need to do anything.</Text>
               {awaiting.map((line) => (
                 <View key={line} style={styles.neededRow}>
-                  <Clock size={16} color={colors.primary} style={styles.neededIcon} />
                   <Text style={styles.neededText}>{line}</Text>
+                  <Badge label="Waiting" variant="warning" />
                 </View>
               ))}
             </View>
@@ -281,25 +273,20 @@ export default function DealScreen() {
               return (
                 <View key={d.id} style={[styles.doc, i > 0 && styles.rowDivider]}>
                   <View style={styles.docHead}>
-                    <FileText size={20} color={colors.textMuted} style={styles.docIcon} />
                     <View style={styles.flex}>
                       <Text style={styles.rowTitle}>{title}</Text>
                       {owner ? <Text style={styles.rowMeta}>Shared by {owner}</Text> : null}
                     </View>
-                  </View>
-                  <View style={styles.docBody}>
                     <Badge label={state.label} variant={state.variant} />
-                    {rejected ? (
-                      <View style={styles.rejected}>
-                        <Text style={styles.rejectedText}>
-                          {note ? `Reason: ${note}` : 'FoundersLink did not accept this document.'}
-                        </Text>
-                        <Text style={styles.rejectedHint}>Use Replace above to share a corrected copy.</Text>
-                      </View>
-                    ) : note ? (
-                      <Text style={styles.rowMeta}>{note}</Text>
-                    ) : null}
                   </View>
+                  {rejected ? (
+                    <View style={styles.rejected}>
+                      <Text style={styles.rejectedText}>{note ? `Reason: ${note}` : 'FoundersLink did not accept this document.'}</Text>
+                      <Text style={styles.rejectedHint}>Use Replace above to share a corrected copy.</Text>
+                    </View>
+                  ) : note ? (
+                    <Text style={styles.rowMeta}>{note}</Text>
+                  ) : null}
                 </View>
               );
             })}
@@ -313,22 +300,12 @@ export default function DealScreen() {
           <Card style={styles.group}>
             {deal.confirmations.map((c, i) => (
               <View key={c.userId} style={[styles.row, i > 0 && styles.rowDivider]}>
-                <Avatar name={c.name} size={36} />
+                <Avatar name={c.name} size={36} ring={false} />
                 <Text style={[styles.rowTitle, styles.flex]}>
                   {c.name}
                   {c.userId === me ? ' (you)' : ''}
                 </Text>
-                {c.confirmed ? (
-                  <View style={styles.state}>
-                    <Check size={16} color={colors.success} strokeWidth={3} />
-                    <Text style={[styles.stateText, { color: colors.success }]}>Confirmed</Text>
-                  </View>
-                ) : (
-                  <View style={styles.state}>
-                    <Clock size={16} color={colors.textMuted} />
-                    <Text style={styles.stateText}>Waiting</Text>
-                  </View>
-                )}
+                {c.confirmed ? <Badge label="Confirmed" variant="success" /> : <Badge label="Waiting" variant="warning" />}
               </View>
             ))}
           </Card>
@@ -344,8 +321,8 @@ export default function DealScreen() {
           <Card style={styles.group}>
             {deal.checklist.map((item, i) => (
               <View key={item.id} style={[styles.row, i > 0 && styles.rowDivider]}>
-                {item.done ? <CircleCheck size={22} color={colors.success} /> : <CircleDashed size={22} color={colors.textMuted} />}
                 <Text style={[styles.rowBody, styles.flex, item.done && { color: colors.textMuted }]}>{item.label}</Text>
+                <Badge label={item.done ? 'Done' : 'Not yet'} variant={item.done ? 'success' : 'muted'} />
               </View>
             ))}
           </Card>
@@ -359,7 +336,7 @@ export default function DealScreen() {
         </View>
       ) : atDueDiligence && iConfirmed ? (
         <View style={styles.waiting}>
-          <Clock size={20} color={colors.primaryDark} />
+          <Badge label="Waiting" variant="warning" />
           <Text style={styles.waitingText}>
             You have confirmed the terms.{' '}
             {waitingOn.length > 0 ? `Waiting for ${waitingOn.join(' and ')} to confirm.` : 'The deal moves on shortly.'}
@@ -370,20 +347,20 @@ export default function DealScreen() {
       {deal.timeline.length > 0 ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Activity</Text>
-          <View>
+          <Card>
             {deal.timeline.map((event, i) => (
               <View key={event.id} style={styles.event}>
                 <View style={styles.eventRail}>
-                  <View style={styles.eventDot} />
+                  <View style={[styles.bullet, i === 0 && styles.bulletPurple]} />
                   {i < deal.timeline.length - 1 ? <View style={styles.eventLine} /> : null}
                 </View>
-                <View style={styles.eventWords}>
+                <View style={[styles.eventWords, i === deal.timeline.length - 1 && styles.eventWordsLast]}>
                   <Text style={styles.rowBody}>{event.title}</Text>
                   <Text style={styles.eventTime}>{when(event.at)}</Text>
                 </View>
               </View>
             ))}
-          </View>
+          </Card>
         </View>
       ) : null}
     </ScrollView>
@@ -391,108 +368,74 @@ export default function DealScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  content: { padding: spacing[2], paddingBottom: spacing[6], gap: spacing[3] },
-  flex: { flex: 1 },
-  dim: { opacity: 0.5 },
+  screen: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing[2], paddingBottom: spacing[6], gap: spacing[2] },
+  flex: { flex: 1, minWidth: 0 },
 
-  head: { gap: spacing[1] },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  head: { gap: spacing[1], marginTop: spacing[0.5] },
+  title: { fontSize: 28, lineHeight: 34, color: colors.primaryDark },
   withRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
   withText: { fontSize: 14, color: colors.textMuted },
 
-  // The one bold block on the screen: the money.
-  terms: { backgroundColor: colors.primaryDark, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
-  termsLabel: { fontSize: 14, fontWeight: '600', color: colors.onDarkMuted },
-  termsFine: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  moneyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1], marginTop: spacing[1] },
-  moneyText: { flex: 1, fontSize: 13, fontWeight: '500', color: colors.textMuted },
-  amount: { fontSize: 32, fontWeight: '800', color: colors.white },
+  card: { gap: spacing[1.5] },
+  label: { fontSize: 12, color: colors.textMuted },
+
+  // The one deep purple block on the screen: the money.
+  terms: { backgroundColor: colors.primaryDark, borderRadius: radius.card, padding: 22, gap: spacing[1] },
+  termsLabel: { fontSize: 12, color: colors.onDarkMuted },
+  termsFine: { fontSize: 12, color: colors.onDarkDim },
+  amount: { fontSize: 34, lineHeight: 40, color: colors.white, marginTop: spacing[0.5] },
   termFacts: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3], marginTop: spacing[0.5] },
   termFact: { gap: 2 },
-  termFactLabel: { fontSize: 12, fontWeight: '600', color: colors.onDarkMuted },
-  termFactValue: { fontSize: 16, fontWeight: '700', color: colors.white },
+  termFactLabel: { fontSize: 12, color: colors.onDarkDim },
+  termFactValue: { fontSize: 15, fontWeight: '500', color: colors.white },
   termNote: { fontSize: 14, color: colors.onDarkMuted },
+  termsRule: { height: 1, backgroundColor: colors.onDarkLine, marginTop: spacing[1] },
+  moneyText: { fontSize: 13, color: colors.onDarkMuted },
 
   section: { gap: spacing[1.5] },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
+  sectionTitle: { fontSize: 20, fontWeight: '500', color: colors.primaryDark },
   group: { gap: 0, paddingVertical: spacing[1] },
-  groupTitle: { fontSize: 14, fontWeight: '600', color: colors.textMuted, paddingVertical: spacing[1] },
+  groupTitle: { fontSize: 12, color: colors.textMuted, paddingVertical: spacing[1] },
   emptyLine: { fontSize: 14, color: colors.textMuted, paddingBottom: spacing[1] },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5], paddingVertical: spacing[1.5], minHeight: 56 },
   rowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  rowTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-  rowBody: { fontSize: 16, color: colors.text },
-  rowMeta: { fontSize: 14, color: colors.textMuted },
+  rowTitle: { fontSize: 15, fontWeight: '500', color: colors.text },
+  rowBody: { fontSize: 15, color: colors.text },
+  rowMeta: { fontSize: 13, color: colors.textMuted, marginTop: 1 },
 
-  upload: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[0.5],
-    minHeight: touchTargetMin,
-    paddingHorizontal: spacing[1.5],
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  uploadPressed: { backgroundColor: colors.primaryLight, transform: [{ scale: 0.97 }] },
-  uploadText: { fontSize: 14, fontWeight: '700', color: colors.primary },
-
-  needed: { backgroundColor: colors.warningLight, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
-  neededTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  awaitingBox: { backgroundColor: colors.primaryLight, borderRadius: 16, padding: spacing[2], gap: spacing[1] },
-  neededRow: { flexDirection: 'row', gap: spacing[1] },
-  neededIcon: { marginTop: 2 },
+  // Still needed: gold-tinted, the one place gold carries a message.
+  needed: { backgroundColor: colors.accentLight, borderRadius: radius.card, padding: 18, gap: spacing[1] },
+  neededLabel: { fontSize: 12, fontWeight: '600', color: colors.accentText },
+  awaitingBox: { backgroundColor: colors.primaryLight, borderRadius: radius.card, padding: 18, gap: spacing[1] },
+  awaitingLabel: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  neededRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
   neededText: { flex: 1, fontSize: 14, color: colors.text },
+  bullet: { width: 7, height: 7, borderRadius: radius.full, backgroundColor: colors.grey300 },
+  bulletGold: { backgroundColor: colors.accent },
+  bulletPurple: { backgroundColor: colors.primary },
 
   doc: { paddingVertical: spacing[1.5], gap: spacing[1] },
-  docHead: { flexDirection: 'row', gap: spacing[1.5] },
-  docIcon: { marginTop: 2 },
-  docBody: { marginLeft: 20 + spacing[1.5], gap: spacing[1] },
-  rejected: { backgroundColor: colors.errorLight, borderRadius: 12, padding: spacing[1.5], gap: 4 },
-  rejectedText: { fontSize: 14, fontWeight: '600', color: colors.error },
+  docHead: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
+  rejected: { backgroundColor: colors.errorLight, borderRadius: radius.md, padding: spacing[1.5], gap: 4 },
+  rejectedText: { fontSize: 14, fontWeight: '500', color: colors.error },
   rejectedHint: { fontSize: 14, color: colors.text },
 
-  state: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
-  stateText: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-
   action: { gap: spacing[1], marginTop: spacing[1] },
-  actionHelp: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
-  waiting: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1.5],
-    backgroundColor: colors.primaryLight,
-    borderRadius: 16,
-    padding: spacing[2],
-  },
-  waitingText: { flex: 1, fontSize: 14, color: colors.primaryDark },
+  actionHelp: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
+  waiting: { gap: spacing[1], backgroundColor: colors.primaryLight, borderRadius: radius.card, padding: 18 },
+  waitingText: { fontSize: 14, color: colors.primaryDark },
 
-  closed: {
-    flexDirection: 'row',
-    gap: spacing[1.5],
-    backgroundColor: colors.successLight,
-    borderRadius: 16,
-    padding: spacing[2],
-  },
-  closedIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closedTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  closedCopy: { fontSize: 14, color: colors.text, marginTop: 4 },
+  closed: { gap: spacing[1], backgroundColor: colors.successLight, borderRadius: radius.card, padding: 18 },
+  closedTitle: { fontSize: 17, fontWeight: '500', color: colors.text },
+  closedCopy: { fontSize: 14, color: colors.text },
 
   event: { flexDirection: 'row', gap: spacing[1.5] },
-  eventRail: { width: 12, alignItems: 'center', paddingTop: 8 },
-  eventDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.grey300 },
-  eventLine: { flex: 1, width: 2, backgroundColor: colors.border, marginTop: 4 },
+  eventRail: { width: 12, alignItems: 'center', paddingTop: 7 },
+  eventLine: { flex: 1, width: 1, backgroundColor: colors.border, marginTop: 4 },
   eventWords: { flex: 1, paddingBottom: spacing[2], gap: 2 },
-  eventTime: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  eventWordsLast: { paddingBottom: 0 },
+  eventTime: { fontSize: 12, color: colors.textMuted },
 });

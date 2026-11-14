@@ -15,3 +15,4 @@ export * from './ConfirmModal';
 export * from './BottomSheet';
 export * from './StepProgress';
 export * from './Switch';
+export * from './Marks';

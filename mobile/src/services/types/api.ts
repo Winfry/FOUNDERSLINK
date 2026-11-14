@@ -84,6 +84,11 @@ export interface DealService {
   confirmTerms(dealId: string): Promise<Deal>;
   advanceStage(dealId: string): Promise<Deal>;
   uploadDocument(dealId: string, name: string): Promise<Deal>;
+  /**
+   * Whether she lets this closed deal show on track records. It shows only
+   * when every party agrees; `shown` says whether it does now.
+   */
+  setSharing(dealId: string, share: boolean): Promise<{ youShare: boolean; shown: boolean }>;
 }
 
 export interface CircleService {

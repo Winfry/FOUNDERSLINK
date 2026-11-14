@@ -1,4 +1,3 @@
-import { ExternalLink } from 'lucide-react-native';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../ui/Text';
 import { colors, spacing } from '../../theme/tokens';
@@ -38,7 +37,7 @@ export function BankOptions() {
           style={styles.row}
         >
           <Text style={styles.name}>{bank.name}</Text>
-          <ExternalLink size={16} color={colors.textMuted} />
+          <Text style={styles.open}>Open</Text>
         </Pressable>
       ))}
       <Text style={styles.footnote}>Listed alphabetically. FoundersLink does not partner with or recommend any bank.</Text>
@@ -48,16 +47,18 @@ export function BankOptions() {
 
 const styles = StyleSheet.create({
   box: { marginTop: spacing[1], gap: spacing[0.5] },
-  heading: { fontSize: 15, fontWeight: '700', color: colors.text },
+  heading: { fontSize: 14, fontWeight: '500', color: colors.text },
   note: { fontSize: 13, color: colors.textMuted, marginBottom: spacing[0.5] },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: 44,
     paddingVertical: spacing[1],
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  name: { fontSize: 15, color: colors.text },
+  name: { flex: 1, fontSize: 14, color: colors.text },
+  open: { fontSize: 13, fontWeight: '500', color: colors.primary },
   footnote: { fontSize: 12, color: colors.textMuted, marginTop: spacing[0.5] },
 });

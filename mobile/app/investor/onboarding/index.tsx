@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Building2, Rocket, User, X } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
@@ -18,9 +17,9 @@ const STEP_NAMES = ['Who you invest for', 'What you fund'];
 const MANDATE_MIN = 10;
 
 const KINDS: KindChoice[] = [
-  { value: 'angel', title: 'Angel investor', line: 'You invest your own money.', icon: User },
-  { value: 'vc', title: 'Venture capital fund', line: 'You invest on behalf of a fund.', icon: Building2 },
-  { value: 'accelerator', title: 'Accelerator', line: 'You run a programme that backs startups.', icon: Rocket },
+  { value: 'angel', title: 'Angel investor', line: 'You invest your own money.' },
+  { value: 'vc', title: 'Venture capital fund', line: 'You invest on behalf of a fund.' },
+  { value: 'accelerator', title: 'Accelerator', line: 'You run a programme that backs startups.' },
 ];
 
 type Field = 'organisationName' | 'sectors' | 'stages' | 'instruments' | 'ticketMin' | 'ticketMax' | 'mandateText';
@@ -286,7 +285,7 @@ export default function InvestorOnboardingScreen() {
                         style={({ pressed }) => [styles.pickedChip, pressed && { opacity: 0.6 }]}
                       >
                         <Text style={styles.pickedText}>{labelOf(c)}</Text>
-                        <X size={16} color={colors.primaryDark} />
+                        <Text style={styles.pickedRemove}>Remove</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -361,31 +360,32 @@ export default function InvestorOnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.white },
+  flex: { flex: 1, backgroundColor: colors.background },
   steps: { paddingHorizontal: spacing[2], paddingTop: spacing[2], paddingBottom: spacing[1.5], borderBottomWidth: 1, borderBottomColor: colors.border },
   content: { padding: spacing[2], paddingTop: spacing[3], paddingBottom: spacing[6] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  helper: { fontSize: 16, color: colors.textMuted, marginTop: spacing[1] },
+  heading: { fontSize: 28, color: colors.primaryDark },
+  helper: { fontSize: 15, color: colors.textMuted, marginTop: spacing[1] },
   section: { marginTop: spacing[3] },
-  group: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: spacing[1] },
+  group: { fontSize: 17, fontWeight: '500', color: colors.primaryDark, marginBottom: spacing[1] },
   small: { fontSize: 14, color: colors.textMuted },
   picked: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1], marginTop: spacing[1.5] },
   pickedChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[0.5],
+    gap: spacing[1],
     minHeight: touchTargetMin,
     paddingHorizontal: spacing[1.5],
     borderRadius: radius.full,
     backgroundColor: colors.primaryLight,
   },
-  pickedText: { fontSize: 14, fontWeight: '600', color: colors.primaryDark },
+  pickedText: { fontSize: 14, fontWeight: '500', color: colors.primary },
+  pickedRemove: { fontSize: 12, color: colors.textMuted },
   countyPick: { marginTop: spacing[1.5] },
   // The Textarea leaves 16 below itself; the count belongs right under it.
   count: { fontSize: 14, color: colors.textMuted, marginTop: -spacing[1] },
   countMet: { color: colors.success },
-  example: { backgroundColor: colors.grey100, borderRadius: radius.card, padding: spacing[1.5], marginTop: spacing[2], gap: spacing[0.5] },
-  exampleTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+  example: { backgroundColor: colors.primaryLight, borderRadius: radius.card, padding: spacing[1.5], marginTop: spacing[2], gap: spacing[0.5] },
+  exampleTitle: { fontSize: 13, fontWeight: '500', color: colors.primary },
   exampleText: { fontSize: 14, color: colors.textMuted },
   actions: { marginTop: spacing[4], gap: spacing[1] },
 });

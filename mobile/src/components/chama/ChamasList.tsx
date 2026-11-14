@@ -2,16 +2,15 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { ChevronRight, UsersRound } from 'lucide-react-native';
 import { Text } from '../ui/Text';
-import { Badge, Button, Card, Input, useToast } from '../ui';
+import { Button, Card, Input, useToast } from '../ui';
+import { Tag } from '../overview/parts';
 import { ScreenError, ScreenLoading } from '../layout/ScreenStates';
 import { ROLE_LABEL, TYPE_LABEL } from './parts';
 import { circleService } from '../../services';
 import { colors, radius, spacing } from '../../theme/tokens';
 import type { ApiError } from '../../types';
 import { PageTitle } from '../layout/PageTitle';
-import { Illustration } from '../illustrations/People';
 
 type CircleType = 'money' | 'learning';
 
@@ -71,7 +70,7 @@ export function ChamasList() {
             </View>
             <View style={styles.typeText}>
               <Text style={styles.typeLabel}>{t.label}</Text>
-              <Text style={styles.meta}>{t.about}</Text>
+              <Text style={styles.about}>{t.about}</Text>
             </View>
           </Pressable>
         ))}
@@ -104,10 +103,18 @@ export function ChamasList() {
       keyExtractor={(c) => c.id}
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={header}
+      ListFooterComponent={
+        circles.length > 0 ? (
+          <View style={styles.note}>
+            <Text style={styles.noteText}>
+              FoundersLink never holds the money. It records what members pay into the chama's own Paybill or account.
+            </Text>
+          </View>
+        ) : null
+      }
       ListEmptyComponent={
         creating ? null : (
           <View style={styles.empty}>
-            <Illustration name="savings" width={210} />
             <Text style={styles.emptyTitle}>Save together with founders you trust</Text>
             <Text style={styles.emptyBody}>
               A chama is a group of people who save or learn together. FoundersLink only records contributions: the money stays in
@@ -128,17 +135,15 @@ export function ChamasList() {
           <Card style={styles.card}>
             <View style={styles.cardTop}>
               <Text style={styles.name}>{item.name}</Text>
-              <ChevronRight size={20} color={colors.textMuted} />
+              <Text style={styles.open}>Open</Text>
             </View>
+            <Text style={styles.membersText}>
+              {item.memberCount} {item.memberCount === 1 ? 'member' : 'members'}
+              {item.myRole ? ` · You are ${ROLE_LABEL[item.myRole].toLowerCase()}` : ''}
+            </Text>
             <View style={styles.facts}>
-              <Badge label={TYPE_LABEL[item.type]} variant={item.type === 'money' ? 'default' : 'muted'} />
-              {item.myRole ? <Badge label={`You: ${ROLE_LABEL[item.myRole]}`} variant="muted" /> : null}
-            </View>
-            <View style={styles.members}>
-              <UsersRound size={16} color={colors.textMuted} />
-              <Text style={styles.membersText}>
-                {item.memberCount} {item.memberCount === 1 ? 'member' : 'members'}
-              </Text>
+              <Tag label={TYPE_LABEL[item.type]} tone={item.type === 'money' ? 'todo' : 'quiet'} />
+              {item.unreadChatCount > 0 ? <Tag label={`${item.unreadChatCount} new`} tone="new" /> : null}
             </View>
           </Card>
         </Pressable>
@@ -149,19 +154,19 @@ export function ChamasList() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: 'transparent' },
-  list: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[4], gap: spacing[2] },
+  list: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[4], gap: spacing[1.5] },
   head: { gap: spacing[0.5] },
-  start: { marginTop: spacing[2] },
-  form: { gap: spacing[1.5], marginTop: spacing[2] },
-  formTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  start: { marginTop: spacing[0.5], marginBottom: spacing[0.5] },
+  form: { gap: spacing[1.5], marginTop: spacing[0.5] },
+  formTitle: { fontSize: 17, fontWeight: '500', color: colors.primaryDark },
+  label: { fontSize: 13, fontWeight: '500', color: colors.text },
   types: { gap: spacing[1] },
   type: {
     flexDirection: 'row',
     gap: spacing[1.5],
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.card,
+    borderRadius: radius.md,
     padding: spacing[1.5],
     minHeight: 48,
   },
@@ -170,8 +175,8 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.grey300,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
@@ -179,27 +184,21 @@ const styles = StyleSheet.create({
   radioOn: { borderColor: colors.primary },
   radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
   typeText: { flex: 1 },
-  typeLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 14, fontWeight: '500', color: colors.textMuted, textAlign: 'left' },
-  error: { color: colors.error, fontSize: 14, fontWeight: '500' },
+  typeLabel: { fontSize: 15, fontWeight: '500', color: colors.text },
+  about: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  meta: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
+  error: { color: colors.error, fontSize: 14 },
   pressed: { opacity: 0.85 },
-  card: { gap: spacing[1.5] },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  name: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text },
+  card: { gap: spacing[1] },
+  cardTop: { flexDirection: 'row', alignItems: 'baseline', gap: spacing[1] },
+  name: { flex: 1, fontSize: 17, fontWeight: '500', color: colors.primaryDark },
+  open: { fontSize: 13, fontWeight: '500', color: colors.primary },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1] },
-  members: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
-  membersText: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  membersText: { fontSize: 13, color: colors.textMuted },
+  note: { backgroundColor: colors.primaryLight, borderRadius: radius.card, padding: spacing[2] },
+  noteText: { fontSize: 13, color: colors.textMuted },
   empty: { alignItems: 'center', paddingVertical: spacing[4], paddingHorizontal: spacing[1], gap: spacing[1] },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing[1],
-  },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  emptyBody: { fontSize: 16, fontWeight: '500', color: colors.textMuted, textAlign: 'center' },
+  emptyTitle: { fontSize: 24, color: colors.primaryDark, textAlign: 'center' },
+  emptyBody: { fontSize: 14, color: colors.textMuted, textAlign: 'center', maxWidth: 380 },
   emptyBtn: { alignSelf: 'stretch', marginTop: spacing[2], marginBottom: spacing[1] },
 });

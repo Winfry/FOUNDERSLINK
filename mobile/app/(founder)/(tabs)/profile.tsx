@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { LogOut, MessageCircle, Settings, ShieldCheck } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Badge, Button, Card, ConfirmModal } from '../../../src/components/ui';
+import { Avatar, Badge, Button, Card, ConfirmModal } from '../../../src/components/ui';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { MenuGroup, MenuRow } from '../../../src/components/profile/MenuRow';
 import { founderService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
@@ -60,16 +60,6 @@ function ksh(amount: number): string {
   return `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
 }
 
-function initialsOf(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.fact}>
@@ -94,16 +84,16 @@ function FounderProfileTab() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.wrap}>
-      <View style={styles.head}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initialsOf(user?.fullName ?? '')}</Text>
-        </View>
+      <PageTitle title="Profile" subtitle="Your business, your verification and your account." />
+
+      <Card style={styles.head}>
+        <Avatar name={user?.fullName ?? ''} uri={user?.avatarUrl} size={64} />
         <View style={styles.headText}>
           <Text style={styles.name}>{user?.fullName}</Text>
           <Text style={styles.email}>{user?.email}</Text>
           <Badge label={v.label} variant={v.variant} />
         </View>
-      </View>
+      </Card>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your business</Text>
@@ -145,10 +135,10 @@ function FounderProfileTab() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Verification</Text>
         {v.state === 'approved' ? (
-          <View style={styles.verified}>
-            <ShieldCheck size={20} color={colors.success} />
-            <Text style={styles.verifiedText}>You're verified. You can connect and chat with investors.</Text>
-          </View>
+          <Card style={styles.cardGap}>
+            <Badge label="Verified" variant="success" />
+            <Text style={styles.muted}>You're verified. You can connect and chat with investors.</Text>
+          </Card>
         ) : (
           <Card style={styles.cardGap}>
             <Text style={styles.cardTitle}>
@@ -179,12 +169,12 @@ function FounderProfileTab() {
       </View>
 
       <MenuGroup>
-        <MenuRow icon={MessageCircle} label="Messages" onPress={() => router.push('/conversations')} />
-        <MenuRow icon={Settings} label="Settings" onPress={() => router.push('/settings')} last />
+        <MenuRow label="Messages" hint="The people you are connected with" onPress={() => router.push('/conversations')} />
+        <MenuRow label="Settings" hint="Language, notifications and your account" onPress={() => router.push('/settings')} last />
       </MenuGroup>
 
       <MenuGroup>
-        <MenuRow icon={LogOut} label="Log out" destructive onPress={() => setConfirmingLogout(true)} last />
+        <MenuRow label="Log out" destructive onPress={() => setConfirmingLogout(true)} last />
       </MenuGroup>
 
       <ConfirmModal
@@ -207,42 +197,24 @@ function FounderProfileTab() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: 'transparent' },
-  wrap: { padding: spacing[2], paddingBottom: spacing[4], gap: spacing[3] },
+  wrap: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[3] },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 24, fontWeight: '800', color: colors.white },
-  headText: { flex: 1, gap: spacing[0.5] },
-  name: { fontSize: 24, fontWeight: '800', color: colors.text },
-  email: { fontSize: 14, fontWeight: '500', color: colors.textMuted, marginBottom: spacing[0.5] },
+  headText: { flex: 1, gap: 4 },
+  name: { fontSize: 20, fontWeight: '500', color: colors.primaryDark },
+  email: { fontSize: 13, color: colors.textMuted, marginBottom: 4 },
   section: { gap: spacing[1] },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+  sectionTitle: { fontSize: 12, color: colors.textMuted },
   cardGap: { gap: spacing[1.5] },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  muted: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  cardTitle: { fontSize: 17, fontWeight: '500', color: colors.primaryDark },
+  muted: { fontSize: 13, color: colors.textMuted },
   facts: { gap: spacing[1] },
   fact: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing[2] },
-  factLabel: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  factValue: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.text, textAlign: 'right' },
+  factLabel: { fontSize: 13, color: colors.textMuted },
+  factValue: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text, textAlign: 'right' },
   progress: { gap: spacing[1], paddingTop: spacing[1.5], borderTopWidth: 1, borderTopColor: colors.border },
-  progressLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
-  track: { height: 8, borderRadius: radius.full, backgroundColor: colors.accentLight, overflow: 'hidden' },
-  fill: { height: 8, borderRadius: radius.full, backgroundColor: colors.accent },
-  verified: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1.5],
-    padding: spacing[2],
-    borderRadius: radius.card,
-    backgroundColor: colors.successLight,
-  },
-  verifiedText: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.text },
+  progressLabel: { fontSize: 13, color: colors.text },
+  track: { height: 6, borderRadius: radius.full, backgroundColor: colors.primaryBorder, overflow: 'hidden' },
+  fill: { height: 6, borderRadius: radius.full, backgroundColor: colors.primary },
 });
 
 export default withBackdrop(FounderProfileTab);

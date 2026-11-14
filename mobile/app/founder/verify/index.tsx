@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { FileText } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
 import { Header } from '../../../src/components/layout/Header';
 import { CodeInput, Steps, TextLink } from '../../../src/components/auth/parts';
@@ -307,7 +306,6 @@ export default function VerifyToConnectScreen() {
         ) : null}
 
         <View style={styles.note}>
-          <FileText size={20} color={colors.textMuted} />
           <Text style={styles.noteText}>{isInvestor
               ? 'No documents are needed here. Documents are shared later, at due diligence on a deal.'
               : isExpert
@@ -323,9 +321,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.white },
   steps: { paddingHorizontal: spacing[2], paddingTop: spacing[2], paddingBottom: spacing[1.5], borderBottomWidth: 1, borderBottomColor: colors.border },
   content: { padding: spacing[2], paddingTop: spacing[3], paddingBottom: spacing[6] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
+  heading: { fontSize: 28, fontWeight: '300', color: colors.primaryDark, letterSpacing: -0.5 },
   helper: { fontSize: 16, color: colors.textMuted, marginTop: spacing[1] },
-  strong: { fontSize: 16, fontWeight: '700', color: colors.text },
+  strong: { fontSize: 16, fontWeight: '500', color: colors.text },
   field: { marginTop: spacing[3] },
   actions: { marginTop: spacing[2], gap: spacing[1] },
   // The Textarea leaves 16 below itself; the count belongs right under it.
@@ -338,8 +336,8 @@ const styles = StyleSheet.create({
     marginTop: spacing[2],
     gap: spacing[0.5],
   },
-  exampleTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+  exampleTitle: { fontSize: 14, fontWeight: '500', color: colors.text },
   exampleText: { fontSize: 14, color: colors.textMuted },
-  note: { flexDirection: 'row', gap: spacing[1], marginTop: spacing[4], alignItems: 'flex-start' },
-  noteText: { flex: 1, fontSize: 14, color: colors.textMuted },
+  note: { marginTop: spacing[4], paddingTop: spacing[2], borderTopWidth: 1, borderTopColor: colors.border },
+  noteText: { fontSize: 14, color: colors.textMuted },
 });

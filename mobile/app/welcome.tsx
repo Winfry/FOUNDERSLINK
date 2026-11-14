@@ -1,16 +1,13 @@
 import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
-import { HandCoins, ShieldCheck, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../src/components/ui/Text';
 import { Button } from '../src/components/ui';
+import { HeroChip, HeroGradient, Wordmark } from '../src/components/auth/AuthPhoto';
 import { setWelcomeSeen } from '../src/lib/welcome-storage';
-import { colors, spacing } from '../src/theme/tokens';
+import { colors, radius, spacing } from '../src/theme/tokens';
 
-const PROMISES: [LucideIcon, string][] = [
-  [ShieldCheck, 'Everyone you talk to has been checked.'],
-  [HandCoins, 'FoundersLink never holds your money.'],
-];
+const PROMISES = ['Everyone you talk to has been checked.', 'FoundersLink never holds your money.'];
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -27,41 +24,42 @@ export default function WelcomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.wrap} bounces={false}>
-      {/* The one bold thing on this screen: a photo of two people closing a
-          deal, under a navy tint so the headline stays readable. */}
-      <View style={styles.block}>
-        {/* Fills the whole block at any height. As a background image it
-            stopped part-way on tall screens and in browsers, leaving a line. */}
-        <View style={styles.photo}>
-          <Image
-            source={require('../assets/images/welcome-photo.jpg')}
-            style={styles.photoImage}
-            resizeMode="cover"
-            accessibilityLabel="Two business people shaking hands"
-          />
-        </View>
-        <View style={styles.tint} />
-        <View style={[styles.blockContent, { paddingTop: insets.top + spacing[3] }]}>
-          <Text style={styles.wordmark}>FoundersLink</Text>
-          <Text style={styles.headline} accessibilityRole="header">
-            Meet investors who fit. Close deals you can trust.
-          </Text>
+      {/* The approved hero: the brand's purple, one promise in a chip, the
+          headline, and the one gold action. */}
+      <View style={styles.hero}>
+        <HeroGradient />
+        <View style={[styles.heroContent, { paddingTop: insets.top + spacing[3] }]}>
+          <Wordmark />
+          <View style={styles.heroWords}>
+            <HeroChip label="Every member is verified" />
+            <Text style={styles.headline} accessibilityRole="header">
+              <Text style={styles.headlineSoft}>Meet investors who fit. </Text>
+              Close deals you can trust.
+            </Text>
+            <Text style={styles.sub}>No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</Text>
+            <Button title="Get started" variant="gold" style={styles.heroButton} onPress={() => void continueToSignup()} />
+          </View>
+          <View style={styles.arch}>
+            <Image
+              source={require('../assets/images/welcome-photo.jpg')}
+              style={styles.archImage}
+              resizeMode="cover"
+              accessibilityLabel="Two business people shaking hands"
+            />
+          </View>
         </View>
       </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing[3] }]}>
         <View style={styles.promises}>
-          {PROMISES.map(([Icon, text]) => (
-            <View key={text} style={styles.promise}>
-              <View style={styles.promiseIcon}>
-                <Icon size={20} color={colors.primary} />
-              </View>
-              <Text style={styles.promiseText}>{text}</Text>
-            </View>
+          {PROMISES.map((text, i) => (
+            <Text key={text} style={[styles.promise, i > 0 && styles.promiseLine]}>
+              {text}
+            </Text>
           ))}
         </View>
         <View style={styles.actions}>
-          <Button title="Get started" onPress={() => void continueToSignup()} />
+          <Text style={styles.already}>Already a member?</Text>
           <Button title="Log in" variant="secondary" onPress={() => void goLogin()} />
         </View>
       </View>
@@ -70,38 +68,39 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flexGrow: 1, backgroundColor: colors.white },
-  block: {
-    flexGrow: 1,
-    minHeight: 440,
+  wrap: { flexGrow: 1, backgroundColor: colors.background },
+  hero: {
     backgroundColor: colors.primaryDark,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     overflow: 'hidden',
   },
-  photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  photoImage: { width: '100%', height: '100%' },
-  // An even navy tint over the photo, so the white text reads on it.
-  tint: { ...StyleSheet.absoluteFill, backgroundColor: colors.primaryDark, opacity: 0.55 },
-  blockContent: {
-    flex: 1,
-    paddingHorizontal: spacing[3],
-    paddingBottom: spacing[4],
-    justifyContent: 'space-between',
+  heroContent: { paddingHorizontal: spacing[3], paddingBottom: spacing[4], gap: spacing[4] },
+  heroWords: { gap: spacing[2] },
+  headline: { fontSize: 38, lineHeight: 40, fontWeight: '500', color: colors.white, letterSpacing: -1.1 },
+  headlineSoft: { color: '#D9CCF5', fontWeight: '300' },
+  sub: { fontSize: 16, color: 'rgba(255,255,255,0.8)' },
+  heroButton: { alignSelf: 'flex-start', marginTop: spacing[1] },
+  // The photo in an arch, as in the approved hero.
+  arch: {
+    height: 240,
+    borderTopLeftRadius: 120,
+    borderTopRightRadius: 120,
+    borderBottomLeftRadius: radius.card,
+    borderBottomRightRadius: radius.card,
+    overflow: 'hidden',
   },
-  wordmark: { fontSize: 20, fontWeight: '800', color: colors.white },
-  headline: { fontSize: 32, fontWeight: '800', color: colors.white },
-  bottom: { paddingHorizontal: spacing[3], paddingTop: spacing[3] },
-  promises: { gap: spacing[1.5] },
-  promise: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5] },
-  promiseIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  archImage: { width: '100%', height: '100%' },
+  bottom: { flexGrow: 1, paddingHorizontal: spacing[3], paddingTop: spacing[3], justifyContent: 'space-between' },
+  promises: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    paddingHorizontal: spacing[2],
   },
-  promiseText: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
-  actions: { gap: spacing[1.5], marginTop: spacing[4] },
+  promise: { fontSize: 15, color: colors.text, paddingVertical: spacing[1.5] },
+  promiseLine: { borderTopWidth: 1, borderTopColor: colors.border },
+  actions: { gap: spacing[1], marginTop: spacing[3] },
+  already: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 });

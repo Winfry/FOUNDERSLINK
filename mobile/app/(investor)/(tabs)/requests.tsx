@@ -3,11 +3,10 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ChevronRight, Handshake } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Badge, Button, Card, ConfirmModal, useToast } from '../../../src/components/ui';
+import { Avatar, Button, Card, ConfirmModal, useToast } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
-import { TextLink } from '../../../src/components/auth/parts';
+import { Empty, Panel, Tag } from '../../../src/components/overview/parts';
 import { stageLabel } from '../../../src/components/deal/StageStepper';
 import { dealService, investorService, type JoinRequestRow } from '../../../src/services';
 import { colors, spacing } from '../../../src/theme/tokens';
@@ -15,9 +14,14 @@ import type { ApiError } from '../../../src/types';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { SkeletonCard } from '../../../src/components/ui/Skeleton';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
-import { Illustration } from '../../../src/components/illustrations/People';
 
 const ksh = (amount: number) => `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
+
+const STATUS = {
+  pending: { label: 'Deciding', tone: 'quiet' as const },
+  accepted: { label: 'Connected', tone: 'done' as const },
+  declined: { label: 'Declined', tone: 'quiet' as const },
+};
 
 function sentOn(iso: string): string {
   const d = new Date(iso);
@@ -64,120 +68,105 @@ function InvestorRequestsTab() {
     }
   };
 
-  const card = (r: JoinRequestRow) => (
-    <Card key={r.id} style={styles.card}>
-      <View style={styles.cardTop}>
-        <Text style={styles.name}>{r.founderName}</Text>
-        <Badge
-          label={r.status === 'pending' ? 'Waiting' : r.status === 'accepted' ? 'Connected' : 'Declined'}
-          variant={r.status === 'pending' ? 'default' : r.status === 'accepted' ? 'success' : 'muted'}
-        />
+  const card = (r: JoinRequestRow) => {
+    const status = STATUS[r.status];
+    const date = sentOn(r.createdAt);
+    return (
+      <Card key={r.id} style={styles.card}>
+        <View style={styles.person}>
+          <Avatar name={r.founderName} size={48} />
+          <View style={styles.flex}>
+            <Text style={styles.name}>{r.founderName}</Text>
+            <Text style={styles.proposed}>
+              {r.proposedAmountKes > 0 ? `You proposed ${ksh(r.proposedAmountKes)}` : 'No amount proposed'}
+            </Text>
+            {date ? <Text style={styles.meta}>{date}</Text> : null}
+          </View>
+          <Tag label={status.label} tone={status.tone} />
+        </View>
+        {r.pitch ? (
+          <Text style={styles.pitch} numberOfLines={3}>
+            {r.pitch}
+          </Text>
+        ) : null}
+        {r.status === 'declined' ? (
+          <View style={styles.reason}>
+            <Text style={styles.reasonTitle}>Reason given</Text>
+            <Text style={styles.meta}>{r.declineReason || 'No reason was given.'}</Text>
+          </View>
+        ) : null}
+        {r.status === 'pending' ? <Button title="Withdraw" variant="secondary" onPress={() => setWithdrawing(r)} /> : null}
+        {r.status === 'accepted' ? <Button title="Open the chat" variant="soft" onPress={() => router.push('/conversations')} /> : null}
+      </Card>
+    );
+  };
+
+  const group = (title: string, list: JoinRequestRow[]) =>
+    list.length ? (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {list.map(card)}
       </View>
-      {r.proposedAmountKes > 0 ? (
-        <View>
-          <Text style={styles.amountLabel}>You proposed</Text>
-          <Text style={styles.amount}>{ksh(r.proposedAmountKes)}</Text>
-        </View>
-      ) : (
-        <Text style={styles.meta}>No amount proposed</Text>
-      )}
-      {r.pitch ? (
-        <Text style={styles.pitch} numberOfLines={3}>
-          {r.pitch}
-        </Text>
-      ) : null}
-      {r.status === 'declined' ? (
-        <View style={styles.reason}>
-          <Text style={styles.reasonTitle}>Reason given</Text>
-          <Text style={styles.reasonText}>{r.declineReason || 'No reason was given.'}</Text>
-        </View>
-      ) : null}
-      {sentOn(r.createdAt) ? <Text style={styles.date}>{sentOn(r.createdAt)}</Text> : null}
-      {r.status === 'pending' ? <Button title="Withdraw" variant="secondary" onPress={() => setWithdrawing(r)} /> : null}
-      {r.status === 'accepted' ? <Button title="Message" variant="secondary" onPress={() => router.push('/conversations')} /> : null}
-    </Card>
-  );
+    ) : null;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.wrap} refreshControl={<RefreshControl {...pull} />}>
-      <PageTitle title="Requests" subtitle="The founders you asked to connect with, and the deals that followed." />
+      <PageTitle title="Your requests" subtitle="The founders you asked to connect with." />
 
       {rows.length === 0 ? (
-        <View style={styles.empty}>
-          <Illustration name="meet" width={210} />
+        <Card style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>Your first connection starts here</Text>
           <Text style={styles.emptyBody}>
-            Find a founder that fits in Discover and send them a request with the amount you have in mind. When they accept, you can chat and start a deal.
+            Find a business that fits and send the founder a request with the amount you have in mind. When they accept, you can chat and start a deal.
           </Text>
-          <Button title="Find founders" onPress={toDiscover} style={styles.emptyBtn} />
-        </View>
+          <Button title="Find businesses" onPress={toDiscover} style={styles.topGap} />
+        </Card>
       ) : (
         <>
-          {pending.length ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Waiting for a reply</Text>
-              {pending.map(card)}
-            </View>
-          ) : null}
-          {accepted.length ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Connected</Text>
-              {accepted.map(card)}
-            </View>
-          ) : null}
-          {declined.length ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Declined</Text>
-              {declined.map(card)}
-            </View>
-          ) : null}
+          {group('Waiting for a reply', pending)}
+          {group('Connected', accepted)}
+          {group('Declined', declined)}
         </>
       )}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your deals</Text>
-        {dealsQ.isLoading ? (
-          <SkeletonCard />
-        ) : dealsQ.isError ? (
-          <Card style={styles.card}>
-            <Text style={styles.meta}>
-              {(dealsQ.error as { message?: string })?.message ?? "We couldn't load your deals. Check your connection and try again."}
-            </Text>
-            <Button title="Try again" variant="secondary" onPress={() => void dealsQ.refetch()} />
-          </Card>
-        ) : deals.length === 0 ? (
-          <Card style={styles.card}>
-            <View style={styles.noDeals}>
-              <Handshake size={20} color={colors.textMuted} />
-              <Text style={styles.noDealsText}>
-                No deals yet. A deal starts once a founder accepts your request and the two of you agree to explore one.
-              </Text>
-            </View>
-            {rows.length > 0 ? <TextLink title="Find more founders" align="left" onPress={toDiscover} /> : null}
-          </Card>
-        ) : (
-          deals.map((d) => (
-            <Pressable
-              key={d.id}
-              onPress={() => router.push(`/deal/${d.id}`)}
-              accessibilityRole="button"
-              accessibilityLabel={`Open deal ${d.title}`}
-              style={({ pressed }) => pressed && styles.pressed}
-            >
-              <Card style={styles.deal}>
-                <View style={styles.dealText}>
-                  <Text style={styles.name}>{d.title}</Text>
+      {dealsQ.isLoading ? (
+        <SkeletonCard />
+      ) : (
+        <Panel
+          title="Your deals"
+          sub="Money moves between banks. FoundersLink keeps the record."
+          link={!dealsQ.isError && deals.length === 0 && rows.length > 0 ? 'Find more founders' : undefined}
+          onLink={toDiscover}
+        >
+          {dealsQ.isError ? (
+            <>
+              <Empty text={(dealsQ.error as { message?: string })?.message ?? "We couldn't load your deals. Check your connection and try again."} />
+              <Button title="Try again" variant="secondary" size="sm" onPress={() => void dealsQ.refetch()} style={styles.start} />
+            </>
+          ) : deals.length === 0 ? (
+            <Empty text="No deals yet. A deal starts once a founder accepts your request and the two of you agree to explore one." />
+          ) : (
+            deals.map((d, i) => (
+              <Pressable
+                key={d.id}
+                onPress={() => router.push(`/deal/${d.id}`)}
+                accessibilityRole="button"
+                accessibilityLabel={`Open deal ${d.title}`}
+                style={({ pressed }) => [styles.dealRow, i < deals.length - 1 && styles.rowLine, pressed && styles.pressed]}
+              >
+                <Avatar name={d.withName} size={40} ring={false} />
+                <View style={styles.flex}>
+                  <Text style={styles.dealTitle} numberOfLines={2}>
+                    {d.title}
+                  </Text>
                   <Text style={styles.meta}>With {d.withName}</Text>
-                  <View style={styles.dealBadge}>
-                    <Badge label={stageLabel(d.stage)} variant="default" />
-                  </View>
                 </View>
-                <ChevronRight size={20} color={colors.textMuted} />
-              </Card>
-            </Pressable>
-          ))
-        )}
-      </View>
+                <Tag label={stageLabel(d.stage)} tone="todo" />
+              </Pressable>
+            ))
+          )}
+        </Panel>
+      )}
 
       <ConfirmModal
         visible={!!withdrawing}
@@ -200,39 +189,27 @@ function InvestorRequestsTab() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: 'transparent' },
-  wrap: { flexGrow: 1, padding: spacing[2], paddingTop: 0, paddingBottom: spacing[4], gap: spacing[3] },
+  wrap: { flexGrow: 1, paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[2] },
+  flex: { flex: 1, minWidth: 0 },
   section: { gap: spacing[1.5] },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
+  sectionTitle: { fontSize: 12, color: colors.textMuted },
   card: { gap: spacing[1.5] },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  name: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text },
-  amountLabel: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  amount: { fontSize: 24, fontWeight: '800', color: colors.primaryDark },
-  pitch: { fontSize: 16, fontWeight: '500', color: colors.text },
-  meta: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  date: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
-  reason: { backgroundColor: colors.grey100, borderRadius: 12, padding: spacing[1.5], gap: spacing[0.5] },
-  reasonTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
-  reasonText: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  noDeals: { flexDirection: 'row', gap: spacing[1.5], alignItems: 'flex-start' },
-  noDealsText: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  person: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
+  name: { fontSize: 16, fontWeight: '500', color: colors.text },
+  proposed: { fontSize: 13, color: colors.text, marginTop: 4 },
+  meta: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  pitch: { fontSize: 14, color: colors.text },
+  reason: { backgroundColor: colors.grey100, borderRadius: 14, padding: spacing[1.5], gap: 2 },
+  reasonTitle: { fontSize: 13, fontWeight: '500', color: colors.text },
+  start: { alignSelf: 'flex-start' },
+  topGap: { marginTop: spacing[1.5] },
   pressed: { opacity: 0.85 },
-  deal: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  dealText: { flex: 1, gap: spacing[0.5] },
-  dealBadge: { flexDirection: 'row', marginTop: spacing[0.5] },
-  empty: { alignItems: 'center', paddingVertical: spacing[3], paddingHorizontal: spacing[1], gap: spacing[1] },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing[1],
-  },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  emptyBody: { fontSize: 16, fontWeight: '500', color: colors.textMuted, textAlign: 'center' },
-  emptyBtn: { alignSelf: 'stretch', marginTop: spacing[2] },
+  dealRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5], paddingVertical: 13 },
+  rowLine: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  dealTitle: { fontSize: 14, color: colors.text },
+  emptyCard: { gap: 6 },
+  emptyTitle: { fontSize: 20, color: colors.primaryDark },
+  emptyBody: { fontSize: 14, color: colors.textMuted },
 });
 
 export default withBackdrop(InvestorRequestsTab);

@@ -11,7 +11,9 @@ interface ApiDeal {
   stage: DealStage;
   pending: { to_stage: DealStage; waiting_for: { user_id: string }[] } | null;
   terms: { amount_kes?: number; instrument?: DealTerms['instrument']; equity_percent?: number; roles?: string; notes?: string };
-  parties: { user_id: string; full_name: string; role: string }[];
+  parties: { user_id: string; full_name: string; role: string; shares_track_record?: boolean }[];
+  milestones?: { id: string; title: string; due_date: string | null; status: string }[];
+  closed_at?: string | null;
 }
 
 interface ApiDocument {
@@ -85,6 +87,9 @@ function base(deal: ApiDeal, me: string | null): Deal {
     checklist: [],
     timeline: [],
     documents: [],
+    closedAt: deal.closed_at ?? null,
+    milestones: (deal.milestones ?? []).map((m) => ({ id: m.id, title: m.title, dueDate: m.due_date, status: m.status === 'done' ? 'done' : 'pending' })),
+    sharesTrackRecord: deal.parties.find((p) => p.user_id === me)?.shares_track_record ?? false,
   };
 }
 
@@ -195,5 +200,10 @@ export const httpDealService: DealService = {
     }
     await post(`/deals/${dealId}/documents`, form);
     return load(dealId);
+  },
+
+  async setSharing(dealId, share) {
+    const res = await patch<{ you_share: boolean; shown_on_track_records: boolean }>(`/deals/${dealId}/sharing`, { share });
+    return { youShare: res.you_share, shown: res.shown_on_track_records };
   },
 };

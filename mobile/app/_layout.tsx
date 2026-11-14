@@ -100,6 +100,8 @@ function Screens({ wide }: { wide: boolean }) {
     >
       <Stack.Screen name="founder/investor-match/[id]" options={withBack('Investor')} />
       <Stack.Screen name="founder/verify/status" options={withBack('Verification')} />
+      <Stack.Screen name="deals/index" options={withBack('Deal rooms')} />
+      <Stack.Screen name="investor/investment/[id]" options={withBack('My investments')} />
       <Stack.Screen name="deal/[id]" options={withBack('Deal')} />
       <Stack.Screen name="chama/[id]" options={withBack('Chama')} />
       <Stack.Screen name="conversations/index" options={withBack('Messages')} />

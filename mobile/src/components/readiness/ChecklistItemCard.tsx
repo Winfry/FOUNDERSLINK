@@ -1,16 +1,14 @@
-import { CalendarDays, CircleCheck } from 'lucide-react-native';
-import { StyleSheet, View } from 'react-native';
-import { Badge } from '../ui/Badge';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';
 import { BANK_ACCOUNT_ITEM, BankOptions } from './BankOptions';
 import type { ComplianceItem } from '../../types';
-import { colors, shadows, spacing } from '../../theme/tokens';
+import { colors, radius, spacing } from '../../theme/tokens';
 
-const STATUS: Record<ComplianceItem['status'], { label: string; variant: 'muted' | 'default' | 'success' }> = {
-  not_started: { label: 'Not started', variant: 'muted' },
-  in_progress: { label: 'In progress', variant: 'default' },
-  complete: { label: 'Done', variant: 'success' },
+const STATE: Record<ComplianceItem['status'], string> = {
+  not_started: 'To do',
+  in_progress: 'In progress',
+  complete: 'Done',
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -25,62 +23,109 @@ export function formatDeadline(value: string): string {
 
 interface Props {
   item: ComplianceItem;
+  /** Its place on the path, from 1. */
+  number: number;
+  /** The last step draws no line below its number. */
+  last?: boolean;
+  open: boolean;
+  onToggle: () => void;
   saving: boolean;
   onMarkDone: () => void;
+  onAskExpert: () => void;
 }
 
-export function ChecklistItemCard({ item, saving, onMarkDone }: Props) {
+/**
+ * One step on the path to being ready: its number in a circle (purple
+ * when done), a thin line down to the next, and a card with the title and
+ * "Done" or "To do". Tapping the card opens why it matters and what to do.
+ */
+export function ChecklistItemCard({ item, number, last, open, onToggle, saving, onMarkDone, onAskExpert }: Props) {
   const done = item.status === 'complete';
-  const status = STATUS[item.status] ?? STATUS.not_started;
+  const state = STATE[item.status] ?? STATE.not_started;
+  const when = item.deadline && !done ? `Due ${formatDeadline(item.deadline)}` : null;
   return (
-    <View style={[styles.card, done && styles.cardDone]}>
-      <View style={styles.head}>
-        {done ? <CircleCheck size={22} color={colors.success} style={styles.tick} /> : null}
-        <Text style={[styles.title, done && styles.titleDone]}>{item.label}</Text>
+    <View style={styles.step}>
+      {!last ? <View style={styles.line} /> : null}
+      <View style={[styles.stone, done && styles.stoneDone]}>
+        <Text style={[styles.stoneText, done && styles.stoneTextDone]}>{number}</Text>
       </View>
-      {item.description ? <Text style={styles.why}>{item.description}</Text> : null}
-      <View style={styles.facts}>
-        <Badge label={status.label} variant={status.variant} />
-        {item.deadline && !done ? (
-          <View style={styles.deadline}>
-            <CalendarDays size={16} color={colors.textMuted} />
-            <Text style={styles.deadlineText}>Due {formatDeadline(item.deadline)}</Text>
+      <View style={[styles.card, open && styles.cardOpen]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          accessibilityLabel={`${item.label}. ${state}${when ? `. ${when}` : ''}`}
+          onPress={onToggle}
+          style={({ pressed }) => [styles.head, pressed && styles.pressed]}
+        >
+          <Text style={styles.title}>{item.label}</Text>
+          <Text style={[styles.state, done && styles.stateDone]}>{[state, when].filter(Boolean).join(' · ')}</Text>
+        </Pressable>
+        {open ? (
+          <View style={styles.more}>
+            {item.description ? (
+              <>
+                <Text style={styles.label}>Why it matters</Text>
+                <Text style={styles.why}>{item.description}</Text>
+              </>
+            ) : null}
+            {item.id === BANK_ACCOUNT_ITEM && !done ? <BankOptions /> : null}
+            <View style={styles.buttons}>
+              {!done ? (
+                <Button
+                  title="Mark as done"
+                  loading={saving}
+                  onPress={onMarkDone}
+                  accessibilityLabel={`Mark ${item.label} as done`}
+                />
+              ) : null}
+              <Button
+                title="Talk to an expert"
+                variant="soft"
+                onPress={onAskExpert}
+                accessibilityLabel={`Ask which expert could help with ${item.label}`}
+              />
+            </View>
           </View>
         ) : null}
       </View>
-      {item.id === BANK_ACCOUNT_ITEM && !done ? <BankOptions /> : null}
-      {!done ? (
-        <Button
-          title="Mark as done"
-          variant="secondary"
-          loading={saving}
-          onPress={onMarkDone}
-          accessibilityLabel={`Mark ${item.label} as done`}
-          style={styles.button}
-        />
-      ) : null}
     </View>
   );
 }
 
+const STONE = 34;
+
 const styles = StyleSheet.create({
-  card: {
+  step: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5], paddingBottom: 10 },
+  line: { position: 'absolute', left: STONE / 2, top: STONE + 2, bottom: 0, width: 1, backgroundColor: colors.borderStrong },
+  stone: {
+    width: STONE,
+    height: STONE,
+    borderRadius: STONE / 2,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
     backgroundColor: colors.white,
-    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stoneDone: { backgroundColor: colors.primary, borderColor: colors.primary },
+  stoneText: { fontSize: 13, fontWeight: '500', color: colors.textMuted },
+  stoneTextDone: { color: colors.white },
+  card: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing[2],
-    gap: spacing[1],
-    ...shadows.sm,
+    borderRadius: radius.md,
   },
-  cardDone: { backgroundColor: colors.grey100, shadowOpacity: 0, elevation: 0 },
-  head: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1] },
-  tick: { marginTop: 1 },
-  title: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text },
-  titleDone: { color: colors.textMuted },
+  cardOpen: { borderColor: colors.primaryLine },
+  head: { paddingHorizontal: 14, paddingVertical: 11, minHeight: 44, justifyContent: 'center' },
+  pressed: { opacity: 0.85 },
+  title: { fontSize: 15, fontWeight: '500', color: colors.text },
+  state: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  stateDone: { color: colors.success },
+  more: { paddingHorizontal: 14, paddingBottom: 14, gap: spacing[0.5] },
+  label: { fontSize: 12, color: colors.textMuted },
   why: { fontSize: 14, color: colors.textMuted },
-  facts: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing[1.5], marginTop: spacing[0.5] },
-  deadline: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
-  deadlineText: { fontSize: 14, color: colors.textMuted },
-  button: { marginTop: spacing[1] },
+  buttons: { gap: spacing[1], marginTop: spacing[1] },
 });

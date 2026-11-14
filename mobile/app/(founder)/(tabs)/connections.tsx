@@ -1,7 +1,6 @@
 import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, MessageCircle } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
@@ -12,10 +11,9 @@ import { kes, words } from '../../../src/components/matches/parts';
 import { useToast } from '../../../src/components/ui/Toast';
 import { connectionService, dealService } from '../../../src/services';
 import type { ConnectionJoinRequest } from '../../../src/types';
-import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
+import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
-import { Illustration } from '../../../src/components/illustrations/People';
 
 function sentStatus(status: ConnectionJoinRequest['status']): { label: string; variant: 'default' | 'success' | 'muted' } {
   if (status === 'accepted') return { label: 'Accepted', variant: 'success' };
@@ -132,14 +130,11 @@ function ConnectionsScreen() {
         accessibilityRole="button"
         accessibilityLabel="Open your chats"
       >
-        <View style={styles.chatIcon}>
-          <MessageCircle size={20} color={colors.primary} />
-        </View>
         <View style={styles.flexOne}>
           <Text style={styles.chatTitle}>Messages</Text>
           <Text style={styles.meta}>Message the people you are connected with.</Text>
         </View>
-        <ChevronRight size={20} color={colors.primary} />
+        <Text style={styles.linkText}>Open</Text>
       </Pressable>
 
       <View style={styles.section}>
@@ -150,7 +145,6 @@ function ConnectionsScreen() {
 
         {waiting.length === 0 ? (
           <View style={styles.empty}>
-            <Illustration name="meet" width={190} />
             <Text style={styles.emptyTitle}>No requests waiting</Text>
             <Text style={styles.emptyText}>
               When an investor asks to join your business, their pitch and the amount they propose show here for you to
@@ -251,10 +245,7 @@ function ConnectionsScreen() {
                   </Text>
                 </View>
                 <View style={styles.connectedActions}>
-                  <View style={styles.messageLink}>
-                    <MessageCircle size={16} color={colors.primary} />
-                    <Text style={styles.linkText}>Message</Text>
-                  </View>
+                  <Text style={styles.linkText}>Message</Text>
                   {/* An investor who proposed an amount: the deal can be opened any time. */}
                   {item.direction === 'received' && item.proposedAmountKes > 0 ? (
                     <Pressable
@@ -348,67 +339,58 @@ function ConnectionsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: spacing[2], paddingTop: 0, paddingBottom: spacing[6] },
-  flexOne: { flex: 1 },
+  content: { paddingHorizontal: spacing[2], paddingBottom: spacing[6] },
+  flexOne: { flex: 1, minWidth: 0 },
   stretch: { alignSelf: 'stretch', marginTop: spacing[1] },
   pressed: { backgroundColor: colors.grey100 },
 
-
   chatRow: {
-    marginTop: spacing[2],
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[1.5],
-    padding: spacing[1.5],
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1.5],
     minHeight: touchTargetMin,
-    borderRadius: 16,
+    borderRadius: radius.card,
     backgroundColor: colors.primaryLight,
   },
-  chatIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chatTitle: { fontSize: 17, fontWeight: '700', color: colors.primaryDark },
+  chatTitle: { fontSize: 15, fontWeight: '500', color: colors.primaryDark },
 
   section: { marginTop: spacing[3], gap: spacing[1.5] },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
+  sectionTitle: { fontSize: 17, fontWeight: '500', color: colors.primaryDark },
 
   empty: {
     alignItems: 'center',
     gap: spacing[1],
     padding: spacing[3],
-    borderRadius: 16,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderStyle: 'dashed',
+    backgroundColor: colors.white,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  emptyText: { fontSize: 14, fontWeight: '500', color: colors.textMuted, textAlign: 'center' },
-  emptyLine: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  emptyTitle: { fontSize: 20, color: colors.primaryDark, textAlign: 'center' },
+  emptyText: { fontSize: 13, color: colors.textMuted, textAlign: 'center', maxWidth: 380 },
+  emptyLine: { fontSize: 13, color: colors.textMuted },
 
-  card: { borderRadius: 16, gap: spacing[2] },
+  card: { gap: spacing[2] },
   person: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5] },
-  name: { fontSize: 17, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  date: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  name: { fontSize: 15, fontWeight: '500', color: colors.text },
+  meta: { fontSize: 13, color: colors.textMuted },
+  date: { fontSize: 12, color: colors.textDim },
 
-  amount: { padding: spacing[2], borderRadius: 12, backgroundColor: colors.primaryDark, gap: spacing[0.5] },
-  amountLabel: { fontSize: 14, fontWeight: '600', color: colors.primaryBorder },
-  amountValue: { fontSize: 24, fontWeight: '800', color: colors.white },
+  amount: { gap: 2 },
+  amountLabel: { fontSize: 12, color: colors.textMuted },
+  amountValue: { fontSize: 28, color: colors.primaryDark },
 
-  block: { gap: spacing[0.5] },
-  blockLabel: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '500', color: colors.text },
+  block: { gap: 4 },
+  blockLabel: { fontSize: 12, color: colors.textMuted },
+  body: { fontSize: 14, lineHeight: 21, color: colors.text },
 
-  actions: { flexDirection: 'row', gap: spacing[1.5] },
-  fine: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  actions: { flexDirection: 'row', gap: spacing[1] },
+  fine: { fontSize: 13, color: colors.textMuted },
 
-  listCard: { borderRadius: 16, paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden' },
+  listCard: { paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden' },
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,9 +399,8 @@ const styles = StyleSheet.create({
     minHeight: touchTargetMin,
   },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
-  connectedActions: { alignItems: 'flex-end', gap: spacing[1] },
-  messageLink: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
-  linkText: { fontSize: 14, fontWeight: '700', color: colors.primary },
+  connectedActions: { alignItems: 'flex-end', gap: spacing[0.5] },
+  linkText: { fontSize: 13, fontWeight: '500', color: colors.primary },
   // A full-size target of its own: browsers ignore the extra touch area (hitSlop).
   startDeal: { minHeight: touchTargetMin, justifyContent: 'center' },
 

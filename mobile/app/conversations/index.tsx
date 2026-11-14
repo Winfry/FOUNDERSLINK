@@ -1,9 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { Handshake, UsersRound } from 'lucide-react-native';
 import { Text } from '../../src/components/ui/Text';
-import { Avatar } from '../../src/components/ui';
+import { Avatar, initialsOf } from '../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { conversationService } from '../../src/services';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -28,8 +27,8 @@ function shortTime(at: string) {
 }
 
 const ROOM = {
-  deal: { label: 'Deal room', Icon: Handshake },
-  circle: { label: 'Chama', Icon: UsersRound },
+  deal: { label: 'Deal room' },
+  circle: { label: 'Chama' },
 } as const;
 
 function Row({ item, onPress }: { item: ConversationSummary; onPress: () => void }) {
@@ -43,8 +42,9 @@ function Row({ item, onPress }: { item: ConversationSummary; onPress: () => void
       onPress={onPress}
     >
       {room ? (
+        // A room is not a person: the initials of its title in a deep purple square.
         <View style={styles.roomAvatar}>
-          <room.Icon size={22} color={colors.white} />
+          <Text style={styles.roomInitials}>{initialsOf(item.title)}</Text>
         </View>
       ) : (
         <Avatar name={item.title} size={AVATAR} />
@@ -90,7 +90,6 @@ export default function ConversationsScreen() {
   if (!q.data?.length) {
     return (
       <ScreenEmpty
-        illustration="messages"
         title="No conversations yet"
         description={
           isFounder
@@ -127,7 +126,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[1.5],
     minHeight: 72,
   },
-  rowPressed: { backgroundColor: colors.grey100 },
+  rowPressed: { backgroundColor: colors.primaryLight },
   separator: { height: 1, backgroundColor: colors.border, marginLeft: spacing[2] + AVATAR + spacing[1.5] },
   roomAvatar: {
     width: AVATAR,
@@ -137,15 +136,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  roomInitials: { fontSize: 16, fontWeight: '500', color: colors.white, letterSpacing: 0.3 },
   words: { flex: 1, gap: 4 },
   line: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  title: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text },
-  time: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
-  timeUnread: { color: colors.text },
+  title: { flex: 1, fontSize: 16, fontWeight: '500', color: colors.primaryDark },
+  time: { fontSize: 12, color: colors.textMuted },
+  timeUnread: { color: colors.accentText, fontWeight: '500' },
   roomLabel: { backgroundColor: colors.primaryLight, borderRadius: radius.full, paddingHorizontal: spacing[1], paddingVertical: 2 },
-  roomLabelText: { fontSize: 12, fontWeight: '700', color: colors.primaryDark },
+  roomLabelText: { fontSize: 12, fontWeight: '500', color: colors.primary },
   preview: { flex: 1, fontSize: 14, color: colors.textMuted },
-  previewUnread: { color: colors.text, fontWeight: '600' },
+  previewUnread: { color: colors.text, fontWeight: '500' },
   unread: {
     minWidth: 22,
     height: 22,
@@ -155,5 +155,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  unreadText: { fontSize: 12, fontWeight: '700', color: colors.primaryDark },
+  unreadText: { fontSize: 12, fontWeight: '600', color: colors.primaryDark },
 });

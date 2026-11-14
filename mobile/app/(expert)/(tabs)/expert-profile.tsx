@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { BadgeCheck, LogOut, Settings, UserRoundPen } from 'lucide-react-native';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Avatar, ConfirmModal } from '../../../src/components/ui';
 import { Text } from '../../../src/components/ui/Text';
@@ -37,13 +36,13 @@ export default function ExpertProfile() {
       </View>
 
       <Panel title="How founders see you" sub="Your profession, what you help with, and how many sessions you offer each month.">
-        <Row icon={UserRoundPen} title="Edit my expert profile" line="Profession, register, services, sectors and counties." onPress={() => router.push('/expert/onboarding')} />
-        <Row icon={BadgeCheck} title="My verification" line="See what FoundersLink checked, or what it still needs." onPress={() => router.push('/founder/verify/status')} last />
+        <Row title="Edit my expert profile" line="Profession, register, services, sectors and counties." right={<Text style={styles.go}>Edit</Text>} onPress={() => router.push('/expert/onboarding')} />
+        <Row title="My verification" line="See what FoundersLink checked, or what it still needs." right={<Text style={styles.go}>Open</Text>} onPress={() => router.push('/founder/verify/status')} last />
       </Panel>
 
       <Panel title="Account">
-        <Row icon={Settings} title="Settings" line="Notifications, privacy, your data and support." onPress={() => router.push('/settings')} />
-        <Row icon={LogOut} title="Log out" onPress={() => setConfirming(true)} last />
+        <Row title="Settings" line="Notifications, privacy, your data and support." right={<Text style={styles.go}>Open</Text>} onPress={() => router.push('/settings')} />
+        <Row title="Log out" onPress={() => setConfirming(true)} last />
       </Panel>
 
       <ConfirmModal
@@ -67,7 +66,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   page: { padding: spacing[2], paddingBottom: spacing[6], gap: spacing[2] },
   me: { flexDirection: 'row', alignItems: 'center', gap: spacing[2], paddingVertical: spacing[2] },
-  name: { fontSize: 24, fontWeight: '800', color: colors.text },
+  name: { fontSize: 28, color: colors.primaryDark },
+  go: { fontSize: 13, color: colors.primary, fontWeight: '500' },
   email: { fontSize: 14, color: colors.textMuted },
   tag: { flexDirection: 'row', marginTop: spacing[1] },
 });

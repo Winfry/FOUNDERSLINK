@@ -1,6 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Info } from 'lucide-react-native';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
@@ -77,7 +76,6 @@ export default function JoinRequestScreen() {
         <Text style={styles.heading}>{who ? `Ask to join ${who}` : 'Ask to join'}</Text>
 
         <View style={styles.infoBox}>
-          <Info size={20} color={colors.primaryDark} />
           <Text style={styles.infoText}>
             The founder sees your request and decides. If they accept, you are connected and they can open a deal with this amount.
           </Text>
@@ -122,19 +120,16 @@ export default function JoinRequestScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing[2], paddingBottom: spacing[6] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
+  heading: { fontSize: 28, color: colors.primaryDark },
   infoBox: {
     marginTop: spacing[2],
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[1.5],
     padding: spacing[2],
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: colors.primaryLight,
   },
-  infoText: { flex: 1, fontSize: 14, lineHeight: 20, fontWeight: '500', color: colors.text },
+  infoText: { fontSize: 14, lineHeight: 20, color: colors.primaryDark },
   fields: { marginTop: spacing[3], gap: spacing[2] },
   action: { marginTop: spacing[4], gap: spacing[1.5] },
 });

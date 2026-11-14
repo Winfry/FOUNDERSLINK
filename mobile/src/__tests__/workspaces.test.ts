@@ -9,19 +9,25 @@ import { DEMO_PASSWORD } from '../services/mocks/mock-store';
 const labels = (role: 'founder' | 'investor' | 'expert') => WORKSPACES[role].items.map((i) => i.label);
 
 describe('Each member gets the workspace for what they signed up as', () => {
-  it('founders find investors and save in chamas; investors and experts have no chamas', () => {
-    expect(labels('founder')).toEqual(expect.arrayContaining(['Overview', 'Find investors', 'Readiness', 'Chamas']));
-    expect(labels('investor')).toEqual(expect.arrayContaining(['Overview', 'Find businesses', 'Requests & deals']));
+  it("the founder's side menu is the one she asked for, in order", () => {
+    expect(labels('founder')).toEqual(['Overview', 'Investors', 'Readiness', 'Deal rooms', 'Messages', 'Network', 'Chamas', 'Co-pilot']);
+    const groups = Object.fromEntries(WORKSPACES.founder.items.map((i) => [i.label, i.group]));
+    expect([groups.Network, groups.Chamas, groups['Co-pilot']]).toEqual(['Community', 'Community', 'Assistant']);
+  });
+
+  it('investors and experts get menus for their own work, with no chamas', () => {
+    expect(labels('investor')).toEqual(expect.arrayContaining(['Overview', 'Businesses', 'Requests', 'Deal rooms', 'Messages']));
+    expect(labels('expert')).toEqual(expect.arrayContaining(['Overview', 'Deal rooms', 'Messages', 'Profile']));
     expect(labels('investor')).not.toContain('Chamas');
     expect(labels('expert')).not.toContain('Chamas');
     expect(workspaceFor('admin')).toBeNull();
   });
 
   it('the menu lights up the section a page belongs to', () => {
-    const network = WORKSPACES.founder.items.find((i) => i.label === 'Network')!;
-    expect(isActive(network, '/connections')).toBe(true);
-    expect(isActive(network, '/deal/deal-1')).toBe(true);
-    expect(isActive(network, '/connectionsx')).toBe(false);
+    const deals = WORKSPACES.founder.items.find((i) => i.label === 'Deal rooms')!;
+    expect(isActive(deals, '/deals')).toBe(true);
+    expect(isActive(deals, '/deal/deal-1')).toBe(true);
+    expect(isActive(deals, '/dealsx')).toBe(false);
   });
 
   it('the demo investor is matched with businesses that fit what she funds', async () => {

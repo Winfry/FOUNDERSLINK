@@ -1,73 +1,66 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { BadgeCheck, CircleSlash, Clock, MessageCircleQuestion, ShieldCheck, type LucideIcon } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Button } from '../../../src/components/ui';
+import { Badge, Button } from '../../../src/components/ui';
 import { ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { vettingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
-import { Illustration } from '../../../src/components/illustrations/People';
+
+type Tone = 'default' | 'success' | 'warning' | 'error' | 'muted' | 'accent';
 
 interface State {
-  icon: LucideIcon;
-  tint: string;
-  ink: string;
+  /** The state in a few words, on the badge. */
+  badge: string;
+  tone: Tone;
   title: string;
   body: string;
 }
 
 const CHECKING: State = {
-  icon: Clock,
-  tint: colors.primaryLight,
-  ink: colors.primary,
+  badge: 'Being checked',
+  tone: 'default',
   title: "We're checking your details",
   body: 'A person on our team is reading what you sent. You can keep exploring while you wait. Come back here to see the result.',
 };
 
 const STATES: Record<string, State> = {
   draft: {
-    icon: ShieldCheck,
-    tint: colors.primaryLight,
-    ink: colors.primary,
+    badge: 'Not verified yet',
+    tone: 'muted',
     title: 'Verify to connect',
     body: 'Before you can connect with investors or message them, we check your phone number and a short statement about your business.',
   },
   submitted: CHECKING,
   in_review: CHECKING,
   approved: {
-    icon: BadgeCheck,
-    tint: colors.successLight,
-    ink: colors.success,
+    badge: 'Verified',
+    tone: 'success',
     title: "You're verified",
     body: 'You can now connect with investors and message them.',
   },
   needs_info: {
-    icon: MessageCircleQuestion,
-    tint: colors.warningLight,
-    ink: colors.warning,
+    badge: 'More needed',
+    tone: 'warning',
     title: 'We need a little more from you',
     body: 'Update your details and send them again. It only takes a minute.',
   },
   rejected: {
-    icon: CircleSlash,
-    tint: colors.errorLight,
-    ink: colors.error,
+    badge: 'Not approved',
+    tone: 'error',
     title: 'Not approved',
     body: 'Your verification was not approved, so you cannot connect with investors for now. You can still explore the app.',
   },
   suspended: {
-    icon: CircleSlash,
-    tint: colors.errorLight,
-    ink: colors.error,
+    badge: 'Paused',
+    tone: 'error',
     title: 'Your account is paused',
     body: 'You cannot connect or message for now. You can still explore the app.',
   },
   banned: {
-    icon: CircleSlash,
-    tint: colors.errorLight,
-    ink: colors.error,
+    badge: 'Closed',
+    tone: 'error',
     title: 'Your account is closed',
     body: 'You can no longer connect or message on FoundersLink.',
   },
@@ -83,7 +76,6 @@ export default function VerificationStatusScreen() {
   // What the backend says now comes before what was saved at sign-in.
   const status = q.data?.approvalStatus ?? user?.approvalStatus ?? 'draft';
   const state = STATES[status] ?? STATES.draft;
-  const Icon = state.icon;
   // The words that explain where she is now, from the backend: the
   // reviewer's reason, or why her account was paused.
   const reason = q.data?.statusReason ?? null;
@@ -103,16 +95,7 @@ export default function VerificationStatusScreen() {
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
       <View style={styles.middle}>
-        {/* A person for the moments that matter: waiting to be checked, and approved. */}
-        {status === 'approved' ? (
-          <Illustration name="celebrate" width={230} />
-        ) : status === 'submitted' || status === 'in_review' ? (
-          <Illustration name="waiting" width={230} />
-        ) : (
-          <View style={[styles.circle, { backgroundColor: state.tint }]}>
-            <Icon size={56} color={state.ink} strokeWidth={1.75} />
-          </View>
-        )}
+        <Badge label={state.badge} variant={state.tone} />
         <Text style={styles.title} accessibilityRole="header">
           {state.title}
         </Text>
@@ -139,27 +122,20 @@ export default function VerificationStatusScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flexGrow: 1, backgroundColor: colors.white, padding: spacing[2], paddingBottom: spacing[4] },
-  middle: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[4] },
-  circle: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing[3],
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, textAlign: 'center' },
-  body: { fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: spacing[1], maxWidth: 320 },
+  wrap: { flexGrow: 1, backgroundColor: colors.background, padding: spacing[2], paddingBottom: spacing[4] },
+  middle: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing[4], gap: spacing[1.5], maxWidth: 480, width: '100%', alignSelf: 'center' },
+  title: { fontSize: 34, lineHeight: 38, fontWeight: '300', color: colors.primaryDark, letterSpacing: -0.6 },
+  body: { fontSize: 16, color: colors.textMuted },
   reason: {
-    alignSelf: 'stretch',
-    backgroundColor: colors.grey100,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.card,
     padding: spacing[2],
-    marginTop: spacing[3],
+    marginTop: spacing[1.5],
     gap: spacing[0.5],
   },
-  reasonLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
+  reasonLabel: { fontSize: 12, color: colors.textMuted },
   reasonText: { fontSize: 16, color: colors.text },
-  actions: { gap: spacing[1.5] },
+  actions: { gap: spacing[1], maxWidth: 480, width: '100%', alignSelf: 'center' },
 });

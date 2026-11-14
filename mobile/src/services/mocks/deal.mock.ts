@@ -67,6 +67,14 @@ export const mockDealService: DealService = {
     return deal;
   },
 
+  async setSharing(dealId, share) {
+    await mockDelay();
+    const deal = await this.get(dealId);
+    deal.sharesTrackRecord = share;
+    // In the demo the founder has already agreed, so her choice decides it.
+    return { youShare: share, shown: share };
+  },
+
   async uploadDocument(dealId, name) {
     await mockDelay();
     const deal = await this.get(dealId);

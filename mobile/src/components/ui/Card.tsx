@@ -1,6 +1,7 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
 import { colors, radius, shadows, spacing } from '../../theme/tokens';
 
+/** A white card with a hairline border and a soft lift. */
 export function Card({ style, children, ...rest }: ViewProps) {
   return (
     <View style={[styles.card, style]} {...rest}>

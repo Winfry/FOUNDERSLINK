@@ -1,4 +1,3 @@
-import { Check, X } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../ui/Text';
 import type { MatchBand, MatchReason } from '../../types';
@@ -13,6 +12,9 @@ export const bandMeta: Record<MatchBand, { label: string; verdict: string; badge
   possible: { label: 'Possible fit', verdict: 'Some of it matches. Read the reasons before you pitch.', badge: 'muted' },
   not_a_fit: { label: 'Not a fit', verdict: 'Not for you right now. Your time is better spent elsewhere.', badge: 'muted' },
 };
+
+/** How many of the three fit bars each band fills. */
+export const bandBars: Record<MatchBand, number> = { strong: 3, good: 2, possible: 1, not_a_fit: 0 };
 
 // The reasons that tell her the most come first.
 const SIGNAL_ORDER = ['sector', 'amount', 'stage', 'instrument', 'mandate', 'county', 'journey'];
@@ -60,28 +62,25 @@ export function splitHeadline(headline: string): { kind: string; sectors: string
   return { kind: parts[0], sectors, ticket };
 }
 
-/** One reason, with a real tick or cross. */
-export function ReasonRow({ fits, text, compact }: { fits: boolean; text: string; compact?: boolean }) {
-  const size = compact ? 20 : 28;
+/**
+ * One reason, in words. With `n` it is numbered ("01"), as in the approved
+ * design; without, a quiet "Yes" or "No" leads it. A reason that does not
+ * fit is greyed and says so under it.
+ */
+export function ReasonRow({ fits, text, compact, n }: { fits: boolean; text: string; compact?: boolean; n?: number }) {
+  const lead = n !== undefined ? String(n).padStart(2, '0') : fits ? 'Yes' : 'No';
   return (
     <View style={styles.reasonRow} accessibilityLabel={`${fits ? 'Fits' : 'Does not fit'}: ${text}`}>
-      <View
-        style={[
-          styles.reasonIcon,
-          { width: size, height: size, borderRadius: size / 2, backgroundColor: fits ? colors.successLight : colors.grey100 },
-        ]}
-      >
-        {fits ? (
-          <Check size={compact ? 12 : 16} color={colors.success} strokeWidth={3} />
-        ) : (
-          <X size={compact ? 12 : 16} color={colors.textMuted} strokeWidth={3} />
-        )}
+      <Text style={[styles.lead, n === undefined && fits && styles.leadYes]}>{lead}</Text>
+      <View style={styles.reasonWords}>
+        <Text style={[compact ? styles.reasonTextCompact : styles.reasonText, !fits && styles.reasonMiss]}>{text}</Text>
+        {n !== undefined && !fits ? <Text style={styles.missNote}>Does not match</Text> : null}
       </View>
-      <Text style={[compact ? styles.reasonTextCompact : styles.reasonText, !fits && styles.reasonMiss]}>{text}</Text>
     </View>
   );
 }
 
+/** A fact in a small outlined pill: a sector, a stage, a ticket size. */
 export function Chip({ label }: { label: string }) {
   return (
     <View style={styles.chip}>
@@ -91,16 +90,21 @@ export function Chip({ label }: { label: string }) {
 }
 
 const styles = StyleSheet.create({
-  reasonRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
-  reasonIcon: { alignItems: 'center', justifyContent: 'center' },
-  reasonText: { flex: 1, fontSize: 16, lineHeight: 24, fontWeight: '500', color: colors.text, paddingTop: 2 },
-  reasonTextCompact: { flex: 1, fontSize: 14, lineHeight: 20, fontWeight: '500', color: colors.text },
+  reasonRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1] },
+  lead: { width: 26, fontSize: 12, lineHeight: 20, color: colors.textDim },
+  leadYes: { color: colors.success },
+  reasonWords: { flex: 1 },
+  reasonText: { fontSize: 15, lineHeight: 22, color: colors.text },
+  reasonTextCompact: { fontSize: 14, lineHeight: 20, color: colors.text },
   reasonMiss: { color: colors.textMuted },
+  missNote: { fontSize: 12, color: colors.textDim, marginTop: 2 },
   chip: {
     paddingHorizontal: spacing[1.5],
-    paddingVertical: spacing[1],
+    paddingVertical: 5,
     borderRadius: radius.full,
-    backgroundColor: colors.grey100,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.white,
   },
-  chipText: { fontSize: 14, fontWeight: '600', color: colors.text },
+  chipText: { fontSize: 13, fontWeight: '500', color: colors.text },
 });

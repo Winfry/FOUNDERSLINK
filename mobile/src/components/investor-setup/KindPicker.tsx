@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import type { LucideIcon } from 'lucide-react-native';
 import { Text } from '../ui/Text';
 import { colors, radius, spacing, touchTargetMin } from '../../theme/tokens';
 
@@ -7,7 +6,6 @@ export interface KindChoice {
   value: string;
   title: string;
   line: string;
-  icon: LucideIcon;
 }
 
 /**
@@ -28,7 +26,7 @@ export function KindPicker({
   return (
     <View style={styles.wrap} accessibilityRole="radiogroup" accessibilityLabel={label}>
       <Text style={styles.label}>{label}</Text>
-      {choices.map(({ value: v, title, line, icon: Icon }) => {
+      {choices.map(({ value: v, title, line }) => {
         const on = v === value;
         return (
           <Pressable
@@ -39,7 +37,6 @@ export function KindPicker({
             accessibilityLabel={`${title}. ${line}`}
             style={({ pressed }) => [styles.row, on && styles.rowOn, pressed && { opacity: 0.85 }]}
           >
-            <Icon size={24} color={on ? colors.primary : colors.textMuted} />
             <View style={styles.words}>
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.line}>{line}</Text>
@@ -54,7 +51,7 @@ export function KindPicker({
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing[1] },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  label: { fontSize: 14, fontWeight: '500', color: colors.text },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -63,14 +60,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.card,
-    padding: spacing[1.5],
+    paddingVertical: spacing[1.5],
+    paddingHorizontal: spacing[2],
     backgroundColor: colors.white,
   },
   rowOn: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   words: { flex: 1 },
-  title: { fontSize: 16, fontWeight: '700', color: colors.text },
-  line: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.grey300, alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: 16, fontWeight: '500', color: colors.primaryDark },
+  line: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   radioOn: { borderColor: colors.primary },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
 });

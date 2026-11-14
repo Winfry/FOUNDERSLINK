@@ -216,6 +216,19 @@ export interface Deal {
   };
   /** What this deal asks the signed-in party to share at due diligence. */
   requiredDocuments?: { type: string; title: string; provided: boolean; confirmed?: boolean }[];
+  /** When every party agreed to close it (ISO date). */
+  closedAt?: string | null;
+  /** The goals the parties agreed, e.g. "Sign up 25 clinics". */
+  milestones?: DealMilestone[];
+  /** Whether the signed-in party lets this closed deal show on track records. */
+  sharesTrackRecord?: boolean;
+}
+
+export interface DealMilestone {
+  id: string;
+  title: string;
+  dueDate: string | null;
+  status: 'pending' | 'done';
 }
 
 export type CircleRole = 'organiser' | 'treasurer' | 'member';

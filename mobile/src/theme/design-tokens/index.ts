@@ -1,53 +1,64 @@
 /**
  * FoundersLink design tokens — single source of truth for mobile and admin.
- * Solid colors only; no gradients.
+ *
+ * The look is the approved hybrid design (docs/design/founderslink-hybrid.html,
+ * November 2026): deep purple for the side menu and top bar, purple for
+ * actions, a warm paper page, white cards, and gold for one detail per
+ * screen. People are shown by photo or initials; there are no drawings.
  */
 
 export const colors = {
-  /**
-   * The brand: purple and gold (the design prototype, November 2026).
-   * Purple is for actions and the tab you are on; deep purple for the top
-   * bar and the side menu.
-   */
+  /** Purple: buttons, links, the tab you are on, progress. */
   primary: '#5634A5',
+  /** Deep purple: the side menu, the top bar, big numbers. */
   primaryDark: '#28184E',
-  primaryLight: '#EEE9FB',
-  /** A border on a light purple surface. */
-  primaryBorder: '#D9CDF3',
+  /** Lavender: soft buttons, initials, segmented controls. */
+  primaryLight: '#F0ECF8',
+  /** A second lavender: empty progress, borders on lavender. */
+  primaryBorder: '#E4DDF3',
+  /** The outline of a secondary (line) button. */
+  primaryLine: 'rgba(86,52,165,0.28)',
   /**
-   * The accent: gold. For shapes (a badge, a dot, progress, the beaded
-   * stripe), one highlight per screen. Text on it is deep purple, never
-   * white; gold is never used for text on white (it is too faint to read).
+   * Gold: one detail per screen (the mark on the tab you are on, the
+   * "Your next step" dot, a gold button on purple). Text on gold is deep
+   * purple; gold is never used for text on white.
    */
   accent: '#E3B65D',
-  accentLight: '#FBF3DF',
+  accentLight: '#FBF4E4',
   /** Gold dark enough to read as text, on a light gold badge. */
   accentText: '#8A6516',
   white: '#FFFFFF',
-  border: '#E9E4F1',
-  text: '#21183B',
-  textMuted: '#6E6685',
-  /** The page behind cards: a faint lavender, so white cards stand out. */
-  background: '#F8F7FB',
+  border: 'rgba(40,24,78,0.09)',
+  /** A stronger line: table rules, outlines of quiet controls. */
+  borderStrong: 'rgba(40,24,78,0.16)',
+  text: '#251B3D',
+  textMuted: '#716A7D',
+  /** Hints and small labels. */
+  textDim: '#9A93A5',
+  /** The page behind cards. */
+  background: '#F8F6FB',
+  /** The warm paper around the app on a computer. */
+  paper: '#F7F5F1',
   surface: '#FFFFFF',
   /** Text and lines on deep purple. */
   onDark: '#FFFFFF',
-  onDarkMuted: '#C9BDE6',
-  onDarkLine: 'rgba(255,255,255,0.18)',
+  onDarkMuted: 'rgba(255,255,255,0.72)',
+  onDarkDim: 'rgba(255,255,255,0.55)',
+  onDarkLine: 'rgba(255,255,255,0.16)',
   /** Behind a dialog or sheet. */
-  overlay: 'rgba(33, 24, 59, 0.45)',
+  overlay: 'rgba(37, 27, 61, 0.45)',
   /** Status — use sparingly */
-  success: '#21845B',
-  successLight: '#E6F5EE',
-  warning: '#B26A00',
-  warningLight: '#FBF3DF',
-  error: '#B83A52',
-  errorDark: '#962D42',
-  errorLight: '#FBECEF',
-  /** Chat / neutral */
-  grey100: '#F4F1F9',
-  grey200: '#E9E4F1',
-  grey300: '#D5CDE3',
+  success: '#28765D',
+  successLight: '#E7F3EE',
+  warning: '#8A6516',
+  warningLight: '#FBF4E4',
+  error: '#A93A4F',
+  errorDark: '#8E2F42',
+  errorLight: '#FAEBEE',
+  /** Neutral fills */
+  grey100: '#F3F1F6',
+  grey200: '#E9E6EF',
+  grey300: '#D5CFE0',
 } as const;
 
 /**
@@ -72,26 +83,29 @@ export const spacing = {
 
 export const radius = {
   sm: 10,
+  /** Rows, inputs and small panels. */
+  md: 14,
   card: 18,
   full: 9999,
 } as const;
 
 /**
- * The type scale: seven sizes and nothing in between. Sentence case,
- * never all caps. Body text never below 14.
+ * The type scale. Inter Tight: light (300) for big headings and numbers,
+ * regular (400) for reading, medium (500) for names, labels and buttons.
+ * Never heavier than semibold. Sentence case, never all caps.
  */
 export const type = {
-  display: { fontSize: 32, lineHeight: 38, fontWeight: '800' },
-  h1: { fontSize: 24, lineHeight: 30, fontWeight: '800' },
-  h2: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
-  h3: { fontSize: 17, lineHeight: 24, fontWeight: '700' },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '500' },
-  small: { fontSize: 14, lineHeight: 20, fontWeight: '500' },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
+  display: { fontSize: 40, lineHeight: 44, fontWeight: '300' },
+  h1: { fontSize: 28, lineHeight: 34, fontWeight: '300' },
+  h2: { fontSize: 20, lineHeight: 26, fontWeight: '500' },
+  h3: { fontSize: 17, lineHeight: 24, fontWeight: '500' },
+  body: { fontSize: 15, lineHeight: 22, fontWeight: '400' },
+  small: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: '400' },
 } as const;
 
 export const typography = {
-  fontFamily: 'Plus Jakarta Sans',
+  fontFamily: 'Inter Tight',
   sizes: {
     xs: 12,
     sm: 14,
@@ -109,20 +123,20 @@ export const typography = {
 } as const;
 
 export const shadows = {
-  /** Very subtle flat shadow — depth from border + light shadow */
+  /** Cards: a soft purple-tinted lift. */
   sm: {
-    shadowColor: '#2D1C55',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#28184E',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowRadius: 20,
     elevation: 1,
   },
-  /** Cards: a soft purple-tinted lift, as in the prototype. */
+  /** Avatars and raised parts. */
   md: {
-    shadowColor: '#2D1C55',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.07,
-    shadowRadius: 24,
+    shadowColor: '#28184E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
     elevation: 3,
   },
 } as const;

@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { Text } from '../ui/Text';
-import { colors, radius, spacing } from '../../theme/tokens';
+import { colors, radius, shadows, spacing } from '../../theme/tokens';
 
-/** A bordered box holding menu rows, with a line between each. */
+/** A white card holding menu rows, with a line between each. */
 export function MenuGroup({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <View style={styles.group}>
@@ -14,16 +13,19 @@ export function MenuGroup({ title, children }: { title?: string; children: React
   );
 }
 
-/** One row of a menu: an icon in a tinted circle, a label, and a chevron. */
+/**
+ * One row of a menu: what it is, a short line about it, and "Open" in
+ * purple on the right. No icons: the words say where it goes. (`icon` is
+ * accepted and ignored, so older screens keep compiling.)
+ */
 export function MenuRow({
-  icon: Icon,
   label,
   hint,
   onPress,
   destructive,
   last,
 }: {
-  icon: LucideIcon;
+  icon?: unknown;
   label: string;
   hint?: string;
   onPress: () => void;
@@ -32,7 +34,6 @@ export function MenuRow({
   /** The last row of a group has no line under it. */
   last?: boolean;
 }) {
-  const tint = destructive ? colors.error : colors.primaryDark;
   return (
     <Pressable
       onPress={onPress}
@@ -40,27 +41,25 @@ export function MenuRow({
       accessibilityLabel={label}
       style={({ pressed }) => [styles.row, !last && styles.line, pressed && styles.pressed]}
     >
-      <View style={[styles.icon, { backgroundColor: destructive ? colors.errorLight : colors.primaryLight }]}>
-        <Icon size={20} color={tint} />
-      </View>
       <View style={styles.labels}>
         <Text style={[styles.label, destructive && { color: colors.error }]}>{label}</Text>
         {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       </View>
-      {destructive ? null : <ChevronRight size={20} color={colors.textMuted} />}
+      {destructive ? null : <Text style={styles.open}>Open</Text>}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   group: { gap: spacing[1] },
-  groupTitle: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+  groupTitle: { fontSize: 12, color: colors.textMuted },
   box: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.card,
     overflow: 'hidden',
+    ...shadows.sm,
   },
   row: {
     minHeight: 56,
@@ -68,12 +67,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing[1.5],
     paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
+    paddingVertical: spacing[1.5],
   },
   line: { borderBottomWidth: 1, borderBottomColor: colors.border },
   pressed: { backgroundColor: colors.grey100 },
-  icon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   labels: { flex: 1 },
-  label: { fontSize: 16, fontWeight: '600', color: colors.text },
-  hint: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  label: { fontSize: 15, fontWeight: '500', color: colors.text },
+  hint: { fontSize: 13, color: colors.textMuted, marginTop: 1 },
+  open: { fontSize: 13, fontWeight: '500', color: colors.primary },
 });

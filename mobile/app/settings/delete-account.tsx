@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { FileX, Handshake, UserX } from 'lucide-react-native';
 import { Button, ConfirmModal, PasswordInput, Textarea } from '../../src/components/ui';
 import { Text } from '../../src/components/ui/Text';
 import { useToast } from '../../src/components/ui/Toast';
@@ -74,17 +73,14 @@ export default function DeleteAccountScreen() {
           <Row
             label="Your profile, matches and chats are removed"
             line="Other members can no longer see you or message you."
-            right={<UserX size={24} color={colors.textMuted} />}
           />
           <Row
             label="Shared records keep your part without your name"
             line="A closed deal, for example, stays for the other side, with your details made anonymous."
-            right={<Handshake size={24} color={colors.textMuted} />}
           />
           <Row
             label="Your files are deleted"
             line="Documents you uploaded for verification or a deal are removed."
-            right={<FileX size={24} color={colors.textMuted} />}
             last
           />
         </RowGroup>

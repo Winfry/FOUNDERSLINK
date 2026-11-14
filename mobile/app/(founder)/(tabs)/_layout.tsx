@@ -1,20 +1,19 @@
-import { ClipboardCheck, HandCoins, Handshake, LayoutDashboard, UsersRound } from 'lucide-react-native';
 import { WorkspaceTabs } from '../../../src/components/layout/WorkspaceTabs';
 
-// The founder's workspace: find investors, get ready, build a network and
-// save in chamas. Profile is opened from the avatar (and the side menu on a
-// computer), so the tabs stay at five on a phone.
+// The founder's workspace. On a phone, five tabs in words: Home, Investors,
+// Get ready, Guide (the AI co-pilot) and Chamas. Network, her profile and
+// notices are reached from Home, the top bar and the side menu.
 export default function FounderTabsLayout() {
   return (
     <WorkspaceTabs
       role="founder"
       screens={[
-        { name: 'home', title: 'Overview', icon: LayoutDashboard },
-        { name: 'matches', title: 'Matches', icon: Handshake },
-        { name: 'readiness', title: 'Readiness', icon: ClipboardCheck },
-        { name: 'connections', title: 'Network', icon: UsersRound },
-        { name: 'chamas', title: 'Chamas', icon: HandCoins },
-        { name: 'copilot', title: 'AI Co-pilot', hidden: true },
+        { name: 'home', title: 'Home' },
+        { name: 'matches', title: 'Investors' },
+        { name: 'readiness', title: 'Get ready' },
+        { name: 'copilot', title: 'Guide' },
+        { name: 'chamas', title: 'Chamas' },
+        { name: 'connections', title: 'Network', hidden: true },
         { name: 'profile', title: 'Profile', hidden: true },
         { name: 'notifications', title: 'Notifications', hidden: true },
       ]}

@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Button, Card } from '../../../src/components/ui';
+import { Avatar, Button, Card } from '../../../src/components/ui';
 import { useToast } from '../../../src/components/ui/Toast';
 import { Header } from '../../../src/components/layout/Header';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
@@ -59,8 +59,13 @@ export default function FounderProfileScreen() {
     <View style={styles.screen}>
       <Header title="Founder" onBack={back} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>{p.businessName ?? p.founderName}</Text>
-        {p.businessName ? <Text style={styles.person}>Founded by {p.founderName}</Text> : null}
+        <View style={styles.top}>
+          <Avatar name={p.founderName} size={64} />
+          <View style={styles.flex}>
+            <Text style={styles.heading}>{p.businessName ?? p.founderName}</Text>
+            {p.businessName ? <Text style={styles.person}>Founded by {p.founderName}</Text> : null}
+          </View>
+        </View>
 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>Looking for</Text>
@@ -151,21 +156,23 @@ export default function FounderProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing[2], paddingBottom: spacing[6] },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  person: { fontSize: 16, fontWeight: '500', color: colors.textMuted, marginTop: spacing[0.5] },
+  flex: { flex: 1, minWidth: 0 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
+  heading: { fontSize: 28, color: colors.primaryDark },
+  person: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
 
-  hero: { marginTop: spacing[2], padding: spacing[3], borderRadius: 20, backgroundColor: colors.primaryDark, gap: spacing[0.5] },
-  heroLabel: { fontSize: 14, fontWeight: '600', color: colors.primaryBorder },
-  heroAmount: { fontSize: 24, fontWeight: '800', color: colors.white },
-  heroSubLabel: { fontSize: 14, fontWeight: '600', color: colors.primaryBorder, marginTop: spacing[1.5] },
-  heroText: { fontSize: 16, lineHeight: 24, fontWeight: '500', color: colors.white },
+  hero: { marginTop: spacing[2], padding: 20, borderRadius: 18, backgroundColor: colors.primaryDark, gap: 4 },
+  heroLabel: { fontSize: 12, color: colors.onDarkDim },
+  heroAmount: { fontSize: 28, color: colors.white },
+  heroSubLabel: { fontSize: 12, color: colors.onDarkDim, marginTop: spacing[1.5] },
+  heroText: { fontSize: 14, lineHeight: 21, color: colors.onDarkMuted },
 
-  section: { marginTop: spacing[3], gap: spacing[1.5] },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '500', color: colors.text },
-  card: { borderRadius: 16, paddingVertical: spacing[0.5] },
+  section: { marginTop: spacing[3], gap: spacing[1] },
+  sectionTitle: { fontSize: 16, fontWeight: '500', color: colors.primaryDark },
+  body: { fontSize: 15, lineHeight: 23, color: colors.text },
+  card: { paddingVertical: spacing[0.5] },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
 
   factRow: {
@@ -176,16 +183,16 @@ const styles = StyleSheet.create({
     minHeight: touchTargetMin,
     paddingVertical: spacing[1],
   },
-  factLabel: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  factValue: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.text, textAlign: 'right' },
+  factLabel: { fontSize: 13, color: colors.textMuted },
+  factValue: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text, textAlign: 'right' },
   linkPress: { flex: 1, minHeight: touchTargetMin, justifyContent: 'center' },
-  link: { fontSize: 16, fontWeight: '700', color: colors.primary, textAlign: 'right' },
+  link: { fontSize: 14, fontWeight: '500', color: colors.primary, textAlign: 'right' },
 
   venture: { paddingVertical: spacing[1.5], gap: 2 },
-  ventureName: { fontSize: 16, fontWeight: '700', color: colors.text },
-  ventureMeta: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  ventureOutcome: { fontSize: 14, fontWeight: '500', color: colors.text, marginTop: 2 },
+  ventureName: { fontSize: 15, fontWeight: '500', color: colors.text },
+  ventureMeta: { fontSize: 13, color: colors.textMuted },
+  ventureOutcome: { fontSize: 13, color: colors.text, marginTop: 2 },
 
   action: { marginTop: spacing[4], gap: spacing[1] },
-  actionHint: { fontSize: 14, fontWeight: '500', color: colors.textMuted, textAlign: 'center' },
+  actionHint: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 });

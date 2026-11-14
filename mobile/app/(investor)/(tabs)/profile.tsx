@@ -3,38 +3,36 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { LogOut, MessageCircle, Settings, ShieldCheck } from 'lucide-react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Badge, Button, Card, ConfirmModal } from '../../../src/components/ui';
+import { Avatar, Button, Card, ConfirmModal } from '../../../src/components/ui';
 import { MenuGroup, MenuRow } from '../../../src/components/profile/MenuRow';
-import { Chip } from '../../../src/components/matches/parts';
+import { Tag, type Tone } from '../../../src/components/overview/parts';
+import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { investorService, referenceDataService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
-import { colors, radius, spacing } from '../../../src/theme/tokens';
+import { colors, spacing } from '../../../src/theme/tokens';
 import type { ApprovalStatus } from '../../../src/types';
 import { SkeletonCard } from '../../../src/components/ui/Skeleton';
-
-type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'muted';
 
 /** Her verification state in words, and what the card under it should offer. */
 function verification(status: ApprovalStatus | undefined): {
   label: string;
-  variant: BadgeVariant;
+  tone: Tone;
   state: 'none' | 'checking' | 'needs_info' | 'approved' | 'held';
 } {
   switch (status) {
     case 'approved':
-      return { label: 'Verified member', variant: 'success', state: 'approved' };
+      return { label: 'Verified member', tone: 'done', state: 'approved' };
     case 'submitted':
     case 'in_review':
-      return { label: 'Being checked', variant: 'default', state: 'checking' };
+      return { label: 'Being checked', tone: 'todo', state: 'checking' };
     case 'needs_info':
-      return { label: 'More information needed', variant: 'warning', state: 'needs_info' };
+      return { label: 'More information needed', tone: 'waiting', state: 'needs_info' };
     case 'suspended':
     case 'banned':
-      return { label: 'Account on hold', variant: 'error', state: 'held' };
+      return { label: 'Account on hold', tone: 'late', state: 'held' };
     default:
-      return { label: 'Not verified yet', variant: 'muted', state: 'none' };
+      return { label: 'Not verified yet', tone: 'quiet', state: 'none' };
   }
 }
 
@@ -54,26 +52,12 @@ function ksh(amount: number): string {
   return `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
 }
 
-function initialsOf(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function ChipRow({ label, items }: { label: string; items: string[] }) {
+function FactRow({ label, items, last }: { label: string; items: string[]; last?: boolean }) {
   if (!items.length) return null;
   return (
-    <View style={styles.chipBlock}>
+    <View style={[styles.fact, !last && styles.factLine]}>
       <Text style={styles.factLabel}>{label}</Text>
-      <View style={styles.chips}>
-        {items.map((item) => (
-          <Chip key={item} label={item} />
-        ))}
-      </View>
+      <Text style={styles.factValue}>{items.join(', ')}</Text>
     </View>
   );
 }
@@ -95,16 +79,11 @@ function InvestorProfileTab() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.wrap}>
-      <View style={styles.head}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initialsOf(user?.fullName ?? '')}</Text>
-        </View>
-        <View style={styles.headText}>
-          <Text style={styles.name}>{user?.fullName}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
-          <Badge label={v.label} variant={v.variant} />
-        </View>
-      </View>
+      <PageTitle
+        title={user?.fullName || 'Your profile'}
+        subtitle={user?.email}
+        right={user?.fullName ? <Avatar name={user.fullName} size={56} /> : undefined}
+      />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>What you fund</Text>
@@ -130,10 +109,12 @@ function InvestorProfileTab() {
                 {ksh(setup.ticketMinKes)} to {ksh(setup.ticketMaxKes)}
               </Text>
             </View>
-            <ChipRow label="Sectors" items={setup.sectors.map(labelOf)} />
-            <ChipRow label="Stages" items={setup.stages.map(labelOf)} />
-            <ChipRow label="How you invest" items={setup.instruments.map(labelOf)} />
-            <ChipRow label="Where" items={setup.counties.length ? setup.counties.map(labelOf) : ['Anywhere in Kenya']} />
+            <View>
+              <FactRow label="Sectors" items={setup.sectors.map(labelOf)} />
+              <FactRow label="Stages" items={setup.stages.map(labelOf)} />
+              <FactRow label="How you invest" items={setup.instruments.map(labelOf)} />
+              <FactRow label="Where" items={setup.counties.length ? setup.counties.map(labelOf) : ['Anywhere in Kenya']} last />
+            </View>
             {setup.mandateText ? (
               <View style={styles.words}>
                 <Text style={styles.factLabel}>In your words</Text>
@@ -152,12 +133,14 @@ function InvestorProfileTab() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Verification</Text>
+        <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitle}>Verification</Text>
+          <Tag label={v.label} tone={v.tone} />
+        </View>
         {v.state === 'approved' ? (
-          <View style={styles.verified}>
-            <ShieldCheck size={20} color={colors.success} />
-            <Text style={styles.verifiedText}>You're verified. You can connect and chat with founders.</Text>
-          </View>
+          <Card style={styles.cardGap}>
+            <Text style={styles.muted}>You're verified. You can connect and chat with founders.</Text>
+          </Card>
         ) : (
           <Card style={styles.cardGap}>
             <Text style={styles.cardTitle}>
@@ -188,12 +171,12 @@ function InvestorProfileTab() {
       </View>
 
       <MenuGroup>
-        <MenuRow icon={MessageCircle} label="Messages" onPress={() => router.push('/conversations')} />
-        <MenuRow icon={Settings} label="Settings" onPress={() => router.push('/settings')} last />
+        <MenuRow label="Messages" onPress={() => router.push('/conversations')} />
+        <MenuRow label="Settings" onPress={() => router.push('/settings')} last />
       </MenuGroup>
 
       <MenuGroup>
-        <MenuRow icon={LogOut} label="Log out" destructive onPress={() => setConfirmingLogout(true)} last />
+        <MenuRow label="Log out" destructive onPress={() => setConfirmingLogout(true)} last />
       </MenuGroup>
 
       <ConfirmModal
@@ -216,40 +199,20 @@ function InvestorProfileTab() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: 'transparent' },
-  wrap: { padding: spacing[2], paddingBottom: spacing[4], gap: spacing[3] },
-  head: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 24, fontWeight: '800', color: colors.white },
-  headText: { flex: 1, gap: spacing[0.5], alignItems: 'flex-start' },
-  name: { fontSize: 24, fontWeight: '800', color: colors.text },
-  email: { fontSize: 14, fontWeight: '500', color: colors.textMuted, marginBottom: spacing[0.5] },
+  wrap: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[3] },
   section: { gap: spacing[1] },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing[1] },
+  sectionTitle: { fontSize: 12, color: colors.textMuted },
   cardGap: { gap: spacing[1.5] },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  muted: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  factLabel: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  ticket: { fontSize: 20, fontWeight: '700', color: colors.primaryDark },
-  chipBlock: { gap: spacing[1] },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1] },
-  words: { gap: spacing[0.5], paddingTop: spacing[1.5], borderTopWidth: 1, borderTopColor: colors.border },
-  mandate: { fontSize: 16, fontWeight: '500', color: colors.text },
-  verified: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1.5],
-    padding: spacing[2],
-    borderRadius: radius.card,
-    backgroundColor: colors.successLight,
-  },
-  verifiedText: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.text },
+  cardTitle: { fontSize: 17, fontWeight: '500', color: colors.primaryDark },
+  muted: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  factLabel: { fontSize: 12, color: colors.textMuted },
+  ticket: { fontSize: 24, color: colors.primaryDark, marginTop: 2 },
+  fact: { paddingVertical: spacing[1], gap: 2 },
+  factLine: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  factValue: { fontSize: 14, color: colors.text },
+  words: { gap: 2, paddingTop: spacing[1.5], borderTopWidth: 1, borderTopColor: colors.border },
+  mandate: { fontSize: 14, color: colors.text },
 });
 
 export default withBackdrop(InvestorProfileTab);

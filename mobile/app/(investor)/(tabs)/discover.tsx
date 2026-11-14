@@ -1,20 +1,31 @@
 import { withBackdrop } from '../../../src/components/ui/ScreenBackdrop';
 import { useRouter } from 'expo-router';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { ChevronRight, Lock, Search, ShieldCheck } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from '../../../src/components/ui/Text';
-import { Badge, Button, Card } from '../../../src/components/ui';
+import { Avatar, Button, Card, Fit } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
-import { bandMeta, Chip, kes, ReasonRow, words } from '../../../src/components/matches/parts';
+import { Tag } from '../../../src/components/overview/parts';
+import { kes, words } from '../../../src/components/matches/parts';
 import { investorService, referenceDataService } from '../../../src/services';
 import type { DiscoverCard } from '../../../src/services';
+import type { MatchBand } from '../../../src/types';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { verificationInvite } from '../../../src/lib/verification-invite';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
+
+const TITLE = 'Businesses for you';
+const LINE = 'Founders who fit what you fund, already checked.';
+
+const FIT: Record<MatchBand, { label: string; filled: number }> = {
+  strong: { label: 'Strong fit', filled: 3 },
+  good: { label: 'Good fit', filled: 2 },
+  possible: { label: 'Possible fit', filled: 1 },
+  not_a_fit: { label: 'Not a fit', filled: 0 },
+};
 
 function DiscoverScreen() {
   const router = useRouter();
@@ -58,18 +69,15 @@ function DiscoverScreen() {
 
   if (data.needsFund) {
     return (
-      <View style={styles.flex}>
-        <View style={styles.header}>
-          <PageTitle title="Founders for you" />
-        </View>
+      <ScrollView style={styles.flex} contentContainerStyle={styles.list}>
+        <PageTitle title={TITLE} subtitle={LINE} />
         <ScreenEmpty
-          illustration="search"
           title="First, say what you fund"
           description="Tell us the sectors, stages and amounts you invest in. We use that to find the founders who fit you."
           actionLabel="Describe what I fund"
           onAction={() => router.push('/investor/onboarding')}
         />
-      </View>
+      </ScrollView>
     );
   }
 
@@ -84,32 +92,24 @@ function DiscoverScreen() {
 
   const header = (
     <View style={styles.header}>
-      <PageTitle title="Founders for you" subtitle={data.message || undefined} />
+      <PageTitle title={TITLE} subtitle={LINE} />
 
       {invite ? (
-        <View style={styles.invite}>
-          <View style={styles.inviteTop}>
-            <View style={styles.inviteIcon}>
-              <ShieldCheck size={22} color={colors.primary} />
-            </View>
-            <View style={styles.flexOne}>
-              <Text style={styles.inviteTitle}>{invite.title}</Text>
-              <Text style={styles.inviteText}>{invite.text}</Text>
-            </View>
-          </View>
-          <Button title={invite.button} onPress={() => router.push(invite.route)} />
-        </View>
+        <Card style={styles.invite}>
+          <Text style={styles.inviteTitle}>{invite.title}</Text>
+          <Text style={styles.inviteText}>{invite.text}</Text>
+          <Button title={invite.button} onPress={() => router.push(invite.route)} style={styles.inviteBtn} />
+        </Card>
       ) : null}
 
       <View style={[styles.searchBox, focused && styles.searchBoxOn]}>
-        <Search size={20} color={colors.textMuted} />
         <TextInput
           value={typed}
           onChangeText={setTyped}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder="Search by business or sector"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textDim}
           accessibilityLabel="Search founders"
           returnKeyType="search"
           style={styles.searchInput}
@@ -139,6 +139,8 @@ function DiscoverScreen() {
           })}
         </ScrollView>
       ) : null}
+
+      {data.message ? <Text style={styles.note}>{data.message}</Text> : null}
     </View>
   );
 
@@ -154,7 +156,6 @@ function DiscoverScreen() {
       ListEmptyComponent={
         filtering ? (
           <ScreenEmpty
-            illustration="search"
             title="No businesses match these filters"
             description="Try a different word or sector, or clear the filters to see everyone who fits your fund."
             actionLabel="Clear filters"
@@ -162,7 +163,6 @@ function DiscoverScreen() {
           />
         ) : (
           <ScreenEmpty
-            illustration="together"
             title="No businesses fit your fund yet"
             description="New founders join every week. Widening what you fund can also bring more of them here."
             actionLabel="Review what I fund"
@@ -190,58 +190,45 @@ function FounderCard({
   label: (id: string | null) => string;
   onPress?: () => void;
 }) {
-  const band = bandMeta[item.band];
+  const fit = FIT[item.band];
   const sector = label(item.sector);
   const title = item.anonymised || !item.businessName ? `${sector} business` : item.businessName;
+  const who = !item.anonymised && item.founderName ? item.founderName : null;
+  const facts = [sector, item.stage ? label(item.stage) : '', item.county].filter(Boolean).join(' · ');
 
   const body = (
     <>
-      <View style={styles.cardTop}>
+      <View style={styles.person}>
+        <Avatar name={who ?? title} size={52} />
         <View style={styles.flexOne}>
           <Text style={styles.name}>{title}</Text>
-          {!item.anonymised && item.founderName ? <Text style={styles.person}>{item.founderName}</Text> : null}
+          {who ? <Text style={styles.org}>{who}</Text> : null}
+          {facts ? <Text style={styles.org}>{facts}</Text> : null}
+          {item.matchReasons.slice(0, 2).map((r) => (
+            <Text key={r} style={styles.reason}>
+              {r}
+            </Text>
+          ))}
+          <View style={styles.tags}>
+            <Fit label={fit.label} filled={fit.filled} />
+            {item.ready ? <Tag label="Ready to raise" tone="done" /> : null}
+          </View>
         </View>
-        <Badge label={band.label} variant={band.badge} />
-      </View>
-
-      <View style={styles.chips}>
-        {sector ? <Chip label={sector} /> : null}
-        {item.stage ? <Chip label={label(item.stage)} /> : null}
-        {item.county ? <Chip label={item.county} /> : null}
       </View>
 
       {item.fundingAskKes ? (
-        <View>
+        <View style={styles.ask}>
           <Text style={styles.askLabel}>Looking for</Text>
-          <Text style={styles.ask}>{kes(item.fundingAskKes)}</Text>
+          <Text style={styles.askValue}>{kes(item.fundingAskKes)}</Text>
         </View>
       ) : null}
 
-      {item.ready ? (
-        <View style={styles.badgeRow}>
-          <Badge label="Ready to raise" variant="success" />
-        </View>
-      ) : null}
-
-      {item.matchReasons.length > 0 ? (
-        <View style={styles.reasons}>
-          {item.matchReasons.slice(0, 3).map((r) => (
-            <ReasonRow key={r} fits text={r} compact />
-          ))}
-        </View>
-      ) : null}
-
-      {item.anonymised ? (
-        <View style={styles.quietRow}>
-          <Lock size={16} color={colors.textMuted} />
-          <Text style={styles.quietText}>Their name shows once you are verified</Text>
-        </View>
-      ) : null}
+      {item.anonymised ? <Text style={styles.quiet}>Their name shows once you are verified.</Text> : null}
 
       {onPress ? (
-        <View style={styles.more}>
+        // The whole card opens the page; this only shows where to tap.
+        <View style={styles.more} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <Text style={styles.moreText}>See the business</Text>
-          <ChevronRight size={18} color={colors.primary} />
         </View>
       ) : null}
     </>
@@ -250,52 +237,34 @@ function FounderCard({
   if (!onPress) return <Card style={styles.card}>{body}</Card>;
 
   return (
-    <Card style={styles.cardShell}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={`${title}, ${band.label}. Open their page`}
-        style={({ pressed }) => [styles.cardPress, pressed && styles.dim]}
-      >
-        {body}
-      </Pressable>
-    </Card>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${fit.label}. Open their page`}
+      style={({ pressed }) => pressed && styles.dim}
+    >
+      <Card style={styles.card}>{body}</Card>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: 'transparent' },
-  flexOne: { flex: 1 },
-  list: { paddingBottom: spacing[6] },
-  header: { paddingHorizontal: spacing[2], paddingBottom: spacing[2] },
+  flexOne: { flex: 1, minWidth: 0 },
+  list: { paddingHorizontal: spacing[2], paddingBottom: spacing[6] },
+  header: { paddingBottom: spacing[2] },
 
-  invite: {
-    marginTop: spacing[2],
-    padding: spacing[2],
-    borderRadius: 16,
-    backgroundColor: colors.primaryLight,
-    gap: spacing[2],
-  },
-  inviteTop: { flexDirection: 'row', gap: spacing[1.5], alignItems: 'flex-start' },
-  inviteIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inviteTitle: { fontSize: 17, fontWeight: '700', color: colors.primaryDark },
-  inviteText: { fontSize: 14, fontWeight: '500', color: colors.text, marginTop: spacing[0.5] },
+  invite: { gap: 6, marginBottom: spacing[1.5], borderColor: 'rgba(227,182,93,0.55)' },
+  inviteTitle: { fontSize: 17, fontWeight: '500', color: colors.primaryDark },
+  inviteText: { fontSize: 13, color: colors.textMuted },
+  inviteBtn: { marginTop: spacing[1] },
 
   searchBox: {
-    marginTop: spacing[2],
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[1],
     minHeight: touchTargetMin,
-    paddingHorizontal: spacing[1.5],
-    borderRadius: 12,
+    paddingHorizontal: spacing[2],
+    borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.white,
@@ -304,8 +273,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     minHeight: touchTargetMin,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
     color: colors.text,
     // The box shows focus; the browser's own outline would be a second, black one.
     outlineWidth: 0,
@@ -314,7 +282,7 @@ const styles = StyleSheet.create({
   filterScroll: { marginTop: spacing[1.5], marginHorizontal: -spacing[2] },
   filterRow: { paddingHorizontal: spacing[2], gap: spacing[1] },
   filter: {
-    minHeight: touchTargetMin,
+    minHeight: 40,
     paddingHorizontal: spacing[2],
     borderRadius: radius.full,
     borderWidth: 1,
@@ -323,34 +291,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterOn: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  filterText: { fontSize: 14, fontWeight: '600', color: colors.text },
-  filterTextOn: { color: colors.primary, fontWeight: '700' },
+  filterOn: { borderColor: colors.primaryLight, backgroundColor: colors.primaryLight },
+  filterText: { fontSize: 14, color: colors.textMuted },
+  filterTextOn: { color: colors.primary, fontWeight: '500' },
+  note: { fontSize: 13, color: colors.textMuted, marginTop: spacing[1.5] },
 
-  card: { marginHorizontal: spacing[2], marginBottom: spacing[2], borderRadius: 16, gap: spacing[1.5] },
-  cardShell: { marginHorizontal: spacing[2], marginBottom: spacing[2], borderRadius: 16, padding: 0 },
-  cardPress: { padding: spacing[2], gap: spacing[1.5] },
-  dim: { opacity: 0.6 },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
-  name: { fontSize: 17, fontWeight: '700', color: colors.text },
-  person: { fontSize: 14, fontWeight: '500', color: colors.textMuted, marginTop: 2 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1] },
-  askLabel: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  ask: { fontSize: 20, fontWeight: '800', color: colors.text },
-  badgeRow: { flexDirection: 'row' },
-  reasons: { gap: spacing[1] },
-  quietRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1] },
-  quietText: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.textMuted },
+  card: { marginBottom: spacing[1.5], gap: spacing[1.5] },
+  dim: { opacity: 0.85 },
+  person: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
+  name: { fontSize: 16, fontWeight: '500', color: colors.text },
+  org: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  reason: { fontSize: 13, color: colors.text, marginTop: 4 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing[1.5], marginTop: spacing[1] },
+  ask: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: spacing[1] },
+  askLabel: { fontSize: 12, color: colors.textMuted },
+  askValue: { fontSize: 20, color: colors.primaryDark },
+  quiet: { fontSize: 13, color: colors.textMuted },
   more: {
-    flexDirection: 'row',
+    minHeight: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 2,
-    paddingTop: spacing[1.5],
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    justifyContent: 'center',
   },
-  moreText: { fontSize: 14, fontWeight: '700', color: colors.primary },
+  moreText: { fontSize: 15, fontWeight: '500', color: colors.primary },
 });
 
 export default withBackdrop(DiscoverScreen);

@@ -1,33 +1,32 @@
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Bell, Download, FileText, Flag, LifeBuoy, Lock, ShieldCheck, ToggleRight, Trash2, type LucideIcon } from 'lucide-react-native';
 import { Header } from '../../src/components/layout/Header';
 import { MenuGroup, MenuRow } from '../../src/components/profile/MenuRow';
 import { colors, spacing } from '../../src/theme/tokens';
 
-const SECTIONS: { title: string; rows: { label: string; href: string; icon: LucideIcon; destructive?: boolean }[] }[] = [
+const SECTIONS: { title: string; rows: { label: string; href: string; hint: string; destructive?: boolean }[] }[] = [
   {
     title: 'Account',
     rows: [
-      { label: 'Notifications', href: '/settings/notifications', icon: Bell },
-      { label: 'Security', href: '/settings/security', icon: Lock },
+      { label: 'Notifications', href: '/settings/notifications', hint: 'What we tell you about, and how' },
+      { label: 'Security', href: '/settings/security', hint: 'How your account is kept safe' },
     ],
   },
   {
     title: 'Privacy and data',
     rows: [
-      { label: 'Your consents', href: '/settings/consents', icon: ToggleRight },
-      { label: 'Download my data', href: '/settings/export', icon: Download },
-      { label: 'Privacy policy', href: '/settings/privacy', icon: ShieldCheck },
-      { label: 'Terms of service', href: '/settings/terms', icon: FileText },
-      { label: 'Report someone', href: '/settings/report', icon: Flag },
-      { label: 'Delete my account', href: '/settings/delete-account', icon: Trash2 },
+      { label: 'Your consents', href: '/settings/consents', hint: 'What you have agreed to' },
+      { label: 'Download my data', href: '/settings/export', hint: 'A copy of everything we hold' },
+      { label: 'Privacy policy', href: '/settings/privacy', hint: 'How we use your information' },
+      { label: 'Terms of service', href: '/settings/terms', hint: 'The rules for using FoundersLink' },
+      { label: 'Report someone', href: '/settings/report', hint: 'Tell us about a member' },
+      { label: 'Delete my account', href: '/settings/delete-account', hint: 'Remove your account for good' },
     ],
   },
   {
     title: 'Help',
     rows: [
-      { label: 'Contact support', href: '/settings/support', icon: LifeBuoy },
+      { label: 'Contact support', href: '/settings/support', hint: 'Write to the FoundersLink team' },
     ],
   },
 ];
@@ -44,8 +43,8 @@ export default function SettingsScreen() {
             {s.rows.map((r, i) => (
               <MenuRow
                 key={r.href}
-                icon={r.icon}
                 label={r.label}
+                hint={r.hint}
                 onPress={() => router.push(r.href as never)}
                 last={i === s.rows.length - 1}
               />

@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Ellipsis, TriangleAlert } from 'lucide-react-native';
 import { Text } from '../ui/Text';
 import type { ChatMessage } from '../../types';
 import { colors, spacing } from '../../theme/tokens';
@@ -13,10 +12,10 @@ export function messageTime(at: string) {
 }
 
 /**
- * One message. Hers sit on the right in blue, other people's on the left
- * in grey, the system's in the middle. A money warning sits above the
- * message it is about. Other people's messages carry a small "more"
- * control that opens Report and Block.
+ * One message. Hers sit on the right in purple, other people's on the left
+ * in white with a hairline border, the system's in the middle. A money
+ * warning ("Careful") sits above the message it is about. Other people's
+ * messages carry a small "More" control that opens Report and Block.
  */
 export function MessageBubble({
   message,
@@ -44,7 +43,7 @@ export function MessageBubble({
     <View style={[styles.wrap, mine ? styles.wrapMine : styles.wrapTheirs]}>
       {message.warningText ? (
         <View style={styles.warning} accessibilityRole="alert">
-          <TriangleAlert size={18} color={colors.warning} style={styles.warningIcon} />
+          <Text style={styles.warningLabel}>Careful</Text>
           <Text style={styles.warningText}>{message.warningText}</Text>
         </View>
       ) : null}
@@ -66,7 +65,7 @@ export function MessageBubble({
             // A full 44-point target: browsers ignore the extra touch area (hitSlop).
             style={({ pressed }) => [styles.more, styles.moreTarget, pressed && styles.morePressed]}
           >
-            <Ellipsis size={18} color={colors.textMuted} />
+            <Text style={styles.moreText}>More</Text>
           </Pressable>
         ) : null}
       </View>
@@ -77,39 +76,39 @@ export function MessageBubble({
 
 const styles = StyleSheet.create({
   moreTarget: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  moreText: { fontSize: 12, fontWeight: '500', color: colors.textMuted },
   wrap: { maxWidth: '86%', gap: 4 },
   wrapMine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
   wrapTheirs: { alignSelf: 'flex-start', alignItems: 'flex-start' },
 
-  sender: { fontSize: 12, fontWeight: '700', color: colors.textMuted, marginLeft: spacing[1.5] },
+  sender: { fontSize: 12, fontWeight: '500', color: colors.textMuted, marginLeft: spacing[1.5] },
   bubbleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[0.5] },
-  bubble: { flexShrink: 1, paddingHorizontal: spacing[1.5] + 2, paddingVertical: 10, borderRadius: 20 },
+  bubble: { flexShrink: 1, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 18 },
   bubbleMine: { backgroundColor: colors.primary, borderBottomRightRadius: 6 },
-  bubbleTheirs: { backgroundColor: colors.grey100, borderBottomLeftRadius: 6 },
-  bubbleFlagged: { borderWidth: 1, borderColor: colors.warning },
-  body: { fontSize: 16, color: colors.text },
+  bubbleTheirs: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 6 },
+  bubbleFlagged: { borderWidth: 1, borderColor: colors.accent },
+  body: { fontSize: 15, lineHeight: 22, color: colors.text },
   bodyMine: { color: colors.white },
 
-  more: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  morePressed: { backgroundColor: colors.grey100 },
+  more: { paddingHorizontal: spacing[1], borderRadius: 99, alignItems: 'center', justifyContent: 'center' },
+  morePressed: { backgroundColor: colors.primaryLight },
 
-  time: { fontSize: 12, fontWeight: '600', color: colors.textMuted, marginLeft: spacing[1.5] },
+  time: { fontSize: 12, color: colors.textMuted, marginLeft: spacing[1.5] },
   timeMine: { marginLeft: 0, marginRight: spacing[0.5] },
 
   warning: {
-    flexDirection: 'row',
-    gap: spacing[1],
-    backgroundColor: colors.warningLight,
+    gap: 4,
+    backgroundColor: colors.accentLight,
     borderWidth: 1,
-    borderColor: colors.warning,
-    borderRadius: 12,
+    borderColor: colors.accent,
+    borderRadius: 14,
     padding: spacing[1.5],
     marginBottom: 4,
   },
-  warningIcon: { marginTop: 1 },
-  warningText: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.text },
+  warningLabel: { fontSize: 12, fontWeight: '600', color: colors.accentText },
+  warningText: { fontSize: 14, color: colors.text },
 
   systemWrap: { alignSelf: 'center', alignItems: 'center', maxWidth: '90%', gap: 4 },
-  system: { backgroundColor: colors.grey100, borderRadius: 12, paddingHorizontal: spacing[1.5], paddingVertical: 6 },
-  systemText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+  system: { backgroundColor: colors.primaryLight, borderRadius: 99, paddingHorizontal: spacing[1.5], paddingVertical: 6 },
+  systemText: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 });

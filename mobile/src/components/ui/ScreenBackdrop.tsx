@@ -1,25 +1,11 @@
 import type { ComponentType, ReactNode } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { colors } from '../../theme/tokens';
 
-// A faint photo behind a whole screen: people at work, washed almost to
-// white so cards and text keep their contrast. The screen's own root must
-// be transparent for it to show.
-const PHOTO_STRENGTH = 0.08;
-
+// The page behind a tab screen. The approved design keeps it plain (no
+// photo behind the cards), so cards and text have their full contrast.
 export function ScreenBackdrop({ children }: { children: ReactNode }) {
-  return (
-    <View style={styles.screen}>
-      <Image
-        source={require('../../../assets/images/background-all.jpg')}
-        style={styles.photo}
-        resizeMode="cover"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      />
-      {children}
-    </View>
-  );
+  return <View style={styles.screen}>{children}</View>;
 }
 
 // For a tab screen: `export default withBackdrop(MatchesScreen)`.
@@ -36,6 +22,5 @@ export function withBackdrop<P extends object>(Screen: ComponentType<P>) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  photo: { ...StyleSheet.absoluteFill, width: '100%', height: '100%', opacity: PHOTO_STRENGTH },
+  screen: { flex: 1, backgroundColor: colors.background },
 });

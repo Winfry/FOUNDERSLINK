@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../ui/Text';
 import { colors, spacing, touchTargetMin } from '../../theme/tokens';
@@ -33,7 +32,7 @@ export function AuthShell({
         <View style={styles.top}>
           {onBack ? (
             <Pressable onPress={onBack} style={styles.back} accessibilityRole="button" accessibilityLabel="Go back">
-              <ChevronLeft size={24} color={colors.primaryDark} />
+              <Text style={styles.backText}>← Back</Text>
             </Pressable>
           ) : null}
         </View>
@@ -58,9 +57,10 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: spacing[3] },
   // Kept even without a back button, so the mark sits at the same height on every screen.
   top: { minHeight: touchTargetMin, justifyContent: 'center' },
-  back: { width: touchTargetMin, height: touchTargetMin, justifyContent: 'center', marginLeft: -spacing[1] },
+  back: { minHeight: touchTargetMin, justifyContent: 'center', alignSelf: 'flex-start' },
+  backText: { fontSize: 15, fontWeight: '500', color: colors.primary },
   mark: { width: 57, height: 48, marginTop: spacing[1], marginBottom: spacing[3] },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  title: { fontSize: 30, fontWeight: '300', color: colors.primaryDark, letterSpacing: -0.5 },
   helper: { fontSize: 16, color: colors.textMuted, marginTop: spacing[1] },
   form: { marginTop: spacing[3] },
 });

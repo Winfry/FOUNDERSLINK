@@ -1,5 +1,4 @@
 import { StyleSheet, View } from 'react-native';
-import { Check } from 'lucide-react-native';
 import { Text } from '../ui/Text';
 import type { DealStage } from '../../types';
 import { colors, spacing } from '../../theme/tokens';
@@ -17,9 +16,12 @@ export function stageLabel(stage: DealStage) {
   return DEAL_STAGES.find((s) => s.key === stage)?.label ?? 'In progress';
 }
 
-const MARKER = 24;
+const MARKER = 26;
 
-/** The six stages top to bottom: done ones ticked, the current one marked in orange. */
+/**
+ * The six stages top to bottom, each a numbered circle: purple when done,
+ * gold for the current one, an outline for the ones still to come.
+ */
 export function StageStepper({ stage }: { stage: DealStage }) {
   const current = Math.max(0, DEAL_STAGES.findIndex((s) => s.key === stage));
 
@@ -33,8 +35,7 @@ export function StageStepper({ stage }: { stage: DealStage }) {
           <View key={s.key} style={styles.row}>
             <View style={styles.rail}>
               <View style={[styles.marker, done && styles.markerDone, isCurrent && styles.markerCurrent]}>
-                {done ? <Check size={14} color={colors.white} strokeWidth={3} /> : null}
-                {isCurrent ? <View style={styles.currentDot} /> : null}
+                <Text style={[styles.number, done && styles.numberDone, isCurrent && styles.numberCurrent]}>{i + 1}</Text>
               </View>
               {last ? null : <View style={[styles.line, done && styles.lineDone]} />}
             </View>
@@ -56,21 +57,23 @@ const styles = StyleSheet.create({
     width: MARKER,
     height: MARKER,
     borderRadius: MARKER / 2,
-    borderWidth: 2,
-    borderColor: colors.grey300,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   markerDone: { backgroundColor: colors.primary, borderColor: colors.primary },
-  markerCurrent: { backgroundColor: colors.accentLight, borderColor: colors.accent },
-  currentDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent },
-  line: { flex: 1, width: 2, minHeight: spacing[1.5], backgroundColor: colors.border },
+  markerCurrent: { backgroundColor: colors.accent, borderColor: colors.accent },
+  number: { fontSize: 12, fontWeight: '500', color: colors.textMuted },
+  numberDone: { color: colors.white },
+  numberCurrent: { color: colors.primaryDark },
+  line: { flex: 1, width: 1, minHeight: spacing[1.5], backgroundColor: colors.border },
   lineDone: { backgroundColor: colors.primary },
-  words: { flex: 1, paddingBottom: spacing[1.5], gap: 2 },
+  words: { flex: 1, paddingTop: 3, paddingBottom: spacing[1.5], gap: 2 },
   wordsLast: { paddingBottom: 0 },
-  label: { fontSize: 16, fontWeight: '500', color: colors.textMuted },
+  label: { fontSize: 15, color: colors.textMuted },
   labelDone: { color: colors.text },
-  labelCurrent: { fontSize: 17, fontWeight: '700', color: colors.text },
-  hint: { fontSize: 14, color: colors.textMuted },
+  labelCurrent: { fontSize: 16, fontWeight: '500', color: colors.primaryDark },
+  hint: { fontSize: 13, color: colors.textMuted },
 });
