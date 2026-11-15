@@ -342,13 +342,13 @@
       <div class="no">02 — The app</div>
       <div>
         <h2>Warm words, professional look. <span>Try it.</span></h2>
-        <p>The phone from the first design, with every interaction kept, restyled the professional way. Switch between Amina (founder) and Grace (investor), change the language or the text size, and tap anything.</p>
+        <p>The phone from the first design, with every interaction kept, restyled the professional way. Switch between Amina (founder), Grace (investor) and Wanjiku (expert), change the language or the text size, and tap anything.</p>
       </div>
     </div>
     <div class="proto">
       <div class="controls panel">
         <h4>Whose app</h4>
-        <div class="seg" id="roleSeg"><button data-role="founder" class="on">Founder</button><button data-role="investor">Investor</button></div>
+        <div class="seg" id="roleSeg"><button data-role="founder" class="on">Founder</button><button data-role="investor">Investor</button><button data-role="expert">Expert</button></div>
         <h4>Language</h4>
         <div class="seg" id="langSeg"><button data-lang="en" class="on">English</button><button data-lang="sw">Kiswahili</button></div>
         <h4>Text size</h4>
@@ -450,7 +450,7 @@
         <thead><tr><th>Part</th><th>Source</th><th>How it looks now</th></tr></thead>
         <tbody>
           <tr><td>Voice and words</td><td><span class="from">First design</span></td><td>Greetings by name, reasons in full sentences, "Your next step" with how long it takes. Words on every tab and button.</td></tr>
-          <tr><td>Interactions</td><td><span class="from">First design</span></td><td>Founder and investor views, Kiswahili, larger text, the guide, My investments, check-ins and chamas, all kept.</td></tr>
+          <tr><td>Interactions</td><td><span class="from">First design</span></td><td>Founder, investor and expert views, Kiswahili, larger text, the guide, My investments, check-ins and chamas, all kept.</td></tr>
           <tr><td>Colour</td><td><span class="from b">Second design</span></td><td>Deep purple for the top bar and sidebar, FoundersLink purple for actions, warm paper behind, gold for one detail per screen.</td></tr>
           <tr><td>Type</td><td><span class="from b">Second design</span></td><td>Inter Tight: light for big headings and numbers, medium for names and buttons. No more heavy bold (800).</td></tr>
           <tr><td>People</td><td><span class="from b">Second design</span></td><td>Real photos where we have them, clean initials in a lavender circle where we don't. No cartoon faces.</td></tr>
@@ -501,6 +501,7 @@
     fatuma:  { n: 'Fatuma Hassan' },
     peter:   { n: 'Peter Kamau' },
     wanjiku: { n: 'Wanjiku Maina' },
+    kamau: { n: 'Wanjiku Kamau' },
     achieng: { n: 'Achieng Otieno' },
     halima:  { n: 'Halima Abdi' },
     njeri:   { n: 'Njeri Kariuki' },
@@ -703,6 +704,18 @@
   ];
 
   const NOTES = {
+    ehome: { title: 'Expert home: who needs her help', sub: 'Wanjiku is a lawyer. Founders ask her for a session; she accepts or declines.', items: [
+      ['Three numbers, in words', 'New requests, sessions running, founders helped.'],
+      ['Each request with the founder\'s face and question', 'Her question in her own words, then "Accept" or "Decline".'],
+      ['Sessions running', 'Agree a time in Messages, then "Mark as done" when she has helped.'],
+      ['Two tabs, all words', 'Home and Profile. Messages opens from the top bar.'],
+    ] },
+    eprofile: { title: 'Expert profile: how founders see her', sub: 'Her profession, what she offers and her account.', items: [
+      ['Name and register on the purple band', '"Advocate of the High Court · LSK registered".'],
+      ['Verified, in words', 'A green "Verified" tag once FoundersLink has checked her register entry.'],
+      ['What she offers', 'Services, sectors, counties and office hours a month.'],
+      ['Rows with "Open"', 'Edit profile, verification, settings. No icons.'],
+    ] },
     home: { title: 'Home: one next step', sub: 'The first thing Amina sees tells her what to do, and why.', items: [
       ['A greeting in light type', 'Large, light and calm. Her name in medium weight, so it reads like a letter, not a banner.'],
       ['One next step, in a sentence', 'With how long it takes and two clear choices. "I\'ve done this" brings up the next one.'],
@@ -768,6 +781,7 @@
     chat: [], typing: false, task: null, paidMe: false, toast: null,
     inv: null, asked: new Set(), iRequested: new Set(['njeri']),
     share: Object.fromEntries(INVESTMENTS.map((i) => [i.id, i.share])),
+    eAnswer: {}, eDone: new Set(),
   };
   const t = () => T[S.lang];
   const ti = () => TI[S.lang];
@@ -782,7 +796,7 @@
   const segbar = () => `<div class="segbar">${ITEMS.map((it) => `<i class="${S.done.has(it.id) ? 'on' : ''}"></i>`).join('')}</div>`;
 
   function top(inner) {
-    const me = S.role === 'investor' ? 'grace' : 'amina';
+    const me = S.role === 'investor' ? 'grace' : S.role === 'expert' ? 'kamau' : 'amina';
     return `<div class="top">
       <div class="status"><span>9:41</span><span>5G</span></div>
       <div class="top-row">
@@ -1059,9 +1073,109 @@
     </div>`;
   }
 
-  const SCREENS = { home, investors, ready, guide, chamas, ihome, ibiz, ireq, iport };
-  const ORDERS = { founder: ['home', 'investors', 'ready', 'guide', 'chamas'], investor: ['ihome', 'ibiz', 'ireq', 'iport'] };
-  const navName = (k, lang = S.lang) => (T[lang].nav[k] ?? TI[lang].nav[k]);
+  // ---------------- Expert screens ----------------
+  const TE = {
+    en: {
+      nav: { ehome: 'Home', eprofile: 'Profile' },
+      name: 'Wanjiku.',
+      newReq: 'New requests', running: 'Sessions running', helped: 'Founders helped',
+      waitingAnswer: 'Waiting for your answer', noneWaiting: 'None waiting', agreeTime: 'Agree a time in Messages', noneRunning: 'None right now', thanks: 'Thank you',
+      askingTitle: 'Founders asking for help', askingSub: 'Accept to start, then agree a time in Messages.',
+      fresh: 'New', accept: 'Accept', decline: 'Decline', accepted: (n) => `Accepted. Message ${n} to agree a time.`, declined: 'Declined.',
+      runningTitle: 'Sessions running', runningSub: 'Mark one done when you have helped.', markDone: 'Mark as done', doneToast: 'Marked as done. Thank you for helping.',
+      noneAsking: 'No new requests. Founders who need your help will appear here.',
+      profTitle: 'Wanjiku Kamau', profSub: 'Advocate of the High Court · LSK registered', verified: 'Verified expert',
+      seeYou: 'How founders see you', seeYouSub: 'Your profession, what you help with, and how many sessions you offer each month.',
+      editProfile: 'Edit my expert profile', editLine: 'Profession, register, services, sectors and counties.',
+      myVerif: 'My verification', myVerifLine: 'See what FoundersLink checked, or what it still needs.',
+      offer: 'What you offer', offerLine: 'Agreements, incorporation, contracts. Health and fintech, in Nairobi and Kiambu.', hours: '4 office hours a month',
+      account: 'Account', settings: 'Settings', settingsLine: 'Notifications, privacy, your data and support.', logout: 'Log out', open: 'Open',
+    },
+    sw: {
+      nav: { ehome: 'Nyumbani', eprofile: 'Wasifu' },
+      name: 'Wanjiku.',
+      newReq: 'Maombi mapya', running: 'Vikao vinavyoendelea', helped: 'Waanzilishi uliowasaidia',
+      waitingAnswer: 'Yanasubiri jibu lako', noneWaiting: 'Hakuna yanayosubiri', agreeTime: 'Kubalianeni muda kwenye Ujumbe', noneRunning: 'Hakuna kwa sasa', thanks: 'Asante',
+      askingTitle: 'Waanzilishi wanaoomba msaada', askingSub: 'Kubali kuanza, kisha kubalianeni muda kwenye Ujumbe.',
+      fresh: 'Mpya', accept: 'Kubali', decline: 'Kataa', accepted: (n) => `Umekubali. Mtumie ${n} ujumbe mkubaliane muda.`, declined: 'Umekataa.',
+      runningTitle: 'Vikao vinavyoendelea', runningSub: 'Weka kimoja kama kimekamilika ukishasaidia.', markDone: 'Weka kama imekamilika', doneToast: 'Imekamilika. Asante kwa kusaidia.',
+      noneAsking: 'Hakuna maombi mapya. Waanzilishi wanaohitaji msaada wako wataonekana hapa.',
+      profTitle: 'Wanjiku Kamau', profSub: 'Wakili wa Mahakama Kuu · amesajiliwa LSK', verified: 'Mtaalamu aliyethibitishwa',
+      seeYou: 'Jinsi waanzilishi wanavyokuona', seeYouSub: 'Taaluma yako, unachosaidia, na vikao vingapi unatoa kila mwezi.',
+      editProfile: 'Hariri wasifu wangu wa mtaalamu', editLine: 'Taaluma, usajili, huduma, sekta na kaunti.',
+      myVerif: 'Uthibitisho wangu', myVerifLine: 'Ona FoundersLink ilichokagua, au kinachohitajika bado.',
+      offer: 'Unachotoa', offerLine: 'Mikataba, usajili wa kampuni, kandarasi. Afya na fedha, Nairobi na Kiambu.', hours: 'Saa 4 za ushauri kwa mwezi',
+      account: 'Akaunti', settings: 'Mipangilio', settingsLine: 'Arifa, faragha, data yako na msaada.', logout: 'Ondoka', open: 'Fungua',
+    },
+  };
+  const te = () => TE[S.lang];
+  const EREQUESTS = [
+    { id: 'r1', who: 'amina', when: { en: 'Today', sw: 'Leo' }, topic: { en: 'Do I need to register with the Data Commissioner before launching my clinic app?', sw: 'Je, ninahitaji kujisajili na Kamishna wa Data kabla ya kuzindua programu yangu ya kliniki?' } },
+    { id: 'r2', who: 'halima', when: { en: 'Yesterday', sw: 'Jana' }, topic: { en: 'Can you check my shareholders agreement before I sign it?', sw: 'Unaweza kuangalia mkataba wangu wa wanahisa kabla sijatia sahihi?' } },
+  ];
+  const ERUNNING = [{ id: 's1', who: 'achieng', topic: { en: 'Reviewing a convertible note before I sign it.', sw: 'Kukagua noti inayobadilika kabla sijatia sahihi.' } }];
+
+  function ehome() {
+    const tt = te();
+    const asking = EREQUESTS.filter((r) => !S.eAnswer[r.id]);
+    const running = [...ERUNNING, ...EREQUESTS.filter((r) => S.eAnswer[r.id] === 'accepted')].filter((s) => !S.eDone.has(s.id));
+    const helped = 4 + S.eDone.size;
+    const stat = (label, value, note) => `<div class="card" style="flex:1 1 40%;margin:0"><div class="label">${label}</div><div class="num" style="font-size:1.9em;color:var(--purple);margin:6px 0 4px">${value}</div><div class="porg">${note}</div></div>`;
+    return top(greet(tt.name)) + `<div class="body">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        ${stat(tt.newReq, asking.length, asking.length ? tt.waitingAnswer : tt.noneWaiting)}
+        ${stat(tt.running, running.length, running.length ? tt.agreeTime : tt.noneRunning)}
+        ${stat(tt.helped, helped, tt.thanks)}
+      </div>
+      <div class="card">
+        <p class="h" style="margin:0">${tt.askingTitle}</p>
+        <p class="p">${tt.askingSub}</p>
+        ${asking.length === 0 ? `<p class="p" style="margin:0">${tt.noneAsking}</p>` : asking.map((r) => `
+          <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
+            <div class="person">${av(r.who, 44)}<div style="flex:1"><div class="pname">${FULL[r.who]}</div><div class="porg">${L(r.when)}</div></div><span class="tag new" style="background:var(--gold);color:var(--deep)">${tt.fresh}</span></div>
+            <p style="background:var(--lav);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:.93em">“${L(r.topic)}”</p>
+            <div class="btns two" style="margin-bottom:6px"><button class="btn primary" data-act="eaccept" data-id="${r.id}">${tt.accept}</button><button class="btn ghost" data-act="edecline" data-id="${r.id}">${tt.decline}</button></div>
+          </div>`).join('')}
+      </div>
+      <div class="card">
+        <p class="h" style="margin:0">${tt.runningTitle}</p>
+        <p class="p">${tt.runningSub}</p>
+        ${running.map((s) => `
+          <div style="border-top:1px solid var(--line);padding:12px 0 4px">
+            <div class="person">${av(s.who, 40)}<div style="flex:1"><div class="pname">${FULL[s.who]}</div><div class="porg">${L(s.topic)}</div></div></div>
+            <button class="btn ghost" style="margin-top:10px" data-act="edone" data-id="${s.id}">${tt.markDone}</button>
+          </div>`).join('') || `<p class="p" style="margin:0">${tt.noneRunning}</p>`}
+      </div>
+    </div>`;
+  }
+
+  function eprofile() {
+    const tt = te();
+    const row = (title, line, word) => `<div class="member" style="padding:12px 0"><span class="n">${title}<div class="porg" style="font-weight:400">${line}</div></span>${word ? `<span style="color:var(--purple);font-weight:500;font-size:.85em">${word}</span>` : ''}</div>`;
+    return top(`<div class="person" style="margin-top:18px;align-items:center;position:relative;z-index:1">${av('kamau', 64)}<div><h1 class="title" style="margin:0">${tt.profTitle}</h1><div class="tsub" style="margin:2px 0 0">${tt.profSub}</div></div></div>`) + `<div class="body">
+      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="pname">${tt.verified}</span><span class="tag paid">${S.lang === 'sw' ? 'Imethibitishwa' : 'Verified'}</span></div>
+      <div class="card">
+        <p class="h" style="margin:0">${tt.seeYou}</p>
+        <p class="p">${tt.seeYouSub}</p>
+        ${row(tt.editProfile, tt.editLine, tt.open)}
+        ${row(tt.myVerif, tt.myVerifLine, tt.open)}
+      </div>
+      <div class="card">
+        <div class="label">${tt.offer}</div>
+        <p style="margin:6px 0">${tt.offerLine}</p>
+        <span class="tag good">${tt.hours}</span>
+      </div>
+      <div class="card">
+        <p class="h" style="margin:0 0 4px">${tt.account}</p>
+        ${row(tt.settings, tt.settingsLine, tt.open)}
+        ${row(tt.logout, '', '')}
+      </div>
+    </div>`;
+  }
+
+  const SCREENS = { home, investors, ready, guide, chamas, ihome, ibiz, ireq, iport, ehome, eprofile };
+  const ORDERS = { founder: ['home', 'investors', 'ready', 'guide', 'chamas'], investor: ['ihome', 'ibiz', 'ireq', 'iport'], expert: ['ehome', 'eprofile'] };
+  const navName = (k, lang = S.lang) => (T[lang].nav[k] ?? TI[lang].nav[k] ?? TE[lang].nav[k]);
 
   function render() {
     const el = document.getElementById('screen');
@@ -1110,6 +1224,9 @@
       case 'askupdate': { const inv = INVESTMENTS.find((i) => i.id === b.dataset.id); S.asked.add(inv.id); toast(ti().asked(inv.first)); break; }
       case 'share': S.share[b.dataset.id] = !S.share[b.dataset.id]; render(); break;
       case 'iconnect': S.iRequested.add(b.dataset.id); render(); break;
+      case 'eaccept': { const r = EREQUESTS.find((x) => x.id === b.dataset.id); S.eAnswer[r.id] = 'accepted'; toast(te().accepted(FULL[r.who].split(' ')[0])); break; }
+      case 'edecline': S.eAnswer[b.dataset.id] = 'declined'; toast(te().declined); break;
+      case 'edone': S.eDone.add(b.dataset.id); toast(te().doneToast); break;
     }
   });
   document.getElementById('screen').addEventListener('keydown', (e) => {
@@ -1121,7 +1238,7 @@
     document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle('on', x === b));
     render();
   });
-  segment('roleSeg', 'role', (v) => { S.role = v; S.screen = v === 'investor' ? 'ihome' : 'home'; S.inv = null; });
+  segment('roleSeg', 'role', (v) => { S.role = v; S.screen = v === 'investor' ? 'ihome' : v === 'expert' ? 'ehome' : 'home'; S.inv = null; });
   segment('langSeg', 'lang', (v) => { S.lang = v; });
   segment('sizeSeg', 'size', (v) => { S.large = v === 'large'; });
   document.getElementById('jump').addEventListener('click', (e) => {
@@ -1151,7 +1268,7 @@
 
   // Open a screen from the address, e.g. #investor, #investor/mamacare or #founder/guide.
   const [role, where] = decodeURIComponent(location.hash.slice(1)).split('/');
-  if (role === 'investor' || role === 'founder') {
+  if (role === 'investor' || role === 'founder' || role === 'expert') {
     document.querySelector(`#roleSeg [data-role="${role}"]`).click();
     if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
     else if (where && SCREENS[where] && ORDERS[role].includes(where)) S.screen = where;
