@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +15,8 @@ import { WORKSPACES } from './workspace';
 export interface TabScreen {
   name: string;
   title: string;
+  /** The icon above the word in the phone's bottom bar. Always with its word, never alone. */
+  icon?: ComponentType<{ color?: string; size?: number; strokeWidth?: number }>;
   /** Reached from the top bar, a link or the side menu, not shown as a tab. */
   hidden?: boolean;
 }
@@ -67,9 +70,14 @@ function TopBar({ role }: { role: Role }) {
   );
 }
 
-/** The gold mark over the tab you are on. */
-function TabMark({ focused }: { focused: boolean }) {
-  return <View style={[styles.mark, focused && styles.markOn]} />;
+/** The gold mark over the tab you are on, and the tab's icon under it. */
+function TabIcon({ focused, color, icon: Icon }: { focused: boolean; color: string; icon?: TabScreen['icon'] }) {
+  return (
+    <View style={styles.iconWrap}>
+      <View style={[styles.mark, focused && styles.markOn]} />
+      {Icon ? <Icon size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} /> : null}
+    </View>
+  );
 }
 
 /**
@@ -99,15 +107,22 @@ export function WorkspaceTabs({ role, screens }: { role: Role; screens: TabScree
               sceneStyle: { backgroundColor: colors.background },
               tabBarActiveTintColor: colors.primary,
               tabBarInactiveTintColor: colors.textDim,
-              tabBarStyle: { borderTopColor: colors.border, minHeight: 64, paddingTop: 0, backgroundColor: colors.white, elevation: 0 },
-              tabBarIconStyle: { height: 10, marginBottom: 2 },
+              tabBarStyle: { borderTopColor: colors.border, minHeight: 68, paddingTop: 0, backgroundColor: colors.white, elevation: 0 },
+              tabBarIconStyle: { height: 32, marginBottom: 0 },
               tabBarLabelStyle: { fontSize: 12, fontFamily: 'InterTight_500Medium' },
-              tabBarIcon: ({ focused }) => <TabMark focused={focused} />,
             }
       }
     >
       {screens.map((s) => (
-        <Tabs.Screen key={s.name} name={s.name} options={{ title: s.title, ...(s.hidden ? { href: null } : {}) }} />
+        <Tabs.Screen
+          key={s.name}
+          name={s.name}
+          options={{
+            title: s.title,
+            ...(s.hidden ? { href: null } : {}),
+            tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} color={String(color)} icon={s.icon} />,
+          }}
+        />
       ))}
     </Tabs>
   );
@@ -140,6 +155,7 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 12, fontWeight: '500', color: colors.white },
   pillCount: { backgroundColor: colors.accent, borderRadius: 99, paddingHorizontal: 7 },
   pillCountText: { fontSize: 12, fontWeight: '600', color: colors.primaryDark },
-  mark: { width: 18, height: 3, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, marginTop: -6 },
+  iconWrap: { alignItems: 'center', gap: 5 },
+  mark: { width: 18, height: 3, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
   markOn: { backgroundColor: colors.accent },
 });

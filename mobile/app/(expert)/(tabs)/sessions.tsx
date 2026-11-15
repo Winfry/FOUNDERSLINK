@@ -54,28 +54,20 @@ export default function ExpertOverview() {
     }
   };
 
+  const stats = (
+    <Stats>
+      <Stat label="New requests" value={String(asked.length)} note={asked.length ? 'Waiting for your answer' : 'None waiting'} />
+      <Stat label="Sessions running" value={String(running.length)} note={running.length ? 'Agree a time in Messages' : 'None right now'} />
+      <Stat label="Founders helped" value={String(helped)} note={helped ? 'Thank you' : 'Your first is coming'} />
+    </Stats>
+  );
+
   return (
     <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl {...pull} />}>
-      <Greeting
-        hello={`${greeting()},`}
-        name={first}
-        line={approved ? 'Founders who asked for your help, and the sessions you are running.' : 'Once you are verified, founders can find you and ask for a session.'}
-        actions={
-          wide ? (
-            approved ? (
-              <Button title="Open messages" size="sm" variant="secondary" onPress={() => router.push('/conversations')} />
-            ) : (
-              <Button title={invite?.button ?? 'Verify'} size="sm" onPress={() => router.push((invite?.route ?? '/founder/verify') as never)} />
-            )
-          ) : undefined
-        }
-      />
+      <Greeting hello={`${greeting()},`} name={first} />
 
-      <Stats>
-        <Stat label="New requests" value={String(asked.length)} note={asked.length ? 'Waiting for your answer' : 'None waiting'} />
-        <Stat label="Sessions running" value={String(running.length)} note={running.length ? 'Agree a time in Messages' : 'None right now'} />
-        <Stat label="Founders helped" value={String(helped)} note={helped ? 'Thank you' : 'Your first is coming'} />
-      </Stats>
+      {/* On a computer the numbers sit at the top of the left column, as in the design. */}
+      {wide && approved ? null : stats}
 
       {!approved ? (
         <Panel title={invite?.title ?? 'Verify to start helping'} sub={invite?.text}>
@@ -85,6 +77,7 @@ export default function ExpertOverview() {
       ) : (
         <Columns>
           <Column wide>
+            {wide ? stats : null}
             <Panel title="Founders asking for help" sub="Accept to start, then agree a time in Messages.">
               {q.isLoading ? (
                 <Empty text="Loading your requests…" />

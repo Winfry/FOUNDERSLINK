@@ -43,8 +43,11 @@ function Item({ label, count, on, onPress }: { label: string; count?: string; on
  * the member's workspace in words with a count beside each place, headings
  * for the groups ("Community", "Assistant"), and who is signed in at the
  * foot. It stays put while the pages beside it change.
+ *
+ * `fill`: the same menu as a whole page, for the phone's "More" tab, so
+ * everything on the side menu can be reached on a phone too.
  */
-export function Sidebar() {
+export function Sidebar({ fill = false }: { fill?: boolean } = {}) {
   const router = useRouter();
   const path = usePathname();
   const user = useAuthStore((s) => s.user);
@@ -58,12 +61,18 @@ export function Sidebar() {
   const unread = notices.data?.unreadCount ?? 0;
 
   return (
-    <View style={styles.bar}>
-      <Pressable onPress={() => go(ws.home)} accessibilityRole="link" accessibilityLabel="FoundersLink, home">
-        <Text style={styles.wordmark}>
-          FoundersLink<Text style={styles.wordmarkDot}>.</Text>
+    <View style={[styles.bar, fill && styles.fill]}>
+      {fill ? (
+        <Text style={styles.moreTitle} accessibilityRole="header">
+          Everything in your workspace
         </Text>
-      </Pressable>
+      ) : (
+        <Pressable onPress={() => go(ws.home)} accessibilityRole="link" accessibilityLabel="FoundersLink, home">
+          <Text style={styles.wordmark}>
+            FoundersLink<Text style={styles.wordmarkDot}>.</Text>
+          </Text>
+        </Pressable>
+      )}
 
       <ScrollView style={styles.flex} contentContainerStyle={styles.nav} showsVerticalScrollIndicator={false}>
         {ws.items.map((item: WorkspaceItem, i) => {
@@ -111,6 +120,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[2],
     paddingHorizontal: spacing[2],
   },
+  fill: { width: '100%', flex: 1, paddingTop: spacing[2] },
+  moreTitle: { fontSize: 24, color: colors.white, paddingHorizontal: spacing[1.5], paddingBottom: spacing[2] },
   wordmark: { fontSize: 17, fontWeight: '600', color: colors.white, paddingHorizontal: spacing[1.5], paddingBottom: 28 },
   wordmarkDot: { color: colors.accent },
   nav: { gap: 2 },

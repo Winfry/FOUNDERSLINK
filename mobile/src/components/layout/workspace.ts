@@ -43,7 +43,8 @@ export const WORKSPACES: Record<'founder' | 'investor' | 'expert', Workspace> = 
       { label: 'Overview', href: '/home' },
       { label: 'Investors', href: '/matches', also: ['/founder/investor-match'], count: 'investors' },
       { label: 'Readiness', href: '/readiness', count: 'readiness' },
-      deals,
+      // A founder's deal rooms are a tab of their own ("Deals" on a phone).
+      { ...deals, href: '/deal-rooms', also: ['/deals', '/deal'] },
       messages,
       { label: 'Network', href: '/connections', group: 'Community' },
       { label: 'Chamas', href: '/chamas', also: ['/chama'], group: 'Community' },
