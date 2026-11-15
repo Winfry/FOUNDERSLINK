@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
   page: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[1.5] },
   pageWide: { gap: 18 },
-  narrow: { maxWidth: 520 },
+  narrow: {},
   total: { backgroundColor: colors.primaryDark, borderRadius: radius.card, padding: spacing[2] + 2, gap: 2 },
   totalLabel: { fontSize: 12, color: colors.onDarkDim },
   totalMoney: { fontSize: 28, color: colors.white },

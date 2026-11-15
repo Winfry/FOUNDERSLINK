@@ -162,21 +162,17 @@ export default function CopilotScreen() {
 
   const headWords = (
     <View style={styles.flex}>
-      <Text style={wide ? styles.wideTitle : styles.bandTitle} accessibilityRole="header">
+      <Text style={[styles.bandTitle, wide && styles.bandTitleWide]} accessibilityRole="header">
         Your guide
       </Text>
-      <Text style={wide ? styles.wideSub : styles.bandSub}>Ask anything about getting funded.</Text>
+      <Text style={styles.bandSub}>Ask anything about getting funded.</Text>
     </View>
   );
-  const header = wide ? (
-    <View style={styles.wideHead}>
-      <AiMark size={48} />
-      {headWords}
-    </View>
-  ) : (
+  // The same purple band as on a phone, on a computer too.
+  const header = (
     <PhoneBand>
       <View style={styles.bandRow}>
-        <AiMark />
+        <AiMark size={wide ? 48 : 40} />
         {headWords}
       </View>
     </PhoneBand>
@@ -358,11 +354,9 @@ export default function CopilotScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
   page: { paddingHorizontal: spacing[2], paddingBottom: spacing[3], gap: spacing[1.5] },
-  pageWide: { padding: spacing[3], paddingBottom: spacing[6], gap: spacing[1] },
+  pageWide: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[1] },
 
-  wideHead: { flexDirection: 'row', alignItems: 'center', gap: spacing[2], paddingBottom: spacing[2] },
-  wideTitle: { fontSize: 40, color: colors.primaryDark },
-  wideSub: { fontSize: 14, color: colors.textMuted, marginTop: spacing[0.5] },
+  bandTitleWide: { fontSize: 40 },
   bandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5], marginTop: spacing[1] },
   bandTitle: { fontSize: 24, color: colors.white },
   bandSub: { fontSize: 13, color: colors.onDarkMuted, marginTop: 2 },

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notificationService } from '../../services';
 import { useAuthStore } from '../../stores/authStore';
 import { useWorkspaceCounts } from '../../hooks/useWorkspaceCounts';
-import { useCentredPadding, useWideLayout } from '../../hooks/useWideLayout';
+import { PAGE_MAX, useCentredPadding, useWideLayout } from '../../hooks/useWideLayout';
 import { colors, spacing } from '../../theme/tokens';
 import { Avatar } from '../ui/Avatar';
 import { Text } from '../ui/Text';
@@ -20,8 +20,7 @@ export interface TabScreen {
 
 type Role = 'founder' | 'investor' | 'expert';
 
-/** The widest a page's content gets beside the side menu. */
-export const PAGE_MAX = 1120;
+export { PAGE_MAX };
 
 function Pill({ label, count, onPress }: { label: string; count?: string; onPress: () => void }) {
   return (
@@ -90,7 +89,9 @@ export function WorkspaceTabs({ role, screens }: { role: Role; screens: TabScree
           ? {
               headerShown: false,
               tabBarStyle: { display: 'none' },
-              sceneStyle: { backgroundColor: colors.background, paddingTop: 34, paddingHorizontal: pad + spacing[4] },
+              // Pages fill the whole width beside the side menu, and open with
+              // the same purple band as on a phone, edge to edge (see PhoneBand).
+              sceneStyle: { backgroundColor: colors.background, paddingTop: 0, paddingHorizontal: 0 },
             }
           : {
               headerShown: true,

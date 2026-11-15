@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Header } from '../src/components/layout/Header';
 import { Sidebar } from '../src/components/layout/Sidebar';
 import { AuthPhoto } from '../src/components/auth/AuthPhoto';
-import { useCentredPadding, useWideLayout } from '../src/hooks/useWideLayout';
+import { useWideLayout } from '../src/hooks/useWideLayout';
 import { AppProviders } from '../src/providers/AppProviders';
 import { useLiveUpdates } from '../src/hooks/useLiveUpdates';
 import { useAuthStore } from '../src/stores/authStore';
@@ -69,9 +69,7 @@ function SessionGuard() {
 function BackHeader({ title }: { title: string }) {
   const router = useRouter();
   // After a reload or a link there is nothing to go back to, so it goes home.
-  // On a computer, the title lines up with the page, centred beside the side menu.
-  const inset = useCentredPadding(DETAIL_MAX);
-  return <Header title={title} insetX={inset || undefined} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
+  return <Header title={title} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
 }
 
 const withBack = (title: string) => ({
@@ -79,22 +77,18 @@ const withBack = (title: string) => ({
   header: () => <BackHeader title={title} />,
 });
 
-/** The widest a page opened from a workspace (a deal, a chat, settings) gets on a computer. */
-const DETAIL_MAX = 820;
-
 const OPEN_AREAS = new Set([undefined, 'auth', 'welcome', 'splash']);
 
 function Screens({ wide }: { wide: boolean }) {
-  const inset = useCentredPadding(DETAIL_MAX);
   return (
     <Stack
       screenOptions={({ route }) => ({
         headerShown: false,
         // Workspaces ("(founder)", ...) lay themselves out; pages opened
-        // from them are centred at a reading width on a computer.
+        // from them use the full width beside the side menu, like the tabs.
         contentStyle:
           wide && !route.name.startsWith('(')
-            ? { backgroundColor: colors.background, paddingHorizontal: inset }
+            ? { backgroundColor: colors.background }
             : { backgroundColor: wide ? colors.background : colors.white },
       })}
     >

@@ -22,35 +22,32 @@ const today = () =>
  */
 export function Greeting({ hello, name, line, actions }: { hello: string; name?: string; line?: string; actions?: ReactNode }) {
   const wide = useWideLayout();
-  if (wide) {
-    return (
-      <View style={styles.head}>
-        <View style={styles.flex}>
-          <Text style={styles.headTitle} accessibilityRole="header">
-            {hello}
-            {name ? <Text style={[styles.headTitle, styles.name]}>{` ${name}.`}</Text> : null}
-          </Text>
-          {line ? <Text style={styles.headLine}>{today()} · {line}</Text> : null}
-        </View>
-        {actions ? <View style={styles.headActions}>{actions}</View> : null}
-      </View>
-    );
-  }
   return (
     <PhoneBand>
-      <Text style={styles.bandDate}>{today()}</Text>
-      <Text style={styles.bandHello} accessibilityRole="header">
-        {hello}
-        {name ? <Text style={[styles.bandHello, styles.name]}>{` ${name}.`}</Text> : null}
-      </Text>
-      {line ? <Text style={styles.bandLine}>{line}</Text> : null}
+      <View style={styles.bandRow}>
+        <View style={styles.flex}>
+          <Text style={styles.bandDate}>{today()}</Text>
+          <Text style={[styles.bandHello, wide && styles.bandHelloWide]} accessibilityRole="header">
+            {hello}
+            {name ? <Text style={[styles.bandHello, wide && styles.bandHelloWide, styles.name]}>{` ${name}.`}</Text> : null}
+          </Text>
+          {line ? <Text style={styles.bandLine}>{line}</Text> : null}
+        </View>
+        {actions && wide ? <View style={styles.headActions}>{actions}</View> : null}
+      </View>
     </PhoneBand>
   );
 }
 
-/** The deep purple band under the phone's top bar, edge to edge. */
+/**
+ * The deep purple band at the top of a page, edge to edge: under the top
+ * bar on a phone, and across the page beside the side menu on a computer,
+ * so both look the same. The page around it pads its sides; the band
+ * reaches past that padding and lines its text up with the content.
+ */
 export function PhoneBand({ children }: { children: ReactNode }) {
-  return <View style={styles.band}>{children}</View>;
+  const wide = useWideLayout();
+  return <View style={[styles.band, wide && styles.bandWide]}>{children}</View>;
 }
 
 /** The numbers that matter: four across on a computer, two on a phone. */
@@ -207,8 +204,11 @@ const styles = StyleSheet.create({
     paddingBottom: 22,
     marginBottom: spacing[0.5],
   },
+  bandWide: { paddingTop: 34, paddingBottom: 30, marginBottom: spacing[1] },
   bandDate: { fontSize: 12, color: colors.onDarkDim },
   bandHello: { fontSize: 28, color: colors.white, marginTop: 4 },
+  bandHelloWide: { fontSize: 40 },
+  bandRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing[3] },
   bandLine: { fontSize: 13, color: colors.onDarkMuted, marginTop: 6 },
 
   card: {

@@ -254,7 +254,7 @@ export default function InvestorMatchProfileScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing[2], paddingBottom: spacing[6], width: '100%', maxWidth: 760, alignSelf: 'center' },
+  content: { padding: spacing[2], paddingBottom: spacing[6], width: '100%' },
   flexOne: { flex: 1, minWidth: 0 },
 
   person: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },

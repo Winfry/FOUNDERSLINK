@@ -4,6 +4,8 @@ import { Platform, useWindowDimensions } from 'react-native';
 export const WIDE_MIN = 1000;
 /** The side menu's width. */
 export const SIDEBAR_WIDTH = 252;
+/** The widest a workspace page's content gets beside the side menu. */
+export const PAGE_MAX = 1120;
 
 /**
  * True in a wide browser window: the app then uses the side menu and wide

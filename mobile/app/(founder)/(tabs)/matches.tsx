@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: 'transparent' },
   flexOne: { flex: 1, minWidth: 0 },
   page: { paddingHorizontal: spacing[2], paddingBottom: spacing[6] },
-  pageWide: { paddingBottom: spacing[6], maxWidth: 760, width: '100%' },
+  pageWide: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], width: '100%' },
   dim: { opacity: 0.85 },
 
   invite: { marginBottom: spacing[2], gap: 4 },
