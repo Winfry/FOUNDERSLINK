@@ -8,7 +8,7 @@ export interface TabItem {
   count?: number;
 }
 
-// Orange marks where you are: the active tab's label and underline.
+// Purple marks where you are: the active tab's label and underline.
 export function Tabs({
   items,
   active,
@@ -34,16 +34,16 @@ export function Tabs({
             className={cn(
               "-mb-px flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-4 text-sm transition-colors",
               on
-                ? "border-accent font-bold text-accent"
-                : "border-transparent font-semibold text-muted hover:border-border hover:text-foreground",
+                ? "border-primary font-medium text-primary"
+                : "border-transparent font-normal text-muted hover:border-border hover:text-navy",
             )}
           >
             {t.label}
             {t.count !== undefined ? (
               <span
                 className={cn(
-                  "rounded-full px-2 py-0.5 text-xs font-semibold",
-                  on ? "bg-accent-light text-navy" : "bg-slate-100 text-slate-600",
+                  "rounded-full px-2 py-0.5 text-xs font-medium",
+                  on ? "bg-primary-light text-primary" : "bg-[#F3F1F6] text-muted",
                 )}
               >
                 {t.count}

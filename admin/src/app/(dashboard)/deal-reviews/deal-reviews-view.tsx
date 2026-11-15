@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
 import type { DealReviewListItem } from "@/types";
 import { EmptyState } from "@/components/empty-state";
 import { dealTypeLabel, stageLabel } from "@/components/labels";
@@ -18,7 +17,6 @@ export function DealReviewsView({ deals }: { deals: DealReviewListItem[] }) {
       />
       {deals.length === 0 ? (
         <EmptyState
-          icon={ClipboardCheck}
           title="No documents are waiting for review"
           description="When a founder or investor shares a document in a deal, the deal appears here until every document is confirmed or rejected."
         />
@@ -56,7 +54,7 @@ export function DealReviewsView({ deals }: { deals: DealReviewListItem[] }) {
                   <Td className="text-right">
                     <Link
                       href={`/deal-reviews/${d.id}`}
-                      className="inline-flex min-h-10 items-center rounded-btn bg-primary px-4 text-sm font-bold text-white hover:bg-primary-dark"
+                      className="inline-flex min-h-10 items-center rounded-full bg-primary px-5 text-sm font-medium text-white hover:bg-primary-dark"
                     >
                       Review
                     </Link>

@@ -1,26 +1,22 @@
-import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
   value: string;
-  icon: LucideIcon;
+  /** Accepted and ignored: the design shows numbers without icons. */
+  icon?: unknown;
   className?: string;
-  /** A short line under the title, e.g. what the number leaves out. */
+  /** A short line under the number, e.g. what it leaves out. */
   note?: string;
 }
 
-export function StatCard({ title, value, icon: Icon, className, note }: StatCardProps) {
+/** A number that matters: its name, the number in large light purple, and a short note. */
+export function StatCard({ title, value, className, note }: StatCardProps) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-4 rounded-card border border-border bg-white p-5 transition-colors", className)}>
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-primary-light text-primary">
-        <Icon className="h-5 w-5" strokeWidth={2.25} aria-hidden />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-2xl font-extrabold leading-8 text-foreground">{value}</p>
-        <p className="text-sm font-medium text-muted">{title}</p>
-        {note ? <p className="text-xs font-medium text-muted">{note}</p> : null}
-      </div>
+    <div className={cn("min-w-0 rounded-card border border-border bg-white px-5 py-[18px] shadow-card", className)}>
+      <p className="text-xs text-muted">{title}</p>
+      <p className="mt-2.5 text-[34px] font-normal leading-9 tracking-tight text-primary">{value}</p>
+      {note ? <p className="mt-2 text-[13px] text-muted">{note}</p> : null}
     </div>
   );
 }

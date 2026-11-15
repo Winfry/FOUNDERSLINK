@@ -88,7 +88,7 @@ function LoginFlow() {
     <div>
       {step === "login" ? (
         <>
-          <h1 className="text-2xl font-extrabold text-foreground">Sign in</h1>
+          <h1 className="text-[34px] font-light leading-10 text-navy">Sign in</h1>
           <p className="mt-1 text-base text-muted">Use your staff email and password.</p>
           <form className="mt-8 space-y-5" noValidate onSubmit={loginForm.handleSubmit(onLogin)}>
             <Input
@@ -127,7 +127,7 @@ function LoginFlow() {
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-extrabold text-foreground">Enter your sign-in code</h1>
+          <h1 className="text-[34px] font-light leading-10 text-navy">Enter your sign-in code</h1>
           <p className="mt-1 text-base text-muted">Enter the 6-digit code from your authenticator app.</p>
           <form className="mt-8 space-y-5" noValidate onSubmit={verifyForm.handleSubmit(onVerify)}>
             <Input

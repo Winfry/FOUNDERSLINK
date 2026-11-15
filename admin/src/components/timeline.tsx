@@ -6,13 +6,12 @@ export function Timeline({ events }: { events: TimelineEvent[] }) {
     return <p className="text-sm text-muted">Nothing has happened on this account yet. Decisions and status changes will be listed here.</p>;
   }
   return (
-    <ol className="relative ml-1.5 border-l border-border pl-6">
+    <ol className="divide-y divide-border">
       {events.map((event) => (
-        <li key={event.id} className="relative mb-5 last:mb-0">
-          <span className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-primary" />
-          <p className="text-sm font-semibold text-foreground">{event.title}</p>
-          {event.description ? <p className="text-sm text-muted">{event.description}</p> : null}
-          <p className="mt-0.5 text-xs font-semibold text-muted">
+        <li key={event.id} className="py-3 first:pt-0 last:pb-0">
+          <p className="text-sm font-medium text-navy">{event.title}</p>
+          {event.description ? <p className="mt-0.5 text-sm text-muted">{event.description}</p> : null}
+          <p className="mt-1 text-xs text-[#9A93A5]">
             {formatDayTime(event.at)}
             {event.actor ? ` · ${event.actor}` : ""}
           </p>

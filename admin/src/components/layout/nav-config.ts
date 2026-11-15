@@ -1,34 +1,28 @@
 import type { AdminNavCounts } from "@/types";
-import type { LucideIcon } from "lucide-react";
-import {
-  ClipboardCheck,
-  FileBarChart,
-  FileText,
-  LayoutDashboard,
-  RefreshCw,
-  Scale,
-  Settings,
-  ShieldCheck,
-  Users,
-  UsersRound,
-} from "lucide-react";
 
+/**
+ * The staff side menu, in words (no icons), as in the members' app. Items
+ * with a count show how many are waiting. `group` is the heading an item
+ * sits under.
+ */
 export interface NavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  group?: string;
   countKey?: keyof AdminNavCounts;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/overview", label: "Overview", icon: LayoutDashboard },
-  { href: "/verification", label: "Verification", icon: ShieldCheck, countKey: "verificationWaiting" },
-  { href: "/members", label: "Members", icon: Users },
-  { href: "/deal-reviews", label: "Deal reviews", icon: ClipboardCheck, countKey: "dealReviews" },
-  { href: "/reports", label: "Reports", icon: FileBarChart, countKey: "openReports" },
-  { href: "/rechecks", label: "Re-checks", icon: RefreshCw, countKey: "rechecksDue" },
-  { href: "/compliance-sources", label: "Compliance sources", icon: Scale },
-  { href: "/chamas", label: "Chamas", icon: UsersRound },
-  { href: "/audit-log", label: "Audit log", icon: FileText },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/overview", label: "Overview" },
+  { href: "/verification", label: "Verification", countKey: "verificationWaiting", group: "Checks" },
+  { href: "/deal-reviews", label: "Deal reviews", countKey: "dealReviews", group: "Checks" },
+  { href: "/reports", label: "Reports", countKey: "openReports", group: "Checks" },
+  { href: "/rechecks", label: "Re-checks", countKey: "rechecksDue", group: "Checks" },
+  { href: "/members", label: "Members", group: "Community" },
+  { href: "/chamas", label: "Chamas", group: "Community" },
+  { href: "/compliance-sources", label: "Compliance sources", group: "Records" },
+  { href: "/audit-log", label: "Audit log", group: "Records" },
 ];
+
+/** Settings sits at the foot of the menu, above who is signed in. */
+export const SETTINGS_ITEM: NavItem = { href: "/settings", label: "Settings" };

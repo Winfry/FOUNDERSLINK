@@ -7,7 +7,6 @@ import {
   useLegacyTable,
   type LegacyColumnDef as ColumnDef,
 } from "@tanstack/react-table/legacy";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -66,26 +65,25 @@ export function DataTable<T extends RowData>({
   return (
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+        <div className="w-full max-w-sm">
           <input
             type="search"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="field pl-9"
+            className="field rounded-full px-4"
             aria-label={searchPlaceholder}
           />
         </div>
         {statusFilter}
       </div>
-      <div className="overflow-x-auto rounded-card border border-border bg-white">
+      <div className="overflow-x-auto rounded-card border border-border bg-white shadow-card">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-border bg-surface">
+          <thead className="border-b border-border">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header) => (
-                  <th key={header.id} className="px-4 py-3 text-xs font-semibold text-muted">
+                  <th key={header.id} className="px-5 py-3 text-xs font-normal text-[#9A93A5]">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -98,7 +96,7 @@ export function DataTable<T extends RowData>({
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center">
-                  <p className="text-[17px] font-bold text-foreground">{emptyTitle}</p>
+                  <p className="text-2xl font-light text-navy">{emptyTitle}</p>
                   <p className="mx-auto mt-1 max-w-md text-sm text-muted">{emptyMessage}</p>
                 </td>
               </tr>
@@ -109,7 +107,7 @@ export function DataTable<T extends RowData>({
                   <tr
                     key={row.id}
                     className={cn(
-                      "border-b border-border last:border-0 hover:bg-surface",
+                      "border-b border-border last:border-0 hover:bg-background",
                       href && "cursor-pointer hover:bg-primary-light/60",
                     )}
                     onClick={
@@ -123,7 +121,7 @@ export function DataTable<T extends RowData>({
                     }
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3.5 align-middle font-medium text-foreground">
+                      <td key={cell.id} className="px-5 py-3.5 align-middle text-foreground">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -142,12 +140,10 @@ export function DataTable<T extends RowData>({
           {totalPages > 1 ? (
             <div className="flex gap-2">
               <Button variant="secondary" disabled={page <= 1} onClick={() => onPageChange?.(page - 1)}>
-                <ChevronLeft className="h-4 w-4" aria-hidden />
-                Previous
+                ← Previous
               </Button>
               <Button variant="secondary" disabled={page >= totalPages} onClick={() => onPageChange?.(page + 1)}>
-                Next
-                <ChevronRight className="h-4 w-4" aria-hidden />
+                Next →
               </Button>
             </div>
           ) : null}

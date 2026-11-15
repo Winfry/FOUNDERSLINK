@@ -40,7 +40,7 @@ export function AuditLogView({
     {
       header: "Action",
       accessorKey: "action",
-      cell: ({ row }) => <span className="font-semibold">{/[_.]/.test(row.original.action) ? humanize(row.original.action.replace(/\./g, " ")) : row.original.action}</span>,
+      cell: ({ row }) => <span className="font-medium text-navy">{/[_.]/.test(row.original.action) ? humanize(row.original.action.replace(/\./g, " ")) : row.original.action}</span>,
     },
     { header: "By", accessorKey: "admin", cell: ({ row }) => <span className="whitespace-nowrap">{row.original.admin}</span> },
     { header: "Member", accessorKey: "targetMember", cell: ({ row }) => row.original.targetMember || <span className="text-muted">None</span> },
@@ -69,19 +69,19 @@ export function AuditLogView({
         statusFilter={
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="audit-from" className="text-xs font-semibold text-muted">
+              <label htmlFor="audit-from" className="text-xs text-muted">
                 From
               </label>
               <input id="audit-from" type="date" value={dateFrom} onChange={(e) => updateQuery({ dateFrom: e.target.value, page: 1 })} className="field !w-auto" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="audit-to" className="text-xs font-semibold text-muted">
+              <label htmlFor="audit-to" className="text-xs text-muted">
                 To
               </label>
               <input id="audit-to" type="date" value={dateTo} onChange={(e) => updateQuery({ dateTo: e.target.value, page: 1 })} className="field !w-auto" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="audit-action" className="text-xs font-semibold text-muted">
+              <label htmlFor="audit-action" className="text-xs text-muted">
                 Kind of action
               </label>
               <select id="audit-action" className="field" value={actionType} onChange={(e) => updateQuery({ actionType: e.target.value, page: 1 })}>

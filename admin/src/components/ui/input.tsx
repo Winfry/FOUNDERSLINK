@@ -15,7 +15,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label ? (
-          <label htmlFor={inputId} className="text-sm font-semibold text-foreground">
+          <label htmlFor={inputId} className="text-sm font-medium text-navy">
             {label}
           </label>
         ) : null}
@@ -33,8 +33,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
           {trailing ? <div className="absolute inset-y-0 right-1 flex items-center">{trailing}</div> : null}
         </div>
-        {hint && !error ? <p className="text-xs font-medium text-muted">{hint}</p> : null}
-        {error ? <p className="text-xs font-semibold text-destructive">{error}</p> : null}
+        {hint && !error ? <p className="text-xs text-muted">{hint}</p> : null}
+        {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
       </div>
     );
   },

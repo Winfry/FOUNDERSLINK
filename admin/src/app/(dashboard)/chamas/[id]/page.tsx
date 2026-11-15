@@ -29,14 +29,14 @@ export default async function ChamaDetailPage({ params }: { params: { id: string
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardContent className="pt-5">
-            <p className="text-2xl font-extrabold text-foreground">{chama.contributionCount}</p>
-            <p className="text-sm text-muted">Contributions recorded</p>
+            <p className="text-xs text-muted">Contributions recorded</p>
+            <p className="mt-2.5 text-[34px] font-normal leading-9 tracking-tight text-primary">{chama.contributionCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-5">
-            <p className="text-2xl font-extrabold text-foreground">{chama.goalCount}</p>
-            <p className="text-sm text-muted">Goals tracked</p>
+            <p className="text-xs text-muted">Goals tracked</p>
+            <p className="mt-2.5 text-[34px] font-normal leading-9 tracking-tight text-primary">{chama.goalCount}</p>
           </CardContent>
         </Card>
       </div>
@@ -50,8 +50,8 @@ export default async function ChamaDetailPage({ params }: { params: { id: string
           ) : (
             <ul className="divide-y divide-border">
               {chama.members.map((m) => (
-                <li key={m.memberId} className="flex justify-between gap-4 py-2.5 text-sm font-medium first:pt-0 last:pb-0">
-                  <span>{m.name}</span>
+                <li key={m.memberId} className="flex justify-between gap-4 py-2.5 text-sm first:pt-0 last:pb-0">
+                  <span className="font-medium text-navy">{m.name}</span>
                   <span className="text-muted">{roleLabel(m.role)}</span>
                 </li>
               ))}

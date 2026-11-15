@@ -2,33 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* The FoundersLink admin theme. Values are RGB channels so Tailwind
-   opacity modifiers (bg-primary/10) work. Used by tailwind.config.ts. */
+/* The FoundersLink staff dashboard theme: the approved hybrid design
+   (docs/design/founderslink-hybrid.html), the same as the members' app.
+   Values are RGB channels so Tailwind opacity modifiers (bg-primary/10)
+   work. Used by tailwind.config.ts. */
 :root {
-  --background: 255 255 255;
-  --surface: 248 250 252;
-  --foreground: 14 27 61; /* #0E1B3D */
-  --muted: 100 116 139; /* #64748B */
-  --border: 226 232 240; /* #E2E8F0 */
-  --primary: 4 84 219; /* #0454DB logo blue: what you can press */
-  --primary-hover: 3 68 181;
-  --primary-tint: 234 241 254; /* #EAF1FE */
-  --navy: 17 51 115; /* #113373 sidebar and hero */
-  --accent: 255 90 31; /* #FF5A1F where you are */
-  --accent-tint: 255 240 234; /* #FFF0EA */
-  --destructive: 220 38 38;
-  --destructive-tint: 254 242 242;
+  --background: 248 246 251; /* #F8F6FB the page behind cards */
+  --surface: 247 245 241; /* #F7F5F1 warm paper, for quiet panels */
+  --foreground: 37 27 61; /* #251B3D */
+  --muted: 113 106 125; /* #716A7D */
+  --border: 233 230 239; /* #E9E6EF hairlines */
+  --primary: 86 52 165; /* #5634A5 purple: what you can press */
+  --primary-hover: 40 24 78;
+  --primary-tint: 240 236 248; /* #F0ECF8 lavender */
+  --navy: 40 24 78; /* #28184E deep purple: the side menu and big numbers */
+  --accent: 227 182 93; /* #E3B65D gold: one detail, e.g. where you are */
+  --accent-tint: 251 244 228; /* #FBF4E4 */
+  --destructive: 169 58 79; /* #A93A4F */
+  --destructive-tint: 250 235 238;
 }
 
 @layer base {
   body {
     color: rgb(var(--foreground));
     background: rgb(var(--background));
-    font-family: var(--font-inter), "Plus Jakarta Sans", system-ui, sans-serif;
-    font-weight: 500;
+    font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+    font-weight: 400;
   }
 
-  /* One focus style everywhere: the logo blue, never the browser default. */
+  /* Big headings and numbers are light, as in the design. */
+  h1 {
+    font-weight: 300;
+    letter-spacing: -0.03em;
+  }
+
+  /* One focus style everywhere: purple, never the browser default. */
   :focus-visible {
     outline: 2px solid rgb(var(--primary));
     outline-offset: 2px;
@@ -51,7 +59,7 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 500;
+    font-weight: 400;
     color: rgb(var(--foreground));
   }
   .field::placeholder {
@@ -71,7 +79,7 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
   .text-link {
-    font-weight: 600;
+    font-weight: 500;
     color: rgb(var(--primary));
     text-underline-offset: 2px;
   }

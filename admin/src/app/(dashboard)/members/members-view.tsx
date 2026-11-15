@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { LegacyColumnDef as ColumnDef } from "@tanstack/react-table/legacy";
-import { Download } from "lucide-react";
 import type { MemberListItem, MemberRole } from "@/types";
 import { DataTable } from "@/components/data-table";
 import { formatDay } from "@/components/labels";
@@ -66,7 +65,7 @@ export function MembersView({
           <Link href={`/members/${row.original.id}`} className="text-link">
             {row.original.fullName}
           </Link>
-          <p className="text-xs font-medium text-muted">{row.original.email}</p>
+          <p className="text-xs text-muted">{row.original.email}</p>
         </div>
       ),
     },
@@ -95,7 +94,6 @@ export function MembersView({
         description="Everyone with a FoundersLink account. Open a member to see their profile, consents and history."
         actions={
           <Button type="button" variant="secondary" onClick={downloadCsv}>
-            <Download className="h-4 w-4" aria-hidden />
             Download {plural} as CSV
           </Button>
         }

@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export function ListLoading({ label = "Loading…" }: { label?: string }) {
-  return <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted">{label}</div>;
+  return <div className="rounded-card border border-border bg-white p-8 text-center text-sm text-muted shadow-card">{label}</div>;
 }
 
 // A real failure to reach the backend: says what failed and offers a retry.
@@ -22,12 +22,10 @@ export function ListError({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
-    <div role="alert" className="flex flex-col items-center rounded-card border border-destructive/30 bg-destructive-light px-6 py-10 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-destructive">
-        <AlertTriangle className="h-6 w-6" aria-hidden />
-      </div>
-      <h2 className="text-[17px] font-bold text-foreground">We could not load {what}</h2>
-      <p className="mt-1 max-w-md text-sm text-muted">
+    <div role="alert" className="flex flex-col items-center rounded-card border border-border bg-white px-6 py-12 text-center shadow-card">
+      <Badge variant="destructive">Could not load</Badge>
+      <h2 className="mt-3 text-2xl font-light text-navy">We could not load {what}</h2>
+      <p className="mt-2 max-w-md text-sm text-muted">
         {message ?? "The FoundersLink server did not answer. Nothing was changed. Check that it is running, then try again."}
       </p>
       <Button className="mt-5" loading={pending} onClick={() => startTransition(() => router.refresh())}>

@@ -5,10 +5,10 @@ type BadgeVariant = "default" | "success" | "warning" | "destructive" | "muted" 
 
 const variants: Record<BadgeVariant, string> = {
   default: "bg-primary-light text-primary",
-  success: "bg-success-light text-green-700",
-  warning: "bg-warning-light text-amber-700",
+  success: "bg-[#E7F3EE] text-[#28765D]",
+  warning: "bg-accent-light text-[#8A6516]",
   destructive: "bg-destructive-light text-destructive",
-  muted: "bg-slate-100 text-slate-600",
+  muted: "bg-[#F3F1F6] text-muted",
   navy: "bg-navy text-white",
 };
 
@@ -20,7 +20,7 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
   return (
     <span
       className={cn(
-        "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-4",
+        "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium leading-5",
         variants[variant],
         className,
       )}

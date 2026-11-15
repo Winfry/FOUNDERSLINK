@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { UsersRound } from "lucide-react";
 import type { ChamaListItem } from "@/types";
 import { EmptyState } from "@/components/empty-state";
 import { formatDay } from "@/components/labels";
@@ -15,13 +14,12 @@ export function ChamasView({ chamas }: { chamas: ChamaListItem[] }) {
       />
       {chamas.length === 0 ? (
         <EmptyState
-          icon={UsersRound}
           title="Chamas cannot be listed here yet"
           description="The dashboard cannot read chamas from the FoundersLink server yet, so this list is empty even when members have created some. Nothing is broken. The number of chamas is on the Overview page."
           action={
             <Link
               href="/overview"
-              className="inline-flex min-h-10 items-center rounded-btn border border-border bg-white px-4 text-sm font-bold text-primary hover:border-primary hover:bg-primary-light"
+              className="inline-flex min-h-10 items-center rounded-full border border-primary/30 bg-white px-5 text-sm font-medium text-primary hover:border-primary hover:bg-primary-light"
             >
               Go to overview
             </Link>

@@ -39,9 +39,9 @@ export function Dialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
-        className={cn("relative z-10 w-full max-w-md rounded-card border border-border bg-white p-6 shadow-xl", className)}
+        className={cn("relative z-10 w-full max-w-md rounded-card border border-border bg-white p-6 shadow-[0_24px_65px_rgba(40,24,78,0.14)]", className)}
       >
-        <h2 id="dialog-title" className="text-xl font-bold text-foreground">
+        <h2 id="dialog-title" className="text-2xl font-light text-navy">
           {title}
         </h2>
         {description ? <p className="mt-2 text-sm text-muted">{description}</p> : null}

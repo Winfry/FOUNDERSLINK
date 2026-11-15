@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Flag, Info } from "lucide-react";
 import type { ReportedMemberRow, ReportedMessageRow } from "@/types";
 import { reportMemberAction, reportMessageAction } from "@/app/actions/admin-actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -89,8 +88,7 @@ export function ReportsView({
       ) : null}
       <PageHeader title="Reports" description="Messages and members that other members have reported to FoundersLink." />
 
-      <div className="flex items-start gap-3 rounded-btn bg-primary-light px-4 py-3 text-sm font-medium text-foreground">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+      <div className="rounded-card bg-primary-light px-5 py-3.5 text-sm text-navy">
         <p>
           Dismiss a report that does not call for action: it is closed and no longer counts towards an automatic
           suspension. Suspending the member closes every open report about them. Both are recorded in the audit log with
@@ -110,7 +108,6 @@ export function ReportsView({
 
       {rows.length === 0 ? (
         <EmptyState
-          icon={Flag}
           title={tab === "messages" ? "No messages have been reported" : "No members have been reported"}
           description={
             tab === "messages"
@@ -124,9 +121,9 @@ export function ReportsView({
             <Card key={row.id}>
               <CardContent className="space-y-3 pt-6">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="text-base font-medium text-foreground">
-                    <span className="font-bold">{row.reporterName}</span> reported{" "}
-                    <span className="font-bold">{row.reportedMemberName}</span>
+                  <p className="text-base text-muted">
+                    <span className="font-medium text-navy">{row.reporterName}</span> reported{" "}
+                    <span className="font-medium text-navy">{row.reportedMemberName}</span>
                   </p>
                   <div className="flex items-center gap-2">
                     {row.aiWarning ? <Badge variant="warning">Flagged automatically</Badge> : null}
@@ -134,29 +131,29 @@ export function ReportsView({
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted">Their reason</p>
-                  <p className="text-sm font-medium text-foreground">{row.reason}</p>
+                  <p className="text-xs text-muted">Their reason</p>
+                  <p className="mt-0.5 text-sm text-foreground">{row.reason}</p>
                 </div>
                 {row.messageText ? (
                   <div>
-                    <p className="text-xs font-semibold text-muted">The reported message</p>
-                    <p className="mt-1 rounded-btn border-l-4 border-primary bg-surface px-4 py-3 text-sm font-medium text-foreground">
+                    <p className="text-xs text-muted">The reported message</p>
+                    <p className="mt-1 rounded-btn border-l-2 border-primary bg-background px-4 py-3 text-sm text-foreground">
                       {row.messageText}
                     </p>
                   </div>
                 ) : null}
                 {row.status === "handled" ? (
-                  <div className="rounded-btn bg-surface px-4 py-3">
-                    <p className="text-xs font-semibold text-muted">
+                  <div className="rounded-btn bg-background px-4 py-3">
+                    <p className="text-xs text-muted">
                       {row.handledOutcome === "suspended" ? "Member suspended" : "Dismissed"}
                       {row.handledBy ? ` by ${row.handledBy}` : ""}
                       {row.handledAt ? `, ${formatDayTime(row.handledAt)}` : ""}
                     </p>
-                    {row.handledNote ? <p className="text-sm font-medium text-foreground">{row.handledNote}</p> : null}
+                    {row.handledNote ? <p className="mt-0.5 text-sm text-foreground">{row.handledNote}</p> : null}
                   </div>
                 ) : null}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-                  <p className="text-xs font-semibold text-muted">Reported {formatDayTime(row.reportedAt)}</p>
+                  <p className="text-xs text-[#9A93A5]">Reported {formatDayTime(row.reportedAt)}</p>
                   {row.status === "open" ? (
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -198,11 +195,11 @@ export function ReportsView({
         onConfirm={resolve}
       >
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="report-reason" className="text-sm font-semibold text-foreground">
+          <label htmlFor="report-reason" className="text-sm font-medium text-navy">
             Written reason <span className="text-destructive">(required)</span>
           </label>
           <textarea id="report-reason" rows={3} autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className="field resize-y" />
-          <p className="text-xs font-semibold text-muted">
+          <p className="text-xs text-muted">
             {reasonLength >= MIN_REASON ? "Reason written." : `Write at least ${MIN_REASON} characters to turn on the button.`}
           </p>
         </div>

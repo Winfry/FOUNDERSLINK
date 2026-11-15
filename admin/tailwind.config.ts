@@ -42,8 +42,22 @@ const config: Config = {
         },
       },
       borderRadius: {
-        card: "16px",
+        card: "18px",
         btn: "12px",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter-tight)", "Inter Tight", "system-ui", "sans-serif"],
+      },
+      // The design never goes heavier than semibold: older pages that ask
+      // for bold or extra bold come out medium and semibold.
+      fontWeight: {
+        semibold: "500",
+        bold: "500",
+        extrabold: "600",
+        black: "600",
+      },
+      boxShadow: {
+        card: "0 6px 20px rgba(40, 24, 78, 0.05)",
       },
       ringColor: {
         DEFAULT: rgb("primary"),

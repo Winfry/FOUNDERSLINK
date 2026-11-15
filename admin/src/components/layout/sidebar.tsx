@@ -1,77 +1,104 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { AdminNavCounts } from "@/types";
+import type { AdminSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS } from "./nav-config";
+import { NAV_ITEMS, SETTINGS_ITEM, type NavItem } from "./nav-config";
 
 interface SidebarProps {
   navCounts: AdminNavCounts;
-  collapsed?: boolean;
+  session: AdminSession;
   onNavigate?: () => void;
 }
 
-export function Sidebar({ navCounts, collapsed, onNavigate }: SidebarProps) {
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function Item({ item, count, active, onNavigate }: { item: NavItem; count?: number; active: boolean; onNavigate?: () => void }) {
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative flex min-h-10 items-center overflow-hidden rounded-[10px] px-3 text-sm transition-colors focus-visible:outline-white",
+        active ? "bg-white/[0.12] text-white" : "text-white/70 hover:bg-white/[0.12] hover:text-white",
+      )}
+    >
+      {/* Gold marks where you are. */}
+      {active ? <span className="absolute inset-y-0 left-0 w-[3px] bg-accent" aria-hidden /> : null}
+      <span className="flex-1">{item.label}</span>
+      {count ? (
+        <span className="text-xs text-white/55" aria-label={`${count} waiting`}>
+          {count}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
+/**
+ * The staff side menu, as in the members' app: the wordmark, every page in
+ * words with how many are waiting beside it, headings for the groups, and
+ * who is signed in at the foot, with "Log out".
+ */
+export function Sidebar({ navCounts, session, onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
-    <aside className={cn("sticky top-0 flex h-screen flex-col bg-navy text-white", collapsed ? "w-16" : "w-64")}>
-      <div className="flex h-16 shrink-0 items-center px-5">
-        <Link href="/overview" className="flex items-center gap-3 rounded-btn focus-visible:outline-white" onClick={onNavigate}>
-          <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white p-1.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="" className="h-full w-full object-contain" />
-          </div>
-          {!collapsed ? (
-            <span className="leading-tight">
-              <span className="block text-[17px] font-extrabold">FoundersLink</span>
-              <span className="block text-xs font-semibold text-white/70">Admin</span>
-            </span>
-          ) : null}
-        </Link>
-      </div>
-      <nav aria-label="Main" className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          const count = item.countKey ? navCounts[item.countKey] : 0;
+    <aside className="sticky top-0 flex h-screen w-[252px] flex-col bg-navy px-4 pb-4 pt-[26px] text-white">
+      <Link href="/overview" className="rounded-btn px-3 pb-1 focus-visible:outline-white" onClick={onNavigate}>
+        <span className="block text-[17px] font-semibold tracking-tight">
+          FoundersLink<span className="text-accent">.</span>
+        </span>
+        <span className="block text-xs text-white/55">Staff</span>
+      </Link>
+
+      <nav aria-label="Main" className="mt-6 flex-1 space-y-0.5 overflow-y-auto">
+        {NAV_ITEMS.map((item, i) => {
+          const startsGroup = item.group && item.group !== NAV_ITEMS[i - 1]?.group;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "relative flex min-h-11 items-center gap-3 rounded-btn px-3 text-sm transition-colors focus-visible:outline-white",
-                active ? "bg-white/10 font-bold text-white" : "font-semibold text-white/80 hover:bg-white/10 hover:text-white",
-              )}
-            >
-              {/* Orange marks where you are. */}
-              {active ? <span className="absolute -left-3 top-2 h-7 w-1 rounded-r-full bg-accent" aria-hidden /> : null}
-              <Icon className={cn("h-5 w-5 shrink-0", active ? "text-accent" : "text-white/80")} strokeWidth={2} aria-hidden />
-              {!collapsed ? (
-                <>
-                  <span className="flex-1">{item.label}</span>
-                  {count > 0 ? (
-                    <span
-                      className="flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-2 text-xs font-bold text-navy"
-                      aria-label={`${count} waiting`}
-                    >
-                      {count}
-                    </span>
-                  ) : null}
-                </>
-              ) : null}
-            </Link>
+            <div key={item.href}>
+              {startsGroup ? <p className="mb-1.5 mt-[22px] px-3 text-[11px] text-[#B9ACD4]">{item.group}</p> : null}
+              <Item item={item} count={item.countKey ? navCounts[item.countKey] : undefined} active={isActive(item.href)} onNavigate={onNavigate} />
+            </div>
           );
         })}
       </nav>
-      {!collapsed ? (
-        <p className="px-5 pb-5 text-xs font-medium leading-5 text-white/60">
-          Every decision here is recorded with your written reason.
-        </p>
-      ) : null}
+
+      <div className="space-y-0.5 pt-2">
+        <Item item={SETTINGS_ITEM} active={isActive(SETTINGS_ITEM.href)} onNavigate={onNavigate} />
+        <div className="mt-2 flex items-center gap-2.5 border-t border-white/[0.16] px-2.5 pt-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-medium text-primary" aria-hidden>
+            {initials(session.name)}
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block truncate text-[13px]">{session.name}</span>
+            <span className="block text-xs text-[#C8BEDB]">Staff</span>
+          </span>
+          <button type="button" onClick={logout} className="rounded-full px-2 py-1 text-xs text-white/70 hover:bg-white/10 hover:text-white">
+            Log out
+          </button>
+        </div>
+        <p className="px-2.5 pt-3 text-[11px] leading-4 text-white/45">Every decision here is recorded with your written reason.</p>
+      </div>
     </aside>
   );
 }

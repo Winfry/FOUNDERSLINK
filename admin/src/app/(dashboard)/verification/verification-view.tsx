@@ -66,7 +66,7 @@ export function VerificationView({
           <Link href={`/verification/${row.original.id}`} className="text-link">
             {row.original.fullName}
           </Link>
-          <p className="text-xs font-medium text-muted">{row.original.email}</p>
+          <p className="text-xs text-muted">{row.original.email}</p>
         </div>
       ),
     },

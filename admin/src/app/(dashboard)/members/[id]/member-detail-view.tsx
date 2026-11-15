@@ -19,8 +19,8 @@ const notGiven = <span className="text-muted">Not given</span>;
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1 border-b border-border py-3 last:border-0 sm:grid-cols-[180px_1fr] sm:gap-4">
-      <dt className="text-sm font-medium text-muted">{label}</dt>
-      <dd className="break-words text-sm font-medium text-foreground">{children}</dd>
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="break-words text-sm text-foreground">{children}</dd>
     </div>
   );
 }
@@ -72,13 +72,13 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
         <ToastBanner message={toast.text} variant={toast.error ? "error" : "success"} onDismiss={() => setToast(null)} />
       ) : null}
 
-      <section className="rounded-card bg-navy p-6 text-white md:p-8">
-        <p className="text-sm font-semibold text-white/70">{roleLabel(member.role)}</p>
-        <h1 className="mt-1 break-words text-2xl font-extrabold leading-8">{member.fullName}</h1>
+      <section>
+        <p className="text-sm text-muted">{roleLabel(member.role)}</p>
+        <h1 className="mt-1 break-words text-[34px] font-light leading-[40px] text-navy md:text-[40px] md:leading-[44px]">{member.fullName}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <StatusBadge status={member.memberStatus} />
           <StatusBadge status={member.approvalStatus} />
-          <span className="text-xs font-semibold text-white/70">Joined {formatDay(member.joinedAt)}</span>
+          <span className="text-xs text-muted">Joined {formatDay(member.joinedAt)}</span>
         </div>
       </section>
 
@@ -102,14 +102,14 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
             <CardTitle>Verification</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm font-medium text-foreground">
+            <p className="text-sm text-foreground">
               {member.verificationSummary ?? "This member has not submitted a verification application yet."}
             </p>
             <Link
               href="/verification"
-              className="inline-flex min-h-10 items-center rounded-btn border border-border bg-white px-4 text-sm font-bold text-primary hover:border-primary hover:bg-primary-light"
+              className="inline-flex min-h-10 items-center rounded-full border border-primary/30 bg-white px-5 text-sm font-medium text-primary hover:border-primary hover:bg-primary-light"
             >
-              Open the verification queue
+              Open the verification queue →
             </Link>
           </CardContent>
         </Card>
@@ -125,7 +125,7 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
             ) : (
               <ul className="divide-y divide-border">
                 {member.consents.map((c) => (
-                  <li key={c.purpose} className="flex items-center justify-between gap-4 py-2.5 text-sm font-medium first:pt-0 last:pb-0">
+                  <li key={c.purpose} className="flex items-center justify-between gap-4 py-2.5 text-sm text-foreground first:pt-0 last:pb-0">
                     <span>{c.label}</span>
                     <Badge variant={c.granted ? "success" : "muted"}>{c.granted ? "Granted" : "Not granted"}</Badge>
                   </li>
@@ -146,9 +146,9 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
               <ul className="divide-y divide-border">
                 {member.reportsAgainst.map((r) => (
                   <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm first:pt-0 last:pb-0">
-                    <span className="font-medium text-foreground">{r.reason}</span>
+                    <span className="text-foreground">{r.reason}</span>
                     <span className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-muted">{formatDay(r.reportedAt)}</span>
+                      <span className="text-xs text-[#9A93A5]">{formatDay(r.reportedAt)}</span>
                       <StatusBadge status={r.status} />
                     </span>
                   </li>
@@ -202,7 +202,7 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
         onConfirm={confirmAction}
       >
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="member-reason" className="text-sm font-semibold text-foreground">
+          <label htmlFor="member-reason" className="text-sm font-medium text-navy">
             Written reason <span className="text-destructive">(required)</span>
           </label>
           <textarea
@@ -213,7 +213,7 @@ export function MemberDetailView({ member: initial }: { member: MemberDetail }) 
             onChange={(e) => setReason(e.target.value)}
             className="field resize-y"
           />
-          <p className="text-xs font-semibold text-muted">
+          <p className="text-xs text-muted">
             {reasonLength >= MIN_REASON ? "Reason written." : `Write at least ${MIN_REASON} characters to turn on the button.`}
           </p>
         </div>

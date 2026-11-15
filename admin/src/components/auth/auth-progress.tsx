@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Step = "login" | "verify" | "dashboard";
@@ -9,7 +8,7 @@ const STEPS: { id: Step; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
 ];
 
-// Orange marks the step you are on; done steps are blue.
+// Gold marks the step you are on; done steps are purple. Numbers, no icons.
 export function AuthProgress({ current }: { current: Step }) {
   const currentIndex = STEPS.findIndex((s) => s.id === current);
 
@@ -28,7 +27,7 @@ export function AuthProgress({ current }: { current: Step }) {
                 !done && !here && "border border-border bg-white text-muted",
               )}
             >
-              {done ? <Check className="h-4 w-4" aria-hidden /> : i + 1}
+              {i + 1}
             </span>
             <span className={cn("text-sm", here ? "font-bold text-foreground" : "font-semibold text-muted")}>{step.label}</span>
             {i < STEPS.length - 1 ? <span className="ml-1 h-px w-6 bg-border sm:w-10" aria-hidden /> : null}

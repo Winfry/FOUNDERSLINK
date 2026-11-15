@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 import type { RiskLevel, VerificationDetail } from "@/types";
 import { recheckDecisionAction, verificationDecisionAction, type DecisionResult } from "@/app/actions/admin-actions";
 import { approvalLabel, formatDay, formatDayTime, roleLabel } from "@/components/labels";
@@ -26,14 +25,14 @@ import { cn } from "@/lib/utils";
 const MIN_REASON = 8;
 
 const RISK_TEXT: Record<RiskLevel, string> = {
-  low: "text-green-700",
-  medium: "text-amber-700",
+  low: "text-[#28765D]",
+  medium: "text-[#8A6516]",
   high: "text-destructive",
 };
 
 const RISK_BAR: Record<RiskLevel, string> = {
-  low: "bg-green-600",
-  medium: "bg-amber-500",
+  low: "bg-[#28765D]",
+  medium: "bg-accent",
   high: "bg-destructive",
 };
 
@@ -46,8 +45,8 @@ const RISK_ADVICE: Record<RiskLevel, string> = {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1 border-b border-border py-3 last:border-0 sm:grid-cols-[160px_1fr] sm:gap-4">
-      <dt className="text-sm font-medium text-muted">{label}</dt>
-      <dd className="break-words text-sm font-medium text-foreground">{children}</dd>
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="break-words text-sm text-foreground">{children}</dd>
     </div>
   );
 }
@@ -131,30 +130,28 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
         <ToastBanner message={toast.text} variant={toast.error ? "error" : "success"} onDismiss={() => setToast(null)} />
       ) : null}
 
-      {/* The one bold thing on this page: who it is and how risky. */}
-      <section className="overflow-hidden rounded-card bg-navy text-white">
-        <div className="flex flex-col gap-6 p-6 md:flex-row md:items-stretch md:justify-between md:p-8">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white/70">Verification application</p>
-            <h1 className="mt-1 break-words text-2xl font-extrabold leading-8">{detail.fullName}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">{roleLabel(detail.role)}</span>
-              <StatusBadge status={detail.approvalStatus} />
-              <span className="text-xs font-semibold text-white/70">Submitted {formatDay(detail.submittedAt)}</span>
-            </div>
+      {/* Who it is, and how risky. */}
+      <section className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm text-muted">Verification application</p>
+          <h1 className="mt-1 break-words text-[34px] font-light leading-[40px] text-navy md:text-[40px] md:leading-[44px]">{detail.fullName}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge variant="default">{roleLabel(detail.role)}</Badge>
+            <StatusBadge status={detail.approvalStatus} />
+            <span className="text-xs text-muted">Submitted {formatDay(detail.submittedAt)}</span>
           </div>
-          <div className="flex shrink-0 overflow-hidden rounded-btn bg-white text-foreground md:w-80">
-            <span className={cn("w-2 shrink-0", RISK_BAR[detail.riskLevel])} aria-hidden />
-            <div className="p-4">
-              <p className="text-xs font-semibold text-muted">Risk level</p>
-              <p className={cn("text-[32px] font-extrabold leading-10", RISK_TEXT[detail.riskLevel])}>
-                {RISK_LABEL[detail.riskLevel]}
-              </p>
-              <p className="mt-1 text-sm font-medium text-muted">
-                {signalCount === 0 ? "No risk signals. " : signalCount === 1 ? "1 risk signal. " : `${signalCount} risk signals. `}
-                {RISK_ADVICE[detail.riskLevel]}
-              </p>
-            </div>
+        </div>
+        <div className="flex shrink-0 overflow-hidden rounded-card border border-border bg-white shadow-card md:w-80">
+          <span className={cn("w-1 shrink-0", RISK_BAR[detail.riskLevel])} aria-hidden />
+          <div className="px-5 py-[18px]">
+            <p className="text-xs text-muted">Risk level</p>
+            <p className={cn("mt-2 text-[30px] font-light leading-9 tracking-tight", RISK_TEXT[detail.riskLevel])}>
+              {RISK_LABEL[detail.riskLevel]}
+            </p>
+            <p className="mt-2 text-[13px] text-muted">
+              {signalCount === 0 ? "No risk signals. " : signalCount === 1 ? "1 risk signal. " : `${signalCount} risk signals. `}
+              {RISK_ADVICE[detail.riskLevel]}
+            </p>
           </div>
         </div>
       </section>
@@ -167,9 +164,11 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           </CardHeader>
           <CardContent>
             {signalCount === 0 ? (
-              <div className="flex items-start gap-3 rounded-btn bg-success-light p-4">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-700" aria-hidden />
-                <p className="text-sm font-medium text-foreground">
+              <div className="flex items-start gap-3 rounded-btn bg-[#E7F3EE] p-4">
+                <Badge variant="success" className="shrink-0 bg-white">
+                  Nothing found
+                </Badge>
+                <p className="text-sm text-foreground">
                   The rules found nothing unusual in this application. That is not an approval: read what they submitted.
                 </p>
               </div>
@@ -177,11 +176,11 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
               <ul className="space-y-3">
                 {detail.riskSignals.map((s) => (
                   <li key={s.id} className="flex items-start gap-3 rounded-btn border border-border p-4">
-                    <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full", detail.riskLevel === "high" ? "bg-destructive-light text-destructive" : "bg-warning-light text-amber-700")}>
-                      <AlertTriangle className="h-4 w-4" aria-hidden />
-                    </span>
+                    <Badge variant={detail.riskLevel === "high" ? "destructive" : "warning"} className="mt-0.5 shrink-0">
+                      Needs attention
+                    </Badge>
                     <div className="min-w-0">
-                      <p className="text-base font-semibold text-foreground">{s.text}</p>
+                      <p className="text-base text-navy">{s.text}</p>
                       {s.explanation ? <p className="mt-1 text-sm text-muted">{s.explanation}</p> : null}
                     </div>
                   </li>
@@ -229,7 +228,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
       {awaiting ? (
       <Card className="border-primary/30">
         <CardHeader>
-          <h2 className="text-xl font-bold text-foreground">Your decision</h2>
+          <h2 className="text-2xl font-light text-navy">Your decision</h2>
           <CardDescription>
             Write your reason first. The three buttons turn on once the reason is at least {MIN_REASON} characters. It is
             saved in the audit log with your name, and is not sent to the applicant.
@@ -237,7 +236,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="decision-reason" className="text-sm font-semibold text-foreground">
+            <label htmlFor="decision-reason" className="text-sm font-medium text-navy">
               Written reason <span className="text-destructive">(required)</span>
             </label>
             <textarea
@@ -249,7 +248,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
               className="field resize-y"
               aria-describedby="decision-reason-help"
             />
-            <p id="decision-reason-help" className={cn("text-xs font-semibold", canAct ? "text-green-700" : "text-muted")}>
+            <p id="decision-reason-help" className={cn("text-xs", canAct ? "text-[#28765D]" : "text-muted")}>
               {canAct
                 ? "Reason written. Choose a decision below."
                 : reasonLength === 0
@@ -259,8 +258,8 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="member-message" className="text-sm font-semibold text-foreground">
-              Message to the applicant <span className="font-medium text-muted">(optional)</span>
+            <label htmlFor="member-message" className="text-sm font-medium text-navy">
+              Message to the applicant <span className="font-normal text-muted">(optional)</span>
             </label>
             <textarea
               id="member-message"
@@ -271,20 +270,20 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
               className="field resize-y"
               aria-describedby="member-message-help"
             />
-            <p id="member-message-help" className="text-xs font-semibold text-muted">
+            <p id="member-message-help" className="text-xs text-muted">
               If you leave it empty: a rejection sends a standard message that says nothing about our checks, and
               &quot;Needs more info&quot; sends your reason, so write that reason for them. Never name a risk signal here.
             </p>
           </div>
 
-          <div className="rounded-btn bg-surface p-4">
-            <p className="text-sm font-semibold text-foreground">Checks you made (optional)</p>
+          <div className="rounded-card bg-background p-5">
+            <p className="text-sm font-medium text-navy">Checks you made (optional)</p>
             <p className="mt-0.5 text-sm text-muted">
               Record what you verified yourself, for example a BRS lookup of the business or a call to a reference. They are saved with your decision.
             </p>
             <div className="mt-3 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_140px_180px_auto]">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="check-type" className="text-sm font-semibold text-foreground">
+                <label htmlFor="check-type" className="text-sm font-medium text-navy">
                   What you checked
                 </label>
                 <select
@@ -306,7 +305,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="check-result" className="text-sm font-semibold text-foreground">
+                <label htmlFor="check-result" className="text-sm font-medium text-navy">
                   Result
                 </label>
                 <select id="check-result" className="field !w-full" value={checkResult} onChange={(e) => setCheckResult(e.target.value as "passed" | "failed")}>
@@ -315,7 +314,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="check-method" className="text-sm font-semibold text-foreground">
+                <label htmlFor="check-method" className="text-sm font-medium text-navy">
                   How
                 </label>
                 <select id="check-method" className="field !w-full" value={checkMethod} onChange={(e) => setCheckMethod(e.target.value as CheckMethod)}>
@@ -334,16 +333,16 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
               <ul className="mt-3 space-y-2">
                 {checks.map((c, i) => (
                   <li key={i} className="flex items-center gap-3 rounded-btn border border-border bg-white px-3 py-2 text-sm">
-                    <span className="flex-1 font-semibold text-foreground">{CHECK_TYPE_LABEL[c.checkType]}</span>
+                    <span className="flex-1 font-medium text-navy">{CHECK_TYPE_LABEL[c.checkType]}</span>
                     <Badge variant={c.result === "passed" ? "success" : "destructive"}>{c.result === "passed" ? "Passed" : "Failed"}</Badge>
-                    <span className="text-xs font-semibold text-muted">{CHECK_METHOD_LABEL[c.method]}</span>
+                    <span className="text-xs text-muted">{CHECK_METHOD_LABEL[c.method]}</span>
                     <button
                       type="button"
                       onClick={() => setChecks((list) => list.filter((_, j) => j !== i))}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-primary hover:bg-primary-light"
+                      className="inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium text-primary hover:bg-primary-light"
                       aria-label={`Remove check: ${CHECK_TYPE_LABEL[c.checkType]}`}
                     >
-                      <X className="h-4 w-4" aria-hidden />
+                      Remove
                     </button>
                   </li>
                 ))}
@@ -361,14 +360,14 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
             <Button type="button" variant="destructive" className="min-h-11 sm:ml-auto" disabled={!canAct || pending} onClick={() => submit("rejected")}>
               Reject
             </Button>
-            {pending ? <p className="w-full text-sm font-semibold text-muted">Saving your decision…</p> : null}
+            {pending ? <p className="w-full text-sm text-muted">Saving your decision…</p> : null}
           </div>
         </CardContent>
       </Card>
       ) : detail.recheck ? (
         <Card className="border-primary/30">
           <CardHeader>
-            <h2 className="text-xl font-bold text-foreground">Re-check due</h2>
+            <h2 className="text-2xl font-light text-navy">Re-check due</h2>
             <CardDescription>
               {detail.recheck.reason}. They are approved; decide whether they stay approved for another year. Write your
               reason first: it is saved in the audit log with your name, and sent to them if you suspend.
@@ -376,7 +375,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="recheck-reason" className="text-sm font-semibold text-foreground">
+              <label htmlFor="recheck-reason" className="text-sm font-medium text-navy">
                 Written reason <span className="text-destructive">(required)</span>
               </label>
               <textarea
@@ -387,7 +386,7 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                 placeholder="What you checked again, and what you found"
                 className="field resize-y"
               />
-              <p className={cn("text-xs font-semibold", canAct ? "text-green-700" : "text-muted")}>
+              <p className={cn("text-xs", canAct ? "text-[#28765D]" : "text-muted")}>
                 {canAct ? "Reason written. Choose below." : `At least ${MIN_REASON} characters.`}
               </p>
             </div>
@@ -398,14 +397,14 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
               <Button type="button" variant="destructive" className="min-h-11 sm:ml-auto" disabled={!canAct || pending} onClick={() => decideRecheck("suspend")}>
                 Suspend
               </Button>
-              {pending ? <p className="w-full text-sm font-semibold text-muted">Saving…</p> : null}
+              {pending ? <p className="w-full text-sm text-muted">Saving…</p> : null}
             </div>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-bold text-foreground">Nothing to decide</h2>
+            <h2 className="text-2xl font-light text-navy">Nothing to decide</h2>
             <CardDescription>
               {detail.approvalStatus === "needs_info"
                 ? "You asked them for more. The decision buttons come back when they resubmit."
@@ -430,13 +429,13 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
                 <li key={d.id} className="py-3 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={d.decision} />
-                    <span className="text-xs font-semibold text-muted">
+                    <span className="text-xs text-[#9A93A5]">
                       {formatDayTime(d.decidedAt)} · {d.by}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-sm font-medium text-foreground">{d.reason || approvalLabel(d.decision)}</p>
+                  <p className="mt-1.5 text-sm text-foreground">{d.reason || approvalLabel(d.decision)}</p>
                   {d.checks && d.checks.length > 0 ? (
-                    <p className="mt-1 text-xs font-semibold text-muted">
+                    <p className="mt-1 text-xs text-muted">
                       Checks: {d.checks.map((c) => `${CHECK_TYPE_LABEL[c.checkType]}, ${CHECK_METHOD_LABEL[c.method].toLowerCase()} (${c.result})`).join("; ")}
                     </p>
                   ) : null}

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { RefreshCw } from "lucide-react";
 import type { RecheckListItem } from "@/types";
 import { EmptyState } from "@/components/empty-state";
 import { formatDay, roleLabel } from "@/components/labels";
@@ -17,7 +16,6 @@ export function RechecksView({ items }: { items: RecheckListItem[] }) {
       />
       {items.length === 0 ? (
         <EmptyState
-          icon={RefreshCw}
           title="No re-checks are due"
           description="Approved members come back to this list when it is time to look at their verification again."
         />
@@ -38,14 +36,14 @@ export function RechecksView({ items }: { items: RecheckListItem[] }) {
             <tbody>
               {items.map((row) => (
                 <Tr key={row.id}>
-                  <Td className="font-semibold">{row.fullName}</Td>
+                  <Td className="font-medium text-navy">{row.fullName}</Td>
                   <Td>{roleLabel(row.role)}</Td>
                   <Td className="whitespace-nowrap">{row.lastCheckedAt ? formatDay(row.lastCheckedAt) : "Never"}</Td>
                   <Td className="text-muted">{row.dueReason}</Td>
                   <Td className="text-right">
                     <Link
                       href={row.id.startsWith("rc-") ? `/verification/vet-${row.memberId}` : `/verification/${row.id}`}
-                      className="inline-flex min-h-10 items-center whitespace-nowrap rounded-btn border border-border bg-white px-4 text-sm font-bold text-primary hover:border-primary hover:bg-primary-light"
+                      className="inline-flex min-h-10 items-center whitespace-nowrap rounded-full border border-primary/30 bg-white px-5 text-sm font-medium text-primary hover:border-primary hover:bg-primary-light"
                     >
                       Review verification
                     </Link>

@@ -1,6 +1,5 @@
 "use client";
 
-import { Info, Scale } from "lucide-react";
 import type { ComplianceSourceRow } from "@/types";
 import { EmptyState } from "@/components/empty-state";
 import { formatDay } from "@/components/labels";
@@ -27,8 +26,7 @@ export function ComplianceSourcesView({ sources }: { sources: ComplianceSourceRo
         title="Compliance sources"
         description="The official sources that Ask Compliance answers from, and how recently each one was checked. Those needing attention are first."
       />
-      <div className="flex items-start gap-3 rounded-btn bg-primary-light px-4 py-3 text-sm font-medium text-foreground">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+      <div className="rounded-card bg-primary-light px-5 py-3.5 text-sm text-navy">
         <p>
           This page is read-only for now. Marking a source as reviewed from the dashboard is not available yet.
           {sources.length > 0
@@ -40,7 +38,6 @@ export function ComplianceSourcesView({ sources }: { sources: ComplianceSourceRo
       </div>
       {sources.length === 0 ? (
         <EmptyState
-          icon={Scale}
           title="No compliance sources are listed"
           description="Each official source that Ask Compliance relies on will be listed here with the date it was last checked."
         />
@@ -51,13 +48,13 @@ export function ComplianceSourcesView({ sources }: { sources: ComplianceSourceRo
               <CardContent className="pt-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[17px] font-bold text-foreground">{s.name}</p>
+                    <p className="text-[17px] font-medium text-navy">{s.name}</p>
                     {s.covers ? <p className="text-sm text-muted">{coversText(s.covers)}</p> : null}
                   </div>
                   <StatusBadge status={s.status} />
                 </div>
-                {s.reviewNote ? <p className="mt-3 text-sm font-medium text-foreground">{s.reviewNote}</p> : null}
-                <p className="mt-3 text-xs font-semibold text-muted">
+                {s.reviewNote ? <p className="mt-3 text-sm text-foreground">{s.reviewNote}</p> : null}
+                <p className="mt-3 text-xs text-[#9A93A5]">
                   {s.lastUpdatedAt ? `Last checked ${formatDay(s.lastUpdatedAt)}` : "Never checked against the official source"}
                   {s.lastReviewedAt ? ` · Last reviewed ${formatDay(s.lastReviewedAt)}` : ""}
                 </p>
