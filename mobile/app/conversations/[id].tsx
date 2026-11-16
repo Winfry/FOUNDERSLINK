@@ -56,8 +56,11 @@ export default function ConversationThreadScreen() {
 
   const { show } = useToast();
 
-  // The header names who she is talking to, when the chat list has been seen.
-  const title = qc.getQueryData<ConversationSummary[]>(['conversations'])?.find((c) => c.id === id)?.title;
+  // The header names who she is talking to ("Grace Njoroge"), even when the
+  // chat was opened straight from a link.
+  const listQ = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list() });
+  // Just the name: "Grace Njoroge · ClinicBook deal room" is too long for a phone.
+  const title = listQ.data?.find((c: ConversationSummary) => c.id === id)?.title.split(' · ')[0];
 
   if (q.isLoading) return <ScreenLoading />;
   if (q.isError && !q.data) {

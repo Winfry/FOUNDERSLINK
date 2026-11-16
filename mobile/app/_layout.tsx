@@ -74,7 +74,8 @@ function BackHeader({ title }: { title: string }) {
 
 const withBack = (title: string) => ({
   headerShown: true,
-  header: () => <BackHeader title={title} />,
+  // A screen can name itself once it knows more (a chat names the person).
+  header: ({ options }: { options: { title?: string } }) => <BackHeader title={options.title ?? title} />,
 });
 
 const OPEN_AREAS = new Set([undefined, 'auth', 'welcome', 'splash']);
