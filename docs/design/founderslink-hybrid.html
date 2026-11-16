@@ -205,6 +205,14 @@
   .need .row span { font-size: .84em; color: var(--muted); }
   .need .row em { font-style: normal; color: var(--purple); font-weight: 500; font-size: .84em; white-space: nowrap; padding-top: 2px; }
   .seeall { border: 0; background: none; padding: 12px 0 0; border-top: 1px solid var(--line); width: 100%; text-align: left; color: var(--purple); font: inherit; font-weight: 500; font-size: .9em; cursor: pointer; }
+  .rates { margin-top: 8px; }
+  .rates .price { font-weight: 500; font-size: .9em; }
+  .rates .free { color: var(--pos); font-size: .84em; }
+  .rates .fit { font-size: .8em; color: var(--pos); }
+  .rates .over { font-size: .8em; color: var(--late); }
+  .ratelist { background: var(--paper); border-radius: 12px; padding: 8px 12px; margin-top: 6px; font-size: .84em; line-height: 1.6; }
+  .ratelist small { display: block; color: var(--muted); font-size: .9em; margin-top: 4px; }
+  .cardtoggle { border: 0; background: none; padding: 4px 0 0; color: var(--purple); font: inherit; font-weight: 500; font-size: .84em; cursor: pointer; }
   .cpq { display: block; width: 100%; text-align: left; border: 1px solid var(--line2); background: #fff; color: var(--purple); border-radius: 12px; padding: 10px 12px; margin-top: 6px; font: inherit; font-size: .88em; cursor: pointer; }
   .tabsrow { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
   .tabsrow button { flex-shrink: 0; border: 1px solid var(--line2); background: #fff; border-radius: 99px; padding: 8px 13px; font-weight: 500; font-size: .84em; color: var(--muted); }
@@ -795,6 +803,8 @@
       ['Legal, tax and audit only for the licensed', 'A mentor cannot offer land law. The backend refuses it.'],
     ] },
     icopilot: { title: 'Co-pilot: who can help me check this?', sub: 'An investor new to a sector asks in her own words, in English or Kiswahili.', items: [
+      ['Within her budget', '"…for under KES 7,000": the advocate whose land search fits comes first, and the other is marked above budget.'],
+      ['Every expert\'s rate card', 'The price for her need, a free first consultation if offered, and the whole card one tap away. She pays the expert directly.'],
       ['She asks, plainly', '"I want to invest in a farming business. Which advocates know land law?"'],
       ['What to check, in plain words', 'In farming, land is often the biggest risk: the title, the lease, any loan on it.'],
       ['Verified experts, with why', 'Advocates who know land law and work with farms, LSK register checked, sessions left this month.'],
@@ -907,7 +917,7 @@
   const S = {
     role: 'founder', screen: 'home', lang: 'en', large: false,
     done: new Set(['kra', 'brs', 'permit', 'data']), openStep: null, invTab: 'ready', requested: new Set(), openInv: 'david',
-    chat: [], typing: false, dealOpen: 'accountant', cpAsked: [], cpSent: new Set(), cpOpen: null, cpReporting: null, cpReported: new Set(), eCat: 'legal', eProf: 'lawyer', invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
+    chat: [], typing: false, cpCard: new Set(), dealOpen: 'accountant', cpAsked: [], cpSent: new Set(), cpOpen: null, cpReporting: null, cpReported: new Set(), eCat: 'legal', eProf: 'lawyer', invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
     inv: null, asked: new Set(), iRequested: new Set(['njeri']),
     share: Object.fromEntries(INVESTMENTS.map((i) => [i.id, i.share])),
     eAnswer: {}, eDone: new Set(),
@@ -1407,6 +1417,8 @@
         <div class="label">${tt.offer}</div>
         <p style="margin:6px 0">${tt.offerLine}</p>
         <span class="tag good">${tt.hours}</span>
+        <div class="label" style="margin-top:14px">${S.lang === 'sw' ? 'Bei zako' : 'Your rate card'}</div>
+        <div class="ratelist">${RATES.kamau.map(rateL).join('<br>')}<small>${S.lang === 'sw' ? 'Wanachama wanaona bei kabla ya kukuomba, na hukulipa moja kwa moja.' : 'Members see it before they ask you, and pay you directly.'}</small></div>
         <div class="label" style="margin-top:14px">${S.lang === 'sw' ? 'Anachobobea' : 'What she specialises in'}</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${(S.lang === 'sw' ? ['Sheria ya kampuni', 'Mikataba ya uwekezaji', 'Ulinzi wa data'] : ['Company law', 'Investment deals', 'Data protection']).map((x) => `<span class="tag good">${x}</span>`).join('')}</div>
         <p class="p" style="font-size:.8em;margin:8px 0 0">${S.lang === 'sw' ? 'Wanachama wakiuliza mtaalamu wa mambo haya, utaonekana.' : 'When members ask the Co-pilot for these, she is suggested.'}</p>
@@ -1491,6 +1503,7 @@
           ${open ? `<div style="margin-top:10px"><div class="person" style="align-items:center">${av(n.expert, 44)}<div style="flex:1"><div class="pname">${FULL[n.expert]}</div><div class="porg">${e.org}</div></div><span class="tag paid">Licensed</span></div>
             <div class="trustbox"><b>${e.trust}</b><span>On the official register, checked there by FoundersLink.</span></div>
             <div class="porg" style="margin-top:6px">${e.bio}</div>
+            ${rateBlock(n.expert, { accountant: 'audit', company_advocate: 'company', health_data: 'data_protection' }[n.id], null, 'deal' + n.id)}
             ${S.cpSent.has(key) ? `<div class="sent" style="margin-top:10px">Request sent. ${first} will answer in your notifications, and you can then message them.</div>` : `<button class="btn soft" style="margin-top:10px" data-act="cpsend" data-id="${key}">Ask ${first} for a session</button>`}
             ${S.cpReported.has(n.expert) ? `<p class="p" style="color:var(--pos);font-size:.82em;margin:8px 0 0">Thank you. A person at FoundersLink will look into it, and ${first} can respond before anything is decided.</p>` : S.cpReporting === key ? `<div class="reportbox"><b style="font-weight:500;font-size:.88em">What happened?</b>
                 <div class="porg" style="font-size:.76em;margin-top:2px">Only FoundersLink staff read this. ${first} can respond, and one report alone never removes anyone.</div>
@@ -1537,6 +1550,14 @@
       : trust === 'certified'
         ? `<label class="field">Your qualification<input placeholder="e.g. Certified Information Systems Auditor"></label><label class="field">Awarded by<input placeholder="e.g. ISACA"></label>`
         : '';
+    const rateCard = `<div class="label" style="margin-top:18px">Your rate card (optional)</div>
+      <div class="porg" style="font-size:.8em;margin-top:2px">What you charge. Members see it before they ask you, and the Co-pilot suggests you to those within budget. They pay you directly: FoundersLink never handles the money.${S.eProf === 'lawyer' ? ' Your prices must follow the Advocates (Remuneration) Order.' : ''}</div>
+      <div class="reportbox" style="background:#fff;border:1px solid var(--line)">
+        <label class="field" style="margin-top:0">What you do<input value="${S.eProf === 'lawyer' ? 'Land search and title report' : S.eProf === 'valuer' ? 'Farm and equipment valuation' : ''}" placeholder="e.g. Land search and title report"></label>
+        <div class="chiprow" style="margin:10px 0 0"><button class="on">Fixed price</button><button>Per hour</button><button>Free</button></div>
+        <label class="field">Price (KES)<input value="${S.eProf === 'lawyer' ? '8000' : S.eProf === 'valuer' ? '30000' : ''}" placeholder="e.g. 8000"></label>
+      </div>
+      <button class="btn ghost" style="margin-top:8px">Add another line</button>`;
     return top(`<button class="backlink" data-act="go" data-to="eprofile" style="color:#fff;padding:14px 0 0;position:relative;z-index:1">← Profile</button><h1 class="title" style="margin-top:8px">Your expert profile</h1><div class="tsub">Before you are shown, a person at FoundersLink checks you.</div>`) + `<div class="body">
       <div class="label">What kind of work do you do?</div>
       <div class="chiprow">${ECATS.map(([id, l]) => `<button class="${S.eCat === id ? 'on' : ''}" data-act="ecat" data-id="${id}">${l}</button>`).join('')}</div>
@@ -1544,6 +1565,7 @@
       <div class="profcards">${EPROFS.filter((x) => x[1] === S.eCat).map((x) => `<button class="${S.eProf === x[0] ? 'on' : ''}" data-act="eprof" data-id="${x[0]}"><b>${x[2]}</b><span>${x[3]}</span></button>`).join('')}</div>
       <div class="trustbox" style="margin-top:14px"><b>${ETRUST[trust]} · ${label}</b><span>${how}</span></div>
       ${fields}
+      ${rateCard}
       <button class="btn primary" style="margin-top:16px" data-act="go" data-to="eprofile">Save and continue</button>
     </div>`;
   }
@@ -1551,6 +1573,7 @@
   // ---------------- The investor's Co-pilot: who can help ----------------
   const CP_PROMPTS = [
     'I want to invest in a farming business. Which advocates know land law?',
+    'Who can do a land search for a farm in Nakuru for under KES 7,000?',
     'Who can check a business’s books before I invest?',
     'I need help reading a term sheet',
     'Nani anajua sheria ya ardhi Nakuru?',
@@ -1562,13 +1585,41 @@
     mutua: { trust: 'Licensed · ICPAK · checked 15 Sep 2026', org: 'Accountant · Mutua CPA', bio: 'Tax, eTIMS and books for farms and small food businesses.', left: 4, helped: 9 },
     njambi: { trust: 'Licensed · ICPAK · checked 5 Oct 2026', org: 'Accountant · Njambi & Partners', bio: 'Checks the numbers before you invest: audits and due diligence.', left: 2, helped: 5 },
   };
+  const RATES = {
+    kiprono: [['First consultation (30 minutes)', 'land_property', 'free'], ['Land search and title report', 'land_property', 'fixed', 8000], ['Lease review', 'land_property', 'fixed', 15000], ['Contract review', 'contracts', 'hour', 3000]],
+    atieno: [['First consultation (30 minutes)', 'land_property', 'free'], ['Land search and title report', 'land_property', 'fixed', 6500], ['Title transfer', 'land_property', 'fixed', 25000]],
+    kamau: [['First consultation (30 minutes)', 'company', 'free'], ['Company papers check', 'company', 'fixed', 12000], ['Shareholders agreement review', 'investment_deals', 'fixed', 35000], ['Data protection registration', 'data_protection', 'fixed', 20000]],
+    mutua: [['VAT and eTIMS set-up', 'tax', 'fixed', 10000], ['Tax advice', 'tax', 'hour', 2500], ['Monthly bookkeeping', 'bookkeeping', 'fixed', 8000]],
+    njambi: [['Financial due diligence', 'audit', 'fixed', 45000], ['Books review', 'bookkeeping', 'fixed', 15000]],
+  };
+  const kes = (n) => `KES ${n.toLocaleString('en-KE')}`;
+  const priceW = ([, , unit, price]) => (unit === 'free' ? 'Free' : unit === 'hour' ? `${kes(price)} an hour` : kes(price));
+  const rateL = (r) => `${r[0]}: ${priceW(r)}`;
+  // The price for her need: the cheapest paid line in that area.
+  const priceOf = (id, area) => (RATES[id] ?? []).filter((r) => r[2] !== 'free' && (!area || r[1] === area)).sort((a, b) => a[3] - b[3])[0] ?? null;
+  // "under KES 7,000", "below 10k": her budget, or null.
+  const budgetOf = (t) => { const m = /(?:under|below|less than|up to|chini ya)\s*(?:kes|ksh)?\s*([\d,]+)\s*(k)?/.exec(t); if (!m) return null; const n = Number(m[1].replace(/,/g, '')) * (m[2] ? 1000 : 1); return n >= 100 ? n : null; };
+  function rateBlock(id, area, budget, key) {
+    const r = RATES[id]; if (!r) return '';
+    const first = FULL[id].split(' ')[0]; const price = priceOf(id, area); const free = r.find((x) => x[2] === 'free');
+    const fit = price && budget ? (price[2] === 'free' || price[3] <= budget) : null;
+    return `<div class="rates">
+      ${price ? `<div class="price">${rateL(price)}</div>` : ''}
+      ${fit === true ? `<div class="fit">Within your budget of ${kes(budget)}</div>` : fit === false ? `<div class="over">Above your budget of ${kes(budget)}</div>` : ''}
+      ${free ? `<div class="free">${free[0]}: free</div>` : ''}
+      ${S.cpCard.has(key) ? `<div class="ratelist">${r.map(rateL).join('<br>')}<small>You pay ${first} directly. FoundersLink never handles the money.</small></div>` : ''}
+      <button class="cardtoggle" data-act="cpcard" data-id="${key}">${S.cpCard.has(key) ? 'Hide rate card' : `See ${first}’s rate card`}</button></div>`;
+  }
   function cpAnswer(q) {
     const t = q.toLowerCase();
     const sw = /\b(nani|nahitaji|sheria|ardhi|wakili|shamba)\b/.test(t);
     const county = ['Nakuru', 'Kisumu', 'Nairobi'].find((c) => t.includes(c.toLowerCase()));
     if (/land|ardhi|title|lease|shamba|farm|agri|kilimo|dairy/.test(t)) {
-      const order = county === 'Kisumu' ? ['atieno', 'kiprono'] : ['kiprono', 'atieno'];
+      const budget = budgetOf(t);
+      const fits = (id) => (budget ? (priceOf(id, 'land_property')?.[3] ?? Infinity) <= budget : false);
+      const order = budget ? ['kiprono', 'atieno'].sort((a, b) => Number(fits(b)) - Number(fits(a))) : county === 'Kisumu' ? ['atieno', 'kiprono'] : ['kiprono', 'atieno'];
       return {
+        areaKey: 'land_property', budget,
         area: sw ? 'Sheria ya ardhi na mali' : 'Land and property law',
         explain: sw
           ? 'Katika kilimo, ardhi mara nyingi ndiyo hatari kubwa zaidi. Kabla ya kuwekeza, hakikisha nani anamiliki ardhi (hati miliki au ukodishaji uliosajiliwa), kwamba ukodishaji ni mrefu kuliko uwekezaji wako, na hakuna mzozo au mkopo juu ya hati. Wakili anayejua sheria ya ardhi anaweza kukufanyia utafutaji rasmi kwenye sajili ya Ardhi.'
@@ -1579,11 +1630,11 @@
     }
     if (/book|account|tax|kra|vat|numbers|audit|hesabu|kodi/.test(t)) {
       return { area: 'Bookkeeping and accounts', explain: 'An accountant who knows bookkeeping can look at the business’s numbers and tell you whether they hold up: sales, costs, what is owed to KRA, and whether the books match the bank statements.',
-        experts: [['njambi', ['Audit and due diligence']], ['mutua', ['Bookkeeping and accounts']]], sw: false };
+        areaKey: 'audit', experts: [['njambi', ['Audit and due diligence']], ['mutua', ['Bookkeeping and accounts']]], sw: false };
     }
     if (/term sheet|shareholder|agreement|equity|convertible|mkataba/.test(t)) {
       return { area: 'Investment deals', explain: 'Before you sign, an advocate who does investment deals can read the terms, the shareholders agreement and the company papers, and tell you what you get for your money.',
-        experts: [['kamau', ['Investment deals']]], sw: false };
+        areaKey: 'investment_deals', experts: [['kamau', ['Investment deals']]], sw: false };
     }
     return { area: null, explain: 'I could not tell exactly what help you need, so here are the verified experts who fit best. Tell me a little more (for example "land", "tax" or "contract") and I can narrow it down.',
       experts: [['kamau', []], ['njambi', []]], sw: false };
@@ -1607,6 +1658,7 @@
               <div class="trustbox"><b>${e.trust}</b><span>On the official register, checked there by FoundersLink.</span></div>
               ${reasons.length ? `<ol class="why" style="margin:8px 0 4px">${reasons.map((r) => `<li>${r}</li>`).join('')}</ol>` : ''}
               <div class="porg">${e.bio}</div>
+              ${rateBlock(id, a.areaKey, a.budget, 'cp' + key)}
               <div class="porg" style="margin-top:4px;font-size:.8em">${e.left} free sessions left this month · Has helped ${e.helped} people</div>
               ${action}
               ${S.cpReported.has(id) ? `<p class="p" style="color:var(--pos);font-size:.82em;margin:8px 0 0">Thank you. A person at FoundersLink will look into it, and ${first} can respond before anything is decided.</p>`
@@ -1673,6 +1725,7 @@
       case 'cpcancel': S.cpOpen = null; render(); renderWeb(); break;
       case 'cpsend': S.cpSent.add(b.dataset.id); S.cpOpen = null; render(); renderWeb(); break;
       case 'cpreport': S.cpReporting = b.dataset.id; render(); renderWeb(); break;
+      case 'cpcard': S.cpCard.has(b.dataset.id) ? S.cpCard.delete(b.dataset.id) : S.cpCard.add(b.dataset.id); render(); renderWeb(); break;
       case 'dneed': S.dealOpen = S.dealOpen === b.dataset.id ? null : b.dataset.id; render(); renderWeb(); break;
       // "See who you may need at every step": the guide answers the whole path.
       case 'dealplan': S.screen = 'guide'; if (!S.chat.some((m) => m.q === 'raise')) S.chat.push({ from: 'me', q: 'raise' }, { from: 'guide', q: 'raise' }); render(); break;
@@ -1905,6 +1958,7 @@
         </div><div>
           <div class="card"><p class="h" style="margin:0 0 4px">How members see you</p><div class="trustbox"><b>Licensed · LSK · checked 2 Nov 2026</b><span>On the official register, checked there by FoundersLink.</span></div>
             <p class="p" style="font-size:13px;margin:10px 0 0">Every member who sees you can report you. A person at FoundersLink looks into it, and you can respond before anything is decided.</p></div>
+          <div class="card"><div class="label">Your rate card</div><div class="ratelist">${RATES.kamau.map(rateL).join('<br>')}<small>Members see it before they ask you, and pay you directly.</small></div></div>
           <div class="card"><div class="label">What you offer</div><p style="margin:6px 0 10px">Agreements, incorporation, contracts. Health and fintech, in Nairobi and Kiambu.</p><span class="tag good">4 office hours a month</span></div>
         </div></div>`
       : W.page === 'copilot' ? `<div class="wband"><h3>Co-pilot</h3><div class="wsub">Ask who can help you check a business before you invest.</div></div>
@@ -1942,6 +1996,7 @@
       if (a === 'cpcancel') S.cpOpen = null;
       if (a === 'cpsend') { S.cpSent.add(cp.dataset.id); S.cpOpen = null; }
       if (a === 'cpreport') S.cpReporting = cp.dataset.id;
+      if (a === 'cpcard') S.cpCard.has(cp.dataset.id) ? S.cpCard.delete(cp.dataset.id) : S.cpCard.add(cp.dataset.id);
       if (a === 'cpreportcancel') S.cpReporting = null;
       if (a === 'cpreportsend') { S.cpReported.add(cp.dataset.id); S.cpReporting = null; }
       render(); renderWeb(); return;
