@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
 import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion } from "../../../../shared/expert-question/index.js";
-import { allowedAreas } from "../../../../shared/professions/index.js";
+import { allowedAreas, professionById } from "../../../../shared/professions/index.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { consented } from "../account/consents.js";
@@ -44,6 +44,8 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
   const experts = await prisma.expertProfile.findMany({
     where: {
       user: { approval_status: "approved", role: "expert" },
+      // Not shown once her licence has run out, until she is checked again.
+      OR: [{ licence_expires_at: null }, { licence_expires_at: { gt: new Date() } }],
       ...(filter.profession ? { profession: filter.profession } : {}),
     },
     include: {
@@ -85,6 +87,8 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
         counties: e.counties,
         services: e.services,
         practice_areas: e.practice_areas,
+        trust: professionById(e.profession)?.trust ?? "experience",
+        licence_expires_at: e.licence_expires_at,
         office_hours: { per_month: e.office_hours_per_month, left_this_month: left },
         // Different people she has finished a session with.
         helped: new Set(e.user.office_hours_given.map((o) => o.requester_id)).size,

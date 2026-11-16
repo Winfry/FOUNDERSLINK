@@ -19,6 +19,7 @@ const people = {
   peter: { role: "investor", full_name: "Peter Investor", status: "draft" },
   amina: { role: "founder", full_name: "Amina Founder", status: "draft" },
   wanjiru: { role: "founder", full_name: "Wanjiru Founder", status: "draft" },
+  kiprono: { role: "expert", full_name: "Kiprono Advocate", status: "draft" },
 } as const;
 type Who = keyof typeof people;
 
@@ -197,4 +198,50 @@ test("approval lasts a year, and a re-check can end in suspension", async () => 
   assert.equal(outcome.json.approval_status, "suspended");
   assert.equal(await statusOf("amina"), "suspended");
   assert.equal(await dueFor("amina"), undefined);
+});
+
+test("an expert is approved only when every check her profession needs has passed", async () => {
+  // An advocate: checked on identity and the LSK register. Her licence runs out in 100 days.
+  const expiry = new Date(Date.now() + 100 * 86400000).toISOString().slice(0, 10);
+  await call("PUT", "/me/expert-profile", "kiprono", {
+    profession: "lawyer",
+    register_number: "P.105/12345/20",
+    licence_expires_at: expiry,
+    bio: "Land searches and agricultural leases.",
+    practice_areas: ["land_property"],
+  });
+  await apply("kiprono", 9);
+
+  // The review shows what to check, and where.
+  const review = (await call("GET", `/admin/vetting/${applications.kiprono}`, "adminOne")).json;
+  assert.deepEqual(review.expert_checklist.items.map((i: any) => [i.label, i.state]), [["Identity", "missing"], ["LSK register", "missing"]]);
+  assert.equal(review.expert_checklist.items[1].url, "https://lsk.or.ke");
+
+  // Nothing checked: approval is refused, saying what is missing.
+  const early = await call("POST", `/admin/vetting/${applications.kiprono}/decision`, "adminOne", { decision: "approve", reason: "Looks fine." });
+  assert.equal(early.status, 409);
+  assert.equal(early.json.error.code, "EXPERT_NOT_READY");
+  assert.equal(early.json.error.message, "Still to check: Identity, LSK register.");
+
+  // Only identity: still refused.
+  const half = await call("POST", `/admin/vetting/${applications.kiprono}/decision`, "adminOne", {
+    decision: "approve",
+    reason: "Identity confirmed.",
+    checks: [{ check_type: "identity", result: "pass", method: "provider" }],
+  });
+  assert.equal(half.json.error.message, "Still to check: Identity, LSK register.".replace("Identity, ", ""));
+
+  // Both checks, recorded with the decision: approved, and looked at again when her licence runs out.
+  const ok = await call("POST", `/admin/vetting/${applications.kiprono}/decision`, "adminOne", {
+    decision: "approve",
+    reason: "Identity and LSK practising certificate confirmed.",
+    checks: [
+      { check_type: "identity", result: "pass", method: "provider" },
+      { check_type: "professional_register", result: "pass", method: "lsk" },
+    ],
+  });
+  assert.equal(ok.status, 200);
+  assert.equal(await statusOf("kiprono"), "approved");
+  const application = await prisma.vettingApplication.findUniqueOrThrow({ where: { id: applications.kiprono! } });
+  assert.equal(application.recheck_due_at?.toISOString().slice(0, 10), expiry);
 });

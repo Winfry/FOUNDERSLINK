@@ -147,3 +147,127 @@ export function requiredChecks(professionId: string): CheckType[] {
   if (trust === 'certified') return ['identity', 'qualification'];
   return ['identity', 'reference'];
 }
+
+// ---------------------------------------------------------------------------
+// Where an expert stands: what a person at FoundersLink must still check
+// before approving her, and whether her licence has run out.
+
+export interface RecordedCheck {
+  check_type: string;
+  result: 'pass' | 'fail';
+  checked_at?: string | Date;
+}
+
+export interface ChecklistItem {
+  check: CheckType;
+  label: string;
+  /** How to make the check, for the person doing it. */
+  how: string;
+  /** Where to look, when there is a public register. */
+  url: string | null;
+  state: 'pass' | 'fail' | 'missing';
+  /** References: how many passed, of the two needed. */
+  count?: { passed: number; needed: number };
+}
+
+export interface ExpertChecklist {
+  profession: string;
+  trust: Trust;
+  trustLabel: string;
+  regulator: { short: string; name: string } | null;
+  items: ChecklistItem[];
+  /** Every check needed has passed and the licence, if any, is current. */
+  ready: boolean;
+  /** The licence or certificate has run out. */
+  expired: boolean;
+  /** Words for what still stops approval, or null. */
+  blocking: string | null;
+}
+
+const REFERENCES_NEEDED = 2;
+
+/**
+ * The checklist for one expert. A check that was never recorded is never a
+ * pass; the latest result of each kind counts. References need two passes.
+ */
+export function expertChecklist(
+  expert: { profession: string; licence_expires_at?: string | Date | null; qualification?: string | null; qualification_body?: string | null },
+  checks: RecordedCheck[],
+  now = new Date(),
+): ExpertChecklist {
+  const p = professionById(expert.profession);
+  const regulator = regulatorOf(p);
+  const trust = p?.trust ?? 'experience';
+  const time = (c: RecordedCheck) => (c.checked_at ? new Date(c.checked_at).getTime() : 0);
+  const latest = (type: string) => [...checks].filter((c) => c.check_type === type).sort((a, b) => time(b) - time(a))[0];
+
+  const items: ChecklistItem[] = requiredChecks(expert.profession).map((check): ChecklistItem => {
+    if (check === 'reference') {
+      const passed = checks.filter((c) => c.check_type === 'reference' && c.result === 'pass').length;
+      const failed = checks.some((c) => c.check_type === 'reference' && c.result === 'fail');
+      return {
+        check,
+        label: 'Two references',
+        how: 'Speak to two people she has worked with. Find or confirm their contacts yourself, not only from her. Record one check for each.',
+        url: null,
+        state: passed >= REFERENCES_NEEDED ? 'pass' : failed ? 'fail' : 'missing',
+        count: { passed, needed: REFERENCES_NEEDED },
+      };
+    }
+    const last = latest(check);
+    const state: ChecklistItem['state'] = last ? last.result : 'missing';
+    if (check === 'identity') {
+      return { check, label: 'Identity', how: 'Through the identity provider, which answers pass or fail. FoundersLink never asks for or keeps ID numbers or documents.', url: null, state };
+    }
+    if (check === 'professional_register') {
+      return {
+        check,
+        label: regulator ? regulator.short + ' register' : 'Professional register',
+        how: regulator ? regulator.howToCheck + (regulator.registerUrl ? '' : ' It has no public register online.') : 'Check the register her profession is kept on.',
+        url: regulator?.registerUrl ?? null,
+        state,
+      };
+    }
+    const body = expert.qualification_body || 'the body that awarded it';
+    return {
+      check,
+      label: 'Qualification',
+      how: expert.qualification
+        ? 'Confirm "' + expert.qualification + '" with ' + body + ', using their official contacts.'
+        : 'Confirm her qualification with the body that awarded it, using their official contacts.',
+      url: null,
+      state,
+    };
+  });
+
+  const expired = Boolean(expert.licence_expires_at && new Date(expert.licence_expires_at).getTime() < now.getTime());
+  const failed = items.filter((i) => i.state === 'fail');
+  const missing = items.filter((i) => i.state === 'missing');
+  const named = (i: ChecklistItem) => (i.count ? i.label + ' (' + i.count.passed + ' of ' + i.count.needed + ')' : i.label);
+  const blocking = expired
+    ? 'Her licence has run out. Ask her for the new expiry date and check the register again.'
+    : failed.length
+      ? 'Did not pass: ' + failed.map((i) => i.label).join(', ') + '.'
+      : missing.length
+        ? 'Still to check: ' + missing.map(named).join(', ') + '.'
+        : null;
+
+  return {
+    profession: p?.label ?? expert.profession,
+    trust,
+    trustLabel: TRUST[trust].label,
+    regulator: regulator ? { short: regulator.short, name: regulator.name } : null,
+    items,
+    ready: blocking === null,
+    expired,
+    blocking,
+  };
+}
+
+/** When to look at an approved expert again: in a year, or when her licence runs out if sooner. */
+export function nextRecheck(licenceExpiresAt: string | Date | null | undefined, now = new Date()): Date {
+  const year = new Date(now.getTime() + 365 * 24 * 3600 * 1000);
+  if (!licenceExpiresAt) return year;
+  const expiry = new Date(licenceExpiresAt);
+  return expiry < year ? expiry : year;
+}

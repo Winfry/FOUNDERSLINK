@@ -161,9 +161,10 @@ networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) 
     create: { ...row, user_id: req.user!.id },
     update: row,
   });
-  const claim = (p: typeof profile) => [p.profession, p.register_body, p.register_number].join("|");
+  const claim = (p: typeof profile) =>
+    [p.profession, p.register_body, p.register_number, p.licence_expires_at?.toISOString() ?? "", p.qualification ?? "", p.qualification_body ?? ""].join("|");
   if (before && claim(before) !== claim(profile)) {
-    await flagForRecheck(req.user!.id, "Changed her profession or professional registration");
+    await flagForRecheck(req.user!.id, "Changed her profession, licence or qualification");
   }
   res.json(profile);
 });

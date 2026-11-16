@@ -225,6 +225,52 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
         </Card>
       </div>
 
+      {/* An expert: what her profession needs checked, where, and what is still missing. */}
+      {detail.expertChecklist ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              What to check: {detail.expertChecklist.profession} · {detail.expertChecklist.trustLabel}
+            </CardTitle>
+            <CardDescription>
+              {detail.expertChecklist.regulator
+                ? `Checked on the ${detail.expertChecklist.regulator.name} register. `
+                : ""}
+              Approval is refused until every check below has passed. Record each one with your decision. A check that
+              was never made is never a pass.
+              {detail.licenceExpiresAt ? ` Her licence runs out on ${formatDay(detail.licenceExpiresAt)}.` : ""}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {detail.expertChecklist.items.map((item) => (
+              <div key={item.check} className="flex items-start gap-3 rounded-btn border border-border p-4">
+                <Badge
+                  variant={item.state === "pass" ? "success" : item.state === "fail" ? "destructive" : "warning"}
+                  className="mt-0.5 shrink-0"
+                >
+                  {item.state === "pass" ? "Passed" : item.state === "fail" ? "Did not pass" : "Not checked yet"}
+                </Badge>
+                <div className="min-w-0 flex-1">
+                  <p className="text-base text-navy">
+                    {item.label}
+                    {item.count ? <span className="text-sm text-muted"> · {item.count.passed} of {item.count.needed}</span> : null}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">{item.how}</p>
+                  {item.url ? (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline">
+                      Open the {item.label} (opens in a new tab)
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+            <p className={cn("text-sm", detail.expertChecklist.ready ? "text-[#28765D]" : "text-[#8A6516]")}>
+              {detail.expertChecklist.ready ? "Every check has passed. You can approve." : detail.expertChecklist.blocking}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {awaiting ? (
       <Card className="border-primary/30">
         <CardHeader>
@@ -277,7 +323,9 @@ export function VerificationDetailView({ detail: initial }: { detail: Verificati
           </div>
 
           <div className="rounded-card bg-background p-5">
-            <p className="text-sm font-medium text-navy">Checks you made (optional)</p>
+            <p className="text-sm font-medium text-navy">
+              {detail.expertChecklist ? "Checks you made (needed to approve an expert)" : "Checks you made (optional)"}
+            </p>
             <p className="mt-0.5 text-sm text-muted">
               Record what you verified yourself, for example a BRS lookup of the business or a call to a reference. They are saved with your decision.
             </p>

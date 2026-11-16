@@ -25,7 +25,7 @@ async function decided(run: () => Promise<VerificationDetail | null>): Promise<D
       ? { ok: true, detail }
       : { ok: false, message: "The decision may have been saved, but the page could not load it again. Refresh the page to check." };
   } catch (e) {
-    if (e instanceof ApiError) return { ok: false, message: `Not saved: ${e.message}.` };
+    if (e instanceof ApiError) return { ok: false, message: `Not saved: ${e.message.replace(/\.$/, "")}.` };
     return { ok: false, message: "Not saved: the FoundersLink server did not answer. Try again." };
   }
 }

@@ -453,6 +453,8 @@ export const components: Record<string, Schema> = {
     counties: described(arr(str), "Empty means all."),
     services: arr(str),
     practice_areas: described(arr(str), 'What she specialises in, e.g. "land_property", "tax".'),
+    trust: described(oneOf(["licensed", "certified", "experience"]), "How she was checked: on a register, a qualification, or experience and references."),
+    licence_expires_at: described(nullable(dateTime), "When her licence runs out. She is not listed after it until checked again."),
     reasons: described(arr(str), "From POST /experts/find only: why she fits the question, in words."),
     office_hours: obj({ per_month: int, left_this_month: int }),
     helped: described(int, "Different people she has finished a session with."),

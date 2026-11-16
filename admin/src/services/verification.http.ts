@@ -1,3 +1,4 @@
+import type { ExpertChecklist } from "@/types";
 import type {
   ApprovalStatus,
   MemberRole,
@@ -48,7 +49,15 @@ interface ApiDetail extends ApiListItem {
   recheck_due_at: string | null;
   recheck_reason: string | null;
   history: { id: string; action: string; reason: string; created_at: string; admin: { full_name: string }; checks: ApiCheck[] }[];
-  user: ApiApplicant & { expert_profile?: { profession?: string | null; registration_number?: string | null } | null };
+  user: ApiApplicant & {
+    expert_profile?: {
+      profession?: string | null;
+      register_body?: string | null;
+      register_number?: string | null;
+      licence_expires_at?: string | null;
+    } | null;
+  };
+  expert_checklist?: ExpertChecklist | null;
 }
 
 // The dashboard's tabs, and the backend statuses each one covers.
@@ -132,8 +141,10 @@ function toDetail(a: ApiDetail): VerificationDetail {
     website: a.organisation_website,
     // The backend keeps references as one free-text field.
     references: a.references ? [{ name: a.references, relationship: "", phone: "" }] : [],
-    professionalRegister: a.user.expert_profile?.profession ?? null,
-    registerNumber: a.user.expert_profile?.registration_number ?? null,
+    professionalRegister: a.user.expert_profile?.register_body ?? null,
+    registerNumber: a.user.expert_profile?.register_number ?? null,
+    licenceExpiresAt: a.user.expert_profile?.licence_expires_at ?? null,
+    expertChecklist: a.expert_checklist ?? null,
     // The backend sends each signal as one sentence.
     riskSignals: a.risk_signals.map((text, i) => ({ id: String(i), text, explanation: "" })),
     // From the audit log, so a resubmission does not wipe it (FINAL_VERIFICATION 18).

@@ -11,6 +11,7 @@ export const CHECK_TYPE_LABEL = {
   track_record: "Track record",
   professional_register: "Professional register",
   reference: "Reference",
+  qualification: "Qualification",
 } as const;
 
 export type CheckType = keyof typeof CHECK_TYPE_LABEL;
@@ -23,6 +24,15 @@ export const CHECK_METHOD_LABEL = {
   cma: "CMA register",
   domain: "Website or domain",
   reference: "Spoke to a reference",
+  kra: "KRA (tax agents)",
+  ics: "ICS register",
+  vrb: "Valuers Registration Board",
+  lsb: "Land Surveyors Board",
+  boraqs: "BORAQS register",
+  ebk: "EBK register",
+  ira: "IRA register",
+  ihrm: "IHRM register",
+  awarding_body: "Awarding body",
   provider: "Outside provider",
   // Set by the backend when a phone is confirmed by code; staff never pick it.
   otp: "Code sent to the phone",
@@ -41,6 +51,7 @@ export const DEFAULT_METHOD: Record<CheckType, CheckMethod> = {
   track_record: "manual",
   professional_register: "lsk",
   reference: "reference",
+  qualification: "awarding_body",
 };
 
 export interface NewCheck {

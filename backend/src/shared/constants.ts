@@ -61,6 +61,8 @@ export const CHECK_TYPES = [
   "track_record",
   "professional_register",
   "reference",
+  // A certified expert's qualification, confirmed with the awarding body.
+  "qualification",
 ] as const;
 
 export const CHECK_METHODS = [
@@ -73,6 +75,16 @@ export const CHECK_METHODS = [
   "cma",
   "domain",
   "reference",
+  // The other regulators experts are checked against (shared/professions).
+  "kra",
+  "ics",
+  "vrb",
+  "lsb",
+  "boraqs",
+  "ebk",
+  "ira",
+  "ihrm",
+  "awarding_body",
 ] as const;
 
 // What a person can agree to, each on its own.

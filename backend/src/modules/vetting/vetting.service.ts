@@ -14,6 +14,11 @@ import { prisma } from "../../shared/db.js";
 import { kenyanMobile } from "../../shared/phone.js";
 import { sendEmail } from "../../shared/email.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
+import { expertChecklist, nextRecheck } from "../../../../shared/professions/index.js";
+
+// Checks as the checklist reads them.
+const recorded = (checks: { check_type: string; result: string; checked_at: Date }[]) =>
+  checks.map((c) => ({ check_type: c.check_type, result: c.result === "pass" ? ("pass" as const) : ("fail" as const), checked_at: c.checked_at }));
 
 export const applicationSchema = z.object({
   // Stored in one form, so the same number on two accounts is noticed
@@ -269,8 +274,12 @@ export async function getApplicationForReview(applicationId: string) {
       })
     : null;
 
+  // For an expert: what her profession needs checked, and what is still missing.
+  const expert = application.user.role === "expert" ? application.user.expert_profile : null;
+
   return {
     ...application,
+    expert_checklist: expert ? expertChecklist(expert, recorded(application.checks)) : null,
     claims_funder: claims,
     documents: await listDocuments(application.id),
     history: await decisionHistory(application.user_id, application.checks),
@@ -317,11 +326,25 @@ const YEAR = 365 * 24 * 60 * 60 * 1000;
 export async function decide(adminId: string, applicationId: string, input: z.infer<typeof decisionSchema>) {
   const application = await prisma.vettingApplication.findUnique({
     where: { id: applicationId },
-    include: { user: { select: { approval_status: true, role: true, funder: { select: { id: true } } } } },
+    include: {
+      checks: true,
+      user: { select: { approval_status: true, role: true, funder: { select: { id: true } }, expert_profile: true } },
+    },
   });
   if (!application) throw notFound("No such application");
   if (!AWAITING_DECISION.includes(application.user.approval_status)) {
     throw conflict("NOT_AWAITING_DECISION", "This application is not waiting for a decision");
+  }
+
+  // An expert is approved only when every check her profession needs has
+  // passed, counting the ones recorded with this decision, and her licence
+  // is current (docs/EXPERT_VERIFICATION.md). A missing check is never a pass.
+  const expert = application.user.role === "expert" ? application.user.expert_profile : null;
+  if (input.decision === "approve" && application.user.role === "expert") {
+    if (!expert) throw conflict("EXPERT_NOT_READY", "She has not filled in her expert profile yet");
+    const now = new Date();
+    const list = expertChecklist(expert, [...recorded(application.checks), ...input.checks.map((c) => ({ ...c, checked_at: now }))], now);
+    if (!list.ready) throw conflict("EXPERT_NOT_READY", list.blocking ?? "Not every check has passed");
   }
 
   // The four-eyes rule: with two approvals required, the first admin's
@@ -356,8 +379,9 @@ export async function decide(adminId: string, applicationId: string, input: z.in
         member_message: input.member_message ?? null,
         // A first approval does not carry over to a later application.
         ...(input.decision === "approve" ? {} : { first_approved_by: null }),
-        // An approved member is looked at again in a year.
-        recheck_due_at: input.decision === "approve" ? new Date(Date.now() + YEAR) : null,
+        // An approved member is looked at again in a year; an expert sooner
+        // if her licence runs out first.
+        recheck_due_at: input.decision === "approve" ? (expert ? nextRecheck(expert.licence_expires_at) : new Date(Date.now() + YEAR)) : null,
         recheck_reason: null,
       },
     });

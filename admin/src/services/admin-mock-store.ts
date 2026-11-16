@@ -1,5 +1,7 @@
+import { ApiError } from "@/lib/api";
 import type {
   AdminNavCounts,
+  ExpertChecklist,
   AdminSettingsState,
   AdminStats,
   ApprovalStatus,
@@ -53,6 +55,27 @@ interface StoredMember {
   list: MemberListItem;
   detail: MemberDetail;
   verification: VerificationDetail;
+}
+
+// An advocate's checklist on the demo data (the backend builds it from
+// shared/professions). States follow the checks recorded on her.
+function demoAdvocateChecklist(checks: VettingCheck[]): ExpertChecklist {
+  const passed = (type: string) => {
+    const latest = checks.find((c) => c.checkType === type);
+    return latest ? (latest.result === "passed" ? "pass" : "fail") : "missing";
+  };
+  const items: ExpertChecklist["items"] = [
+    { check: "identity", label: "Identity", how: "Through the identity provider, which answers pass or fail. FoundersLink never asks for or keeps ID numbers or documents.", url: null, state: passed("identity") },
+    { check: "professional_register", label: "LSK register", how: "Search the advocate by name and admission number, and confirm a practising certificate for this year.", url: "https://lsk.or.ke", state: passed("professional_register") },
+  ];
+  const failed = items.filter((i) => i.state === "fail");
+  const missing = items.filter((i) => i.state === "missing");
+  const blocking = failed.length
+    ? `Did not pass: ${failed.map((i) => i.label).join(", ")}.`
+    : missing.length
+      ? `Still to check: ${missing.map((i) => i.label).join(", ")}.`
+      : null;
+  return { profession: "Advocate", trustLabel: "Licensed", regulator: { short: "LSK", name: "Law Society of Kenya" }, items, ready: blocking === null, expired: false, blocking };
 }
 
 const members: StoredMember[] = [
@@ -336,6 +359,61 @@ const members: StoredMember[] = [
           recordedAt: "2025-12-18T09:55:00.000Z",
         },
       ],
+    },
+  },
+  {
+    list: {
+      id: "u-kiprono",
+      fullName: "Joseph Kiprono",
+      email: "joseph@kiprono.demo",
+      role: "expert",
+      organisationOrBusiness: "Kiprono & Associates Advocates",
+      memberStatus: "active",
+      joinedAt: "2026-11-14T08:00:00.000Z",
+      approvalStatus: "submitted",
+    },
+    detail: {
+      id: "u-kiprono",
+      fullName: "Joseph Kiprono",
+      email: "joseph@kiprono.demo",
+      role: "expert",
+      phone: "+254722310455",
+      county: "Nakuru",
+      organisationOrBusiness: "Kiprono & Associates Advocates",
+      memberStatus: "active",
+      joinedAt: "2026-11-14T08:00:00.000Z",
+      approvalStatus: "submitted",
+      verificationSummary: "Waiting for the LSK register check.",
+      consents: [
+        { purpose: "profile_visibility", label: "Profile visibility", granted: true, updatedAt: "2026-11-14T09:00:00.000Z" },
+        { purpose: "ai_matching", label: "AI matching", granted: false, updatedAt: null },
+        { purpose: "contact", label: "SMS or WhatsApp contact", granted: true, updatedAt: "2026-11-14T09:00:00.000Z" },
+      ],
+      reportsAgainst: [],
+      timeline: [{ id: "tl-k1", title: "Verification submitted", at: "2026-11-15T08:00:00.000Z" }],
+    },
+    verification: {
+      recheck: null,
+      id: "vet-u-kiprono",
+      memberId: "u-kiprono",
+      fullName: "Joseph Kiprono",
+      email: "joseph@kiprono.demo",
+      role: "expert",
+      phone: "+254722310455",
+      statement: "Advocate of the High Court. Land searches, agricultural leases and title transfers for farms in Nakuru and Uasin Gishu.",
+      organisationName: "Kiprono & Associates Advocates",
+      website: "https://kiprono-advocates.demo",
+      references: [],
+      professionalRegister: "LSK",
+      registerNumber: "P.105/12345/20",
+      licenceExpiresAt: "2026-12-31T00:00:00.000Z",
+      expertChecklist: demoAdvocateChecklist([]),
+      riskLevel: "low",
+      riskSignals: [],
+      approvalStatus: "submitted",
+      submittedAt: "2026-11-15T08:00:00.000Z",
+      decisions: [],
+      checks: [],
     },
   },
   {
@@ -680,6 +758,12 @@ export function submitVerificationDecision(
     id: `chk-${Date.now()}-${i}`,
     recordedAt: now,
   }));
+  // As the backend: an expert is approved only when her checklist passes.
+  if (m.verification.expertChecklist) {
+    const list = demoAdvocateChecklist([...newChecks, ...m.verification.checks]);
+    if (decision === "approved" && !list.ready) throw new ApiError(409, "EXPERT_NOT_READY", list.blocking ?? "Not every check has passed");
+    m.verification.expertChecklist = list;
+  }
   const record: VettingDecisionRecord = {
     id: `dec-${Date.now()}`,
     decision,

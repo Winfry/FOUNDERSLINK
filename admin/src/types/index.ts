@@ -81,6 +81,24 @@ export interface VerificationQueueItem {
   approvalStatus: ApprovalStatus;
 }
 
+/** What an expert's profession needs checked before approval (backend: shared/professions). */
+export interface ExpertChecklist {
+  profession: string;
+  trustLabel: string;
+  regulator: { short: string; name: string } | null;
+  items: {
+    check: string;
+    label: string;
+    how: string;
+    url: string | null;
+    state: "pass" | "fail" | "missing";
+    count?: { passed: number; needed: number };
+  }[];
+  ready: boolean;
+  expired: boolean;
+  blocking: string | null;
+}
+
 export interface VerificationDetail {
   id: string;
   memberId: string;
@@ -94,6 +112,9 @@ export interface VerificationDetail {
   references: VerificationReference[];
   professionalRegister: string | null;
   registerNumber: string | null;
+  /** Experts: when her licence runs out, and the checklist for her profession. */
+  licenceExpiresAt?: string | null;
+  expertChecklist?: ExpertChecklist | null;
   riskLevel: RiskLevel;
   riskSignals: RiskSignal[];
   approvalStatus: ApprovalStatus;

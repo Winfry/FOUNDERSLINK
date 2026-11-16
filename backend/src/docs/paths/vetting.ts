@@ -205,6 +205,7 @@ export const ops: Op[] = [
       NO_APPLICATION,
       [409, "NOT_AWAITING_DECISION", "The member is not `submitted` or `in_review`."],
       [409, "SAME_ADMIN", "Two approvals are required and this admin gave the first."],
+      [409, "EXPERT_NOT_READY", "Approving an expert whose profession's checks have not all passed (counting those sent with this decision), or whose licence has run out. The message says what is missing."],
     ],
   },
   {
