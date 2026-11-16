@@ -1,0 +1,4 @@
+{
+  "//": "Plain ES modules, used by the backend and the mobile app.",
+  "type": "module"
+}

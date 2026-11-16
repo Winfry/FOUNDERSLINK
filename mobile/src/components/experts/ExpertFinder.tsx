@@ -1,3 +1,4 @@
+import { professionById } from '@shared/professions';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { AiMark, Avatar, Button, Card } from '../ui';
@@ -22,7 +23,7 @@ const INTRO =
 // A question with these words is answered in Kiswahili.
 const isKiswahili = (q: string) => /\b(nani|nahitaji|naomba|sheria|ardhi|wakili|shamba|mhasibu|kodi|biashara|langu|yangu)\b/i.test(q);
 
-const TITLE: Record<ExpertCard['profession'], string> = { lawyer: 'Advocate', accountant: 'Accountant', mentor: 'Mentor', other: 'Expert' };
+const title = (profession: string) => professionById(profession)?.label ?? 'Expert';
 
 interface Turn {
   id: number;
@@ -61,7 +62,7 @@ function ExpertResult({ e, question }: { e: ExpertCard; question: string }) {
         <Avatar name={e.full_name} size={48} />
         <View style={styles.flex}>
           <Text style={styles.name}>{e.full_name}</Text>
-          <Text style={styles.org}>{[TITLE[e.profession], e.organisation_name].filter(Boolean).join(' · ')}</Text>
+          <Text style={styles.org}>{[title(e.profession), e.organisation_name].filter(Boolean).join(' · ')}</Text>
         </View>
         {e.register_checked ? <Tag label="Verified" tone="done" /> : null}
       </View>

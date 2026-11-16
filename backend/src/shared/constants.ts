@@ -1,3 +1,4 @@
+import { PROFESSION_IDS, PROFESSIONS as EXPERT_PROFESSIONS } from "../../../shared/professions/index.js";
 // Option lists for onboarding. Served by GET /meta/options so the frontend
 // does not hardcode them.
 
@@ -50,7 +51,8 @@ export const COUNTIES = [
 // Roles a person can sign up as. `admin` is never available at sign-up.
 export const SIGNUP_ROLES = ["founder", "investor", "expert"] as const;
 
-export const PROFESSIONS = ["lawyer", "accountant", "mentor", "other"] as const;
+// Who can be an expert, how each is checked, and by whom: shared/professions.
+export const PROFESSIONS = PROFESSION_IDS;
 
 export const CHECK_TYPES = [
   "identity",
@@ -90,6 +92,7 @@ export const CONSENT_PURPOSES = [
 // How each value reads on a screen. Anything not listed here is shown
 // with its underscores turned into spaces and a capital first letter.
 const LABELS: Record<string, string> = {
+  ...Object.fromEntries(EXPERT_PROFESSIONS.map((p) => [p.id, p.label])),
   agri: "Agriculture",
   mvp: "MVP",
   sme: "Small business",

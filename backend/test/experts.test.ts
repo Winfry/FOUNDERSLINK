@@ -206,3 +206,24 @@ test("an investor new to farming asks in her own words and gets an advocate who 
   // Not yet approved members cannot search.
   assert.equal((await call("POST", "/experts/find", "newcomer", { question: "land law for my farm" })).json.error.code, "APPROVAL_REQUIRED");
 });
+
+test("a profession offers only its own practice areas, and the register is the profession's own", async () => {
+  // A mentor cannot offer legal work.
+  const mentor = await call("PUT", "/me/expert-profile", "kamau", { profession: "mentor", bio: "I help founders pitch.", practice_areas: ["land_property"] });
+  assert.equal(mentor.status, 400);
+  assert.equal(mentor.json.error.code, "AREA_NOT_ALLOWED");
+
+  // A valuer is checked against the Valuers Registration Board, whatever she sends.
+  const valuer = await call("PUT", "/me/expert-profile", "kamau", {
+    profession: "valuer",
+    register_body: "Something else",
+    register_number: "VRB/123",
+    licence_expires_at: "2026-12-31",
+    bio: "Valuing farmland and equipment.",
+    practice_areas: ["valuation"],
+  });
+  assert.equal(valuer.status, 200);
+  assert.equal(valuer.json.register_body, "VRB");
+  assert.equal(valuer.json.country, "KE");
+  assert.equal(new Date(valuer.json.licence_expires_at).toISOString().slice(0, 10), "2026-12-31");
+});

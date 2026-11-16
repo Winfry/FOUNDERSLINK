@@ -17,7 +17,7 @@ type Form = z.infer<typeof signupSchema>;
 const ROLES: Choice[] = [
   { value: 'founder', title: 'Founder', line: 'I am raising money for my business.' },
   { value: 'investor', title: 'Investor', line: 'I am looking for businesses to back.' },
-  { value: 'expert', title: 'Expert', line: 'I am a lawyer, accountant or mentor who helps founders.' },
+  { value: 'expert', title: 'Expert', line: 'I am a professional who helps businesses: an advocate, accountant, valuer, surveyor, mentor and more.' },
 ];
 
 export default function SignupScreen() {

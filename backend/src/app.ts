@@ -19,6 +19,7 @@ import { notificationsRouter } from "./modules/notifications/notifications.route
 import { profileRouter } from "./modules/profile/profile.routes.js";
 import { vettingRouter } from "./modules/vetting/vetting.routes.js";
 import * as options from "./shared/constants.js";
+import { CATEGORIES, PROFESSIONS as EXPERT_PROFESSIONS, REGULATORS, TRUST } from "../../shared/professions/index.js";
 
 export const app = express();
 
@@ -64,8 +65,10 @@ app.get("/meta/options", (_req, res) => {
     professions: options.PROFESSIONS,
     check_types: options.CHECK_TYPES,
   };
+  // Who can be an expert, how each is checked and by whom (shared/professions).
+  const experts = { categories: CATEGORIES, professions: EXPERT_PROFESSIONS, regulators: REGULATORS, trust: TRUST };
   const labels = Object.fromEntries(Object.entries(lists).map(([name, values]) => [name, options.labelled(values)]));
-  res.json({ ...lists, labels });
+  res.json({ ...lists, labels, experts });
 });
 
 app.use(authRouter);

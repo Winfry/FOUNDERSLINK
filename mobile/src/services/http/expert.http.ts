@@ -15,7 +15,8 @@ export interface ExpertSession {
 export interface ExpertCard {
   user_id: string;
   full_name: string;
-  profession: 'lawyer' | 'accountant' | 'mentor' | 'other';
+  /** A profession id from shared/professions ("lawyer", "valuer"...). */
+  profession: string;
   organisation_name: string | null;
   register_body: string | null;
   register_checked: boolean;

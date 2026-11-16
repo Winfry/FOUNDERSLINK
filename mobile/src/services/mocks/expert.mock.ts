@@ -1,5 +1,6 @@
 import { KENYAN_COUNTIES } from './kenya-data';
 import { explain, NOT_ADVICE, PRACTICE, rankExperts, readQuestion } from '@shared/expert-question';
+import { allowedAreas } from '@shared/professions';
 import type { ExpertCard, ExpertService } from '../http/expert.http';
 import { mockDelay } from './delay';
 import { getMemberById, upsertMember } from './mock-store';
@@ -15,7 +16,7 @@ const COUNTIES = KENYAN_COUNTIES.map((c) => c.name);
 const expert = (
   user_id: string,
   full_name: string,
-  profession: ExpertCard['profession'],
+  profession: string,
   organisation_name: string,
   bio: string,
   practice_areas: string[],
@@ -56,7 +57,7 @@ export const mockExpertService: ExpertService = {
   },
   async find(question, lang = 'en') {
     await mockDelay(600);
-    const understood = readQuestion(question, COUNTIES);
+    const understood = readQuestion(question, COUNTIES, (p, area) => allowedAreas(p).includes(area));
     const ranked = rankExperts(DEMO_EXPERTS, understood, lang, 3);
     return {
       understood: {

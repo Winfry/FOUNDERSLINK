@@ -1,48 +1,80 @@
 import { useRouter } from 'expo-router';
 import { PRACTICE, PRACTICE_AREAS } from '@shared/expert-question';
+import { allowedAreas, CATEGORIES, professionById, PROFESSIONS, regulatorOf, TRUST, type CategoryId } from '@shared/professions';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChoiceCards, FormError, type Choice } from '../../src/components/auth/parts';
 import { Button, Input, MultiSelect, Textarea } from '../../src/components/ui';
 import { Text } from '../../src/components/ui/Text';
 import { API_URL, put } from '../../src/services/http/client';
 import { useAuthStore } from '../../src/stores/authStore';
-import { colors, spacing } from '../../src/theme/tokens';
+import { colors, radius, spacing } from '../../src/theme/tokens';
 
-const PROFESSIONS: Choice[] = [
-  { value: 'lawyer', title: 'Lawyer', line: 'Agreements, incorporation, contracts.' },
-  { value: 'accountant', title: 'Accountant', line: 'Tax, eTIMS, bookkeeping.' },
-  { value: 'mentor', title: 'Mentor', line: 'Product, pitch, fundraising.' },
-];
-
-// The register a profession is checked against (TEAM_DECISIONS D12).
-const REGISTER: Record<string, string | undefined> = { lawyer: 'LSK', accountant: 'ICPAK' };
-
-// What she specialises in, from the list members search by ("an advocate
-// who knows land law"). Only the areas of her profession are offered.
-const areasFor = (profession: string) => PRACTICE_AREAS.filter((a) => PRACTICE[a].profession === profession);
 const AREA_LABELS = Object.fromEntries(PRACTICE_AREAS.map((a) => [a, PRACTICE[a].label]));
+const choicesIn = (category: CategoryId): Choice[] =>
+  PROFESSIONS.filter((p) => p.category === category).map((p) => ({ value: p.id, title: p.label, line: p.line }));
 
+/** "2026-12-31" as a date, or null when it is not a real, future date. */
+function futureDate(text: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text.trim())) return null;
+  const d = new Date(`${text.trim()}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) || d.getTime() < Date.now() ? null : d;
+}
+
+/**
+ * An expert's profile. First what kind of work, then the profession, then
+ * only what that profession is checked on: a licence number and expiry for
+ * a licensed one (LSK, ICPAK...), a qualification for a certified one, and
+ * nothing more for one checked on experience (references come at
+ * verification). How she will be checked is said before she is asked.
+ */
 export default function ExpertOnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const patchUser = useAuthStore((s) => s.patchUser);
+  const [category, setCategory] = useState<CategoryId>('legal');
   const [profession, setProfession] = useState('lawyer');
   const [organisation, setOrganisation] = useState('');
   const [registerNumber, setRegisterNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [qualification, setQualification] = useState('');
+  const [awardedBy, setAwardedBy] = useState('');
   const [bio, setBio] = useState('');
   const [services, setServices] = useState('');
   const [areas, setAreas] = useState<string[]>([]);
   const [sessions, setSessions] = useState('3');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const register = REGISTER[profession];
+
+  const chosen = professionById(profession);
+  const regulator = regulatorOf(chosen);
+  const trust = chosen?.trust ?? 'experience';
+
+  const pickCategory = (c: CategoryId) => {
+    setCategory(c);
+    const first = PROFESSIONS.find((p) => p.category === c);
+    if (first) setProfession(first.id);
+    setAreas([]);
+  };
 
   const save = async () => {
     setError(null);
+    if (trust === 'licensed' && registerNumber.trim().length < 2) {
+      setError(`Add your ${regulator?.short ?? 'register'} number. It is how we check you.`);
+      return;
+    }
+    const expires = expiry.trim() ? futureDate(expiry) : null;
+    if (expiry.trim() && !expires) {
+      setError('Write the date as year-month-day, for example 2026-12-31, and make sure it has not passed.');
+      return;
+    }
+    if (trust === 'certified' && (qualification.trim().length < 2 || awardedBy.trim().length < 2)) {
+      setError('Add your qualification and who awarded it. We check it with them.');
+      return;
+    }
     if (bio.trim().length < 10) {
-      setError('Say in a sentence or two how you help founders.');
+      setError('Say in a sentence or two how you help.');
       return;
     }
     const perMonth = Number(sessions);
@@ -56,17 +88,20 @@ export default function ExpertOnboardingScreen() {
       if (API_URL) {
         await put('/me/expert-profile', {
           profession,
+          country: 'KE',
           organisation_name: organisation.trim() || undefined,
-          register_body: register,
-          register_number: register && registerNumber.trim() ? registerNumber.trim() : undefined,
+          register_number: trust === 'licensed' ? registerNumber.trim() : undefined,
+          licence_expires_at: expires ? expires.toISOString() : undefined,
+          qualification: trust === 'certified' ? qualification.trim() : undefined,
+          qualification_body: trust === 'certified' ? awardedBy.trim() : undefined,
           bio: bio.trim(),
           services: services
             .split(',')
             .map((s) => s.trim())
             .filter((s) => s.length >= 2)
             .slice(0, 10),
-          // Only the areas of the profession she ended up choosing.
-          practice_areas: areas.filter((a) => areasFor(profession).includes(a as never)),
+          // Only the areas her profession may offer.
+          practice_areas: areas.filter((a) => allowedAreas(profession).includes(a)),
           office_hours_per_month: perMonth,
         });
       }
@@ -79,6 +114,13 @@ export default function ExpertOnboardingScreen() {
     }
   };
 
+  const howText =
+    trust === 'licensed' && regulator
+      ? `We check you on the ${regulator.name} (${regulator.short}) register. You are shown only while your licence is current.`
+      : trust === 'certified'
+        ? 'We check your qualification with the body that awarded it.'
+        : 'We check your work history and speak to two people you have worked with. You give their names when you verify.';
+
   return (
     <ScrollView
       style={styles.screen}
@@ -88,41 +130,81 @@ export default function ExpertOnboardingScreen() {
       <Text style={styles.title} accessibilityRole="header">
         Your expert profile
       </Text>
-      <Text style={styles.lede}>Founders find you by what you do. It takes about two minutes.</Text>
+      <Text style={styles.lede}>Members find you by what you do. Before you are shown, a person at FoundersLink checks you.</Text>
 
-      <ChoiceCards label="I am a" choices={PROFESSIONS} value={profession} onChange={setProfession} />
-      <Input label="Firm or organisation (optional)" value={organisation} onChangeText={setOrganisation} placeholder="e.g. Odhiambo & Partners Advocates" />
-      {register ? (
-        <Input
-          label={`${register} number`}
-          hint={`We check it against the ${register} register before you are approved.`}
-          value={registerNumber}
-          onChangeText={setRegisterNumber}
-          autoCapitalize="characters"
-        />
+      <View style={styles.group}>
+        <Text style={styles.label}>What kind of work do you do?</Text>
+        <View style={styles.chips} accessibilityRole="radiogroup">
+          {CATEGORIES.map((c) => {
+            const on = c.id === category;
+            return (
+              <Pressable
+                key={c.id}
+                onPress={() => pickCategory(c.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: on }}
+                style={[styles.chip, on && styles.chipOn]}
+              >
+                <Text style={[styles.chipText, on && styles.chipTextOn]}>{c.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <ChoiceCards
+        label="I am a"
+        choices={choicesIn(category)}
+        value={profession}
+        onChange={(v) => {
+          setProfession(v);
+          setAreas([]);
+        }}
+      />
+
+      <View style={styles.how}>
+        <Text style={styles.howTitle}>{TRUST[trust].label}</Text>
+        <Text style={styles.howText}>{howText}</Text>
+      </View>
+
+      {trust === 'licensed' ? (
+        <>
+          <Input
+            label={`${regulator?.short ?? 'Register'} number`}
+            hint={`The number on the ${regulator?.short ?? 'official'} register.`}
+            value={registerNumber}
+            onChangeText={setRegisterNumber}
+            autoCapitalize="characters"
+          />
+          <Input
+            label="Licence or practising certificate expires on (optional)"
+            hint="For example 2026-12-31. We check you again when it runs out."
+            value={expiry}
+            onChangeText={setExpiry}
+            placeholder="YYYY-MM-DD"
+          />
+        </>
       ) : null}
+      {trust === 'certified' ? (
+        <>
+          <Input label="Your qualification" value={qualification} onChangeText={setQualification} placeholder="e.g. Certified Information Systems Auditor" />
+          <Input label="Awarded by" value={awardedBy} onChangeText={setAwardedBy} placeholder="e.g. ISACA" />
+          <Input label="Valid until (optional)" hint="For example 2027-06-30." value={expiry} onChangeText={setExpiry} placeholder="YYYY-MM-DD" />
+        </>
+      ) : null}
+
+      <Input label="Firm or organisation (optional)" value={organisation} onChangeText={setOrganisation} placeholder="e.g. Odhiambo & Partners Advocates" />
       <Textarea
-        label="How you help founders"
+        label="How you help founders and investors"
         value={bio}
         onChangeText={setBio}
-        placeholder="e.g. I help startups incorporate, draft shareholder agreements and review term sheets."
+        placeholder="e.g. I run land searches and review agricultural leases before an investment."
       />
-      <MultiSelect
-        label="What you specialise in"
-        options={[...areasFor(profession)]}
-        labels={AREA_LABELS}
-        values={areas}
-        onChange={setAreas}
-      />
-      <Input
-        label="Services (separate with commas)"
-        value={services}
-        onChangeText={setServices}
-        placeholder="e.g. Shareholder agreements, Term sheet review"
-      />
+      <MultiSelect label="What you specialise in" options={allowedAreas(profession)} labels={AREA_LABELS} values={areas} onChange={setAreas} />
+      <Input label="Services (separate with commas)" value={services} onChangeText={setServices} placeholder="e.g. Land searches, Lease review" />
       <Input
         label="Free sessions a month"
-        hint="Founders can book up to this many sessions with you each month."
+        hint="Members can book up to this many sessions with you each month."
         value={sessions}
         onChangeText={setSessions}
         keyboardType="number-pad"
@@ -142,4 +224,14 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, fontWeight: '300', color: colors.primaryDark, letterSpacing: -0.5 },
   lede: { fontSize: 16, color: colors.textMuted, marginBottom: spacing[1] },
   action: { marginTop: spacing[2], gap: spacing[1] },
+  group: { gap: spacing[1] },
+  label: { fontSize: 14, fontWeight: '500', color: colors.text },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.white },
+  chipOn: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
+  chipText: { fontSize: 13, fontWeight: '500', color: colors.textMuted },
+  chipTextOn: { color: colors.white },
+  how: { backgroundColor: colors.primaryLight, borderRadius: radius.md, padding: spacing[1.5], gap: 4 },
+  howTitle: { fontSize: 14, fontWeight: '500', color: colors.primary },
+  howText: { fontSize: 13, lineHeight: 19, color: colors.text },
 });

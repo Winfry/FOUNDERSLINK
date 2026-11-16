@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
 import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion } from "../../../../shared/expert-question/index.js";
+import { allowedAreas } from "../../../../shared/professions/index.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { consented } from "../account/consents.js";
@@ -102,7 +103,7 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
  * expert matters. General information, never advice; nothing is booked.
  */
 export async function findExperts(input: z.infer<typeof findSchema>) {
-  const understood = readQuestion(input.question, COUNTIES);
+  const understood = readQuestion(input.question, COUNTIES, (p, a) => allowedAreas(p).includes(a));
   const all = await listExperts({}, 200);
   const ranked = rankExperts(all, understood, input.lang, 3);
   return {

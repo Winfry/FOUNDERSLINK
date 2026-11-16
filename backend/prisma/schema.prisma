@@ -313,6 +313,14 @@ model ExpertProfile {
   services               String[]
   // What she specialises in, e.g. "land_property" (shared/expert-question).
   practice_areas         String[] @default([])
+  // Where she practises. Professions and regulators are per country.
+  country                String   @default("KE")
+  // When her licence or practising certificate runs out. After it, she is
+  // not shown until it is checked again.
+  licence_expires_at     DateTime?
+  // Certified professions: the qualification, and who awarded it.
+  qualification          String?
+  qualification_body     String?
   // How many office-hours sessions she will take on in a month. 0 = none.
   office_hours_per_month Int      @default(0)
   created_at             DateTime @default(now())

@@ -22,13 +22,23 @@ export const PRACTICE_AREAS = [
   'tax',
   'bookkeeping',
   'audit',
-  // Mentors
+  // Mentors and consultants
   'fundraising',
   'business_growth',
+  'sector_expertise',
+  // Other licensed professions (shared/professions)
+  'governance',
+  'valuation',
+  'land_survey',
+  'construction',
+  'insurance',
+  'hr',
+  'technology',
 ] as const;
 export type PracticeArea = (typeof PRACTICE_AREAS)[number];
 
-export type Profession = 'lawyer' | 'accountant' | 'mentor';
+/** A profession id from shared/professions ("lawyer", "valuer"...). */
+export type Profession = string;
 
 /** Who each practice area belongs to, and how it reads. */
 export const PRACTICE: Record<PracticeArea, { profession: Profession; label: string; labelSw: string }> = {
@@ -44,6 +54,14 @@ export const PRACTICE: Record<PracticeArea, { profession: Profession; label: str
   audit: { profession: 'accountant', label: 'Audit and due diligence', labelSw: 'Ukaguzi wa hesabu' },
   fundraising: { profession: 'mentor', label: 'Pitching and fundraising', labelSw: 'Kuwasilisha na kutafuta fedha' },
   business_growth: { profession: 'mentor', label: 'Growing the business', labelSw: 'Kukuza biashara' },
+  sector_expertise: { profession: 'sector_specialist', label: 'Sector knowledge', labelSw: 'Ujuzi wa sekta' },
+  governance: { profession: 'company_secretary', label: 'Governance and share registers', labelSw: 'Utawala na rejista ya hisa' },
+  valuation: { profession: 'valuer', label: 'Valuation', labelSw: 'Uthamini' },
+  land_survey: { profession: 'land_surveyor', label: 'Land surveys and boundaries', labelSw: 'Upimaji wa ardhi na mipaka' },
+  construction: { profession: 'quantity_surveyor', label: 'Building and construction', labelSw: 'Ujenzi' },
+  insurance: { profession: 'insurance_broker', label: 'Insurance', labelSw: 'Bima' },
+  hr: { profession: 'hr_consultant', label: 'Hiring and HR', labelSw: 'Ajira na rasilimali watu' },
+  technology: { profession: 'it_security', label: 'Technology and cybersecurity', labelSw: 'Teknolojia na usalama wa mtandao' },
 };
 
 export const SECTOR_WORDS: Record<string, string> = {
@@ -54,6 +72,9 @@ export const SECTOR_WORDS: Record<string, string> = {
 // Words that point to each thing, in English and Kiswahili. Checked as
 // whole words or word starts, case-insensitively.
 const AREA_WORDS: [PracticeArea, string[]][] = [
+  // More specific first: on a tie ("a valuation of the land") the specific one wins.
+  ['valuation', ['valuation', 'value the', 'worth', 'valuer', 'thamani']],
+  ['land_survey', ['survey', 'beacon', 'boundar', 'subdivi', 'mpaka']],
   ['land_property', ['land', 'title deed', 'title', 'lease', 'plot', 'acre', 'property', 'shamba', 'ardhi', 'hati miliki', 'kiwanja']],
   // Not "invest": an investor says it in every question.
   ['investment_deals', ['term sheet', 'due diligence', 'shareholder', 'equity', 'convertible', 'valuation']],
@@ -66,12 +87,25 @@ const AREA_WORDS: [PracticeArea, string[]][] = [
   ['bookkeeping', ['bookkeeping', 'books', 'accounts', 'financial statement', 'records', 'hesabu']],
   ['audit', ['audit', 'check the numbers', 'verify the numbers', 'financials']],
   ['fundraising', ['pitch', 'fundrais', 'raise money', 'pitch deck']],
+  ['governance', ['company secretary', 'share register', 'annual return', 'board', 'governance']],
+  ['construction', ['building', 'construction', 'architect', 'quantity surveyor', 'engineer', 'ujenzi']],
+  ['insurance', ['insurance', 'insure', 'cover', 'bima']],
+  ['hr', ['hiring', 'recruit', 'human resource', ' hr ', 'payroll']],
+  ['technology', ['cybersecurity', 'cyber', 'software', 'security of', 'it system']],
   ['business_growth', ['grow', 'market', 'customers', 'strategy', 'mentor']],
 ];
 
 const PROFESSION_WORDS: [Profession, string[]][] = [
   ['lawyer', ['lawyer', 'advocate', 'legal', 'law', 'wakili', 'sheria']],
-  ['accountant', ['accountant', 'mhasibu', 'cpa']],
+  ['accountant', ['accountant', 'auditor', 'mhasibu', 'cpa']],
+  ['tax_agent', ['tax agent']],
+  ['company_secretary', ['company secretary']],
+  ['valuer', ['valuer']],
+  ['land_surveyor', ['land surveyor', 'surveyor']],
+  ['architect', ['architect']],
+  ['quantity_surveyor', ['quantity surveyor']],
+  ['engineer', ['engineer']],
+  ['insurance_broker', ['insurance broker', 'broker']],
   ['mentor', ['mentor', 'coach', 'adviser', 'advisor']],
 ];
 
@@ -100,23 +134,32 @@ export interface ReadQuestion {
  * What she is asking for. The practice area decides the profession unless
  * she names one ("an accountant for my farm" stays an accountant).
  */
-export function readQuestion(question: string, counties: readonly string[] = []): ReadQuestion {
+export function readQuestion(
+  question: string,
+  counties: readonly string[] = [],
+  /** Whether a profession may offer a practice area (shared/professions' allowedAreas). */
+  canOffer: (profession: string, area: string) => boolean = (p, a) => PRACTICE[a as PracticeArea]?.profession === p,
+): ReadQuestion {
   const text = question.toLowerCase();
-  const best = <K>(list: [K, string[]][]) => {
-    const scored = list.map(([k, words]) => [k, count(text, words)] as const).filter(([, n]) => n > 0);
-    scored.sort((a, b) => b[1] - a[1]);
-    return scored[0]?.[0];
-  };
+  const ranked = <K>(list: [K, string[]][]) =>
+    list
+      .map(([k, words]) => [k, count(text, words)] as const)
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k]) => k);
 
-  let practiceArea: PracticeArea | undefined = best(AREA_WORDS);
-  const sector = best(SECTOR_KEYWORDS);
-  const named = best(PROFESSION_WORDS);
+  const areas = ranked(AREA_WORDS);
+  const sector = ranked(SECTOR_KEYWORDS)[0];
+  const named = ranked(PROFESSION_WORDS)[0];
 
+  // A named profession wins: of the areas she mentioned, the best one that
+  // profession may offer ("an accountant to check the books", "a tax agent
+  // for VAT"). Without one, simply the best area.
+  let practiceArea: PracticeArea | undefined = named ? areas.find((a) => canOffer(named, a)) : areas[0];
   // "Invest in a farming business" with nothing else: on a farm, land is
   // what an investor most needs checked.
-  if (!practiceArea && sector === 'agri') practiceArea = 'land_property';
-  // A named profession wins over the area's own when they disagree.
-  if (practiceArea && named && PRACTICE[practiceArea].profession !== named) practiceArea = undefined;
+  if (!practiceArea && !named && sector === 'agri') practiceArea = 'land_property';
+  if (!practiceArea && named === 'lawyer' && sector === 'agri') practiceArea = 'land_property';
   const profession = named ?? (practiceArea ? PRACTICE[practiceArea].profession : undefined);
   const county = counties.find((c) => has(text, c.toLowerCase()));
 
@@ -209,7 +252,11 @@ export function fitOf(e: ExpertLike, q: ReadQuestion, lang: 'en' | 'sw' = 'en') 
  * this month; then who has helped most.
  */
 export function rankExperts<T extends ExpertLike>(experts: T[], q: ReadQuestion, lang: 'en' | 'sw' = 'en', limit = 3) {
-  const wanted = experts.filter((e) => !q.profession || e.profession === q.profession);
+  // Who does what she asked (an accountant or a tax agent, for tax), or
+  // shares the profession she named.
+  const wanted = experts.filter(
+    (e) => (!q.profession && !q.practiceArea) || e.profession === q.profession || (q.practiceArea !== undefined && e.practice_areas.includes(q.practiceArea)),
+  );
   const pool = wanted.length > 0 ? wanted : experts;
   return pool
     .map((e) => ({ expert: e, ...fitOf(e, q, lang) }))

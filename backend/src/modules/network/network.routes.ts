@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { PRACTICE_AREAS } from "../../../../shared/expert-question/index.js";
+import { allowedAreas, professionById, regulatorOf } from "../../../../shared/professions/index.js";
 import { z } from "zod";
 import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
@@ -129,15 +130,30 @@ export const expertProfileSchema = z.object({
   services: z.array(z.string().trim().min(2).max(80)).max(10).default([]),
   practice_areas: z.array(z.enum(PRACTICE_AREAS)).max(6).default([]),
   office_hours_per_month: z.number().int().min(0).max(40).default(0),
+  country: z.enum(["KE"]).default("KE"),
+  licence_expires_at: z.coerce.date().optional(),
+  qualification: z.string().trim().max(120).optional(),
+  qualification_body: z.string().trim().max(120).optional(),
 });
 
 networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) => {
   const input = expertProfileSchema.parse(req.body);
+  // Legal, tax and audit work only for those licensed to do it: each
+  // profession offers only its own practice areas (shared/professions).
+  const notHers = input.practice_areas.filter((a) => !allowedAreas(input.profession).includes(a));
+  if (notHers.length > 0) {
+    throw new AppError(400, "AREA_NOT_ALLOWED", `As a ${professionById(input.profession)?.label ?? input.profession}, you cannot offer: ${notHers.join(", ")}`);
+  }
+  // The register is the profession's own, whatever was sent.
+  const regulator = regulatorOf(professionById(input.profession));
   const row = {
     ...input,
     organisation_name: input.organisation_name ?? null,
-    register_body: input.register_body ?? null,
+    register_body: regulator?.short ?? input.register_body ?? null,
     register_number: input.register_number ?? null,
+    licence_expires_at: input.licence_expires_at ?? null,
+    qualification: input.qualification ?? null,
+    qualification_body: input.qualification_body ?? null,
   };
   const before = await prisma.expertProfile.findUnique({ where: { user_id: req.user!.id } });
   const profile = await prisma.expertProfile.upsert({
