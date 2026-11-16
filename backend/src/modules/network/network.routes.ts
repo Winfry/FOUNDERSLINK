@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { PRACTICE_AREAS } from "../../../../shared/expert-question/index.js";
 import { z } from "zod";
 import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
@@ -126,6 +127,7 @@ export const expertProfileSchema = z.object({
   sectors: z.array(z.enum(SECTORS)).default([]),
   counties: z.array(z.enum(COUNTIES)).default([]),
   services: z.array(z.string().trim().min(2).max(80)).max(10).default([]),
+  practice_areas: z.array(z.enum(PRACTICE_AREAS)).max(6).default([]),
   office_hours_per_month: z.number().int().min(0).max(40).default(0),
 });
 

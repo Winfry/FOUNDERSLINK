@@ -160,3 +160,49 @@ test("when a compliance answer says to get an expert, an approved member is show
   assert.deepEqual(waiting.json.experts, []);
   assert.ok(waiting.json.experts_available > 0);
 });
+
+test("an investor new to farming asks in her own words and gets an advocate who knows land law", async () => {
+  // A land lawyer for agriculture, and an investor to ask.
+  const extra = async (key: string, role: "expert" | "investor", full_name: string) => {
+    const email = `exp-${key}-${run}@example.com`;
+    const password_hash = await bcrypt.hash(password, 4);
+    const user = await prisma.user.create({ data: { email, role, full_name, password_hash, approval_status: "approved" } });
+    ids[key] = user.id;
+    tokens[key] = (await call("POST", "/auth/login", undefined, { email, password })).json.token;
+    await prisma.consent.create({ data: { user_id: user.id, purpose: "profile_visibility", granted: true, granted_at: new Date() } });
+  };
+  await extra("kiprono", "expert", "Kiprono Land Advocate");
+  await extra("grace", "investor", "Grace Investor");
+  const saved = await call("PUT", "/me/expert-profile", "kiprono" as Who, {
+    profession: "lawyer",
+    register_body: "LSK",
+    bio: "Land searches, agricultural leases and title transfers.",
+    sectors: ["agri"],
+    counties: ["Nakuru", "Uasin Gishu"],
+    practice_areas: ["land_property", "contracts"],
+    office_hours_per_month: 2,
+  });
+  assert.deepEqual(saved.json.practice_areas, ["land_property", "contracts"]);
+  assert.equal((await call("PUT", "/me/expert-profile", "kiprono" as Who, { profession: "lawyer", bio: "Land law and more.", practice_areas: ["wizardry"] })).status, 400);
+
+  // The directory filters by practice area.
+  const land = mine((await call("GET", "/experts?practice_area=land_property", "amina")).json).map((e: any) => e.full_name);
+  assert.deepEqual(land, ["Kiprono Land Advocate"]);
+
+  // The question, as she would type it.
+  const res = await call("POST", "/experts/find", "grace" as Who, {
+    question: "I would love to invest in a founder in agriculture but I do not know the laws. Which advocates know land law?",
+  });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.json.understood, { profession: "lawyer", practice_area: "land_property", practice_area_label: "Land and property law", sector: "agri", county: null });
+  assert.match(res.json.explanation, /land is often the biggest risk/);
+  assert.match(res.json.note, /not legal, tax or financial advice/);
+  const found = mine(res.json.experts);
+  assert.equal(found[0].full_name, "Kiprono Land Advocate");
+  assert.deepEqual(found[0].reasons, ["Land and property law", "Works with agriculture businesses"]);
+  // Only lawyers: she asked for an advocate.
+  assert.ok(found.every((e: any) => e.profession === "lawyer"));
+
+  // Not yet approved members cannot search.
+  assert.equal((await call("POST", "/experts/find", "newcomer", { question: "land law for my farm" })).json.error.code, "APPROVAL_REQUIRED");
+});

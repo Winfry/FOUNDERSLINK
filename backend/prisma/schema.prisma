@@ -311,6 +311,8 @@ model ExpertProfile {
   counties               String[]
   // What she offers, e.g. "Business registration", "eTIMS setup".
   services               String[]
+  // What she specialises in, e.g. "land_property" (shared/expert-question).
+  practice_areas         String[] @default([])
   // How many office-hours sessions she will take on in a month. 0 = none.
   office_hours_per_month Int      @default(0)
   created_at             DateTime @default(now())

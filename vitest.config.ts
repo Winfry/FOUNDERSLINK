@@ -12,6 +12,8 @@ export default defineConfig({
       "expo-secure-store": fileURLToPath(new URL("./mobile/src/__tests__/expo.stub.ts", import.meta.url)),
       "expo-document-picker": fileURLToPath(new URL("./mobile/src/__tests__/expo.stub.ts", import.meta.url)),
       "lucide-react-native": fileURLToPath(new URL("./mobile/src/__tests__/icons.stub.ts", import.meta.url)),
+      // The code the apps share, as the mobile bundler resolves it.
+      "@shared": fileURLToPath(new URL("./shared", import.meta.url)),
     },
   },
   test: {

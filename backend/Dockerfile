@@ -9,6 +9,7 @@ COPY backend/package.json backend/package-lock.json ./
 RUN npm ci
 
 COPY backend ./
+COPY shared /app/shared
 COPY data/seed /app/data/seed
 # prisma.config.ts requires DATABASE_URL even to generate the client, which
 # never connects. The real address comes from the environment at run time.

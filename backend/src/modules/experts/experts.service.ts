@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
+import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion } from "../../../../shared/expert-question/index.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { consented } from "../account/consents.js";
@@ -13,6 +14,12 @@ export const filterSchema = z.object({
   profession: z.enum(PROFESSIONS).optional(),
   sector: z.enum(SECTORS).optional(),
   county: z.enum(COUNTIES).optional(),
+  practice_area: z.enum(PRACTICE_AREAS).optional(),
+});
+
+export const findSchema = z.object({
+  question: z.string().trim().min(5, "Say a little about what you need help with").max(600),
+  lang: z.enum(["en", "sw"]).default("en"),
 });
 
 export const requestSchema = z.object({ topic: z.string().trim().min(10, "Say what you need help with").max(500) });
@@ -56,7 +63,13 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
   const covers = (list: string[], value?: string) => !value || list.length === 0 || list.includes(value);
 
   return experts
-    .filter((e) => visible.has(e.user_id) && covers(e.sectors, filter.sector) && covers(e.counties, filter.county))
+    .filter(
+      (e) =>
+        visible.has(e.user_id) &&
+        covers(e.sectors, filter.sector) &&
+        covers(e.counties, filter.county) &&
+        (!filter.practice_area || e.practice_areas.includes(filter.practice_area)),
+    )
     .map((e) => {
       const left = Math.max(0, e.office_hours_per_month - (taken.get(e.user_id) ?? 0));
       return {
@@ -70,6 +83,7 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
         sectors: e.sectors,
         counties: e.counties,
         services: e.services,
+        practice_areas: e.practice_areas,
         office_hours: { per_month: e.office_hours_per_month, left_this_month: left },
         // Different people she has finished a session with.
         helped: new Set(e.user.office_hours_given.map((o) => o.requester_id)).size,
@@ -78,6 +92,31 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
     // Those who can take a session now come first, then the most experienced.
     .sort((a, b) => Number(b.office_hours.left_this_month > 0) - Number(a.office_hours.left_this_month > 0) || b.helped - a.helped)
     .slice(0, limit);
+}
+
+/**
+ * A member asks in her own words ("I want to invest in a farm, who knows
+ * land law?"). The question is read for a profession, practice area,
+ * sector and county; the best-fitting verified experts come back with the
+ * reasons each fits, and a short plain explanation of why that kind of
+ * expert matters. General information, never advice; nothing is booked.
+ */
+export async function findExperts(input: z.infer<typeof findSchema>) {
+  const understood = readQuestion(input.question, COUNTIES);
+  const all = await listExperts({}, 200);
+  const ranked = rankExperts(all, understood, input.lang, 3);
+  return {
+    understood: {
+      profession: understood.profession ?? null,
+      practice_area: understood.practiceArea ?? null,
+      practice_area_label: understood.practiceArea ? PRACTICE[understood.practiceArea].label : null,
+      sector: understood.sector ?? null,
+      county: understood.county ?? null,
+    },
+    explanation: explain(understood, input.lang),
+    experts: ranked.map((r) => ({ ...r.expert, reasons: r.reasons })),
+    note: NOT_ADVICE[input.lang],
+  };
 }
 
 // A few experts to offer when an answer says "get professional help".

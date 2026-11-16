@@ -1,4 +1,4 @@
-import { filterSchema, requestSchema, respondSchema } from "../../modules/experts/experts.service.js";
+import { filterSchema, findSchema, requestSchema, respondSchema } from "../../modules/experts/experts.service.js";
 import { arr, dateTime, described, nullable, obj, oneOf, ref, str, uuid, type Op } from "../builder.js";
 import { person } from "../schemas.js";
 
@@ -18,6 +18,30 @@ export const ops: Op[] = [
     access: "approved",
     query: filterSchema,
     ok: { description: "The experts.", schema: arr(ref("ExpertCard")) },
+  },
+  {
+    method: "post",
+    path: "/experts/find",
+    summary: "Find experts from a question",
+    description:
+      "The caller describes what she needs in her own words, in English or Kiswahili (\"I want to invest in a farming business, who knows land law?\"). The question is read for a profession, practice area, sector and county; up to three approved, visible experts come back best first, each with the reasons it fits, plus a short plain explanation and a note that this is general information, not advice. Nothing is booked.",
+    access: "approved",
+    body: findSchema,
+    ok: {
+      description: "What was understood, why it matters, and the experts.",
+      schema: obj({
+        understood: obj({
+          profession: nullable(str),
+          practice_area: nullable(str),
+          practice_area_label: nullable(str),
+          sector: nullable(str),
+          county: nullable(str),
+        }),
+        explanation: str,
+        experts: arr(ref("ExpertCard")),
+        note: str,
+      }),
+    },
   },
   {
     method: "post",

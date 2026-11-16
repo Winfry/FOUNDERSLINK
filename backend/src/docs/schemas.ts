@@ -452,9 +452,11 @@ export const components: Record<string, Schema> = {
     sectors: described(arr(str), "Empty means all."),
     counties: described(arr(str), "Empty means all."),
     services: arr(str),
+    practice_areas: described(arr(str), 'What she specialises in, e.g. "land_property", "tax".'),
+    reasons: described(arr(str), "From POST /experts/find only: why she fits the question, in words."),
     office_hours: obj({ per_month: int, left_this_month: int }),
     helped: described(int, "Different people she has finished a session with."),
-  }),
+  }, ["reasons"]),
 
   Notification: obj({
     id: uuid,

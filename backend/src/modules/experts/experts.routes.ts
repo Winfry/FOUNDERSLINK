@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireApproved, requireAuth } from "../../middlewares/auth.js";
 import {
   filterSchema,
+  findExperts,
+  findSchema,
   listExperts,
   listOfficeHours,
   requestOfficeHour,
@@ -18,6 +20,12 @@ const id = (value: unknown) => z.uuid().parse(value);
 
 expertsRouter.get("/experts", ...member, async (req, res) => {
   res.json(await listExperts(filterSchema.parse(req.query)));
+});
+
+// "Who can help me with...?" in her own words. Any approved member:
+// founders, and investors checking a business before they put money in.
+expertsRouter.post("/experts/find", ...member, async (req, res) => {
+  res.json(await findExperts(findSchema.parse(req.body)));
 });
 
 expertsRouter.post("/experts/:id/office-hours", ...member, async (req, res) => {
