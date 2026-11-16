@@ -4,7 +4,7 @@
 
 import { z } from "zod";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
-import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion } from "../../../../shared/expert-question/index.js";
+import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion, type RateItem } from "../../../../shared/expert-question/index.js";
 import { allowedAreas, professionById, trustSummary } from "../../../../shared/professions/index.js";
 import { journeyOf, matchNeeds, planIntro, whoYouMayNeed, type Side } from "../../../../shared/deal-experts/index.js";
 import { prisma } from "../../shared/db.js";
@@ -98,6 +98,8 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
         counties: e.counties,
         services: e.services,
         practice_areas: e.practice_areas,
+        // What she charges (shared/expert-question RateItem). Payment is between the member and her.
+        rate_card: (Array.isArray(e.rate_card) ? e.rate_card : []) as unknown as RateItem[],
         trust: professionById(e.profession)?.trust ?? "experience",
         licence_expires_at: e.licence_expires_at,
         office_hours: { per_month: e.office_hours_per_month, left_this_month: left },
@@ -129,10 +131,10 @@ export async function findExperts(input: z.infer<typeof findSchema>, role = "fou
     const plan = matchNeeds(whoYouMayNeed(journey, { side, sector: understood.sector }), all, understood.sector);
     const experts = [...new Map(plan.flatMap((p) => (p.expert ? [[p.expert.user_id, p.expert] as const] : []))).values()];
     return {
-      understood: { profession: null, practice_area: null, practice_area_label: null, sector: understood.sector ?? null, county: understood.county ?? null },
+      understood: { profession: null, practice_area: null, practice_area_label: null, sector: understood.sector ?? null, county: understood.county ?? null, budget_kes: understood.budgetKes ?? null },
       explanation: planIntro(journey, side),
       experts,
-      plan: plan.map((p) => ({ need: p.id, who: p.who, why: p.why, step: p.step, expert: p.expert })),
+      plan: plan.map((p) => ({ need: p.id, area: p.area, who: p.who, why: p.why, step: p.step, expert: p.expert })),
       note: NOT_ADVICE[input.lang],
     };
   }
@@ -145,6 +147,7 @@ export async function findExperts(input: z.infer<typeof findSchema>, role = "fou
       practice_area_label: understood.practiceArea ? PRACTICE[understood.practiceArea].label : null,
       sector: understood.sector ?? null,
       county: understood.county ?? null,
+      budget_kes: understood.budgetKes ?? null,
     },
     explanation: explain(understood, input.lang),
     experts: ranked.map((r) => ({ ...r.expert, reasons: r.reasons })),

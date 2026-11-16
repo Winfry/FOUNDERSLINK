@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PRACTICE_AREAS } from "../../../../shared/expert-question/index.js";
+import { PRACTICE_AREAS, RATE_CARD_MAX, rateCardProblem } from "../../../../shared/expert-question/index.js";
 import { allowedAreas, professionById, regulatorOf } from "../../../../shared/professions/index.js";
 import { z } from "zod";
 import { requireApproved, requireAuth, requireRole } from "../../middlewares/auth.js";
@@ -134,6 +134,18 @@ export const expertProfileSchema = z.object({
   licence_expires_at: z.coerce.date().optional(),
   qualification: z.string().trim().max(120).optional(),
   qualification_body: z.string().trim().max(120).optional(),
+  // What she charges. Free lines have no price; the others a price in KES.
+  rate_card: z
+    .array(
+      z.object({
+        service: z.string().trim().min(2).max(80),
+        area: z.enum(PRACTICE_AREAS),
+        unit: z.enum(["free", "fixed", "hour"]),
+        price_kes: z.number().int().min(0).max(10_000_000).nullable().default(null),
+      }),
+    )
+    .max(RATE_CARD_MAX)
+    .default([]),
 });
 
 networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) => {
@@ -144,6 +156,9 @@ networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) 
   if (notHers.length > 0) {
     throw new AppError(400, "AREA_NOT_ALLOWED", `As a ${professionById(input.profession)?.label ?? input.profession}, you cannot offer: ${notHers.join(", ")}`);
   }
+  // Each price is for something her profession may offer, and has a price unless free.
+  const cardProblem = rateCardProblem(input.rate_card, allowedAreas(input.profession));
+  if (cardProblem) throw new AppError(400, "RATE_CARD_INVALID", cardProblem);
   // The register is the profession's own, whatever was sent.
   const regulator = regulatorOf(professionById(input.profession));
   const row = {
@@ -154,6 +169,7 @@ networkRouter.put("/me/expert-profile", requireAuth, isExpert, async (req, res) 
     licence_expires_at: input.licence_expires_at ?? null,
     qualification: input.qualification ?? null,
     qualification_body: input.qualification_body ?? null,
+    rate_card: input.rate_card.map((i) => ({ ...i, price_kes: i.unit === "free" ? null : i.price_kes })),
   };
   const before = await prisma.expertProfile.findUnique({ where: { user_id: req.user!.id } });
   const profile = await prisma.expertProfile.upsert({

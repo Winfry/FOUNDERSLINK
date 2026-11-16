@@ -14,6 +14,7 @@ import { ExpertResult } from './ExpertResultCard';
 const PROMPTS: Record<'founder' | 'investor', string[]> = {
   investor: [
     'I want to invest in a farming business. Which advocates know land law?',
+    'Who can do a land search for a farm in Nakuru for under KES 7,000?',
     'Who can check a business’s books before I invest?',
     'I need help reading a term sheet',
     'Nani anajua sheria ya ardhi Nakuru?',
@@ -61,7 +62,7 @@ function Answer({ result, question }: { result: ExpertFindResult; question: stri
             <Text style={styles.stepWho}>{s.who}</Text>
             <Text style={styles.stepWhy}>{s.why}</Text>
             {s.expert ? (
-              <ExpertResult e={s.expert} question={`${s.who}: ${s.why}`} />
+              <ExpertResult e={s.expert} question={`${s.who}: ${s.why}`} area={s.area} />
             ) : (
               <Text style={styles.none}>No verified expert offers this on FoundersLink yet.</Text>
             )}
@@ -71,7 +72,7 @@ function Answer({ result, question }: { result: ExpertFindResult; question: stri
         <>
           <Text style={[styles.label, styles.gap]}>{result.experts.length ? 'Verified experts who can help' : 'No verified expert fits this yet'}</Text>
           {result.experts.map((e) => (
-            <ExpertResult key={e.user_id} e={e} question={question} />
+            <ExpertResult key={e.user_id} e={e} question={question} area={result.understood.practice_area} />
           ))}
         </>
       )}

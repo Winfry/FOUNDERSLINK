@@ -1,5 +1,5 @@
 import { filterSchema, findSchema, requestSchema, respondSchema } from "../../modules/experts/experts.service.js";
-import { arr, dateTime, described, nullable, obj, oneOf, ref, str, uuid, type Op } from "../builder.js";
+import { arr, dateTime, described, int, nullable, obj, oneOf, ref, str, uuid, type Op } from "../builder.js";
 import { person } from "../schemas.js";
 
 export const tag = {
@@ -36,6 +36,7 @@ export const ops: Op[] = [
           practice_area_label: nullable(str),
           sector: nullable(str),
           county: nullable(str),
+          budget_kes: described(nullable(int), 'Her budget, when she gives one ("under KES 10,000"). Experts within it come first.'),
         }),
         explanation: str,
         experts: arr(ref("ExpertCard")),
@@ -44,6 +45,7 @@ export const ops: Op[] = [
             arr(
               obj({
                 need: str,
+                area: described(str, "The practice area that need searches for."),
                 who: described(str, '"An accountant or auditor".'),
                 why: described(str, "Why, from the caller's side (founder or investor)."),
                 step: described(str, '"Due diligence", "Terms agreed"...'),

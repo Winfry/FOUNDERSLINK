@@ -334,6 +334,12 @@ function init() {
     expertOnboardingComplete: true,
     expertProfession: 'lawyer',
     expertLicenceExpiresAt: '2026-12-31T00:00:00.000Z',
+    expertRateCard: [
+      { service: 'First consultation (30 minutes)', area: 'company', unit: 'free', price_kes: null },
+      { service: 'Company papers check', area: 'company', unit: 'fixed', price_kes: 12000 },
+      { service: 'Shareholders agreement review', area: 'investment_deals', unit: 'fixed', price_kes: 35000 },
+      { service: 'Data protection registration', area: 'data_protection', unit: 'fixed', price_kes: 20000 },
+    ],
   }, {
     vetting: { approvalStatus: 'approved', phone: '+254700000555', statement: 'Advocate of the High Court, helping startups with company law and data protection.' },
     sessions: expertSessions,

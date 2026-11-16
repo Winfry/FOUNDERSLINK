@@ -15,7 +15,7 @@ interface Me {
   preferred_language: string;
   founder_profile: object | null;
   investor_profile: object | null;
-  expert_profile: { profession?: string; licence_expires_at?: string | null } | null;
+  expert_profile: { profession?: string; licence_expires_at?: string | null; rate_card?: SessionUser['expertRateCard'] } | null;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -49,6 +49,7 @@ export async function fetchSessionUser(): Promise<SessionUser> {
     expertOnboardingComplete: me.role !== 'expert' || me.expert_profile !== null,
     expertProfession: me.expert_profile?.profession ?? null,
     expertLicenceExpiresAt: me.expert_profile?.licence_expires_at ?? null,
+    expertRateCard: me.expert_profile?.rate_card ?? [],
   };
 }
 

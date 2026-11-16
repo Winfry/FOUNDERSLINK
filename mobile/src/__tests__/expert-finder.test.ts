@@ -77,4 +77,26 @@ describe('asking the Co-pilot who can help (demo data)', () => {
     // The company advocate is an advocate, never the company secretary.
     expect(r.plan!.find((p) => p.need === 'company_advocate')!.expert!.profession).toBe('lawyer');
   });
+
+  it('within a budget: the advocate whose land search fits comes first, and the other is told plainly', async () => {
+    const r = await mockExpertService.find('Who can do a land search for a farm in Nakuru for under KES 7,000?');
+    expect(r.understood.budget_kes).toBe(7000);
+    expect(r.experts[0]!.full_name).toBe('Mercy Atieno');
+    expect(r.experts[0]!.reasons).toContain('Land search and title report: KES 6,500, within your budget');
+    expect(r.experts.find((e) => e.full_name === 'Joseph Kiprono')!.reasons).toContain('Land search and title report: KES 8,000, above your budget');
+  });
+
+  it('every demo expert has a rate card, and each line is something her profession may offer', async () => {
+    const { allowedAreas } = await import('@shared/professions');
+    const { rateCardProblem } = await import('@shared/expert-question');
+    for (const e of await mockExpertService.list()) {
+      expect(e.rate_card!.length, e.full_name).toBeGreaterThan(0);
+      expect(rateCardProblem(e.rate_card!, allowedAreas(e.profession)), e.full_name).toBeNull();
+    }
+  });
+
+  it('each step of a plan says which area it is for, so the right price shows', async () => {
+    const r = await mockExpertService.find('I’m preparing to raise investment. Who will I need?');
+    expect(r.plan!.every((p) => typeof p.area === 'string')).toBe(true);
+  });
 });

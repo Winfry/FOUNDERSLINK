@@ -1,3 +1,4 @@
+import type { RateItem } from '@shared/expert-question';
 import type { TrustSummary } from '@shared/professions';
 import { get, patch, post } from './client';
 
@@ -32,11 +33,15 @@ export interface ExpertCard {
   reasons?: string[];
   /** How she was checked: "Licensed · LSK · checked 12 Nov 2026" (shared/professions trustWords). */
   verification?: TrustSummary;
+  /** What she charges, in her words. Payment is between the member and her. */
+  rate_card?: RateItem[];
 }
 
 /** One step of the path: who often helps, why, and the best verified expert for it. */
 export interface PlanStep {
   need: string;
+  /** The practice area it searches for, so the right price is shown. */
+  area?: string;
   who: string;
   why: string;
   /** "Due diligence", "Terms agreed"... */
@@ -47,7 +52,15 @@ export interface PlanStep {
 
 /** What the guide understood from a question, why it matters, and who can help. */
 export interface ExpertFindResult {
-  understood: { profession: string | null; practice_area: string | null; practice_area_label: string | null; sector: string | null; county: string | null };
+  understood: {
+    profession: string | null;
+    practice_area: string | null;
+    practice_area_label: string | null;
+    sector: string | null;
+    county: string | null;
+    /** Her budget in KES, when she gave one. */
+    budget_kes?: number | null;
+  };
   explanation: string;
   experts: ExpertCard[];
   /** "I'm preparing to raise investment": the whole path, in order. Null for an ordinary question. */

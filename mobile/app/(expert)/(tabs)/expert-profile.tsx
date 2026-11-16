@@ -1,3 +1,4 @@
+import { rateLine } from '@shared/expert-question';
 import { checksInWords, expertStatus, professionById, regulatorOf, shortDate, TRUST } from '@shared/professions';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
@@ -59,8 +60,19 @@ export default function ExpertProfile() {
         <Row title="My verification" line="See what FoundersLink checked, or what it still needs." right={<Text style={styles.go}>Open</Text>} onPress={() => router.push('/founder/verify/status')} last />
       </Panel>
 
+      <Panel
+        title="Your rate card"
+        sub="What you charge. Members see it before they ask you, and the Co-pilot suggests you to those within budget. They pay you directly."
+      >
+        {(user?.expertRateCard ?? []).length > 0 ? (
+          (user?.expertRateCard ?? []).map((i, n, all) => <Row key={i.service} title={rateLine(i)} last={n === all.length - 1} />)
+        ) : (
+          <Row title="No prices yet" line="Add what you charge, so members know before they ask." right={<Text style={styles.go}>Add</Text>} onPress={() => router.push('/expert/onboarding')} last />
+        )}
+      </Panel>
+
       <Panel title="How members see you" sub="Your profession, what you specialise in, and how many sessions you offer each month.">
-        <Row title="Edit my expert profile" line="Profession, licence, specialities, services and sessions." right={<Text style={styles.go}>Edit</Text>} onPress={() => router.push('/expert/onboarding')} last />
+        <Row title="Edit my expert profile" line="Profession, licence, specialities, rate card and sessions." right={<Text style={styles.go}>Edit</Text>} onPress={() => router.push('/expert/onboarding')} last />
       </Panel>
 
       <Panel title="Account">

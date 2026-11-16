@@ -128,6 +128,8 @@ export interface ReadQuestion {
   practiceArea?: PracticeArea;
   sector?: string;
   county?: string;
+  /** Her budget in KES, when she gives one ("under KES 10,000"). */
+  budgetKes?: number;
 }
 
 /**
@@ -162,8 +164,9 @@ export function readQuestion(
   if (!practiceArea && named === 'lawyer' && sector === 'agri') practiceArea = 'land_property';
   const profession = named ?? (practiceArea ? PRACTICE[practiceArea].profession : undefined);
   const county = counties.find((c) => has(text, c.toLowerCase()));
+  const budgetKes = readBudget(question) ?? undefined;
 
-  return { profession, practiceArea, sector, county };
+  return { profession, practiceArea, sector, county, ...(budgetKes ? { budgetKes } : {}) };
 }
 
 /**
@@ -219,6 +222,7 @@ export interface ExpertLike {
   register_checked: boolean;
   office_hours: { left_this_month: number };
   helped: number;
+  rate_card?: RateItem[] | null;
 }
 
 /**
@@ -243,6 +247,16 @@ export function fitOf(e: ExpertLike, q: ReadQuestion, lang: 'en' | 'sw' = 'en') 
     reasons.push(sw ? `Anapatikana ${q.county}` : `Works in ${q.county}`);
   }
   // How she was checked is shown on its own line (shared/professions trustWords), not as a reason.
+  // Her budget: what this expert charges for her need, and whether it fits.
+  if (q.budgetKes) {
+    const item = priceFor(e.rate_card, q.practiceArea);
+    if (item && withinBudget(item, q.budgetKes)) {
+      score += 3;
+      reasons.push(`${rateLine(item, lang)}, ${sw ? 'ndani ya bajeti yako' : 'within your budget'}`);
+    } else if (item) {
+      reasons.push(`${rateLine(item, lang)}, ${sw ? 'juu ya bajeti yako' : 'above your budget'}`);
+    }
+  }
   return { score, reasons };
 }
 
@@ -267,4 +281,89 @@ export function rankExperts<T extends ExpertLike>(experts: T[], q: ReadQuestion,
         b.expert.helped - a.expert.helped,
     )
     .slice(0, limit);
+}
+
+// ---------------------------------------------------------------------------
+// Rate cards: what an expert charges, in her own words, and budgets.
+//
+// An expert lists what she does and what it costs. FoundersLink only shows
+// it and uses it to suggest someone within a member's budget. Payment is
+// between the member and the expert, never through FoundersLink.
+
+export type RateUnit = 'free' | 'fixed' | 'hour';
+
+export interface RateItem {
+  /** In her words: "Land search and title report". */
+  service: string;
+  /** The practice area it belongs to, so the right price is shown for the right need. */
+  area: string;
+  unit: RateUnit;
+  /** In KES. Null for a free item. */
+  price_kes: number | null;
+}
+
+export const RATE_CARD_MAX = 8;
+
+const kesWords = (n: number) => `KES ${Math.round(n).toLocaleString('en-KE')}`;
+
+/** "Free", "KES 8,000", "KES 3,000 an hour". */
+export function priceWords(item: RateItem, lang: 'en' | 'sw' = 'en'): string {
+  if (item.unit === 'free' || !item.price_kes) return lang === 'sw' ? 'Bure' : 'Free';
+  return item.unit === 'hour' ? `${kesWords(item.price_kes)} ${lang === 'sw' ? 'kwa saa' : 'an hour'}` : kesWords(item.price_kes);
+}
+
+/** "Land search and title report: KES 8,000". */
+export const rateLine = (item: RateItem, lang: 'en' | 'sw' = 'en') => `${item.service}: ${priceWords(item, lang)}`;
+
+/**
+ * The price that answers her need: the item for that practice area (the
+ * cheapest, if several), else nothing. Without an area, her cheapest paid
+ * item, so a card can say "From KES 3,000".
+ */
+export function priceFor(card: RateItem[] | null | undefined, area?: string | null): RateItem | null {
+  const items = (card ?? []).filter((i) => i.unit !== 'free');
+  const pool = area ? items.filter((i) => i.area === area) : items;
+  return [...pool].sort((a, b) => (a.price_kes ?? 0) - (b.price_kes ?? 0))[0] ?? null;
+}
+
+/** Whether she offers a free first conversation. */
+export const freeFirst = (card: RateItem[] | null | undefined) => (card ?? []).some((i) => i.unit === 'free');
+
+/** Whether a price fits a budget. An hourly rate is read as one hour. */
+export const withinBudget = (item: RateItem, budgetKes: number) => item.unit === 'free' || (item.price_kes ?? 0) <= budgetKes;
+
+/**
+ * A budget in her words: "under KES 10,000", "below 10k", "budget of
+ * 20,000", "15,000 or less", "chini ya 10,000". Null when she gives none.
+ */
+export function readBudget(question: string): number | null {
+  const t = question.toLowerCase().replace(/,(?=\d{3}\b)/g, '');
+  const amount = String.raw`(?:kes|ksh|ksh\.|shillings?|sh\.?)?\s*(\d+(?:\.\d+)?)\s*(k|thousand|elfu)?`;
+  const patterns = [
+    new RegExp(String.raw`(?:under|below|less than|at most|max(?:imum)?|up to|not more than|within|chini ya|isiyozidi)\s*` + amount),
+    new RegExp(String.raw`budget(?: of| is)?\s*` + amount),
+    new RegExp(amount + String.raw`\s*(?:or less|or below|max)`),
+  ];
+  // Kiswahili says the thousand first: "chini ya elfu 10" is under 10,000.
+  const elfu = /(?:chini ya|isiyozidi|bajeti ya|bajeti)\s*(?:kes|ksh)?\s*elfu\s*(\d+)/.exec(t);
+  if (elfu) return Number(elfu[1]) * 1000;
+  for (const p of patterns) {
+    const m = p.exec(t);
+    if (!m) continue;
+    const n = Number(m[1]) * (m[2] ? 1000 : 1);
+    // Below KES 100 it is not a budget ("up to 5 people").
+    if (Number.isFinite(n) && n >= 100) return Math.round(n);
+  }
+  return null;
+}
+
+/** A rate card as she wrote it, checked: what is wrong with it, or null. */
+export function rateCardProblem(card: RateItem[], allowed: string[]): string | null {
+  if (card.length > RATE_CARD_MAX) return `A rate card has at most ${RATE_CARD_MAX} lines.`;
+  for (const i of card) {
+    if (i.service.trim().length < 2) return 'Give each line a name, for example "Land search and title report".';
+    if (!allowed.includes(i.area)) return `"${i.service}" is not something your profession may offer.`;
+    if (i.unit !== 'free' && (!i.price_kes || i.price_kes <= 0)) return `Give "${i.service}" a price in KES, or mark it free.`;
+  }
+  return null;
 }

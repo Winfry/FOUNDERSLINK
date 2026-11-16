@@ -272,3 +272,44 @@ test("preparing to raise investment: the whole path, each step with a verified e
   // An ordinary question has no plan.
   assert.equal((await call("POST", "/experts/find", "amina", { question: "Which advocates know land law?" })).json.plan, null);
 });
+
+test("an expert's rate card is checked, shown, and used to find someone within a budget", async () => {
+  const profile = (rate_card: unknown) =>
+    call("PUT", "/me/expert-profile", "kiprono" as Who, {
+      profession: "lawyer",
+      register_body: "LSK",
+      bio: "Land searches, agricultural leases and title transfers.",
+      sectors: ["agri"],
+      counties: ["Nakuru", "Uasin Gishu"],
+      practice_areas: ["land_property", "contracts"],
+      office_hours_per_month: 2,
+      rate_card,
+    });
+
+  // A price for something her profession may not offer is refused, and so is a missing price.
+  assert.equal((await profile([{ service: "Tax filing", area: "tax", unit: "fixed", price_kes: 5000 }])).json.error.code, "RATE_CARD_INVALID");
+  assert.equal((await profile([{ service: "Land search", area: "land_property", unit: "fixed", price_kes: null }])).json.error.code, "RATE_CARD_INVALID");
+
+  const saved = await profile([
+    { service: "First consultation (30 minutes)", area: "land_property", unit: "free", price_kes: 999 },
+    { service: "Land search and title report", area: "land_property", unit: "fixed", price_kes: 8000 },
+    { service: "Contract review", area: "contracts", unit: "hour", price_kes: 3000 },
+  ]);
+  assert.equal(saved.status, 200);
+  // A free line never carries a price.
+  assert.equal(saved.json.rate_card[0].price_kes, null);
+
+  // Members see it on her card.
+  const card = mine((await call("GET", "/experts?practice_area=land_property", "amina")).json).find((e: any) => e.full_name === "Kiprono Land Advocate");
+  assert.deepEqual(card.rate_card.map((i: any) => [i.service, i.price_kes]), [
+    ["First consultation (30 minutes)", null],
+    ["Land search and title report", 8000],
+    ["Contract review", 3000],
+  ]);
+
+  // Asked within a budget: she fits, and the answer says so.
+  const res = await call("POST", "/experts/find", "grace" as Who, { question: "Who can do a land search for a farm for under KES 10,000?" });
+  assert.equal(res.json.understood.budget_kes, 10000);
+  const her = mine(res.json.experts).find((e: any) => e.full_name === "Kiprono Land Advocate");
+  assert.ok(her.reasons.includes("Land search and title report: KES 8,000, within your budget"));
+});

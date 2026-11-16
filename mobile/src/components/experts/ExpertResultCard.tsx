@@ -1,6 +1,7 @@
+import { freeFirst, priceFor, rateLine } from '@shared/expert-question';
 import { professionById, trustWords } from '@shared/professions';
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Avatar, Button } from '../ui';
 import { Text } from '../ui/Text';
 import { useToast } from '../ui/Toast';
@@ -16,7 +17,7 @@ const professionTitle = (profession: string) => professionById(profession)?.labe
  * fits, her sessions left, the ask, and "Report this expert". Used by the
  * Co-pilot and by "Who you may need now" in a deal room.
  */
-export function ExpertResult({ e, question }: { e: ExpertCard; question: string }) {
+export function ExpertResult({ e, question, area }: { e: ExpertCard; question: string; /** Her need, so the right price shows. */ area?: string | null }) {
   const { show } = useToast();
   const [asking, setAsking] = useState(false);
   const [topic, setTopic] = useState(question);
@@ -24,6 +25,9 @@ export function ExpertResult({ e, question }: { e: ExpertCard; question: string 
   const [sent, setSent] = useState(false);
   const first = e.full_name.split(' ')[0];
   const full = e.office_hours.left_this_month === 0;
+  const card = e.rate_card ?? [];
+  const price = priceFor(card, area);
+  const [seeCard, setSeeCard] = useState(false);
 
   const send = async () => {
     setBusy(true);
@@ -67,6 +71,29 @@ export function ExpertResult({ e, question }: { e: ExpertCard; question: string 
         </View>
       ) : null}
       <Text style={styles.bio}>{e.bio}</Text>
+
+      {/* What she charges: the price for this need, then her whole rate card on request. */}
+      {card.length > 0 ? (
+        <View style={styles.rates}>
+          {price ? <Text style={styles.price}>{rateLine(price)}</Text> : null}
+          {freeFirst(card) ? <Text style={styles.free}>{card.find((i) => i.unit === 'free')!.service}: free</Text> : null}
+          {seeCard ? (
+            <View style={styles.cardList}>
+              {card.map((i) => (
+                <Text key={i.service} style={styles.cardLine}>
+                  {rateLine(i)}
+                </Text>
+              ))}
+              <Text style={styles.payNote}>You pay {first} directly. FoundersLink never handles the money.</Text>
+            </View>
+          ) : null}
+          <Pressable onPress={() => setSeeCard((v) => !v)} accessibilityRole="button" accessibilityState={{ expanded: seeCard }} hitSlop={6}>
+            <Text style={styles.cardToggle}>{seeCard ? 'Hide rate card' : `See ${first}’s rate card`}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Text style={styles.payNote}>No rate card yet. Ask {first} for a price.</Text>
+      )}
       <Text style={styles.slots}>
         {full ? 'No sessions left this month' : `${e.office_hours.left_this_month} free session${e.office_hours.left_this_month === 1 ? '' : 's'} left this month`}
         {e.helped ? ` · Has helped ${e.helped} ${e.helped === 1 ? 'person' : 'people'}` : ''}
@@ -105,6 +132,13 @@ const styles = StyleSheet.create({
   reason: { fontSize: 14, color: colors.text },
   n: { fontSize: 12, color: colors.textDim },
   bio: { fontSize: 13, lineHeight: 19, color: colors.textMuted },
+  rates: { gap: 3 },
+  price: { fontSize: 14, fontWeight: '500', color: colors.text },
+  free: { fontSize: 13, color: colors.success },
+  cardList: { gap: 3, paddingVertical: spacing[1], paddingHorizontal: spacing[1.5], borderRadius: radius.md, backgroundColor: colors.background },
+  cardLine: { fontSize: 13, color: colors.text },
+  payNote: { fontSize: 12, color: colors.textMuted },
+  cardToggle: { fontSize: 13, fontWeight: '500', color: colors.primary, paddingVertical: 2 },
   slots: { fontSize: 12, color: colors.textMuted },
   sent: { fontSize: 13, color: colors.success, fontWeight: '500' },
   ask: { gap: spacing[1] },

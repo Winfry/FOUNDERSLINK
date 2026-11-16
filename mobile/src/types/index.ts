@@ -65,6 +65,8 @@ export interface SessionUser {
   expertProfession?: string | null;
   /** When an expert's licence runs out. After it, members cannot see her. */
   expertLicenceExpiresAt?: string | null;
+  /** What an expert charges (shared/expert-question RateItem). */
+  expertRateCard?: { service: string; area: string; unit: 'free' | 'fixed' | 'hour'; price_kes: number | null }[];
   avatarUrl?: string;
 }
 

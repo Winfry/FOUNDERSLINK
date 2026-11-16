@@ -454,6 +454,10 @@ export const components: Record<string, Schema> = {
     counties: described(arr(str), "Empty means all."),
     services: arr(str),
     practice_areas: described(arr(str), 'What she specialises in, e.g. "land_property", "tax".'),
+    rate_card: described(
+      arr(obj({ service: str, area: str, unit: oneOf(["free", "fixed", "hour"]), price_kes: described(nullable(int), "KES. Null when free.") })),
+      "What she charges, in her words. Shown to members; payment is between them and her, never through FoundersLink.",
+    ),
     trust: described(oneOf(["licensed", "certified", "experience"]), "How she was checked: on a register, a qualification, or experience and references."),
     verification: described(
       obj(

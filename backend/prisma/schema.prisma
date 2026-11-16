@@ -321,6 +321,10 @@ model ExpertProfile {
   // Certified professions: the qualification, and who awarded it.
   qualification          String?
   qualification_body     String?
+  // What she charges, in her words: [{ service, area, unit, price_kes }]
+  // (shared/expert-question RateItem). Shown to members; payment is between
+  // them and her, never through FoundersLink.
+  rate_card              Json     @default("[]")
   // How many office-hours sessions she will take on in a month. 0 = none.
   office_hours_per_month Int      @default(0)
   created_at             DateTime @default(now())

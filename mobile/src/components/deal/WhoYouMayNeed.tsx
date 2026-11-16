@@ -54,7 +54,7 @@ export function WhoYouMayNeed({ stage, sector, side }: { stage: DealStep; sector
               ) : experts.isError ? (
                 <Text style={styles.none}>The experts did not load. Check your connection and try again.</Text>
               ) : p.expert ? (
-                <ExpertResult e={p.expert} question={`${p.who} for our deal: ${p.why}`} />
+                <ExpertResult e={p.expert} question={`${p.who} for our deal: ${p.why}`} area={p.area} />
               ) : (
                 <Text style={styles.none}>No verified expert offers this on FoundersLink yet.</Text>
               )
