@@ -108,7 +108,7 @@ export function readQuestion(question: string, counties: readonly string[] = [])
     return scored[0]?.[0];
   };
 
-  let practiceArea = best(AREA_WORDS);
+  let practiceArea: PracticeArea | undefined = best(AREA_WORDS);
   const sector = best(SECTOR_KEYWORDS);
   const named = best(PROFESSION_WORDS);
 
