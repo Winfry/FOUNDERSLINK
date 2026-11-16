@@ -2,6 +2,7 @@ import type { FundingService } from '../types/api';
 import type { ApprovalStatus, FundingMatches, InvestorMatchCard, MatchBand, MatchReason } from '../../types';
 import { get } from './client';
 import { syncSessionUser } from './session-sync';
+import { shortTicket } from '../../lib/ticket';
 
 /** One card of `GET /funding/matches`. Only the fields used here. */
 interface ApiCard {
@@ -53,6 +54,8 @@ function toCard(card: ApiCard): InvestorMatchCard {
     riskFactors: card.risk_factors.map((risk) => ({ text: risk.text })),
     organisationName: card.investor?.organisation_name ?? undefined,
     anonymised: card.anonymised,
+    personUserId: card.investor?.user_id,
+    ticket: shortTicket(card.funder.ticket_min_kes, card.funder.ticket_max_kes),
   };
 }
 
@@ -81,11 +84,13 @@ export const httpFundingService: FundingService = {
     // The person behind the record, and her track record, are shown
     // only to a verified founder. The backend decides; we just ask.
     let trackRecord: { label: string; source: string }[] = [];
+    let years: number[] = [];
     if (card.investor) {
       const profile = await get<{
         track_record?: { company_name: string | null; sector: string; stage: string | null; year: number | null; source: string }[];
       }>(`/profiles/${card.investor.user_id}`).catch(() => null);
       trackRecord = (profile?.track_record ?? []).map((entry) => ({ label: SOURCE_TEXT(entry), source: entry.source }));
+      years = (profile?.track_record ?? []).map((entry) => entry.year).filter((y): y is number => typeof y === 'number');
     }
 
     return {
@@ -105,6 +110,10 @@ export const httpFundingService: FundingService = {
       gaps: card.gaps,
       riskFactors: card.risk_factors,
       trackRecord,
+      organisationName: card.investor?.organisation_name ?? null,
+      // Facts for the top of the page, from the track record she shared.
+      dealsClosed: card.investor ? trackRecord.length : null,
+      investingSince: years.length ? Math.min(...years) : null,
     };
   },
 };

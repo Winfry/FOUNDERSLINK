@@ -7,7 +7,7 @@ import { Avatar, Badge, Button, Card, Fit } from '../../../src/components/ui';
 import { ScreenError, ScreenLoading } from '../../../src/components/layout/ScreenStates';
 import { bandBars, bandMeta, Chip, kes, ReasonRow, splitHeadline, words } from '../../../src/components/matches/parts';
 import { useToast } from '../../../src/components/ui/Toast';
-import { connectionService, fundingService } from '../../../src/services';
+import { connectionService, founderService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import type { MatchBand } from '../../../src/types';
 import { fitVerdict, type FitGap } from '../../../src/lib/fit-verdict';
@@ -32,6 +32,7 @@ export default function InvestorMatchProfileScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const q = useQuery({ queryKey: ['investor-profile', id], queryFn: () => fundingService.getInvestorProfile(String(id)) });
+  const profileQ = useQuery({ queryKey: ['founder-profile'], queryFn: () => founderService.getProfile() });
   const [sending, setSending] = useState(false);
 
   const { show } = useToast();
@@ -106,29 +107,51 @@ export default function InvestorMatchProfileScreen() {
   };
 
   const fitLabel = fixFirst ? `${meta.label} after one fix` : meta.label;
+  const verifiedInvestor = data.verified === true;
+
+  // Above the name: their role and firm ("Partner · Lakeside Ventures").
+  const org = typeof data.organisationName === 'string' && data.organisationName !== name ? data.organisationName : '';
+  const role = [typeof data.title === 'string' ? data.title : '', org].filter(Boolean).join(' · ');
+
+  // Three facts under the name, as in the design. Only the ones we know.
+  const shortTicket = typeof data.ticket === 'string' ? data.ticket : '';
+  const facts = [
+    { value: shortTicket || ticket, label: 'Ticket' },
+    { value: typeof data.dealsClosed === 'number' ? String(data.dealsClosed) : '', label: 'Deals closed' },
+    { value: typeof data.investingSince === 'number' ? String(data.investingSince) : '', label: 'Investing since' },
+  ].filter((f) => f.value);
+  const business = profileQ.data?.businessName || 'your business';
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Card>
-        <View style={styles.person}>
-          <Avatar name={name} size={64} />
-          <View style={styles.flexOne}>
-            <Text style={styles.name} accessibilityRole="header">
-              {name}
-            </Text>
-            {ticket ? <Text style={styles.sub}>{ticket}</Text> : null}
-            {anonymised ? <Text style={styles.sub}>Their name shows once you are verified.</Text> : null}
-            <View style={styles.fitGap}>
-              <Fit label={fitLabel} filled={bandBars[band]} fix={fixFirst} />
-            </View>
+      <View style={styles.hero}>
+        <View style={styles.flexOne}>
+          {role ? <Text style={styles.role}>{role}</Text> : null}
+          <Text style={styles.name} accessibilityRole="header">
+            {name}
+          </Text>
+          {anonymised ? <Text style={styles.sub}>Their name shows once you are verified.</Text> : null}
+          <View style={styles.fitGap}>
+            <Fit label={verifiedInvestor ? `${fitLabel} · Verified` : fitLabel} filled={bandBars[band]} fix={fixFirst} />
           </View>
         </View>
-        <View style={styles.verdict}>
-          <Text style={styles.verdictLabel}>{verdict.label}</Text>
-          <Text style={styles.verdictText}>{verdict.text}</Text>
-          {verdict.count ? <Text style={styles.count}>{verdict.count}</Text> : null}
+        <Avatar name={name} size={72} />
+      </View>
+
+      {facts.length > 0 ? (
+        <View style={styles.facts}>
+          {facts.map((f, i) => (
+            <View key={f.label} style={[styles.factCell, i > 0 && styles.factDivider]}>
+              <Text style={styles.factValue} numberOfLines={1} adjustsFontSizeToFit>
+                {f.value}
+              </Text>
+              <Text style={styles.factName}>{f.label}</Text>
+            </View>
+          ))}
         </View>
-      </Card>
+      ) : null}
+
+      <Text style={styles.verdictText}>{verdict.text}</Text>
 
       {fixFirst ? (
         <Card style={styles.block}>
@@ -162,7 +185,7 @@ export default function InvestorMatchProfileScreen() {
 
       {reasons.length > 0 ? (
         <Card style={styles.block}>
-          <Text style={styles.label}>{band === 'not_a_fit' ? 'Why not' : 'Why they fit'}</Text>
+          <Text style={styles.label}>{band === 'not_a_fit' ? `Why not, for ${business}` : `Why they fit ${business}`}</Text>
           <View style={styles.list}>
             {reasons.map((r, i) => (
               <View key={r.text} style={[styles.row, i > 0 && styles.rowDivider]}>
@@ -239,11 +262,11 @@ export default function InvestorMatchProfileScreen() {
           </Text>
         ) : (
           <>
-            <Button title={verified ? 'Ask to connect' : 'Verify to connect'} loading={sending} onPress={() => void connect()} />
+            <Button title={verified ? 'Request introduction' : 'Verify to request an introduction'} loading={sending} onPress={() => void connect()} />
             <Text style={styles.actionHint}>
               {verified
-                ? 'They get a request from you. You can chat once they accept.'
-                : 'Verify once, and you can send investors a request to connect.'}
+                ? 'They get your request. You can message them once they accept.'
+                : 'Verify once, and you can ask investors for an introduction.'}
             </Text>
           </>
         )}
@@ -257,15 +280,18 @@ const styles = StyleSheet.create({
   content: { padding: spacing[2], paddingBottom: spacing[6], width: '100%' },
   flexOne: { flex: 1, minWidth: 0 },
 
-  person: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5] },
-  name: { fontSize: 22, fontWeight: '500', color: colors.primaryDark },
+  hero: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[2], paddingTop: spacing[1] },
+  role: { fontSize: 12, color: colors.textMuted },
+  name: { fontSize: 30, fontWeight: '300', color: colors.primaryDark, marginTop: 4, letterSpacing: -0.6 },
   sub: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   fitGap: { marginTop: spacing[1] },
 
-  verdict: { marginTop: spacing[2], paddingTop: spacing[1.5], borderTopWidth: 1, borderTopColor: colors.border, gap: 4 },
-  verdictLabel: { fontSize: 18, color: colors.primaryDark },
-  verdictText: { fontSize: 14, lineHeight: 20, color: colors.textMuted },
-  count: { fontSize: 13, color: colors.text, marginTop: 4 },
+  facts: { flexDirection: 'row', marginTop: spacing[2], paddingVertical: spacing[1.5], borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
+  factCell: { flex: 1, paddingHorizontal: spacing[1] },
+  factDivider: { borderLeftWidth: 1, borderLeftColor: colors.border },
+  factValue: { fontSize: 20, fontWeight: '300', color: colors.text },
+  factName: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  verdictText: { fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: spacing[1.5] },
 
   block: { marginTop: spacing[1.5] },
   blockButton: { marginTop: spacing[1.5] },

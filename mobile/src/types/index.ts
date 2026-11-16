@@ -112,6 +112,10 @@ export interface InvestorMatchCard {
   riskFactors: RiskFactor[];
   organisationName?: string;
   anonymised: boolean;
+  /** The person behind the record on FoundersLink, when there is one. Deals and requests are with them. */
+  personUserId?: string;
+  /** What they invest, short ("KES 1–5M"). */
+  ticket?: string;
 }
 
 export interface FundingMatches {

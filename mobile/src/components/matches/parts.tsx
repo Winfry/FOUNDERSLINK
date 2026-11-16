@@ -45,6 +45,7 @@ export function kes(amount: number): string {
   return `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
 }
 
+
 /**
  * A record with no name is known by its headline, three facts joined
  * with a dot ("Angel investor · health, fintech · KSh 500,000 to KSh 5,000,000").

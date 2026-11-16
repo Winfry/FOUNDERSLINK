@@ -4,6 +4,7 @@ import type {
   Deal,
   FounderProfile,
   FundingMatches,
+  InvestorMatchCard,
   SessionUser,
   VettingApplication,
 } from '../../types';
@@ -55,51 +56,71 @@ function baseFounderProfile(overrides: Partial<FounderProfile> = {}): FounderPro
   };
 }
 
+// The investors who fit Amina's ClinicBook, as in the approved design.
+const card = (
+  id: string,
+  name: string,
+  org: string,
+  ticket: string,
+  band: InvestorMatchCard['band'],
+  reasons: [string, boolean, string][],
+  gaps: string[] = [],
+): InvestorMatchCard => ({
+  investorUserId: id,
+  personUserId: id,
+  displayName: name,
+  organisationName: org,
+  ticket,
+  band,
+  reasons: reasons.map(([signal, fits, text]) => ({ signal, fits, text })),
+  gaps: gaps.map((text) => ({ kind: 'requirement' as const, text })),
+  riskFactors: [],
+  anonymised: false,
+});
+
 const aminaMatches: FundingMatches = {
   applyNow: [
-    {
-      investorUserId: 'inv-savanna',
-      displayName: 'Savanna Angels',
-      band: 'strong',
-      reasons: [
-        { signal: 'sector', fits: true, text: 'Health sector matches their mandate' },
-        { signal: 'stage', fits: true, text: 'MVP stage fits their ticket' },
-        { signal: 'county', fits: true, text: 'Nairobi is in their preferred counties' },
-      ],
-      gaps: [],
-      riskFactors: [],
-      organisationName: 'Savanna Angels',
-      anonymised: false,
-    },
+    card('inv-lakeside', 'David Otieno', 'Lakeside Ventures', 'KES 1–5M', 'strong', [
+      ['sector', true, 'Invests in health technology'],
+      ['amount', true, 'Your KES 1M ask is in his range'],
+      ['stage', true, 'Backs products already in use'],
+    ]),
+    card('inv-savanna', 'Grace Njoroge', 'Savanna Angels', 'KES 0.5–2M', 'strong', [
+      ['sector', true, 'Health is one of the three sectors she funds'],
+      ['amount', true, 'Your KES 1M ask is in her range'],
+      ['county', true, 'Nairobi is one of her counties'],
+    ]),
+    card('inv-syndicate', 'Wairimu Kimani', 'Nairobi Health Syndicate', 'KES 0.3–1M', 'good', [
+      ['sector', true, 'Funds clinics and health apps only'],
+      ['amount', true, 'Your KES 1M ask is at the top of her range'],
+    ]),
   ],
   applyAfter: [
-    {
-      investorUserId: 'inv-coast',
-      displayName: 'Angel investor, Mombasa, health, seed',
-      band: 'good',
-      reasons: [{ signal: 'sector', fits: true, text: 'Health focus aligns' }],
-      gaps: [{ kind: 'requirement', text: 'Add your KRA PIN', complianceItemId: 'kra_pin' }],
-      riskFactors: [],
-      anonymised: true,
-    },
+    card('inv-pwani', 'Fatuma Hassan', 'Pwani Impact Fund', 'KES 0.3–1.5M', 'good', [['sector', true, 'Funds health businesses']], ['Bank account in the business name']),
+    card('inv-rift', 'James Mutua', 'Rift Angels', 'KES 0.5–1M', 'possible', [['amount', true, 'Your ask is in his range']], ['CR12']),
   ],
   notForYou: [
-    {
-      investorUserId: 'inv-north',
-      displayName: 'VC fund, Nairobi, growth',
-      band: 'not_a_fit',
-      reasons: [{ signal: 'ticket', fits: false, text: 'Their minimum investment is KSh 10M' }],
-      gaps: [],
-      riskFactors: [{ text: 'They charge an application fee before diligence — check terms carefully' }],
-      anonymised: true,
-    },
+    card('inv-shamba', 'Peter Kamau', 'Shamba Capital', 'Farming only', 'not_a_fit', [['sector', false, 'Funds farming businesses only']]),
+    card('inv-coast', 'Ann Njoroge', 'Coast Ventures', 'Mombasa only', 'not_a_fit', [['county', false, 'Funds businesses in Mombasa only']]),
+    card('inv-growth', 'Samuel Ouma', 'Growth Partners', 'KES 20M+', 'not_a_fit', [['amount', false, 'Their smallest investment is KES 20M']]),
+    card('inv-retail', 'Lucy Wambui', 'Retail Fund', 'Retail only', 'not_a_fit', [['sector', false, 'Funds retail businesses only']]),
   ],
 };
 
+/** What each demo investor shows at the top of their page. */
+export const INVESTOR_FACTS: Record<string, { title: string; dealsClosed: number; investingSince: number }> = {
+  'inv-lakeside': { title: 'Partner', dealsClosed: 14, investingSince: 2019 },
+  'inv-savanna': { title: 'Lead angel', dealsClosed: 9, investingSince: 2020 },
+  'inv-syndicate': { title: 'Founder', dealsClosed: 6, investingSince: 2021 },
+  'inv-pwani': { title: 'Fund manager', dealsClosed: 11, investingSince: 2018 },
+  'inv-rift': { title: 'Angel investor', dealsClosed: 4, investingSince: 2022 },
+};
+
+// Before she is verified, a founder sees what each investor funds, not who they are.
 const anonymisedMatches: FundingMatches = {
-  applyNow: aminaMatches.applyNow.map((m) => ({ ...m, displayName: 'Angel investor, Nairobi, health, seed', anonymised: true })),
-  applyAfter: aminaMatches.applyAfter,
-  notForYou: aminaMatches.notForYou,
+  applyNow: aminaMatches.applyNow.map((m) => ({ ...m, displayName: 'Angel investor · Health', organisationName: undefined, anonymised: true })),
+  applyAfter: aminaMatches.applyAfter.map((m) => ({ ...m, displayName: 'Angel investor · Health', organisationName: undefined, anonymised: true })),
+  notForYou: aminaMatches.notForYou.map((m) => ({ ...m, displayName: 'Investor', organisationName: undefined, anonymised: true })),
 };
 
 function seedMember(
@@ -145,11 +166,11 @@ function init() {
         title: 'ClinicBook — seed with Savanna Angels',
         stage: 'exploring',
         withUserId: 'inv-savanna',
-        withName: 'Savanna Angels',
+        withName: 'Grace Njoroge',
         terms: { amountKes: 1_000_000, instrument: 'equity', equityPercent: 12, notes: 'Board observer seat' },
         confirmations: [
           { userId: 'u-amina', name: 'Amina Wanjiru', confirmed: false },
-          { userId: 'inv-savanna', name: 'Savanna Angels', confirmed: false },
+          { userId: 'inv-savanna', name: 'Grace Njoroge', confirmed: false },
         ],
         checklist: [{ id: 'c1', label: 'Align on instrument', done: true }],
         timeline: [{ id: 't1', title: 'Deal opened', at: new Date().toISOString() }],

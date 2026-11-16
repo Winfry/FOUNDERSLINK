@@ -8,7 +8,7 @@ const seedRequests: ConnectionJoinRequest[] = [
     direction: 'received',
     status: 'pending',
     withUserId: 'inv-savanna',
-    withFullName: 'Savanna Angels',
+    withFullName: 'Grace Njoroge',
     withOrganisationName: 'Savanna Angels',
     focusAreas: ['Health', 'MVP'],
     pitch: 'We like ClinicBook and can open hospital partnerships.',

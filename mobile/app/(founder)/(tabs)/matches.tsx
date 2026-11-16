@@ -4,15 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../../src/components/ui/Text';
-import { Avatar, Button, Card, Fit } from '../../../src/components/ui';
+import { Avatar, Button, Card, FitBars } from '../../../src/components/ui';
 import { ScreenEmpty, ScreenError, ScreenLoading, ScreenOffline } from '../../../src/components/layout/ScreenStates';
-import { bandBars, bandMeta, ReasonRow, splitHeadline, topReasons } from '../../../src/components/matches/parts';
+import { bandBars, bandMeta, splitHeadline, topReasons } from '../../../src/components/matches/parts';
 import { useNetworkStatus } from '../../../src/hooks/useNetworkStatus';
 import { useWideLayout } from '../../../src/hooks/useWideLayout';
-import { consentService, fundingService } from '../../../src/services';
+import { connectionService, consentService, dealService, fundingService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { verificationInvite } from '../../../src/lib/verification-invite';
-import type { InvestorMatchCard } from '../../../src/types';
+import type { ConnectionJoinRequest, Deal, InvestorMatchCard } from '../../../src/types';
 import { colors, radius, spacing, touchTargetMin } from '../../../src/theme/tokens';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { usePullToRefresh } from '../../../src/hooks/usePullToRefresh';
@@ -22,17 +22,17 @@ type Segment = 'pitch' | 'pitchAfter' | 'dontPitch';
 const SEGMENTS: { key: Segment; label: string; title: string; hint: string; empty: string }[] = [
   {
     key: 'pitch',
-    label: 'Ready to pitch',
+    label: 'Ready',
     title: 'Ready to pitch',
     hint: 'These investors fit your business today.',
-    empty: 'No investor fits fully yet. Look at "After one fix": closing one gap can move an investor here.',
+    empty: 'No investor fits fully yet. Look at "After a fix": closing one gap can move an investor here.',
   },
   {
     key: 'pitchAfter',
-    label: 'After one fix',
+    label: 'After a fix',
     title: 'Pitch after you fix this',
     hint: 'These fit, once you close the gap named on each card.',
-    empty: 'Nothing to fix. Every investor that fits you is already under "Ready to pitch".',
+    empty: 'Nothing to fix. Every investor that fits you is already under "Ready".',
   },
   {
     key: 'dontPitch',
@@ -43,17 +43,32 @@ const SEGMENTS: { key: Segment; label: string; title: string; hint: string; empt
   },
 ];
 
+/**
+ * Where she stands with an investor, in a few words: in a deal room with
+ * them, waiting on a request, connected, or not contacted yet.
+ */
+function standing(personId: string | undefined, deals: Deal[], requests: ConnectionJoinRequest[]): string {
+  if (!personId) return 'Not on FoundersLink yet';
+  if (deals.some((d) => d.withUserId === personId && d.stage !== 'closed')) return 'In deal room';
+  const r = requests.find((c) => c.withUserId === personId);
+  if (r?.status === 'accepted') return 'Connected';
+  if (r?.status === 'pending') return r.direction === 'sent' ? 'Request sent' : 'Wants to connect';
+  if (r?.status === 'declined') return 'Declined';
+  return 'Not contacted';
+}
+
 function MatchesScreen() {
   const router = useRouter();
   const wide = useWideLayout();
   const user = useAuthStore((s) => s.user);
   const { isOffline } = useNetworkStatus();
   const [segment, setSegment] = useState<Segment>('pitch');
-  // One card is open at a time, as in the design: tap a card to see its reasons.
-  const [openId, setOpenId] = useState<string | null>(null);
 
   const consentQ = useQuery({ queryKey: ['consents'], queryFn: () => consentService.list() });
   const matchesQ = useQuery({ queryKey: ['funding-matches'], queryFn: () => fundingService.getMatches() });
+  // For "In deal room", "Request sent", "Not contacted" under each investor.
+  const dealsQ = useQuery({ queryKey: ['deals'], queryFn: () => dealService.list() });
+  const peopleQ = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list() });
   const pull = usePullToRefresh(matchesQ.refetch);
 
   const aiMatchingOn = consentQ.data?.find((c) => c.purpose === 'ai_matching')?.granted ?? false;
@@ -94,7 +109,7 @@ function MatchesScreen() {
 
   const header = (
     <View>
-      <PageTitle title="Investors for you" subtitle="Sorted by how well they fit your business." />
+      <PageTitle title="Investors who fit you." subtitle="Sorted by how well they fit your business." />
 
       {invite ? (
         <Card style={styles.invite}>
@@ -121,10 +136,7 @@ function MatchesScreen() {
                   accessibilityState={{ selected: on }}
                   accessibilityLabel={`${s.title}, ${lists[s.key].length}`}
                   style={({ pressed }) => [styles.tab, on && styles.tabOn, pressed && styles.dim]}
-                  onPress={() => {
-                    setSegment(s.key);
-                    setOpenId(null);
-                  }}
+                  onPress={() => setSegment(s.key)}
                 >
                   <Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
                     {`${s.label} · ${lists[s.key].length}`}
@@ -154,14 +166,20 @@ function MatchesScreen() {
     );
   }
 
+  const deals = dealsQ.data ?? [];
+  const requests = peopleQ.data ?? [];
+
   return (
     <FlatList
+      // Two columns on a computer, one on a phone.
+      key={wide ? 'two' : 'one'}
+      numColumns={wide ? 2 : 1}
+      columnWrapperStyle={wide ? styles.columns : undefined}
       refreshControl={<RefreshControl {...pull} />}
       style={styles.flex}
       contentContainerStyle={page}
       data={list}
       keyExtractor={(item) => item.investorUserId}
-      extraData={openId}
       ListHeaderComponent={header}
       ListEmptyComponent={
         <ScreenEmpty
@@ -172,111 +190,70 @@ function MatchesScreen() {
         />
       }
       renderItem={({ item }) => (
-        <MatchCard
-          item={item}
-          missesFirst={segment === 'dontPitch'}
-          open={openId === item.investorUserId}
-          onToggle={() => setOpenId((id) => (id === item.investorUserId ? null : item.investorUserId))}
-          onPress={() => router.push(`/founder/investor-match/${item.investorUserId}`)}
-          onFix={() => router.push('/(founder)/(tabs)/readiness')}
-        />
+        <View style={wide ? styles.half : undefined}>
+          <MatchCard
+            item={item}
+            segment={segment}
+            status={standing(item.personUserId, deals, requests)}
+            onPress={() => router.push(`/founder/investor-match/${item.investorUserId}`)}
+          />
+        </View>
       )}
     />
   );
 }
 
-function MatchCard({
-  item,
-  missesFirst,
-  open,
-  onToggle,
-  onPress,
-  onFix,
-}: {
-  item: InvestorMatchCard;
-  missesFirst: boolean;
-  open: boolean;
-  onToggle: () => void;
-  onPress: () => void;
-  onFix: () => void;
-}) {
+/**
+ * One investor, as in the approved design: face, name, firm and ticket,
+ * the fit bars, and under them where she stands with them and "View".
+ * After a fix, the line names what to fix; not a fit, it says why not.
+ */
+function MatchCard({ item, segment, status, onPress }: { item: InvestorMatchCard; segment: Segment; status: string; onPress: () => void }) {
   const band = bandMeta[item.band];
-  const afterFix = item.gaps.length > 0 && item.band !== 'not_a_fit';
+  const afterFix = segment === 'pitchAfter';
   // A record with no name yet is known by its headline. Show its parts, not the sentence.
   const headline = item.anonymised || item.displayName.includes(' · ') ? splitHeadline(item.displayName) : null;
   const name = headline ? headline.kind : item.displayName;
-
-  // Under the name: the firm, then what the headline says they fund and the ticket.
   const org = item.organisationName && !name.startsWith(item.organisationName) ? item.organisationName : null;
-  const sub = [org, headline?.sectors.join(', '), headline?.ticket].filter(Boolean).join(' · ');
-  const reasons = topReasons(item.reasons, 3, missesFirst);
-  const line = reasons[0]?.text ?? '';
-  const fitLabel = afterFix ? `${band.label} after one fix` : band.label;
+  const sub = [org, headline?.sectors.join(', '), item.ticket ?? headline?.ticket].filter(Boolean).join(' · ');
+
+  const why = topReasons(item.reasons, 1, true)[0];
+  const line =
+    segment === 'pitch'
+      ? status
+      : afterFix
+        ? `Needs: ${item.gaps.map((g) => g.text).join(', ') || 'one fix'}`
+        : (why && !why.fits ? why.text : band.label);
+  const action = segment === 'pitch' ? 'View' : afterFix ? 'See fix' : null;
 
   return (
     <Card style={styles.card}>
       <Pressable
-        onPress={onToggle}
+        onPress={onPress}
         accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${name}, ${fitLabel}. ${open ? 'Hide' : 'Show'} the reasons`}
-        style={({ pressed }) => [styles.person, pressed && styles.dim]}
+        accessibilityLabel={`${name}, ${afterFix ? `${band.label} after a fix` : band.label}. ${line}`}
+        style={({ pressed }) => [pressed && styles.dim]}
       >
-        <Avatar name={name} size={52} />
-        <View style={styles.flexOne}>
-          <Text style={styles.name}>{name}</Text>
-          {sub ? <Text style={styles.org}>{sub}</Text> : null}
-          {item.anonymised ? <Text style={styles.org}>Their name shows once you are verified.</Text> : null}
-          {line ? <Text style={styles.line}>{line}</Text> : null}
-          <Fit label={fitLabel} filled={bandBars[item.band]} fix={afterFix} />
+        <View style={styles.person}>
+          <Avatar name={name} size={48} />
+          <View style={styles.flexOne}>
+            <Text style={styles.name} numberOfLines={1}>{name}</Text>
+            {sub ? <Text style={styles.org} numberOfLines={2}>{sub}</Text> : null}
+          </View>
+          <FitBars filled={bandBars[item.band]} fix={afterFix} />
+        </View>
+        <View style={styles.foot}>
+          <Text style={[styles.status, segment === 'pitch' && status === 'In deal room' && styles.statusOn]} numberOfLines={2}>
+            {line}
+          </Text>
+          {/* The whole card opens the page; this is how it says so. */}
+          {action ? (
+            <View style={styles.pill}>
+              <Text style={styles.pillText}>{action}</Text>
+            </View>
+          ) : null}
         </View>
       </Pressable>
-
-      {open ? (
-        <View style={styles.more}>
-          {afterFix ? (
-            <>
-              <Text style={styles.label}>Fix this first</Text>
-              <View style={styles.reasons}>
-                {item.gaps.map((g, i) => (
-                  <ReasonRow key={g.text} n={i + 1} fits text={g.text} compact />
-                ))}
-              </View>
-              <Button
-                title={item.gaps.some((g) => g.kind === 'requirement') ? 'Sort it out in Readiness' : 'Answer it in Readiness'}
-                variant="soft"
-                onPress={onFix}
-                accessibilityLabel={`Fix this first: ${item.gaps.map((g) => g.text).join(', ')}. Open Readiness`}
-              />
-            </>
-          ) : null}
-
-          {reasons.length > 0 ? (
-            <>
-              <Text style={[styles.label, afterFix && styles.labelGap]}>{missesFirst ? 'Why not' : 'Why they fit'}</Text>
-              <View style={styles.reasons}>
-                {reasons.map((r, i) => (
-                  <ReasonRow key={r.signal} n={i + 1} fits={r.fits} text={r.text} compact />
-                ))}
-              </View>
-            </>
-          ) : null}
-
-          {item.riskFactors.map((rf) => (
-            <Text key={rf.text} style={styles.quiet}>
-              {rf.text}
-            </Text>
-          ))}
-
-          <Button
-            title="See the full fit"
-            variant={missesFirst || afterFix ? 'secondary' : 'primary'}
-            onPress={onPress}
-            accessibilityLabel={`See the full fit for ${name}`}
-            style={styles.mainButton}
-          />
-        </View>
-      ) : null}
     </Card>
   );
 }
@@ -308,25 +285,17 @@ const styles = StyleSheet.create({
   tabTextOn: { color: colors.white },
   hint: { fontSize: 13, color: colors.textMuted, marginTop: spacing[1.5], marginBottom: spacing[1.5] },
 
-  card: { marginBottom: spacing[1.5] },
-  person: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1.5], minHeight: touchTargetMin },
+  columns: { gap: spacing[1.5] },
+  half: { flex: 1, maxWidth: '50%' },
+  card: { marginBottom: spacing[1.5], paddingVertical: 14 },
+  person: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5], minHeight: touchTargetMin },
   name: { fontSize: 15, fontWeight: '500', color: colors.text },
   org: { fontSize: 13, color: colors.textMuted, marginTop: 1 },
-  line: { fontSize: 13, color: colors.text, marginTop: 4, marginBottom: 6 },
-
-  more: { marginTop: 14 },
-  label: { fontSize: 12, color: colors.textMuted },
-  labelGap: { marginTop: spacing[2] },
-  reasons: {
-    marginTop: spacing[1],
-    marginBottom: spacing[1.5],
-    paddingTop: spacing[1],
-    gap: spacing[1],
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  quiet: { fontSize: 13, color: colors.textMuted, marginBottom: spacing[1] },
-  mainButton: { marginTop: spacing[0.5] },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing[1.5], marginTop: 10 },
+  status: { flex: 1, fontSize: 13, color: colors.textMuted },
+  statusOn: { color: colors.primary, fontWeight: '500' },
+  pill: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 16, borderRadius: radius.full, borderWidth: 1, borderColor: colors.primaryBorder },
+  pillText: { fontSize: 13, fontWeight: '500', color: colors.primary },
 });
 
 export default withBackdrop(MatchesScreen);
