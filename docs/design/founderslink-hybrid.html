@@ -216,6 +216,8 @@
   .more { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--purple); font-weight: 500; font-size: .88em; }
 
   .nav { flex-shrink: 0; display: grid; background: #fff; border-top: 1px solid var(--line); padding: 4px 6px 16px; }
+  .nav button svg { display: block; width: 22px; height: 22px; margin: 0 auto 4px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav button.on svg { stroke-width: 2.2; }
   .nav button { border: 0; background: none; padding: 12px 2px 6px; font-weight: 500; font-size: .78em; color: var(--dim); position: relative; line-height: 1.2; min-height: 48px; }
   .nav button.on { color: var(--purple); }
   .nav button.on::before { content: ""; position: absolute; top: 0; left: 50%; width: 18px; height: 3px; margin-left: -9px; background: var(--gold); border-radius: 0 0 3px 3px; }
@@ -473,7 +475,7 @@
   // ---------------- Words ----------------
   const T = {
     en: {
-      nav: { home: 'Home', investors: 'Investors', ready: 'Get ready', guide: 'Guide', chamas: 'Chamas' },
+      nav: { home: 'Home', investors: 'Investors', ready: 'Readiness', deals: 'Deals', more: 'More', guide: 'Co-pilot', chamas: 'Chamas' },
       date: 'Saturday, 14 November', hello: 'Good evening,', name: 'Amina.', messages: 'Messages',
       nextStep: 'Your next step', showHow: 'Show me how', doneIt: "I've done this",
       allDone: "You've done everything on your list. Investors can see you're ready.",
@@ -499,7 +501,7 @@
       openChat: 'Open the group chat', noMoney: "Money goes to the chama's own account. FoundersLink never holds it.",
     },
     sw: {
-      nav: { home: 'Nyumbani', investors: 'Wawekezaji', ready: 'Jiandae', guide: 'Mwongozo', chamas: 'Chama' },
+      nav: { home: 'Nyumbani', investors: 'Wawekezaji', ready: 'Utayari', deals: 'Mikataba', more: 'Zaidi', guide: 'Msaidizi', chamas: 'Chama' },
       date: 'Jumamosi, 14 Novemba', hello: 'Habari za jioni,', name: 'Amina.', messages: 'Ujumbe',
       nextStep: 'Hatua yako inayofuata', showHow: 'Nionyeshe jinsi', doneIt: 'Nimeshafanya',
       allDone: 'Umekamilisha kila kitu kwenye orodha yako. Wawekezaji wanaona uko tayari.',
@@ -527,7 +529,7 @@
   };
   const TI = {
     en: {
-      nav: { ihome: 'Home', ibiz: 'Businesses', ireq: 'Requests', iport: 'My investments' },
+      nav: { ihome: 'Home', ibiz: 'Businesses', ireq: 'Requests', iport: 'Investments' },
       name: 'Grace.',
       attention: 'Needs your attention', attnText: "MamaCare's 180-day check-in is late. Achieng hasn't sent her update yet.", attnBtn: 'See MamaCare',
       summaryLabel: 'Your investments', summary: '3 businesses backed through FoundersLink.', nextCheck: 'Next check-in: ClinicBook, 10 February 2027.', seeInv: 'See my investments',
@@ -550,7 +552,7 @@
       waiting: 'Deciding', connected: 'Connected', proposed: (a) => `You proposed ${a}`, openChat: 'Open the chat',
     },
     sw: {
-      nav: { ihome: 'Nyumbani', ibiz: 'Biashara', ireq: 'Maombi', iport: 'Uwekezaji wangu' },
+      nav: { ihome: 'Nyumbani', ibiz: 'Biashara', ireq: 'Maombi', iport: 'Uwekezaji' },
       name: 'Grace.',
       attention: 'Inahitaji umakini wako', attnText: 'Ukaguzi wa siku 180 wa MamaCare umechelewa. Achieng bado hajatuma taarifa yake.', attnBtn: 'Ona MamaCare',
       summaryLabel: 'Uwekezaji wako', summary: 'Biashara 3 ulizofadhili kupitia FoundersLink.', nextCheck: 'Ukaguzi unaofuata: ClinicBook, 10 Februari 2027.', seeInv: 'Ona uwekezaji wangu',
@@ -657,6 +659,16 @@
   ];
 
   const NOTES = {
+    deals: { title: 'Deals: her deal rooms, a tab of their own', sub: 'Every deal she is in, and which of the six steps it has reached.', items: [
+      ['The deal and the investor, by name', 'ClinicBook, seed with Savanna Angels, with Grace beside it.'],
+      ['Six steps, one bar', 'Purple for done, gold for where it is now.'],
+      ['Each step in words', 'Done, Now, Next.'],
+    ] },
+    more: { title: 'More: the whole side menu, on a phone', sub: 'The same list as the side menu on a computer, with its counts.', items: [
+      ['Every place, named', 'The same items and counts as the side menu, in the same order.'],
+      ['Learn it once', 'What is on the computer is on the phone.'],
+      ['Notifications and Settings at the foot', 'Where they sit on the side menu.'],
+    ] },
     ehome: { title: 'Expert home: who needs her help', sub: 'Wanjiku is a lawyer. Founders ask her for a session; she accepts or declines.', items: [
       ['Three numbers, in words', 'New requests, sessions running, founders helped.'],
       ['Each request with the founder\'s face and question', 'Her question in her own words, then "Accept" or "Decline".'],
@@ -1126,8 +1138,58 @@
     </div>`;
   }
 
-  const SCREENS = { home, investors, ready, guide, chamas, ihome, ibiz, ireq, iport, ehome, eprofile };
-  const ORDERS = { founder: ['home', 'investors', 'ready', 'guide', 'chamas'], investor: ['ihome', 'ibiz', 'ireq', 'iport'], expert: ['ehome', 'eprofile'] };
+  // The phone's bottom bar: an icon above each word, as in the app.
+  const ICONS = {
+    home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    investors: '<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a3 3 0 0 0-4.2 0l-.9.9a1 1 0 1 1-3-3l2.8-2.8a5.8 5.8 0 0 1 7 .9L21 7.3V14"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/>',
+    ready: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+    deals: '<path d="M12 12h.01"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M22 13a18 18 0 0 1-20 0"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+    more: '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
+    ibiz: '<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2 6.4-6.4 2 2-6.4z"/>',
+    ireq: '<path d="M14.5 21.7a.5.5 0 0 0 .9 0l6.5-19a.5.5 0 0 0-.6-.6l-19 6.5a.5.5 0 0 0 0 .9l7.9 3.2a2 2 0 0 1 1.1 1.1z"/><path d="m21.9 2.1-10.9 10.9"/>',
+    iport: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    eprofile: '<path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/>',
+  };
+  ICONS.ihome = ICONS.home; ICONS.ehome = ICONS.home;
+  const icon = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] ?? ICONS.more}</svg>`;
+
+  // Founder: her deal rooms, a tab of their own.
+  function deals() {
+    const sw = S.lang === 'sw';
+    const steps = sw ? ['Ombi', 'Uchunguzi wa kina', 'Masharti', 'Hati', 'Kutia sahihi', 'Imefungwa'] : ['Interest', 'Due diligence', 'Terms', 'Documents', 'Signing', 'Closed'];
+    const word = (i) => (i === 0 ? (sw ? 'Imekamilika' : 'Done') : i === 1 ? (sw ? 'Sasa' : 'Now') : (sw ? 'Bado' : 'Next'));
+    const tone = (i) => (i === 0 ? 'paid"' : i === 1 ? 'new" style="background:var(--gold);color:var(--deep)"' : 'not"');
+    return top(`<h1 class="title">${sw ? 'Vyumba vya mikataba' : 'Deal rooms'}</h1><div class="tsub">${sw ? 'Kila mkataba, hatua kwa hatua.' : 'Every deal, step by step.'}</div>`) + `<div class="body">
+      <div class="card"><div class="label">${sw ? 'Inaendelea' : 'In progress'}</div>
+        <p class="h" style="margin:4px 0 0">ClinicBook — seed with Savanna Angels</p>
+        <div class="stages"><i class="on"></i><i class="now"></i><i></i><i></i><i></i><i></i></div>
+        <div class="person">${av('grace', 40)}<div style="flex:1"><div class="pname">${FULL.grace}</div><div class="porg">${steps[1]}</div></div></div>
+        <button class="btn primary" style="margin-top:12px" data-act="noop">${sw ? 'Fungua chumba' : 'Open the deal room'}</button></div>
+      <div class="card"><p class="h" style="margin:0 0 4px">${sw ? 'Hatua sita' : 'Six steps'}</p>
+        ${steps.map((x, i) => `<div class="member"><span class="n">${x}</span><span class="tag ${tone(i)}>${word(i)}</span></div>`).join('')}</div>
+    </div>`;
+  }
+
+  // Everyone: "More" is the whole side menu, on the phone.
+  const MORE = {
+    founder: [['Overview', '', 'home'], ['Investors', '3', 'investors'], ['Readiness', '4/7', 'ready'], ['Deal rooms', '1', 'deals'], ['Messages', '2'], ['#Community'], ['Network'], ['Chamas', '', 'chamas'], ['#Assistant'], ['Co-pilot', '', 'guide']],
+    investor: [['Overview', '', 'ihome'], ['Businesses', '3', 'ibiz'], ['Requests', '1', 'ireq'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments', '', 'iport'], ['#Your fund'], ['What you fund'], ['Profile']],
+    expert: [['Overview', '2', 'ehome'], ['Deal rooms'], ['Messages', '1'], ['#Your practice'], ['Profile', '', 'eprofile']],
+  };
+  function more() {
+    const sw = S.lang === 'sw';
+    const rows = MORE[S.role].map(([label, count, to]) => label.startsWith('#')
+      ? `<div class="grp">${label.slice(1)}</div>`
+      : `<a ${to ? `data-act="go" data-to="${to}"` : 'data-act="noop"'} style="cursor:pointer">${label}${count ? ` <small>${count}</small>` : ''}</a>`).join('');
+    return top(`<h1 class="title">${sw ? 'Kila kitu' : 'Everything in your workspace'}</h1><div class="tsub">${sw ? 'Menyu nzima ya pembeni, kwenye simu.' : 'The whole side menu, on your phone.'}</div>`) +
+      `<div class="body" style="background:var(--deep)"><div class="side" style="padding:4px 0 20px;background:none">${rows}
+        <div class="grp">${sw ? 'Akaunti' : 'Account'}</div><a data-act="noop" style="cursor:pointer">Notifications <small>2</small></a><a data-act="noop" style="cursor:pointer">Settings</a></div></div>`;
+  }
+
+  const SCREENS = { home, investors, ready, deals, more, guide, chamas, ihome, ibiz, ireq, iport, ehome, eprofile };
+  const ORDERS = { founder: ['home', 'investors', 'ready', 'deals', 'more'], investor: ['ihome', 'ibiz', 'ireq', 'iport', 'more'], expert: ['ehome', 'eprofile', 'more'] };
+  // Screens reached from "More" (Chamas, Co-pilot) light up the More tab.
+  const tabOf = (k) => (ORDERS[S.role].includes(k) ? k : 'more');
   const navName = (k, lang = S.lang) => (T[lang].nav[k] ?? TI[lang].nav[k] ?? TE[lang].nav[k]);
 
   function render() {
@@ -1139,11 +1201,11 @@
     el.className = 'screen' + (S.large ? ' large' : '');
     el.dataset.view = view;
     el.innerHTML = SCREENS[S.screen]() +
-      `<nav class="nav" style="grid-template-columns:repeat(${ORDER.length},1fr)">${ORDER.map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-act="go" data-to="${k}">${navName(k)}</button>`).join('')}</nav>` +
+      `<nav class="nav" style="grid-template-columns:repeat(${ORDER.length},1fr)">${ORDER.map((k) => `<button class="${tabOf(S.screen) === k ? 'on' : ''}" data-act="go" data-to="${k}">${icon(k)}${navName(k)}</button>`).join('')}</nav>` +
       (S.toast ? `<div class="toast"><span class="dot"></span>${S.toast}</div>` : '');
     const body = el.querySelector('.body');
     if (body) body.scrollTop = S.screen === 'guide' ? body.scrollHeight : keep;
-    document.getElementById('jump').innerHTML = ORDER.map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-to="${k}">${navName(k, 'en')}${S.lang === 'sw' ? ` · ${navName(k, 'sw')}` : ''}</button>`).join('');
+    document.getElementById('jump').innerHTML = [...ORDER, ...(S.role === 'founder' ? ['chamas', 'guide'] : [])].map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-to="${k}">${navName(k, 'en')}${S.lang === 'sw' ? ` · ${navName(k, 'sw')}` : ''}</button>`).join('');
     const n = NOTES[S.screen === 'iport' && S.inv ? 'idetail' : S.screen];
     document.getElementById('notes').innerHTML = `<h3>${n.title}</h3><p class="sub">${n.sub}</p><ol>${n.items.map(([b, s], i) => `<li><i>0${i + 1}</i><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>`;
   }
@@ -1291,7 +1353,7 @@
   if (role === 'investor' || role === 'founder' || role === 'expert') {
     document.querySelector(`#roleSeg [data-role="${role}"]`).click();
     if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
-    else if (where && SCREENS[where] && ORDERS[role].includes(where)) S.screen = where;
+    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || (role === 'founder' && ['chamas', 'guide'].includes(where)))) S.screen = where;
   }
   render();
 })();
