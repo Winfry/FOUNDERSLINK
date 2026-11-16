@@ -1,4 +1,4 @@
-import { professionById } from '@shared/professions';
+import { professionById, trustWords } from '@shared/professions';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { AiMark, Avatar, Button, Card } from '../ui';
@@ -8,6 +8,7 @@ import { Column, Columns, Panel, Tag } from '../overview/parts';
 import { PageTitle } from '../layout/PageTitle';
 import { expertService, type ExpertCard, type ExpertFindResult } from '../../services';
 import { useWideLayout } from '../../hooks/useWideLayout';
+import { ReportExpert } from './ReportExpert';
 import { colors, radius, spacing } from '../../theme/tokens';
 
 const PROMPTS = [
@@ -23,7 +24,7 @@ const INTRO =
 // A question with these words is answered in Kiswahili.
 const isKiswahili = (q: string) => /\b(nani|nahitaji|naomba|sheria|ardhi|wakili|shamba|mhasibu|kodi|biashara|langu|yangu)\b/i.test(q);
 
-const title = (profession: string) => professionById(profession)?.label ?? 'Expert';
+const professionTitle = (profession: string) => professionById(profession)?.label ?? 'Expert';
 
 interface Turn {
   id: number;
@@ -62,10 +63,17 @@ function ExpertResult({ e, question }: { e: ExpertCard; question: string }) {
         <Avatar name={e.full_name} size={48} />
         <View style={styles.flex}>
           <Text style={styles.name}>{e.full_name}</Text>
-          <Text style={styles.org}>{[title(e.profession), e.organisation_name].filter(Boolean).join(' · ')}</Text>
+          <Text style={styles.org}>{[professionTitle(e.profession), e.organisation_name].filter(Boolean).join(' · ')}</Text>
         </View>
-        {e.register_checked ? <Tag label="Verified" tone="done" /> : null}
+        {e.verification ? <Tag label={e.verification.label} tone="done" /> : null}
       </View>
+      {/* How she was checked, in words, and what that means. */}
+      {e.verification ? (
+        <View style={styles.trust} accessibilityLabel={`${trustWords(e.verification)}. ${e.verification.meaning}`}>
+          <Text style={styles.trustWords}>{trustWords(e.verification)}</Text>
+          <Text style={styles.trustMeaning}>{e.verification.meaning}</Text>
+        </View>
+      ) : null}
       {e.reasons && e.reasons.length > 0 ? (
         <View style={styles.reasons}>
           {e.reasons.map((r, i) => (
@@ -96,6 +104,7 @@ function ExpertResult({ e, question }: { e: ExpertCard; question: string }) {
       ) : (
         <Button title={full ? 'Fully booked this month' : `Ask ${first} for a session`} variant="soft" disabled={full} onPress={() => setAsking(true)} />
       )}
+      <ReportExpert expertId={e.user_id} name={e.full_name} />
     </View>
   );
 }
@@ -248,6 +257,9 @@ const styles = StyleSheet.create({
   explain: { fontSize: 15, lineHeight: 22, color: colors.text, marginTop: spacing[1] },
   expert: { gap: spacing[1], paddingTop: spacing[1.5], marginTop: spacing[1.5], borderTopWidth: 1, borderTopColor: colors.border },
   reasons: { gap: 4 },
+  trust: { gap: 2, paddingVertical: spacing[1], paddingHorizontal: spacing[1.5], borderRadius: radius.md, backgroundColor: colors.primaryLight },
+  trustWords: { fontSize: 13, fontWeight: '500', color: colors.primary },
+  trustMeaning: { fontSize: 12, color: colors.textMuted },
   reason: { fontSize: 14, color: colors.text },
   n: { fontSize: 12, color: colors.textDim },
   bio: { fontSize: 13, lineHeight: 19, color: colors.textMuted },

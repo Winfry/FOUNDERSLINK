@@ -1,3 +1,4 @@
+import { checksInWords, expertStatus, professionById, regulatorOf, shortDate, TRUST } from '@shared/professions';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -7,20 +8,18 @@ import { Panel, Row, Tag } from '../../../src/components/overview/parts';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, spacing } from '../../../src/theme/tokens';
 
-const STATUS: Record<string, { label: string; tone: 'done' | 'waiting' | 'todo' }> = {
-  approved: { label: 'Verified expert', tone: 'done' },
-  submitted: { label: 'Being reviewed', tone: 'waiting' },
-  in_review: { label: 'Being reviewed', tone: 'waiting' },
-  needs_info: { label: 'More information needed', tone: 'waiting' },
-};
-
-/** The expert's own page: who she is to founders, and her account. */
+/**
+ * The expert's own page: where she stands with FoundersLink, what it
+ * checks for her profession, how members see her, and her account.
+ */
 export default function ExpertProfile() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [confirming, setConfirming] = useState(false);
-  const status = STATUS[user?.approvalStatus ?? ''] ?? { label: 'Not verified yet', tone: 'todo' as const };
+  const status = expertStatus({ approvalStatus: user?.approvalStatus ?? 'draft', licenceExpiresAt: user?.expertLicenceExpiresAt });
+  const profession = professionById(user?.expertProfession);
+  const regulator = regulatorOf(profession);
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
@@ -35,9 +34,33 @@ export default function ExpertProfile() {
         </View>
       </View>
 
-      <Panel title="How founders see you" sub="Your profession, what you help with, and how many sessions you offer each month.">
-        <Row title="Edit my expert profile" line="Profession, register, services, sectors and counties." right={<Text style={styles.go}>Edit</Text>} onPress={() => router.push('/expert/onboarding')} />
+      <Panel title="Your verification" sub={status.line}>
+        {profession ? (
+          <>
+            <Row
+              title={`${profession.label} · ${TRUST[profession.trust].label}`}
+              line={
+                regulator
+                  ? `We check you on the ${regulator.name} (${regulator.short}) register.`
+                  : TRUST[profession.trust].line
+              }
+            />
+            <Row title="What we check" line={checksInWords(profession.id)} />
+            {user?.expertLicenceExpiresAt ? (
+              <Row
+                title={status.key === 'renewal_required' ? 'Your licence date has passed' : 'Your licence runs to'}
+                line={shortDate(user.expertLicenceExpiresAt)}
+                right={status.key === 'renewal_required' ? <Text style={styles.go}>Update</Text> : undefined}
+                onPress={status.key === 'renewal_required' ? () => router.push('/expert/onboarding') : undefined}
+              />
+            ) : null}
+          </>
+        ) : null}
         <Row title="My verification" line="See what FoundersLink checked, or what it still needs." right={<Text style={styles.go}>Open</Text>} onPress={() => router.push('/founder/verify/status')} last />
+      </Panel>
+
+      <Panel title="How members see you" sub="Your profession, what you specialise in, and how many sessions you offer each month.">
+        <Row title="Edit my expert profile" line="Profession, licence, specialities, services and sessions." right={<Text style={styles.go}>Edit</Text>} onPress={() => router.push('/expert/onboarding')} last />
       </Panel>
 
       <Panel title="Account">

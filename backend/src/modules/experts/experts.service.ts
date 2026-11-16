@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
 import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion } from "../../../../shared/expert-question/index.js";
-import { allowedAreas, professionById } from "../../../../shared/professions/index.js";
+import { allowedAreas, professionById, trustSummary } from "../../../../shared/professions/index.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { consented } from "../account/consents.js";
@@ -53,8 +53,16 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
         select: {
           id: true,
           full_name: true,
-          // A passed register check is what turns a claim into a badge.
-          vetting_application: { select: { checks: { where: { check_type: "professional_register", result: "pass" } } } },
+          // The passed checks that earn her trust level: the register, the
+          // qualification or the references (shared/professions trustSummary).
+          vetting_application: {
+            select: {
+              checks: {
+                where: { result: "pass", check_type: { in: ["professional_register", "qualification", "reference"] } },
+                select: { check_type: true, checked_at: true },
+              },
+            },
+          },
           office_hours_given: { where: { status: "done" }, select: { requester_id: true } },
         },
       },
@@ -81,7 +89,9 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
         profession: e.profession,
         organisation_name: e.organisation_name,
         register_body: e.register_body,
-        register_checked: (e.user.vetting_application?.checks.length ?? 0) > 0,
+        register_checked: (e.user.vetting_application?.checks ?? []).some((c) => c.check_type === "professional_register"),
+        // How she was checked, in words members see: "Licensed · LSK · checked 12 Nov 2026".
+        verification: trustSummary(e.profession, e.user.vetting_application?.checks ?? []),
         bio: e.bio,
         sectors: e.sectors,
         counties: e.counties,

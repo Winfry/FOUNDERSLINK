@@ -242,7 +242,7 @@ export function fitOf(e: ExpertLike, q: ReadQuestion, lang: 'en' | 'sw' = 'en') 
     score += 1;
     reasons.push(sw ? `Anapatikana ${q.county}` : `Works in ${q.county}`);
   }
-  if (e.register_checked) reasons.push(e.profession === 'accountant' ? (sw ? 'Usajili wa ICPAK umeangaliwa' : 'ICPAK register checked') : e.profession === 'lawyer' ? (sw ? 'Usajili wa LSK umeangaliwa' : 'LSK register checked') : sw ? 'Ameangaliwa na FoundersLink' : 'Checked by FoundersLink');
+  // How she was checked is shown on its own line (shared/professions trustWords), not as a reason.
   return { score, reasons };
 }
 

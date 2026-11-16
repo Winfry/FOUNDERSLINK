@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allowedAreas, expertChecklist, nextRecheck, PROFESSIONS, professionById, regulatorOf, REGULATORS, requiredChecks } from '../professions';
+import { allowedAreas, checksInWords, expertChecklist, expertStatus, nextRecheck, PROFESSIONS, professionById, regulatorOf, REGULATORS, requiredChecks, trustSummary, trustWords } from '../professions';
 import { PRACTICE, PRACTICE_AREAS, readQuestion } from '../expert-question';
 
 const canOffer = (p: string, a: string) => allowedAreas(p).includes(a);
@@ -94,5 +94,64 @@ describe('the checklist before an expert is approved', () => {
   it('the next re-check is in a year, or on the licence expiry if sooner', () => {
     expect(nextRecheck('2026-12-31', now).toISOString().slice(0, 10)).toBe('2026-12-31');
     expect(nextRecheck(null, now).toISOString().slice(0, 10)).toBe('2027-11-16');
+  });
+});
+
+describe('what members see: trust in words', () => {
+  it('a licensed advocate: the register and when it was last checked', () => {
+    const s = trustSummary('lawyer', [
+      { check_type: 'professional_register', checked_at: '2026-10-01T09:00:00Z' },
+      { check_type: 'professional_register', checked_at: '2026-11-12T09:00:00Z' },
+      { check_type: 'identity', checked_at: '2026-11-20T09:00:00Z' },
+    ]);
+    expect(s).toMatchObject({ trust: 'licensed', label: 'Licensed', by: 'LSK', checkedOn: '2026-11-12T09:00:00.000Z' });
+    expect(trustWords(s)).toBe('Licensed · LSK · checked 12 Nov 2026');
+  });
+
+  it('a certified specialist: her qualification', () => {
+    const s = trustSummary('it_security', [{ check_type: 'qualification', checked_at: '2026-10-03T08:00:00Z' }]);
+    expect(trustWords(s)).toBe('Certified · qualification checked 3 Oct 2026');
+  });
+
+  it('a mentor: how many references, and when', () => {
+    const s = trustSummary('mentor', [
+      { check_type: 'reference', checked_at: '2026-08-30T08:00:00Z' },
+      { check_type: 'reference', checked_at: '2026-09-01T08:00:00Z' },
+    ]);
+    expect(trustWords(s)).toBe('Experience checked · 2 references · 1 Sep 2026');
+  });
+
+  it('never claims a check that was not made', () => {
+    expect(trustWords(trustSummary('accountant', []))).toBe('Licensed · ICPAK');
+    expect(trustSummary('accountant', []).checkedOn).toBeNull();
+  });
+});
+
+describe('what the expert sees: where she stands', () => {
+  const now = new Date('2026-11-16T10:00:00Z');
+  it('verified while her licence is current, renewal required once it has passed', () => {
+    expect(expertStatus({ approvalStatus: 'approved', licenceExpiresAt: '2026-12-31' }, now)).toMatchObject({ key: 'verified', shown: true });
+    expect(expertStatus({ approvalStatus: 'approved', licenceExpiresAt: '2026-10-31' }, now)).toMatchObject({ key: 'renewal_required', label: 'Renewal required', shown: false });
+    expect(expertStatus({ approvalStatus: 'approved' }, now).key).toBe('verified');
+  });
+  it('every other status keeps her hidden, and says what to do', () => {
+    for (const [status, key] of [
+      ['draft', 'not_started'],
+      ['submitted', 'pending'],
+      ['in_review', 'pending'],
+      ['needs_info', 'action_needed'],
+      ['suspended', 'suspended'],
+      ['rejected', 'not_approved'],
+    ] as const) {
+      const s = expertStatus({ approvalStatus: status }, now);
+      expect(s.key, status).toBe(key);
+      expect(s.shown, status).toBe(false);
+      expect(s.line.length, status).toBeGreaterThan(20);
+    }
+  });
+  it('says what is checked for each profession', () => {
+    expect(checksInWords('lawyer')).toBe('Identity · LSK register');
+    expect(checksInWords('it_security')).toBe('Identity · Qualification');
+    expect(checksInWords('mentor')).toBe('Identity · Two references');
   });
 });

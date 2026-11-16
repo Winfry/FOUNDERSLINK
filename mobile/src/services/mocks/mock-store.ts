@@ -328,6 +328,8 @@ function init() {
     founderOnboardingComplete: false,
     investorOnboardingComplete: false,
     expertOnboardingComplete: true,
+    expertProfession: 'lawyer',
+    expertLicenceExpiresAt: '2026-12-31T00:00:00.000Z',
   }, {
     vetting: { approvalStatus: 'approved', phone: '+254700000555', statement: 'Advocate of the High Court, helping startups with company law and data protection.' },
     sessions: expertSessions,

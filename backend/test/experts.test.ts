@@ -92,6 +92,17 @@ test("approved members can browse experts, and a register check shows as a badge
   assert.equal(wanjiru.register_checked, true);
   assert.deepEqual(wanjiru.services, ["Company registration", "Founders' agreement"]);
   assert.deepEqual(wanjiru.office_hours, { per_month: 1, left_this_month: 1 });
+  // How each was checked, for members to read in words.
+  assert.deepEqual({ ...wanjiru.verification, checkedOn: typeof wanjiru.verification.checkedOn }, {
+    trust: "licensed",
+    label: "Licensed",
+    by: "LSK",
+    checkedOn: "string",
+    meaning: "On the official register, checked there by FoundersLink.",
+  });
+  // Nobody has checked his register, so no date is claimed.
+  assert.equal(kamau.verification.by, "ICPAK");
+  assert.equal(kamau.verification.checkedOn, null);
   // He says nothing about a register, and nobody has checked one.
   assert.equal(kamau.register_checked, false);
   assert.equal(kamau.office_hours.left_this_month, 0);

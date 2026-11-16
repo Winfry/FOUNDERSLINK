@@ -454,6 +454,20 @@ export const components: Record<string, Schema> = {
     services: arr(str),
     practice_areas: described(arr(str), 'What she specialises in, e.g. "land_property", "tax".'),
     trust: described(oneOf(["licensed", "certified", "experience"]), "How she was checked: on a register, a qualification, or experience and references."),
+    verification: described(
+      obj(
+        {
+          trust: oneOf(["licensed", "certified", "experience"]),
+          label: described(str, '"Licensed", "Certified" or "Experience checked".'),
+          by: described(nullable(str), 'The register she is on, e.g. "LSK". Licensed experts only.'),
+          checkedOn: described(nullable(dateTime), "When the check that earns her level last passed. Null if it never has."),
+          references: described(int, "Experience checked: references confirmed."),
+          meaning: described(str, "What the level means, in a sentence."),
+        },
+        ["references"],
+      ),
+      'How she was checked, for showing in words: "Licensed · LSK · checked 12 Nov 2026".',
+    ),
     licence_expires_at: described(nullable(dateTime), "When her licence runs out. She is not listed after it until checked again."),
     reasons: described(arr(str), "From POST /experts/find only: why she fits the question, in words."),
     office_hours: obj({ per_month: int, left_this_month: int }),

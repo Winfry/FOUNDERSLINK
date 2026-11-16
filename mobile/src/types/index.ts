@@ -61,6 +61,10 @@ export interface SessionUser {
   investorOnboardingComplete: boolean;
   /** An expert has saved her professional profile. */
   expertOnboardingComplete?: boolean;
+  /** An expert's profession ("lawyer", "valuer"...), from shared/professions. */
+  expertProfession?: string | null;
+  /** When an expert's licence runs out. After it, members cannot see her. */
+  expertLicenceExpiresAt?: string | null;
   avatarUrl?: string;
 }
 

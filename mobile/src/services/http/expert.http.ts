@@ -1,3 +1,4 @@
+import type { TrustSummary } from '@shared/professions';
 import { get, patch, post } from './client';
 
 /** A help session ("office hours") a founder asked an expert for. */
@@ -29,6 +30,8 @@ export interface ExpertCard {
   helped: number;
   /** Why she fits the question asked, in words (POST /experts/find). */
   reasons?: string[];
+  /** How she was checked: "Licensed · LSK · checked 12 Nov 2026" (shared/professions trustWords). */
+  verification?: TrustSummary;
 }
 
 /** What the guide understood from a question, why it matters, and who can help. */
@@ -47,6 +50,8 @@ export interface ExpertService {
   find(question: string, lang?: 'en' | 'sw'): Promise<ExpertFindResult>;
   /** Ask an expert for a short session about a topic. */
   requestSession(expertId: string, topic: string): Promise<void>;
+  /** Tell FoundersLink's staff about an expert. It goes to their Reports page. */
+  report(expertId: string, reason: string): Promise<{ suspended: boolean }>;
 }
 
 export const httpExpertService: ExpertService = {
@@ -62,5 +67,9 @@ export const httpExpertService: ExpertService = {
   },
   async requestSession(expertId, topic) {
     await post(`/experts/${expertId}/office-hours`, { topic });
+  },
+  async report(expertId, reason) {
+    const r = await post<{ suspended: boolean }>('/reports', { user_id: expertId, reason });
+    return { suspended: Boolean(r?.suspended) };
   },
 };

@@ -58,7 +58,7 @@ describe('ranking experts', () => {
     const q = readQuestion('advocate for land law in agriculture', COUNTIES);
     const ranked = rankExperts([company, accountant, land], q);
     expect(ranked.map((r) => r.expert.name)).toEqual(['land', 'company']);
-    expect(ranked[0]!.reasons).toEqual(['Land and property law', 'Works with agriculture businesses', 'LSK register checked']);
+    expect(ranked[0]!.reasons).toEqual(['Land and property law', 'Works with agriculture businesses']);
   });
 
   it('someone with no sessions left this month comes after someone who has', () => {

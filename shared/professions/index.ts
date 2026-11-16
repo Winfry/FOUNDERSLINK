@@ -271,3 +271,115 @@ export function nextRecheck(licenceExpiresAt: string | Date | null | undefined, 
   const expiry = new Date(licenceExpiresAt);
   return expiry < year ? expiry : year;
 }
+
+// ---------------------------------------------------------------------------
+// What members see: how an expert was checked, in words, and when.
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "12 Nov 2026", the same on every device and in every app. */
+export function shortDate(value: string | Date): string {
+  const d = new Date(value);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+export interface PassedCheck {
+  check_type: string;
+  checked_at: string | Date;
+}
+
+/** How one expert was checked, for her card and profile. */
+export interface TrustSummary {
+  trust: Trust;
+  /** "Licensed", "Certified", "Experience checked". */
+  label: string;
+  /** The register she is on ("LSK"), for a licensed expert. */
+  by: string | null;
+  /** When the check that earns her level last passed (ISO date), or null. */
+  checkedOn: string | null;
+  /** Experience checked: how many references were confirmed. */
+  references?: number;
+  /** What the level means, in a sentence. */
+  meaning: string;
+}
+
+/** The check that earns each level: the register, the qualification, or the references. */
+const EARNED_BY: Record<Trust, CheckType> = { licensed: 'professional_register', certified: 'qualification', experience: 'reference' };
+
+/** Her trust level and when it was earned, from the checks that passed. */
+export function trustSummary(professionId: string, passed: PassedCheck[]): TrustSummary {
+  const p = professionById(professionId);
+  const trust = p?.trust ?? 'experience';
+  const mine = passed.filter((c) => c.check_type === EARNED_BY[trust]);
+  const latest = mine.map((c) => new Date(c.checked_at).getTime()).sort((a, b) => b - a)[0];
+  const regulator = regulatorOf(p);
+  return {
+    trust,
+    label: TRUST[trust].label,
+    by: trust === 'licensed' ? (regulator?.short ?? null) : null,
+    checkedOn: latest === undefined ? null : new Date(latest).toISOString(),
+    ...(trust === 'experience' ? { references: mine.length } : {}),
+    meaning: TRUST[trust].line,
+  };
+}
+
+/** "Licensed · LSK · checked 12 Nov 2026", "Certified · qualification checked 3 Oct 2026", "Experience checked · 2 references · 1 Sep 2026". */
+export function trustWords(s: TrustSummary): string {
+  const on = s.checkedOn ? shortDate(s.checkedOn) : null;
+  if (s.trust === 'licensed') return [s.label, s.by, on ? `checked ${on}` : null].filter(Boolean).join(' · ');
+  if (s.trust === 'certified') return [s.label, on ? `qualification checked ${on}` : null].filter(Boolean).join(' · ');
+  const refs = s.references ? `${s.references} ${s.references === 1 ? 'reference' : 'references'}` : null;
+  return [s.label, refs, on].filter(Boolean).join(' · ');
+}
+
+// ---------------------------------------------------------------------------
+// What the expert herself sees: where she stands.
+
+export type ExpertStatusKey = 'not_started' | 'pending' | 'action_needed' | 'verified' | 'renewal_required' | 'suspended' | 'not_approved';
+
+export interface ExpertStatus {
+  key: ExpertStatusKey;
+  label: string;
+  /** What it means for her, and what to do. */
+  line: string;
+  tone: 'done' | 'waiting' | 'late' | 'todo' | 'quiet';
+  /** Whether members can see her and ask her for sessions. */
+  shown: boolean;
+}
+
+export function expertStatus(
+  me: { approvalStatus: string; licenceExpiresAt?: string | Date | null },
+  now = new Date(),
+): ExpertStatus {
+  const expired = Boolean(me.licenceExpiresAt && new Date(me.licenceExpiresAt).getTime() < now.getTime());
+  switch (me.approvalStatus) {
+    case 'approved':
+      return expired
+        ? { key: 'renewal_required', label: 'Renewal required', line: 'Your licence date has passed, so members cannot see you. Add your new expiry date and we will check the register again.', tone: 'late', shown: false }
+        : { key: 'verified', label: 'Verified', line: 'Members can see you and ask you for sessions.', tone: 'done', shown: true };
+    case 'submitted':
+    case 'in_review':
+      return { key: 'pending', label: 'Verification pending', line: 'A person at FoundersLink is checking you. You will be told when it is done.', tone: 'waiting', shown: false };
+    case 'needs_info':
+      return { key: 'action_needed', label: 'Action needed', line: 'FoundersLink asked you for something. Open your verification to see what.', tone: 'late', shown: false };
+    case 'suspended':
+      return { key: 'suspended', label: 'Suspended', line: 'Your profile is paused while FoundersLink looks into it. You were told why, and you can respond.', tone: 'late', shown: false };
+    case 'rejected':
+      return { key: 'not_approved', label: 'Not approved', line: 'Your application was not approved. If you think this is a mistake, contact support.', tone: 'quiet', shown: false };
+    default:
+      return { key: 'not_started', label: 'Not verified yet', line: 'Members cannot see you until you are verified. It starts with your profile.', tone: 'todo', shown: false };
+  }
+}
+
+/** "Identity · LSK register": what FoundersLink checks for her profession, in words. */
+export function checksInWords(professionId: string): string {
+  const regulator = regulatorOf(professionById(professionId));
+  const words: Record<CheckType, string> = {
+    identity: 'Identity',
+    professional_register: regulator ? `${regulator.short} register` : 'Professional register',
+    qualification: 'Qualification',
+    reference: 'Two references',
+    organisation: 'Organisation',
+  };
+  return requiredChecks(professionId).map((c) => words[c]).join(' · ');
+}

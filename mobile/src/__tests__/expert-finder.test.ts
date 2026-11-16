@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { trustWords } from '@shared/professions';
 import { mockExpertService } from '../services/mocks/expert.mock';
 
 describe('asking the Co-pilot who can help (demo data)', () => {
@@ -27,5 +28,18 @@ describe('asking the Co-pilot who can help (demo data)', () => {
   it('a session request needs a topic', async () => {
     await expect(mockExpertService.requestSession('exp-kiprono', 'short')).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
     await expect(mockExpertService.requestSession('exp-kiprono', 'Please check the title deed of a farm in Nakuru.')).resolves.toBeUndefined();
+  });
+
+  it('every suggested expert says how she was checked, in words', async () => {
+    const r = await mockExpertService.find('land law for a farm');
+    expect(trustWords(r.experts[0]!.verification!)).toBe('Licensed · LSK · checked 12 Nov 2026');
+    const m = await mockExpertService.find('a mentor to help me pitch');
+    expect(trustWords(m.experts[0]!.verification!)).toBe('Experience checked · 2 references · 1 Sep 2026');
+  });
+
+  it('a member can report an expert once; a second report from her is refused', async () => {
+    await expect(mockExpertService.report('exp-atieno', 'no')).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
+    await expect(mockExpertService.report('exp-atieno', 'Asked me to pay a fee outside a session.')).resolves.toEqual({ suspended: false });
+    await expect(mockExpertService.report('exp-atieno', 'Again.')).rejects.toMatchObject({ code: 'ALREADY_REPORTED' });
   });
 });
