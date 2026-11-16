@@ -181,6 +181,24 @@
   .composer { flex-shrink: 0; display: flex; gap: 8px; padding: 10px 12px; background: #fff; border-top: 1px solid var(--line); }
   .composer input { flex: 1; border: 1px solid var(--line2); border-radius: 99px; padding: 10px 14px; font: inherit; font-size: .9em; min-width: 0; }
   .composer button { border: 0; border-radius: 99px; padding: 0 16px; background: var(--purple); color: #fff; font-weight: 500; }
+  .trustbox { background: var(--lav); border-radius: 12px; padding: 8px 12px; margin-top: 10px; }
+  .trustbox b { display: block; color: var(--purple); font-weight: 500; font-size: .86em; }
+  .trustbox span { font-size: .76em; color: var(--muted); }
+  .reportlink { border: 0; background: none; padding: 6px 0 0; color: var(--muted); font: inherit; font-size: .8em; text-decoration: underline; cursor: pointer; }
+  .reportbox { background: var(--paper); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .reportbox textarea { width: 100%; box-sizing: border-box; min-height: 64px; border: 1px solid var(--line2); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: .88em; margin: 8px 0; }
+  .btn.danger { background: var(--late); color: #fff; border-color: var(--late); }
+  .chiprow { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+  .chiprow button { border: 1px solid var(--line2); background: #fff; border-radius: 99px; padding: 7px 12px; font: inherit; font-size: .8em; color: var(--muted); cursor: pointer; }
+  .chiprow button.on { background: var(--deep); border-color: var(--deep); color: #fff; }
+  .profcards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .profcards button { text-align: left; border: 1px solid var(--line2); background: #fff; border-radius: 14px; padding: 10px 12px; font: inherit; cursor: pointer; }
+  .profcards button.on { border-color: var(--purple); background: var(--lav); box-shadow: 0 0 0 1px var(--purple) inset; }
+  .profcards b { display: block; font-weight: 500; font-size: .9em; }
+  .profcards span { font-size: .76em; color: var(--muted); }
+  .field { display: block; margin-top: 12px; font-size: .84em; font-weight: 500; }
+  .field input { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; border: 1px solid var(--line2); border-radius: 12px; padding: 10px 12px; font: inherit; font-weight: 400; }
+  .field small { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; }
   .cpq { display: block; width: 100%; text-align: left; border: 1px solid var(--line2); background: #fff; color: var(--purple); border-radius: 12px; padding: 10px 12px; margin-top: 6px; font: inherit; font-size: .88em; cursor: pointer; }
   .tabsrow { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
   .tabsrow button { flex-shrink: 0; border: 1px solid var(--line2); background: #fff; border-radius: 99px; padding: 8px 13px; font-weight: 500; font-size: .84em; color: var(--muted); }
@@ -761,6 +779,12 @@
   ];
 
   const NOTES = {
+    esignup: { title: 'Expert sign-up: what kind of work, then who checks you', sub: 'Seventeen professions in seven kinds of work, each checked its own way (shared/professions).', items: [
+      ['Kind of work, then profession', 'Legal, finance, land and building, risk, people, technology, growth.'],
+      ['Who checks you, before you are asked anything', 'Licensed: on your regulator\'s register (LSK, ICPAK, BORAQS...). Certified: your qualification. Experience: two references.'],
+      ['Only what your profession needs', 'A register number and expiry, or a qualification. Nothing for a mentor until verification.'],
+      ['Legal, tax and audit only for the licensed', 'A mentor cannot offer land law. The backend refuses it.'],
+    ] },
     icopilot: { title: 'Co-pilot: who can help me check this?', sub: 'An investor new to a sector asks in her own words, in English or Kiswahili.', items: [
       ['She asks, plainly', '"I want to invest in a farming business. Which advocates know land law?"'],
       ['What to check, in plain words', 'In farming, land is often the biggest risk: the title, the lease, any loan on it.'],
@@ -800,7 +824,9 @@
       ['Sessions running', 'Agree a time in Messages, then "Mark as done" when she has helped.'],
       ['Two tabs, all words', 'Home and Profile. Messages opens from the top bar.'],
     ] },
-    eprofile: { title: 'Expert profile: how founders see her', sub: 'Her profession, what she offers and her account.', items: [
+    eprofile: { title: 'Expert profile: where she stands', sub: 'Her verification in words, what she offers and her account.', items: [
+      ['Her status, in words', 'Verified, Verification pending, Action needed, Renewal required, Suspended or Not approved, each with what to do.'],
+      ['What is checked for her profession', '"Identity · LSK register", and when her licence runs out. After that date members cannot see her until she is checked again.'],
       ['Name and register on the purple band', '"Advocate of the High Court · LSK registered".'],
       ['Verified, in words', 'A green "Verified" tag once FoundersLink has checked her register entry.'],
       ['What she offers', 'Services, sectors, counties and office hours a month.'],
@@ -870,7 +896,7 @@
   const S = {
     role: 'founder', screen: 'home', lang: 'en', large: false,
     done: new Set(['kra', 'brs', 'permit', 'data']), openStep: null, invTab: 'ready', requested: new Set(), openInv: 'david',
-    chat: [], typing: false, cpAsked: [], cpSent: new Set(), cpOpen: null, invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
+    chat: [], typing: false, cpAsked: [], cpSent: new Set(), cpOpen: null, cpReporting: null, cpReported: new Set(), eCat: 'legal', eProf: 'lawyer', invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
     inv: null, asked: new Set(), iRequested: new Set(['njeri']),
     share: Object.fromEntries(INVESTMENTS.map((i) => [i.id, i.share])),
     eAnswer: {}, eDone: new Set(),
@@ -1285,7 +1311,7 @@
       runningTitle: 'Sessions running', runningSub: 'Mark one done when you have helped.', markDone: 'Mark as done', doneToast: 'Marked as done. Thank you for helping.',
       noneAsking: 'No new requests. Founders who need your help will appear here.',
       profTitle: 'Wanjiku Kamau', profSub: 'Advocate of the High Court · LSK registered', verified: 'Verified expert',
-      seeYou: 'How founders see you', seeYouSub: 'Your profession, what you help with, and how many sessions you offer each month.',
+      seeYou: 'How members see you', seeYouSub: 'Your profession, what you specialise in, and how many sessions you offer each month.',
       editProfile: 'Edit my expert profile', editLine: 'Profession, register, services, sectors and counties.',
       myVerif: 'My verification', myVerifLine: 'See what FoundersLink checked, or what it still needs.',
       offer: 'What you offer', offerLine: 'Agreements, incorporation, contracts. Health and fintech, in Nairobi and Kiambu.', hours: '4 office hours a month',
@@ -1301,7 +1327,7 @@
       runningTitle: 'Vikao vinavyoendelea', runningSub: 'Weka kimoja kama kimekamilika ukishasaidia.', markDone: 'Weka kama imekamilika', doneToast: 'Imekamilika. Asante kwa kusaidia.',
       noneAsking: 'Hakuna maombi mapya. Waanzilishi wanaohitaji msaada wako wataonekana hapa.',
       profTitle: 'Wanjiku Kamau', profSub: 'Wakili wa Mahakama Kuu · amesajiliwa LSK', verified: 'Mtaalamu aliyethibitishwa',
-      seeYou: 'Jinsi waanzilishi wanavyokuona', seeYouSub: 'Taaluma yako, unachosaidia, na vikao vingapi unatoa kila mwezi.',
+      seeYou: 'Jinsi wanachama wanavyokuona', seeYouSub: 'Taaluma yako, unachosaidia, na vikao vingapi unatoa kila mwezi.',
       editProfile: 'Hariri wasifu wangu wa mtaalamu', editLine: 'Taaluma, usajili, huduma, sekta na kaunti.',
       myVerif: 'Uthibitisho wangu', myVerifLine: 'Ona FoundersLink ilichokagua, au kinachohitajika bado.',
       offer: 'Unachotoa', offerLine: 'Mikataba, usajili wa kampuni, kandarasi. Afya na fedha, Nairobi na Kiambu.', hours: 'Saa 4 za ushauri kwa mwezi',
@@ -1353,12 +1379,18 @@
     const tt = te();
     const row = (title, line, word) => `<div class="member" style="padding:12px 0"><span class="n">${title}<div class="porg" style="font-weight:400">${line}</div></span>${word ? `<span style="color:var(--purple);font-weight:500;font-size:.85em">${word}</span>` : ''}</div>`;
     return top(`<div class="person" style="margin-top:18px;align-items:center;position:relative;z-index:1">${av('kamau', 64)}<div><h1 class="title" style="margin:0">${tt.profTitle}</h1><div class="tsub" style="margin:2px 0 0">${tt.profSub}</div></div></div>`) + `<div class="body">
-      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="pname">${tt.verified}</span><span class="tag paid">${S.lang === 'sw' ? 'Imethibitishwa' : 'Verified'}</span></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><p class="h" style="margin:0">${S.lang === 'sw' ? 'Uthibitisho wako' : 'Your verification'}</p><span class="tag paid">${S.lang === 'sw' ? 'Imethibitishwa' : 'Verified'}</span></div>
+        <p class="p">${S.lang === 'sw' ? 'Wanachama wanakuona na wanaweza kukuomba vikao.' : 'Members can see you and ask you for sessions.'}</p>
+        ${row(S.lang === 'sw' ? 'Wakili · Mwenye leseni' : 'Advocate · Licensed', S.lang === 'sw' ? 'Tunakuangalia kwenye sajili ya Law Society of Kenya (LSK).' : 'We check you on the Law Society of Kenya (LSK) register.', '')}
+        ${row(S.lang === 'sw' ? 'Tunachoangalia' : 'What we check', S.lang === 'sw' ? 'Utambulisho · Sajili ya LSK' : 'Identity · LSK register', '')}
+        ${row(S.lang === 'sw' ? 'Leseni yako inaisha' : 'Your licence runs to', '31 Dec 2026', '')}
+        ${row(tt.myVerif, tt.myVerifLine, tt.open)}
+      </div>
       <div class="card">
         <p class="h" style="margin:0">${tt.seeYou}</p>
         <p class="p">${tt.seeYouSub}</p>
-        ${row(tt.editProfile, tt.editLine, tt.open)}
-        ${row(tt.myVerif, tt.myVerifLine, tt.open)}
+        <div data-act="go" data-to="esignup" style="cursor:pointer">${row(tt.editProfile, tt.editLine, tt.open)}</div>
       </div>
       <div class="card">
         <div class="label">${tt.offer}</div>
@@ -1428,6 +1460,52 @@
         <div class="grp">${sw ? 'Akaunti' : 'Account'}</div><a data-act="noop" style="cursor:pointer">Notifications <small>2</small></a><a data-act="noop" style="cursor:pointer">Settings</a></div></div>`;
   }
 
+  // ---------------- The expert sign-up (shared/professions) ----------------
+  const ECATS = [['legal', 'Legal and governance'], ['finance', 'Finance, tax and investment'], ['property', 'Land, property and building'], ['risk', 'Risk and insurance'], ['people', 'People and HR'], ['technology', 'Technology and data'], ['growth', 'Strategy and growth']];
+  // [id, category, label, line, trust, regulator short, regulator name]
+  const EPROFS = [
+    ['lawyer', 'legal', 'Advocate', 'Agreements, company and land law, investment deals.', 'licensed', 'LSK', 'Law Society of Kenya'],
+    ['company_secretary', 'legal', 'Company secretary', 'Share registers, annual returns, board governance.', 'licensed', 'ICS', 'Institute of Certified Secretaries'],
+    ['accountant', 'finance', 'Accountant or auditor', 'Books, tax, audits, checking the numbers.', 'licensed', 'ICPAK', 'Institute of Certified Public Accountants of Kenya'],
+    ['tax_agent', 'finance', 'Tax agent', 'KRA filings, VAT, eTIMS, tax planning.', 'licensed', 'KRA', 'Kenya Revenue Authority (tax agents)'],
+    ['investment_adviser', 'finance', 'Investment adviser', 'Valuing a business and structuring an investment.', 'licensed', 'CMA', 'Capital Markets Authority'],
+    ['valuer', 'property', 'Valuer', 'What land, buildings and equipment are worth.', 'licensed', 'VRB', 'Valuers Registration Board'],
+    ['land_surveyor', 'property', 'Land surveyor', 'Boundaries, beacons, subdivision and survey plans.', 'licensed', 'Land Surveyors Board', 'Land Surveyors Board'],
+    ['architect', 'property', 'Architect', 'Designs and approvals for buildings.', 'licensed', 'BORAQS', 'Board of Registration of Architects and Quantity Surveyors'],
+    ['quantity_surveyor', 'property', 'Quantity surveyor', 'What a building project should cost.', 'licensed', 'BORAQS', 'Board of Registration of Architects and Quantity Surveyors'],
+    ['engineer', 'property', 'Engineer', 'Technical checks on buildings, machines and infrastructure.', 'licensed', 'EBK', 'Engineers Board of Kenya'],
+    ['insurance_broker', 'risk', 'Insurance broker', 'The right cover for a business, its assets and its people.', 'licensed', 'IRA', 'Insurance Regulatory Authority'],
+    ['hr_consultant', 'people', 'HR professional', 'Hiring, contracts of employment, payroll policy.', 'licensed', 'IHRM', 'Institute of Human Resource Management'],
+    ['data_protection_consultant', 'technology', 'Data protection consultant', 'ODPC registration, privacy policies, data handling.', 'certified'],
+    ['it_security', 'technology', 'IT and cybersecurity specialist', 'Checking software, systems and security.', 'certified'],
+    ['mentor', 'growth', 'Mentor', 'Product, pitch, fundraising.', 'experience'],
+    ['business_consultant', 'growth', 'Business consultant', 'Strategy, operations, entering a new market.', 'experience'],
+    ['sector_specialist', 'growth', 'Sector specialist', 'Deep knowledge of one sector: farming, health, energy...', 'experience'],
+  ];
+  const ETRUST = { licensed: 'Licensed', certified: 'Certified', experience: 'Experience checked' };
+  function esignup() {
+    const p = EPROFS.find((x) => x[0] === S.eProf) ?? EPROFS[0];
+    const [, , label, , trust, short, regName] = p;
+    const how = trust === 'licensed' ? `We check you on the ${regName} (${short}) register. You are shown only while your licence is current.`
+      : trust === 'certified' ? 'We check your qualification with the body that awarded it.'
+      : 'We check your work history and speak to two people you have worked with. You give their names when you verify.';
+    const fields = trust === 'licensed'
+      ? `<label class="field">${short} number<input placeholder="The number on the ${short} register"></label>
+         <label class="field">Licence or practising certificate expires on (optional)<input placeholder="YYYY-MM-DD"><small>For example 2026-12-31. We check you again when it runs out.</small></label>`
+      : trust === 'certified'
+        ? `<label class="field">Your qualification<input placeholder="e.g. Certified Information Systems Auditor"></label><label class="field">Awarded by<input placeholder="e.g. ISACA"></label>`
+        : '';
+    return top(`<button class="backlink" data-act="go" data-to="eprofile" style="color:#fff;padding:14px 0 0;position:relative;z-index:1">← Profile</button><h1 class="title" style="margin-top:8px">Your expert profile</h1><div class="tsub">Before you are shown, a person at FoundersLink checks you.</div>`) + `<div class="body">
+      <div class="label">What kind of work do you do?</div>
+      <div class="chiprow">${ECATS.map(([id, l]) => `<button class="${S.eCat === id ? 'on' : ''}" data-act="ecat" data-id="${id}">${l}</button>`).join('')}</div>
+      <div class="label" style="margin-bottom:8px">I am a</div>
+      <div class="profcards">${EPROFS.filter((x) => x[1] === S.eCat).map((x) => `<button class="${S.eProf === x[0] ? 'on' : ''}" data-act="eprof" data-id="${x[0]}"><b>${x[2]}</b><span>${x[3]}</span></button>`).join('')}</div>
+      <div class="trustbox" style="margin-top:14px"><b>${ETRUST[trust]} · ${label}</b><span>${how}</span></div>
+      ${fields}
+      <button class="btn primary" style="margin-top:16px" data-act="go" data-to="eprofile">Save and continue</button>
+    </div>`;
+  }
+
   // ---------------- The investor's Co-pilot: who can help ----------------
   const CP_PROMPTS = [
     'I want to invest in a farming business. Which advocates know land law?',
@@ -1436,11 +1514,11 @@
     'Nani anajua sheria ya ardhi Nakuru?',
   ];
   const CP_EXPERTS = {
-    kiprono: { org: 'Advocate · Kiprono & Associates', bio: 'Land searches, agricultural leases and title transfers for farms and agribusinesses.', left: 2, helped: 11 },
-    atieno: { org: 'Advocate · Atieno Law', bio: 'Land and property law for farmers and cooperatives in western Kenya.', left: 3, helped: 7 },
-    kamau: { org: 'Advocate · Kamau & Co.', bio: 'Company law, investment deals and data protection for young businesses.', left: 1, helped: 4 },
-    mutua: { org: 'Accountant · Mutua CPA', bio: 'Tax, eTIMS and books for farms and small food businesses.', left: 4, helped: 9 },
-    njambi: { org: 'Accountant · Njambi & Partners', bio: 'Checks the numbers before you invest: audits and due diligence.', left: 2, helped: 5 },
+    kiprono: { trust: 'Licensed · LSK · checked 12 Nov 2026', org: 'Advocate · Kiprono & Associates', bio: 'Land searches, agricultural leases and title transfers for farms and agribusinesses.', left: 2, helped: 11 },
+    atieno: { trust: 'Licensed · LSK · checked 28 Oct 2026', org: 'Advocate · Atieno Law', bio: 'Land and property law for farmers and cooperatives in western Kenya.', left: 3, helped: 7 },
+    kamau: { trust: 'Licensed · LSK · checked 2 Nov 2026', org: 'Advocate · Kamau & Co.', bio: 'Company law, investment deals and data protection for young businesses.', left: 1, helped: 4 },
+    mutua: { trust: 'Licensed · ICPAK · checked 15 Sep 2026', org: 'Accountant · Mutua CPA', bio: 'Tax, eTIMS and books for farms and small food businesses.', left: 4, helped: 9 },
+    njambi: { trust: 'Licensed · ICPAK · checked 5 Oct 2026', org: 'Accountant · Njambi & Partners', bio: 'Checks the numbers before you invest: audits and due diligence.', left: 2, helped: 5 },
   };
   function cpAnswer(q) {
     const t = q.toLowerCase();
@@ -1453,20 +1531,20 @@
         explain: sw
           ? 'Katika kilimo, ardhi mara nyingi ndiyo hatari kubwa zaidi. Kabla ya kuwekeza, hakikisha nani anamiliki ardhi (hati miliki au ukodishaji uliosajiliwa), kwamba ukodishaji ni mrefu kuliko uwekezaji wako, na hakuna mzozo au mkopo juu ya hati. Wakili anayejua sheria ya ardhi anaweza kukufanyia utafutaji rasmi kwenye sajili ya Ardhi.'
           : 'In farming, land is often the biggest risk. Before you invest, check who owns the land (a title deed or a registered lease), that the lease runs longer than your investment, and that there is no dispute or loan charged on the title. An advocate who knows land law can run an official search at the Lands registry for you.',
-        experts: order.map((id) => [id, [sw ? 'Sheria ya ardhi na mali' : 'Land and property law', sw ? 'Hufanya kazi na biashara za kilimo' : 'Works with agriculture businesses', ...(county && (id === 'kiprono' ? county !== 'Kisumu' : county === 'Kisumu') ? [sw ? `Anapatikana ${county}` : `Works in ${county}`] : []), sw ? 'Usajili wa LSK umeangaliwa' : 'LSK register checked']]),
+        experts: order.map((id) => [id, [sw ? 'Sheria ya ardhi na mali' : 'Land and property law', sw ? 'Hufanya kazi na biashara za kilimo' : 'Works with agriculture businesses', ...(county && (id === 'kiprono' ? county !== 'Kisumu' : county === 'Kisumu') ? [sw ? `Anapatikana ${county}` : `Works in ${county}`] : [])]]),
         sw,
       };
     }
     if (/book|account|tax|kra|vat|numbers|audit|hesabu|kodi/.test(t)) {
       return { area: 'Bookkeeping and accounts', explain: 'An accountant who knows bookkeeping can look at the business’s numbers and tell you whether they hold up: sales, costs, what is owed to KRA, and whether the books match the bank statements.',
-        experts: [['njambi', ['Audit and due diligence', 'ICPAK register checked']], ['mutua', ['Bookkeeping and accounts', 'ICPAK register checked']]], sw: false };
+        experts: [['njambi', ['Audit and due diligence']], ['mutua', ['Bookkeeping and accounts']]], sw: false };
     }
     if (/term sheet|shareholder|agreement|equity|convertible|mkataba/.test(t)) {
       return { area: 'Investment deals', explain: 'Before you sign, an advocate who does investment deals can read the terms, the shareholders agreement and the company papers, and tell you what you get for your money.',
-        experts: [['kamau', ['Investment deals', 'LSK register checked']]], sw: false };
+        experts: [['kamau', ['Investment deals']]], sw: false };
     }
     return { area: null, explain: 'I could not tell exactly what help you need, so here are the verified experts who fit best. Tell me a little more (for example "land", "tax" or "contract") and I can narrow it down.',
-      experts: [['kamau', ['LSK register checked']], ['njambi', ['ICPAK register checked']]], sw: false };
+      experts: [['kamau', []], ['njambi', []]], sw: false };
   }
   function copilotThread(web) {
     const intro = `<div class="card"><div class="person">${'<span class="ai-mark">AI</span>'}<div style="flex:1"><div class="pname">Ask who can help</div><div class="porg">Tell me what you are looking at, in your own words. I will explain what to check, and find verified experts who can help you. You decide who to talk to.</div></div></div>
@@ -1483,11 +1561,18 @@
               : S.cpOpen === key ? `<div style="margin-top:10px"><div class="label">What would you like help with?</div><div style="background:#fff;border:1px solid var(--line2);border-radius:12px;padding:10px 12px;margin:6px 0 10px;font-size:.9em">${q}</div><div class="btns two"><button class="btn primary" data-act="cpsend" data-id="${key}">Send request</button><button class="btn ghost" data-act="cpcancel">Cancel</button></div></div>`
               : `<button class="btn soft" style="margin-top:10px" data-act="cpopen" data-id="${key}">Ask ${first} for a session</button>`;
             return `<div style="border-top:1px solid var(--line);padding-top:12px;margin-top:12px">
-              <div class="person" style="align-items:center">${av(id, 46)}<div style="flex:1"><div class="pname">${FULL[id]}</div><div class="porg">${e.org}</div></div><span class="tag paid">Verified</span></div>
-              <ol class="why" style="margin:8px 0 4px">${reasons.map((r) => `<li>${r}</li>`).join('')}</ol>
+              <div class="person" style="align-items:center">${av(id, 46)}<div style="flex:1"><div class="pname">${FULL[id]}</div><div class="porg">${e.org}</div></div><span class="tag paid">Licensed</span></div>
+              <div class="trustbox"><b>${e.trust}</b><span>On the official register, checked there by FoundersLink.</span></div>
+              ${reasons.length ? `<ol class="why" style="margin:8px 0 4px">${reasons.map((r) => `<li>${r}</li>`).join('')}</ol>` : ''}
               <div class="porg">${e.bio}</div>
               <div class="porg" style="margin-top:4px;font-size:.8em">${e.left} free sessions left this month · Has helped ${e.helped} people</div>
-              ${action}</div>`;
+              ${action}
+              ${S.cpReported.has(id) ? `<p class="p" style="color:var(--pos);font-size:.82em;margin:8px 0 0">Thank you. A person at FoundersLink will look into it, and ${first} can respond before anything is decided.</p>`
+                : S.cpReporting === key ? `<div class="reportbox"><b style="font-weight:500;font-size:.88em">What happened?</b>
+                    <div class="porg" style="font-size:.76em;margin-top:2px">For example, asking for money outside a session, or saying they hold a licence they do not. Only FoundersLink staff read this. ${first} can respond, and one report alone never removes anyone.</div>
+                    <textarea aria-label="What happened with ${FULL[id]}">He asked me to pay a fee to his own M-Pesa before the session.</textarea>
+                    <div class="btns two"><button class="btn danger" data-act="cpreportsend" data-id="${id}">Send report</button><button class="btn ghost" data-act="cpreportcancel">Cancel</button></div></div>`
+                : `<button class="reportlink" data-act="cpreport" data-id="${key}">Report this expert</button>`}</div>`;
           }).join('')}
           <p class="p" style="font-size:.78em;margin:14px 0 0">${a.sw ? 'Haya ni maelezo ya jumla ya kukusaidia kumpata mtu sahihi, si ushauri wa kisheria, kodi au fedha. Wataalamu walioangaliwa na FoundersLink pekee ndio wanaoonyeshwa.' : 'This is general information to help you find the right person, not legal, tax or financial advice. Only experts FoundersLink has checked are shown.'}</p>
         </div>`;
@@ -1500,7 +1585,7 @@
       <div class="composer"><input id="cpIn" placeholder="Ask in your own words…" aria-label="Your question"><button data-act="cpask">Ask</button></div>`;
   }
 
-  const SCREENS = { home, investors, invpage, ready, deals, more, guide, chamas, msgs, chatv, icopilot, ihome, ibiz, ireq, iport, ehome, eprofile };
+  const SCREENS = { home, investors, invpage, ready, deals, more, guide, chamas, msgs, chatv, icopilot, esignup, ihome, ibiz, ireq, iport, ehome, eprofile };
   const ORDERS = { founder: ['home', 'investors', 'ready', 'deals', 'more'], investor: ['ihome', 'ibiz', 'ireq', 'iport', 'more'], expert: ['ehome', 'eprofile', 'more'] };
   // Screens reached from "More" (Chamas, Co-pilot) light up the More tab.
   const tabOf = (k) => (ORDERS[S.role].includes(k) ? k : k === 'invpage' ? 'investors' : k === 'msgs' || k === 'chatv' ? null : 'more');
@@ -1545,6 +1630,11 @@
       case 'cpopen': S.cpOpen = b.dataset.id; render(); renderWeb(); break;
       case 'cpcancel': S.cpOpen = null; render(); renderWeb(); break;
       case 'cpsend': S.cpSent.add(b.dataset.id); S.cpOpen = null; render(); renderWeb(); break;
+      case 'cpreport': S.cpReporting = b.dataset.id; render(); renderWeb(); break;
+      case 'cpreportcancel': S.cpReporting = null; render(); renderWeb(); break;
+      case 'cpreportsend': S.cpReported.add(b.dataset.id); S.cpReporting = null; render(); renderWeb(); break;
+      case 'ecat': S.eCat = b.dataset.id; S.eProf = EPROFS.find((p) => p[1] === S.eCat)[0]; render(); break;
+      case 'eprof': S.eProf = b.dataset.id; render(); break;
       case 'sendmsg': {
         const box = document.getElementById('msgIn'); const text = box.value.trim(); if (!text) break;
         const key = S.role + (S.conv ?? 'c1');
@@ -1649,8 +1739,8 @@
   // Section 03 is clickable: Overview, Investors (founder) and Messages open
   // their pages, as in the app on a computer.
   const W = { role: 'founder', page: 'home', invTab: 'ready', invId: 'david', conv: 'c1' };
-  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs', 'Co-pilot': 'copilot' };
-  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages', copilot: 'Co-pilot' };
+  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs', 'Co-pilot': 'copilot', Profile: 'eprofile' };
+  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages', copilot: 'Co-pilot', eprofile: 'Profile' };
 
   function webInvestors() {
     const counts = { ready: 3, fix: 2, no: 4 };
@@ -1737,15 +1827,31 @@
     // Investors is the founder's; the others stay on their overview.
     if (W.role !== 'founder' && (W.page === 'investors' || W.page === 'invpage')) W.page = 'home';
     if (W.role !== 'investor' && W.page === 'copilot') W.page = 'home';
+    if (W.role !== 'expert' && W.page === 'eprofile') W.page = 'home';
     const here = pageOf[W.page];
     const side = w.menu.map(([label, count]) => {
       if (label.startsWith('#')) return `<div class="grp">${label.slice(1)}</div>`;
-      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') && (label !== 'Co-pilot' || W.role === 'investor') ? ` data-wgo="${WMENU[label]}"` : '';
+      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') && (label !== 'Co-pilot' || W.role === 'investor') && (label !== 'Profile' || W.role === 'expert') ? ` data-wgo="${WMENU[label]}"` : '';
       return `<a class="${label === here ? 'on' : ''}"${go}>${label}${count ? ` <small>${count}</small>` : ''}</a>`;
     }).join('');
-    const urls = { home: w.url, copilot: 'investor-copilot', investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
+    const urls = { home: w.url, eprofile: 'expert-profile', copilot: 'investor-copilot', investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
     document.getElementById('webUrl').textContent = `app.founderslink.co.ke/${urls[W.page]}`;
-    const main = W.page === 'copilot' ? `<div class="wband"><h3>Co-pilot</h3><div class="wsub">Ask who can help you check a business before you invest.</div></div>
+    const wrow = (t, l) => `<div class="member" style="padding:12px 0"><span class="n">${t}<div class="porg" style="font-weight:400">${l}</div></span></div>`;
+    const main = W.page === 'eprofile' ? `<div class="wband"><h3>Wanjiku Kamau</h3><div class="wsub">Advocate of the High Court · LSK registered</div></div>
+        <div class="wcols"><div>
+          <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><p class="h" style="margin:0">Your verification</p><span class="tag paid">Verified</span></div>
+            <p class="p">Members can see you and ask you for sessions.</p>
+            ${wrow('Advocate · Licensed', 'We check you on the Law Society of Kenya (LSK) register.')}
+            ${wrow('What we check', 'Identity · LSK register')}
+            ${wrow('Your licence runs to', '31 Dec 2026. After that date members cannot see you until we check the register again.')}</div>
+          <div class="card"><div class="label">What you specialise in</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${['Company law', 'Investment deals', 'Data protection'].map((x) => `<span class="tag good">${x}</span>`).join('')}</div>
+            <p class="p" style="font-size:13px;margin:10px 0 0">When members ask the Co-pilot for these, you are suggested.</p></div>
+        </div><div>
+          <div class="card"><p class="h" style="margin:0 0 4px">How members see you</p><div class="trustbox"><b>Licensed · LSK · checked 2 Nov 2026</b><span>On the official register, checked there by FoundersLink.</span></div>
+            <p class="p" style="font-size:13px;margin:10px 0 0">Every member who sees you can report you. A person at FoundersLink looks into it, and you can respond before anything is decided.</p></div>
+          <div class="card"><div class="label">What you offer</div><p style="margin:6px 0 10px">Agreements, incorporation, contracts. Health and fintech, in Nairobi and Kiambu.</p><span class="tag good">4 office hours a month</span></div>
+        </div></div>`
+      : W.page === 'copilot' ? `<div class="wband"><h3>Co-pilot</h3><div class="wsub">Ask who can help you check a business before you invest.</div></div>
         <div class="wcols"><div>${copilotThread(true)}<div class="composer" style="border:1px solid var(--line);border-radius:16px;margin-top:6px"><input id="webCpIn" placeholder="Ask in your own words…" aria-label="Your question"><button data-wact="cpask">Ask</button></div></div>
         <div><div class="card"><p class="h" style="margin:0 0 4px">How it works</p><p class="p" style="margin:0">The guide finds people. The people give the advice.</p>
           <ol class="why"><li>Ask in your own words, in English or Kiswahili.</li><li>The guide says what to check, in plain words.</li><li>It suggests verified experts: lawyers and accountants checked against the LSK and ICPAK registers.</li><li>You choose who to ask. Nothing is booked until you send a request.</li></ol></div></div></div>`
@@ -1777,6 +1883,9 @@
       if (a === 'cpopen') S.cpOpen = cp.dataset.id;
       if (a === 'cpcancel') S.cpOpen = null;
       if (a === 'cpsend') { S.cpSent.add(cp.dataset.id); S.cpOpen = null; }
+      if (a === 'cpreport') S.cpReporting = cp.dataset.id;
+      if (a === 'cpreportcancel') S.cpReporting = null;
+      if (a === 'cpreportsend') { S.cpReported.add(cp.dataset.id); S.cpReporting = null; }
       render(); renderWeb(); return;
     }
     if (act?.dataset.wact === 'send') {
@@ -1818,7 +1927,7 @@
   if (role === 'investor' || role === 'founder' || role === 'expert') {
     document.querySelector(`#roleSeg [data-role="${role}"]`).click();
     if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
-    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'investor' && where === 'icopilot') || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)))) S.screen = where;
+    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'investor' && where === 'icopilot') || (role === 'expert' && where === 'esignup') || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)))) S.screen = where;
   }
   render();
 })();
