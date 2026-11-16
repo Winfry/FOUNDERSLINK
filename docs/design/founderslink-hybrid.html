@@ -257,7 +257,13 @@
   .browser-bar i { width: 10px; height: 10px; border-radius: 50%; background: #C8C0D6; }
   .browser-bar .url { margin: 0 auto; font-size: 12px; color: var(--muted); background: #fff; padding: 4px 16px; border-radius: 8px; }
   .scroller { overflow-x: auto; }
-  .app { display: grid; grid-template-columns: 232px 1fr; min-width: 1180px; min-height: 680px; background: #F7F5FB; }
+  /* Fits the window: no part of the web app hides off to the right. */
+  .app { display: grid; grid-template-columns: 232px 1fr; min-width: 760px; min-height: 680px; background: #F7F5FB; }
+  @media (max-width: 1100px) {
+    .app { grid-template-columns: 200px 1fr; }
+    .wcols, .wgrid { grid-template-columns: 1fr; }
+    .wchat .bub, .wchat .careful { max-width: 80% !important; }
+  }
   .side { background: var(--deep); color: #fff; padding: 26px 16px; display: flex; flex-direction: column; }
   .side .wordmark { font-size: 17px; padding: 0 12px 28px; }
   .side a { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; color: rgba(255,255,255,.72); font-size: 14px; }
