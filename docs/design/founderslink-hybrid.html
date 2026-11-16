@@ -200,6 +200,11 @@
   .step.late .step-state { color: var(--late); }
   .step.next .step-state { color: var(--purple); }
   .step-more { margin-top: 10px; }
+  .banks { margin-top: 12px; }
+  .banks .bank { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: .9em; color: var(--text); text-decoration: none; }
+  .banks .bank span { color: var(--purple); font-weight: 500; font-size: .9em; }
+  .moneyrule { background: var(--lav); border-radius: 14px; padding: 12px 14px; font-size: .86em; color: var(--text); margin-top: 12px; }
+  .moneyrule b { display: block; font-weight: 500; color: var(--purple); margin-bottom: 2px; }
 
   .chat { display: flex; flex-direction: column; gap: 10px; }
   .bubble { max-width: 86%; padding: 12px 14px; border-radius: 18px; font-size: .93em; white-space: pre-line; animation: pop .25s ease-out; }
@@ -671,6 +676,30 @@
       line: { en: 'Only funds shops and retail.', sw: 'Hufadhili maduka na rejareja pekee.' },
       whyNot: { en: 'ClinicBook is in health, and she only funds retail.', sw: 'ClinicBook iko kwenye afya, na yeye hufadhili rejareja pekee.' } },
   ];
+  // The same ten banks as the app (BankOptions.tsx): alphabetical, no partner, none recommended.
+  const BANKS = [
+    ['Absa Bank Kenya', 'https://www.absabank.co.ke/business/'],
+    ['Co-operative Bank', 'https://www.co-opbank.co.ke/'],
+    ['Diamond Trust Bank (DTB)', 'https://dtbk.dtbafrica.com/'],
+    ['Equity Bank', 'https://equitygroupholdings.com/ke/business'],
+    ['Family Bank', 'https://familybank.co.ke/'],
+    ['I&M Bank', 'https://www.imbankgroup.com/ke'],
+    ['KCB Bank', 'https://ke.kcbgroup.com/'],
+    ['NCBA Bank', 'https://ncbagroup.com/ke/'],
+    ['Stanbic Bank', 'https://www.stanbicbank.co.ke/kenya/business'],
+    ['Standard Chartered', 'https://www.sc.com/ke/business/'],
+  ];
+  function bankList() {
+    const sw = S.lang === 'sw';
+    return `<div class="banks">
+      <div class="label">${sw ? 'Fungua akaunti na benki' : 'Open one with a bank'}</div>
+      <p class="p" style="margin:4px 0 6px">${sw ? 'Kwa kawaida unahitaji: cheti cha usajili wa biashara, KRA PIN ya biashara, na vitambulisho na KRA PIN za wakurugenzi.' : "Usually needed: your business registration certificate, the business KRA PIN, and the directors' IDs and KRA PINs."}</p>
+      ${BANKS.map(([n, u]) => `<a class="bank" href="${u}" target="_blank" rel="noopener" data-act="noop">${n}<span>${sw ? 'Fungua' : 'Open'}</span></a>`).join('')}
+      <p class="p" style="font-size:.78em;margin:8px 0 0">${sw ? 'Zimepangwa kwa alfabeti. FoundersLink haishirikiani na wala haipendekezi benki yoyote.' : 'Listed alphabetically. FoundersLink does not partner with or recommend any bank.'}</p>
+    </div>`;
+  }
+  const moneyRule = (sw, en, swText) => `<div class="moneyrule"><b>${sw ? 'Pesa' : 'The money'}</b>${sw ? swText : en}</div>`;
+
   const QUESTIONS = [
     { id: 'week', q: { en: 'What should I do this week?', sw: 'Nifanye nini wiki hii?' },
       a: { en: "Two things will help most this week:\n1. Open a bank account in ClinicBook's name. Fatuma at Pwani Impact Fund needs it before you pitch.\n2. Ask David Otieno to connect. He funds health businesses like yours.",
@@ -747,6 +776,7 @@
       ['The deal and the investor, by name', 'ClinicBook, seed with Savanna Angels, with Grace beside it.'],
       ['Six steps, one bar', 'Purple for done, gold for where it is now.'],
       ['Each step in words', 'Done, Now, Next.'],
+      ['The money, bank to bank', 'Investor to founder through their banks. Due diligence asks for 6 months of bank statements.'],
     ] },
     more: { title: 'More: the whole side menu, on a phone', sub: 'The same list as the side menu on a computer, with its counts.', items: [
       ['Every place, named', 'The same items and counts as the side menu, in the same order.'],
@@ -783,6 +813,7 @@
       ['Tap a step to open it', 'Why it matters, how long it takes, and one button to mark it done.'],
       ['A short word of praise', '"Well done. One step closer." Small, and in the same calm voice.'],
       ['Kiswahili works here today', 'These translations are the ones already in the backend.'],
+      ['Banks: open the bank account step', '"Bank account in the business name" lists ten Kenyan banks, alphabetical, each with Open. No partner, none recommended.'],
     ] },
     guide: { title: 'Guide: ask, don\'t hunt', sub: 'The AI Co-pilot as a tab called "Guide".', items: [
       ['Clearly an AI', 'A gold circle marked "AI" and a plain note that it can make mistakes. No human face or name.'],
@@ -795,6 +826,7 @@
       ['Every member by photo or initials', '"Paid" or "Not yet" in words.'],
       ['One clear action', '"Record my contribution", with a thank-you.'],
       ['The money rule, stated', 'FoundersLink never holds the money.'],
+      ["The chama's own Paybill", 'Members pay into it by M-Pesa or bank. FoundersLink only records who paid.'],
     ] },
     ihome: { title: 'Investor home: what needs Grace first', sub: 'The same idea as the founder\'s Home.', items: [
       ['"Needs your attention" at the top', 'A late check-in, said in a sentence, with one button.'],
@@ -1039,6 +1071,7 @@
               ${open ? `<div class="step-more">
                 <div class="label">${t().whyMatters}</div>
                 <p class="p" style="margin-top:2px">${L(it.why)}</p>
+                ${it.id === 'bank' && !isDone ? bankList() : ''}
                 <div class="btns">
                   ${isDone ? `<button class="btn ghost" data-act="undo" data-id="${it.id}">${t().notDone}</button>` : `<button class="btn primary" data-act="done" data-id="${it.id}">${t().markDone}</button>`}
                   <button class="btn soft" data-act="noop">${t().expert}</button>
@@ -1100,6 +1133,9 @@
           <button class="btn soft" data-act="noop">${t().openChat}</button>
         </div>
       </div>
+      <div class="card"><div class="label">${S.lang === 'sw' ? 'Paybill au Till ya chama yenyewe' : "The chama's own Paybill or Till"}</div>
+        <div class="num" style="font-size:1.6em;margin:4px 0 2px">303030</div>
+        <p class="p" style="margin:0">${S.lang === 'sw' ? 'Wanachama hulipa hapa kwa M-Pesa au benki. FoundersLink hurekodi tu nani amelipa.' : 'Members pay here by M-Pesa or bank. FoundersLink only records who has paid.'}</p></div>
       <div class="card" style="background:var(--lav);border-color:transparent;box-shadow:none">
         <p class="h" style="font-size:1em">${t().meeting}</p>
         <p class="p" style="margin:0">${t().noMoney}</p>
@@ -1350,7 +1386,11 @@
         <p class="h" style="margin:4px 0 0">ClinicBook — seed with Savanna Angels</p>
         <div class="stages"><i class="on"></i><i class="now"></i><i></i><i></i><i></i><i></i></div>
         <div class="person">${av('grace', 40)}<div style="flex:1"><div class="pname">${FULL.grace}</div><div class="porg">${steps[1]}</div></div></div>
-        <button class="btn primary" style="margin-top:12px" data-act="noop">${sw ? 'Fungua chumba' : 'Open the deal room'}</button></div>
+        <button class="btn primary" style="margin-top:12px" data-act="noop">${sw ? 'Fungua chumba' : 'Open the deal room'}</button>
+        ${moneyRule(sw, 'The money moves between you and the investor through your banks. FoundersLink records the deal and never holds the money.', 'Pesa huhama kati yako na mwekezaji kupitia benki zenu. FoundersLink hurekodi mkataba na haishikilii pesa kamwe.')}</div>
+      <div class="card"><div class="label">${sw ? 'Uchunguzi wa kina unaomba' : 'Due diligence asks for'}</div>
+        <div class="member"><span class="n">KRA PIN certificate</span><span class="tag paid">${sw ? 'Imetumwa' : 'Shared'}</span></div>
+        <div class="member"><span class="n">${sw ? 'Taarifa za benki za miezi 6' : '6 months of bank statements'}</span><span class="tag not">${sw ? 'Bado' : 'Not yet'}</span></div></div>
       <div class="card"><p class="h" style="margin:0 0 4px">${sw ? 'Hatua sita' : 'Six steps'}</p>
         ${steps.map((x, i) => `<div class="member"><span class="n">${x}</span><span class="tag ${tone(i)}>${word(i)}</span></div>`).join('')}</div>
     </div>`;
