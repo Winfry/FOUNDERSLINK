@@ -65,6 +65,8 @@ export const WORKSPACES: Record<'founder' | 'investor' | 'expert', Workspace> = 
       { label: 'My investments', href: '/investments', also: ['/investor/investment'], group: 'Portfolio' },
       { label: 'What you fund', href: '/investor/onboarding', group: 'Your fund' },
       { label: 'Profile', href: '/profile', also: ['/founder/verify'], group: 'Your fund' },
+      // New to a sector? The guide finds verified experts who know its rules.
+      { label: 'Co-pilot', href: '/investor-copilot', group: 'Assistant' },
     ],
   },
   expert: {

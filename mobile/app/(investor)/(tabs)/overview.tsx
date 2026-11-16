@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { Avatar, Button, Card, Eyebrow, Fit } from '../../../src/components/ui';
+import { AiMark, Avatar, Button, Card, Eyebrow, Fit } from '../../../src/components/ui';
 import { Column, Columns, Greeting, kes, Row } from '../../../src/components/overview/parts';
 import { stageLabel } from '../../../src/components/deal/StageStepper';
 import { greeting } from '../../../src/components/layout/workspace';
@@ -128,6 +128,20 @@ export default function InvestorOverview() {
     </Card>
   ) : null;
 
+  // New to a sector? The guide finds verified experts who know its rules.
+  const guideCard = (
+    <Card style={styles.card}>
+      <View style={styles.person}>
+        <AiMark size={40} />
+        <View style={styles.flex}>
+          <Text style={styles.cardTitle}>Not sure what to check?</Text>
+          <Text style={styles.guideLine}>Ask in your own words, like "Who knows land law for farms?". The guide finds verified experts.</Text>
+        </View>
+      </View>
+      <Button title="Ask the Co-pilot" onPress={() => router.navigate('/investor-copilot' as never)} style={styles.topGap} />
+    </Card>
+  );
+
   return (
     <ScrollView contentContainerStyle={wide ? styles.pageWide : styles.page} refreshControl={<RefreshControl {...pull} />}>
       <Greeting hello={`${greeting()},`} name={first} />
@@ -140,6 +154,7 @@ export default function InvestorOverview() {
           <Column>
             {investmentsCard}
             {requestsCard}
+            {guideCard}
           </Column>
         </Columns>
       ) : (
@@ -148,6 +163,7 @@ export default function InvestorOverview() {
           {investmentsCard}
           {businessesCard}
           {requestsCard}
+          {guideCard}
         </>
       )}
     </ScrollView>
@@ -156,6 +172,7 @@ export default function InvestorOverview() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
+  guideLine: { fontSize: 13, lineHeight: 19, color: colors.textMuted, marginTop: 2 },
   page: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: spacing[1.5] },
   pageWide: { paddingHorizontal: spacing[2], paddingBottom: spacing[6], gap: 18 },
   card: { gap: 6 },

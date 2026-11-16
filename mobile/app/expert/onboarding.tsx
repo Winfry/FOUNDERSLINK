@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
+import { PRACTICE, PRACTICE_AREAS } from '@shared/expert-question';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChoiceCards, FormError, type Choice } from '../../src/components/auth/parts';
-import { Button, Input, Textarea } from '../../src/components/ui';
+import { Button, Input, MultiSelect, Textarea } from '../../src/components/ui';
 import { Text } from '../../src/components/ui/Text';
 import { API_URL, put } from '../../src/services/http/client';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -18,6 +19,11 @@ const PROFESSIONS: Choice[] = [
 // The register a profession is checked against (TEAM_DECISIONS D12).
 const REGISTER: Record<string, string | undefined> = { lawyer: 'LSK', accountant: 'ICPAK' };
 
+// What she specialises in, from the list members search by ("an advocate
+// who knows land law"). Only the areas of her profession are offered.
+const areasFor = (profession: string) => PRACTICE_AREAS.filter((a) => PRACTICE[a].profession === profession);
+const AREA_LABELS = Object.fromEntries(PRACTICE_AREAS.map((a) => [a, PRACTICE[a].label]));
+
 export default function ExpertOnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -27,6 +33,7 @@ export default function ExpertOnboardingScreen() {
   const [registerNumber, setRegisterNumber] = useState('');
   const [bio, setBio] = useState('');
   const [services, setServices] = useState('');
+  const [areas, setAreas] = useState<string[]>([]);
   const [sessions, setSessions] = useState('3');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -58,6 +65,8 @@ export default function ExpertOnboardingScreen() {
             .map((s) => s.trim())
             .filter((s) => s.length >= 2)
             .slice(0, 10),
+          // Only the areas of the profession she ended up choosing.
+          practice_areas: areas.filter((a) => areasFor(profession).includes(a as never)),
           office_hours_per_month: perMonth,
         });
       }
@@ -97,6 +106,13 @@ export default function ExpertOnboardingScreen() {
         value={bio}
         onChangeText={setBio}
         placeholder="e.g. I help startups incorporate, draft shareholder agreements and review term sheets."
+      />
+      <MultiSelect
+        label="What you specialise in"
+        options={[...areasFor(profession)]}
+        labels={AREA_LABELS}
+        values={areas}
+        onChange={setAreas}
       />
       <Input
         label="Services (separate with commas)"

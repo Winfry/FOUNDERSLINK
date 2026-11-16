@@ -181,6 +181,7 @@
   .composer { flex-shrink: 0; display: flex; gap: 8px; padding: 10px 12px; background: #fff; border-top: 1px solid var(--line); }
   .composer input { flex: 1; border: 1px solid var(--line2); border-radius: 99px; padding: 10px 14px; font: inherit; font-size: .9em; min-width: 0; }
   .composer button { border: 0; border-radius: 99px; padding: 0 16px; background: var(--purple); color: #fff; font-weight: 500; }
+  .cpq { display: block; width: 100%; text-align: left; border: 1px solid var(--line2); background: #fff; color: var(--purple); border-radius: 12px; padding: 10px 12px; margin-top: 6px; font: inherit; font-size: .88em; cursor: pointer; }
   .tabsrow { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
   .tabsrow button { flex-shrink: 0; border: 1px solid var(--line2); background: #fff; border-radius: 99px; padding: 8px 13px; font-weight: 500; font-size: .84em; color: var(--muted); }
   .tabsrow button.on { background: var(--deep); border-color: var(--deep); color: #fff; }
@@ -518,6 +519,10 @@
     ann:     { n: 'Ann Njoroge' },
     samuel:  { n: 'Samuel Ouma' },
     lucy:    { n: 'Lucy Wambui' },
+    kiprono: { n: 'Joseph Kiprono' },
+    atieno:  { n: 'Mercy Atieno' },
+    mutua:   { n: 'Daniel Mutua' },
+    njambi:  { n: 'Esther Njambi' },
   };
   const initials = (n) => n.split(' ').map((w) => w[0]).join('').slice(0, 2);
   function av(id, size = 44) {
@@ -756,6 +761,12 @@
   ];
 
   const NOTES = {
+    icopilot: { title: 'Co-pilot: who can help me check this?', sub: 'An investor new to a sector asks in her own words, in English or Kiswahili.', items: [
+      ['She asks, plainly', '"I want to invest in a farming business. Which advocates know land law?"'],
+      ['What to check, in plain words', 'In farming, land is often the biggest risk: the title, the lease, any loan on it.'],
+      ['Verified experts, with why', 'Advocates who know land law and work with farms, LSK register checked, sessions left this month.'],
+      ['She decides', 'Nothing is booked until she sends a request. General information, never legal advice.'],
+    ] },
     invpage: { title: 'An investor\'s page', sub: 'What a founder sees after tapping "View".', items: [
       ['Role and firm, then the name', '"Partner · Lakeside Ventures", then David Otieno, large.'],
       ['Three facts', 'Ticket, deals closed, investing since.'],
@@ -859,7 +870,7 @@
   const S = {
     role: 'founder', screen: 'home', lang: 'en', large: false,
     done: new Set(['kra', 'brs', 'permit', 'data']), openStep: null, invTab: 'ready', requested: new Set(), openInv: 'david',
-    chat: [], typing: false, invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
+    chat: [], typing: false, cpAsked: [], cpSent: new Set(), cpOpen: null, invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
     inv: null, asked: new Set(), iRequested: new Set(['njeri']),
     share: Object.fromEntries(INVESTMENTS.map((i) => [i.id, i.share])),
     eAnswer: {}, eDone: new Set(),
@@ -1169,6 +1180,8 @@
         <div class="person">${av('njeri', 40)}<div style="flex:1"><p class="h" style="margin:0;font-size:1em">${tt.reqWaiting}</p></div></div>
         <div style="margin-top:12px"><button class="btn ghost" data-act="go" data-to="ireq">${tt.seeReq}</button></div>
       </div>
+      <div class="card"><div class="person"><span class="ai-mark">AI</span><div style="flex:1"><p class="h" style="margin:0;font-size:1em">Not sure what to check?</p><div class="porg">Ask in your own words, like "Who knows land law for farms?". The guide finds verified experts.</div></div></div>
+        <button class="btn primary" style="margin-top:12px" data-act="go" data-to="icopilot">Ask the Co-pilot</button></div>
     </div>`;
   }
   function ibiz() {
@@ -1351,6 +1364,9 @@
         <div class="label">${tt.offer}</div>
         <p style="margin:6px 0">${tt.offerLine}</p>
         <span class="tag good">${tt.hours}</span>
+        <div class="label" style="margin-top:14px">${S.lang === 'sw' ? 'Anachobobea' : 'What she specialises in'}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${(S.lang === 'sw' ? ['Sheria ya kampuni', 'Mikataba ya uwekezaji', 'Ulinzi wa data'] : ['Company law', 'Investment deals', 'Data protection']).map((x) => `<span class="tag good">${x}</span>`).join('')}</div>
+        <p class="p" style="font-size:.8em;margin:8px 0 0">${S.lang === 'sw' ? 'Wanachama wakiuliza mtaalamu wa mambo haya, utaonekana.' : 'When members ask the Co-pilot for these, she is suggested.'}</p>
       </div>
       <div class="card">
         <p class="h" style="margin:0 0 4px">${tt.account}</p>
@@ -1399,7 +1415,7 @@
   // Everyone: "More" is the whole side menu, on the phone.
   const MORE = {
     founder: [['Overview', '', 'home'], ['Investors', '3', 'investors'], ['Readiness', '4/7', 'ready'], ['Deal rooms', '1', 'deals'], ['Messages', '2'], ['#Community'], ['Network'], ['Chamas', '', 'chamas'], ['#Assistant'], ['Co-pilot', '', 'guide']],
-    investor: [['Overview', '', 'ihome'], ['Businesses', '3', 'ibiz'], ['Requests', '1', 'ireq'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments', '', 'iport'], ['#Your fund'], ['What you fund'], ['Profile']],
+    investor: [['Overview', '', 'ihome'], ['Businesses', '3', 'ibiz'], ['Requests', '1', 'ireq'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments', '', 'iport'], ['#Your fund'], ['What you fund'], ['Profile'], ['#Assistant'], ['Co-pilot', '', 'icopilot']],
     expert: [['Overview', '2', 'ehome'], ['Deal rooms'], ['Messages', '1'], ['#Your practice'], ['Profile', '', 'eprofile']],
   };
   function more() {
@@ -1412,7 +1428,79 @@
         <div class="grp">${sw ? 'Akaunti' : 'Account'}</div><a data-act="noop" style="cursor:pointer">Notifications <small>2</small></a><a data-act="noop" style="cursor:pointer">Settings</a></div></div>`;
   }
 
-  const SCREENS = { home, investors, invpage, ready, deals, more, guide, chamas, msgs, chatv, ihome, ibiz, ireq, iport, ehome, eprofile };
+  // ---------------- The investor's Co-pilot: who can help ----------------
+  const CP_PROMPTS = [
+    'I want to invest in a farming business. Which advocates know land law?',
+    'Who can check a business’s books before I invest?',
+    'I need help reading a term sheet',
+    'Nani anajua sheria ya ardhi Nakuru?',
+  ];
+  const CP_EXPERTS = {
+    kiprono: { org: 'Advocate · Kiprono & Associates', bio: 'Land searches, agricultural leases and title transfers for farms and agribusinesses.', left: 2, helped: 11 },
+    atieno: { org: 'Advocate · Atieno Law', bio: 'Land and property law for farmers and cooperatives in western Kenya.', left: 3, helped: 7 },
+    kamau: { org: 'Advocate · Kamau & Co.', bio: 'Company law, investment deals and data protection for young businesses.', left: 1, helped: 4 },
+    mutua: { org: 'Accountant · Mutua CPA', bio: 'Tax, eTIMS and books for farms and small food businesses.', left: 4, helped: 9 },
+    njambi: { org: 'Accountant · Njambi & Partners', bio: 'Checks the numbers before you invest: audits and due diligence.', left: 2, helped: 5 },
+  };
+  function cpAnswer(q) {
+    const t = q.toLowerCase();
+    const sw = /\b(nani|nahitaji|sheria|ardhi|wakili|shamba)\b/.test(t);
+    const county = ['Nakuru', 'Kisumu', 'Nairobi'].find((c) => t.includes(c.toLowerCase()));
+    if (/land|ardhi|title|lease|shamba|farm|agri|kilimo|dairy/.test(t)) {
+      const order = county === 'Kisumu' ? ['atieno', 'kiprono'] : ['kiprono', 'atieno'];
+      return {
+        area: sw ? 'Sheria ya ardhi na mali' : 'Land and property law',
+        explain: sw
+          ? 'Katika kilimo, ardhi mara nyingi ndiyo hatari kubwa zaidi. Kabla ya kuwekeza, hakikisha nani anamiliki ardhi (hati miliki au ukodishaji uliosajiliwa), kwamba ukodishaji ni mrefu kuliko uwekezaji wako, na hakuna mzozo au mkopo juu ya hati. Wakili anayejua sheria ya ardhi anaweza kukufanyia utafutaji rasmi kwenye sajili ya Ardhi.'
+          : 'In farming, land is often the biggest risk. Before you invest, check who owns the land (a title deed or a registered lease), that the lease runs longer than your investment, and that there is no dispute or loan charged on the title. An advocate who knows land law can run an official search at the Lands registry for you.',
+        experts: order.map((id) => [id, [sw ? 'Sheria ya ardhi na mali' : 'Land and property law', sw ? 'Hufanya kazi na biashara za kilimo' : 'Works with agriculture businesses', ...(county && (id === 'kiprono' ? county !== 'Kisumu' : county === 'Kisumu') ? [sw ? `Anapatikana ${county}` : `Works in ${county}`] : []), sw ? 'Usajili wa LSK umeangaliwa' : 'LSK register checked']]),
+        sw,
+      };
+    }
+    if (/book|account|tax|kra|vat|numbers|audit|hesabu|kodi/.test(t)) {
+      return { area: 'Bookkeeping and accounts', explain: 'An accountant who knows bookkeeping can look at the business’s numbers and tell you whether they hold up: sales, costs, what is owed to KRA, and whether the books match the bank statements.',
+        experts: [['njambi', ['Audit and due diligence', 'ICPAK register checked']], ['mutua', ['Bookkeeping and accounts', 'ICPAK register checked']]], sw: false };
+    }
+    if (/term sheet|shareholder|agreement|equity|convertible|mkataba/.test(t)) {
+      return { area: 'Investment deals', explain: 'Before you sign, an advocate who does investment deals can read the terms, the shareholders agreement and the company papers, and tell you what you get for your money.',
+        experts: [['kamau', ['Investment deals', 'LSK register checked']]], sw: false };
+    }
+    return { area: null, explain: 'I could not tell exactly what help you need, so here are the verified experts who fit best. Tell me a little more (for example "land", "tax" or "contract") and I can narrow it down.',
+      experts: [['kamau', ['LSK register checked']], ['njambi', ['ICPAK register checked']]], sw: false };
+  }
+  function copilotThread(web) {
+    const intro = `<div class="card"><div class="person">${'<span class="ai-mark">AI</span>'}<div style="flex:1"><div class="pname">Ask who can help</div><div class="porg">Tell me what you are looking at, in your own words. I will explain what to check, and find verified experts who can help you. You decide who to talk to.</div></div></div>
+      ${S.cpAsked.length ? '' : `<div class="label" style="margin:12px 0 6px">You could ask</div>${CP_PROMPTS.map((q, i) => `<button class="cpq" data-act="cpask" data-q="${i}">${q}</button>`).join('')}`}</div>`;
+    const turns = S.cpAsked.map((q, ti) => {
+      const a = cpAnswer(q);
+      return `<div class="bub me" style="max-width:${web ? '60%' : '85%'};margin:12px 0 8px auto">${q}</div>
+        <div class="card"><div class="person"><span class="ai-mark" style="width:30px;height:30px;font-size:11px">AI</span><div class="label" style="flex:1">What to know${a.area ? ` · ${a.area}` : ''}</div></div>
+          <p style="margin:8px 0 0;line-height:1.5">${a.explain}</p>
+          <div class="label" style="margin-top:14px">${a.sw ? 'Wataalamu waliothibitishwa wanaoweza kusaidia' : 'Verified experts who can help'}</div>
+          ${a.experts.map(([id, reasons]) => {
+            const e = CP_EXPERTS[id]; const key = ti + id; const first = FULL[id].split(' ')[0];
+            const action = S.cpSent.has(key) ? `<div class="sent" style="margin-top:10px">Request sent. ${first} will answer in your notifications, and you can then message them.</div>`
+              : S.cpOpen === key ? `<div style="margin-top:10px"><div class="label">What would you like help with?</div><div style="background:#fff;border:1px solid var(--line2);border-radius:12px;padding:10px 12px;margin:6px 0 10px;font-size:.9em">${q}</div><div class="btns two"><button class="btn primary" data-act="cpsend" data-id="${key}">Send request</button><button class="btn ghost" data-act="cpcancel">Cancel</button></div></div>`
+              : `<button class="btn soft" style="margin-top:10px" data-act="cpopen" data-id="${key}">Ask ${first} for a session</button>`;
+            return `<div style="border-top:1px solid var(--line);padding-top:12px;margin-top:12px">
+              <div class="person" style="align-items:center">${av(id, 46)}<div style="flex:1"><div class="pname">${FULL[id]}</div><div class="porg">${e.org}</div></div><span class="tag paid">Verified</span></div>
+              <ol class="why" style="margin:8px 0 4px">${reasons.map((r) => `<li>${r}</li>`).join('')}</ol>
+              <div class="porg">${e.bio}</div>
+              <div class="porg" style="margin-top:4px;font-size:.8em">${e.left} free sessions left this month · Has helped ${e.helped} people</div>
+              ${action}</div>`;
+          }).join('')}
+          <p class="p" style="font-size:.78em;margin:14px 0 0">${a.sw ? 'Haya ni maelezo ya jumla ya kukusaidia kumpata mtu sahihi, si ushauri wa kisheria, kodi au fedha. Wataalamu walioangaliwa na FoundersLink pekee ndio wanaoonyeshwa.' : 'This is general information to help you find the right person, not legal, tax or financial advice. Only experts FoundersLink has checked are shown.'}</p>
+        </div>`;
+    }).join('');
+    return intro + turns;
+  }
+  function icopilot() {
+    return top(`<h1 class="title">Co-pilot</h1><div class="tsub">Ask who can help you check a business before you invest.</div>`) +
+      `<div class="body">${copilotThread(false)}</div>
+      <div class="composer"><input id="cpIn" placeholder="Ask in your own words…" aria-label="Your question"><button data-act="cpask">Ask</button></div>`;
+  }
+
+  const SCREENS = { home, investors, invpage, ready, deals, more, guide, chamas, msgs, chatv, icopilot, ihome, ibiz, ireq, iport, ehome, eprofile };
   const ORDERS = { founder: ['home', 'investors', 'ready', 'deals', 'more'], investor: ['ihome', 'ibiz', 'ireq', 'iport', 'more'], expert: ['ehome', 'eprofile', 'more'] };
   // Screens reached from "More" (Chamas, Co-pilot) light up the More tab.
   const tabOf = (k) => (ORDERS[S.role].includes(k) ? k : k === 'invpage' ? 'investors' : k === 'msgs' || k === 'chatv' ? null : 'more');
@@ -1430,7 +1518,8 @@
       `<nav class="nav" style="grid-template-columns:repeat(${ORDER.length},1fr)">${ORDER.map((k) => `<button class="${tabOf(S.screen) === k ? 'on' : ''}" data-act="go" data-to="${k}">${icon(k)}${navName(k)}</button>`).join('')}</nav>` +
       (S.toast ? `<div class="toast"><span class="dot"></span>${S.toast}</div>` : '');
     const body = el.querySelector('.body');
-    if (body) body.scrollTop = S.screen === 'guide' || S.screen === 'chatv' ? body.scrollHeight : keep;
+    if (body) body.scrollTop = S.screen === 'guide' || S.screen === 'chatv' || (S.screen === 'icopilot' && S.cpScroll) ? body.scrollHeight : keep;
+    S.cpScroll = false;
     document.getElementById('jump').innerHTML = [...ORDER, ...(S.role === 'founder' ? ['chamas', 'guide'] : [])].map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-to="${k}">${navName(k, 'en')}${S.lang === 'sw' ? ` · ${navName(k, 'sw')}` : ''}</button>`).join('');
     const n = NOTES[S.screen === 'iport' && S.inv ? 'idetail' : S.screen] ?? NOTES.home;
     document.getElementById('notes').innerHTML = `<h3>${n.title}</h3><p class="sub">${n.sub}</p><ol>${n.items.map(([b, s], i) => `<li><i>0${i + 1}</i><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>`;
@@ -1448,6 +1537,14 @@
       case 'invtab': S.invTab = b.dataset.tab; S.openInv = INVESTORS.find((i) => i.list === S.invTab)?.id; render(); break;
       case 'openinv': S.screen = 'invpage'; S.invId = b.dataset.id; render(); break;
       case 'openconv': S.screen = 'chatv'; S.conv = b.dataset.id; render(); break;
+      case 'cpask': {
+        const q = b.dataset.q !== undefined ? CP_PROMPTS[+b.dataset.q] : (document.getElementById('cpIn')?.value ?? '').trim();
+        if (!q || q.length < 5) break;
+        S.cpAsked.push(q); S.cpScroll = true; render(); renderWeb(); break;
+      }
+      case 'cpopen': S.cpOpen = b.dataset.id; render(); renderWeb(); break;
+      case 'cpcancel': S.cpOpen = null; render(); renderWeb(); break;
+      case 'cpsend': S.cpSent.add(b.dataset.id); S.cpOpen = null; render(); renderWeb(); break;
       case 'sendmsg': {
         const box = document.getElementById('msgIn'); const text = box.value.trim(); if (!text) break;
         const key = S.role + (S.conv ?? 'c1');
@@ -1480,6 +1577,7 @@
   document.getElementById('screen').addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.step-card')) { e.preventDefault(); e.target.click(); }
     if (e.key === 'Enter' && e.target.id === 'msgIn') { e.preventDefault(); document.querySelector('[data-act="sendmsg"]').click(); }
+    if (e.key === 'Enter' && e.target.id === 'cpIn') { e.preventDefault(); document.querySelector('#screen [data-act="cpask"]:not([data-q])').click(); }
   });
   const segment = (id, key, apply) => document.getElementById(id).addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
@@ -1518,7 +1616,7 @@
     },
     investor: {
       url: 'overview', me: 'grace', name: 'Grace',
-      menu: [['Overview', '', true], ['Businesses', '3'], ['Requests', '1'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments'], ['#Your fund'], ['What you fund'], ['Profile']],
+      menu: [['Overview', '', true], ['Businesses', '3'], ['Requests', '1'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments'], ['#Your fund'], ['What you fund'], ['Profile'], ['#Assistant'], ['Co-pilot']],
       left: () => `
         <div class="card" style="border-color:rgba(227,182,93,.55)"><div class="eyebrow">Needs your attention</div>
           <div class="person">${av('achieng', 44)}<div style="flex:1"><p class="h" style="margin:0 0 4px">MamaCare</p><p class="p">MamaCare's 180-day check-in is late. Achieng hasn't sent her update yet.</p></div></div>
@@ -1551,8 +1649,8 @@
   // Section 03 is clickable: Overview, Investors (founder) and Messages open
   // their pages, as in the app on a computer.
   const W = { role: 'founder', page: 'home', invTab: 'ready', invId: 'david', conv: 'c1' };
-  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs' };
-  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages' };
+  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs', 'Co-pilot': 'copilot' };
+  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages', copilot: 'Co-pilot' };
 
   function webInvestors() {
     const counts = { ready: 3, fix: 2, no: 4 };
@@ -1638,15 +1736,20 @@
     const w = WEB[W.role];
     // Investors is the founder's; the others stay on their overview.
     if (W.role !== 'founder' && (W.page === 'investors' || W.page === 'invpage')) W.page = 'home';
+    if (W.role !== 'investor' && W.page === 'copilot') W.page = 'home';
     const here = pageOf[W.page];
     const side = w.menu.map(([label, count]) => {
       if (label.startsWith('#')) return `<div class="grp">${label.slice(1)}</div>`;
-      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') ? ` data-wgo="${WMENU[label]}"` : '';
+      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') && (label !== 'Co-pilot' || W.role === 'investor') ? ` data-wgo="${WMENU[label]}"` : '';
       return `<a class="${label === here ? 'on' : ''}"${go}>${label}${count ? ` <small>${count}</small>` : ''}</a>`;
     }).join('');
-    const urls = { home: w.url, investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
+    const urls = { home: w.url, copilot: 'investor-copilot', investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
     document.getElementById('webUrl').textContent = `app.founderslink.co.ke/${urls[W.page]}`;
-    const main = W.page === 'investors' ? webInvestors() : W.page === 'invpage' ? webInvPage() : W.page === 'msgs' ? webMsgs() : W.page === 'chat' ? webChat()
+    const main = W.page === 'copilot' ? `<div class="wband"><h3>Co-pilot</h3><div class="wsub">Ask who can help you check a business before you invest.</div></div>
+        <div class="wcols"><div>${copilotThread(true)}<div class="composer" style="border:1px solid var(--line);border-radius:16px;margin-top:6px"><input id="webCpIn" placeholder="Ask in your own words…" aria-label="Your question"><button data-wact="cpask">Ask</button></div></div>
+        <div><div class="card"><p class="h" style="margin:0 0 4px">How it works</p><p class="p" style="margin:0">The guide finds people. The people give the advice.</p>
+          <ol class="why"><li>Ask in your own words, in English or Kiswahili.</li><li>The guide says what to check, in plain words.</li><li>It suggests verified experts: lawyers and accountants checked against the LSK and ICPAK registers.</li><li>You choose who to ask. Nothing is booked until you send a request.</li></ol></div></div></div>`
+      : W.page === 'investors' ? webInvestors() : W.page === 'invpage' ? webInvPage() : W.page === 'msgs' ? webMsgs() : W.page === 'chat' ? webChat()
       : `<div class="wband"><div class="date">Saturday, 14 November</div><h3>Good evening, <b>${w.name}.</b></h3></div>
         <div class="wcols"><div>${w.left()}</div><div>${w.right()}</div></div>`;
     document.getElementById('webApp').innerHTML = `
@@ -1663,6 +1766,19 @@
     const tab = e.target.closest('[data-wtab]');
     const act = e.target.closest('[data-wact]');
     if (act?.dataset.wact === 'connect') { S.requested.add(act.dataset.id); renderWeb(); return; }
+    if (act?.dataset.wact === 'cpask') {
+      const q = (document.getElementById('webCpIn')?.value ?? '').trim(); if (q.length < 5) return;
+      S.cpAsked.push(q); render(); renderWeb(); return;
+    }
+    const cp = e.target.closest('[data-act^="cp"]');
+    if (cp) {
+      const a = cp.dataset.act;
+      if (a === 'cpask') S.cpAsked.push(CP_PROMPTS[+cp.dataset.q]);
+      if (a === 'cpopen') S.cpOpen = cp.dataset.id;
+      if (a === 'cpcancel') S.cpOpen = null;
+      if (a === 'cpsend') { S.cpSent.add(cp.dataset.id); S.cpOpen = null; }
+      render(); renderWeb(); return;
+    }
     if (act?.dataset.wact === 'send') {
       const box = document.getElementById('webMsgIn'); const text = box.value.trim(); if (!text) return;
       const key = 'web' + W.role + W.conv;
@@ -1679,6 +1795,7 @@
   });
   document.getElementById('webApp').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.id === 'webMsgIn') { e.preventDefault(); document.querySelector('[data-wact="send"]').click(); }
+    if (e.key === 'Enter' && e.target.id === 'webCpIn') { e.preventDefault(); document.querySelector('[data-wact="cpask"]').click(); }
   });
   document.getElementById('webRole').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
@@ -1701,7 +1818,7 @@
   if (role === 'investor' || role === 'founder' || role === 'expert') {
     document.querySelector(`#roleSeg [data-role="${role}"]`).click();
     if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
-    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)))) S.screen = where;
+    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'investor' && where === 'icopilot') || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)))) S.screen = where;
   }
   render();
 })();

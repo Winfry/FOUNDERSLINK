@@ -14,6 +14,7 @@ export default function InvestorTabsLayout() {
         { name: 'requests', title: 'Requests', icon: Send },
         { name: 'investments', title: 'Investments', icon: Wallet },
         { name: 'investor-more', title: 'More', icon: Menu },
+        { name: 'investor-copilot', title: 'Co-pilot', hidden: true },
         { name: 'profile', title: 'Profile', hidden: true },
         { name: 'notifications', title: 'Notifications', hidden: true },
       ]}

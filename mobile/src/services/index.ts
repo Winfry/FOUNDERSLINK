@@ -81,5 +81,5 @@ export const copilotService: CopilotService = live('copilot') ? httpCopilotServi
 export * from './types/api';
 
 export type { DiscoverCard, DiscoverResult, FounderPublicProfile, InvestorService, InvestorSetup, JoinRequestRow } from './http/investor.http';
-export type { ExpertService, ExpertSession } from './http/expert.http';
+export type { ExpertCard, ExpertFindResult, ExpertService, ExpertSession } from './http/expert.http';
 export type { CopilotActivity, CopilotAnswer, CopilotService, CopilotTask, TaskAction } from './http/copilot.http';
