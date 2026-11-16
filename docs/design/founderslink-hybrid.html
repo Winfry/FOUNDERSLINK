@@ -306,6 +306,20 @@
   .wband h3 b { font-weight: 500; }
   .wcols { display: grid; grid-template-columns: 1.9fr 1fr; gap: 18px; padding: 18px 16px 32px; align-items: start; }
   .wcols .card { margin-bottom: 18px; }
+  .side a[data-wgo] { cursor: pointer; }
+  .side a[data-wgo]:hover { color: #fff; }
+  .wband .wsub { color: rgba(255,255,255,.65); font-size: 14px; margin-top: 6px; }
+  .wpad { padding: 18px 16px 32px; }
+  .wgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .wgrid .card { margin: 0; }
+  .whead { display: flex; align-items: center; gap: 14px; background: #fff; border-bottom: 1px solid var(--line); padding: 16px 24px; }
+  .whead button { border: 0; background: none; color: var(--purple); font-weight: 500; font-size: 14px; cursor: pointer; padding: 0; }
+  .whead b { font-weight: 500; font-size: 17px; }
+  .wchat { display: flex; flex-direction: column; min-height: 620px; }
+  .wchat .msgs { flex: 1; padding: 18px 24px; }
+  .wchat .bub { max-width: 60%; }
+  .wchat .composer { padding: 12px 24px; }
+  .wchat .composer input { padding: 12px 16px; }
   .wcols .btn.soft:last-child { margin-bottom: 0; }
 
   /* ---------- 04 System ---------- */
@@ -407,7 +421,7 @@
       <div class="no">03 — Web app</div>
       <div>
         <h2>The same app on a computer. <span>Just wider.</span></h2>
-        <p>On a computer, each member sees exactly what the phone shows: the purple band with the greeting, then the same cards in the same order and the same words. The phone's bottom tabs become a side menu in words, with a count beside each place, and the cards spread over two columns. No empty margins.</p>
+        <p>On a computer, each member sees exactly what the phone shows: the purple band with the greeting, then the same cards in the same order and the same words. The phone's bottom tabs become a side menu in words, with a count beside each place, and the cards spread over two columns. No empty margins. Click Overview, Investors and Messages in the side menu to open their pages.</p>
       </div>
     </div>
     <div class="seg" id="webRole" style="max-width:420px;margin-bottom:18px"><button data-r="founder" class="on">Founder</button><button data-r="investor">Investor</button><button data-r="expert">Expert</button></div>
@@ -1451,7 +1465,7 @@
       right: () => `
         <div class="card"><div class="label" style="margin-bottom:12px">People who may fund you</div>
           ${['david', 'grace'].map((id) => { const i = INVESTORS.find((x) => x.id === id); return `<div class="person">${av(id, 48)}<div style="flex:1"><div class="pname">${FULL[id]}</div><div class="porg">${i.org} · ${i.ticket}</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${i.line.en}</div><span class="fitw">${meter(i.n)}${i.fitText.en}</span></div></div>`; }).join('')}
-          <button class="btn soft" style="margin-top:14px">See all investors</button></div>
+          <button class="btn soft" style="margin-top:14px" data-wgo="investors">See all investors</button></div>
         <div class="card"><div class="person"><span class="ai-mark">AI</span><div><div class="pname">Ask the guide</div><div class="porg">Not sure what to do? Ask in your own words.</div></div></div>
           <button class="btn primary" style="margin-top:12px">Ask a question</button></div>
         <button class="btn soft">Your network</button>`,
@@ -1488,12 +1502,107 @@
           ${ERUNNING.map((s) => `<div style="border-top:1px solid var(--line);padding:12px 0 4px"><div class="person">${av(s.who, 40)}<div style="flex:1"><div class="pname">${FULL[s.who]}</div><div class="porg">${s.topic.en}</div></div></div><button class="btn ghost" style="margin-top:10px">Mark as done</button></div>`).join('')}</div>`,
     },
   };
-  function renderWeb(role) {
-    const w = WEB[role];
-    const side = w.menu.map(([label, count, on]) => label.startsWith('#')
-      ? `<div class="grp">${label.slice(1)}</div>`
-      : `<a class="${on ? 'on' : ''}">${label}${count ? ` <small>${count}</small>` : ''}</a>`).join('');
-    document.getElementById('webUrl').textContent = `app.founderslink.co.ke/${w.url}`;
+  // Section 03 is clickable: Overview, Investors (founder) and Messages open
+  // their pages, as in the app on a computer.
+  const W = { role: 'founder', page: 'home', invTab: 'ready', invId: 'david', conv: 'c1' };
+  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs' };
+  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages' };
+
+  function webInvestors() {
+    const counts = { ready: 3, fix: 2, no: 4 };
+    const label = { ready: 'Ready', fix: 'After a fix', no: 'Not a fit' };
+    const cards = INVESTORS.filter((i) => i.list === W.invTab).map((i) => {
+      const status = S.requested.has(i.id) ? 'Request sent' : i.status;
+      const item = i.fixItem && ITEMS.find((x) => x.id === i.fixItem);
+      const line = i.list === 'ready' ? `<span class="${status === 'In deal room' ? 'on' : ''}">${status}</span>` : i.list === 'fix' ? `<span>Needs: ${item.en}</span>` : `<span>${i.line.en}</span>`;
+      const action = i.list === 'ready' ? 'View' : i.list === 'fix' ? 'See fix' : '';
+      return `<div class="card" data-wgo="invpage" data-id="${i.id}" style="cursor:pointer;padding:14px 16px">
+        <div class="person" style="align-items:center">${av(i.id, 48)}<div style="flex:1;min-width:0"><div class="pname">${FULL[i.id]}</div><div class="porg">${i.org} · ${i.ticket}</div></div>${meter(i.n, i.list === 'fix')}</div>
+        <div class="inv-foot">${line}${action ? `<span class="pillbtn">${action}</span>` : ''}</div></div>`;
+    }).join('');
+    return `<div class="wband"><h3>Investors who fit you.</h3><div class="wsub">Sorted by how well they fit your business.</div></div>
+      <div class="wpad"><div class="tabsrow">${['ready', 'fix', 'no'].map((k) => `<button class="${W.invTab === k ? 'on' : ''}" data-wtab="${k}">${label[k]} · ${counts[k]}</button>`).join('')}</div>
+      <div class="wgrid">${cards}</div></div>`;
+  }
+
+  function webInvPage() {
+    const i = INVESTORS.find((x) => x.id === W.invId) ?? INVESTORS[0];
+    const item = i.fixItem && ITEMS.find((x) => x.id === i.fixItem);
+    const facts = [[i.ticket, 'Ticket'], [i.deals, 'Deals closed'], [i.since, 'Investing since']].filter(([v]) => v);
+    const ask = S.requested.has(i.id) ? `<div class="sent">${t().sent}</div>`
+      : i.status === 'In deal room' ? `<button class="btn primary">Open the deal room</button>`
+      : i.list === 'no' ? '' : item && !S.done.has(item.id) ? `<button class="btn soft">Sort it out in Readiness</button>`
+      : `<button class="btn primary" data-wact="connect" data-id="${i.id}">Request introduction</button>`;
+    return `<div class="whead"><button data-wgo="investors">← Back</button><b>Investor</b></div>
+      <div class="wcols">
+        <div>
+          <div class="card">
+            <div class="person" style="align-items:flex-start"><div style="flex:1">
+              <div class="label">${i.title ? `${i.title} · ` : ''}${i.org}</div>
+              <div style="font-weight:300;font-size:34px;letter-spacing:-0.03em;line-height:1.1;margin:6px 0 10px">${FULL[i.id]}</div>
+              <span class="fitw">${meter(i.n, i.list === 'fix')}${i.fitText.en}${i.deals ? ' · Verified' : ''}</span>
+            </div>${av(i.id, 84)}</div>
+            ${i.list === 'no' ? '' : `<div class="facts">${facts.map(([v, k]) => `<div><div class="v">${v}</div><div class="k">${k}</div></div>`).join('')}</div>`}
+          </div>
+          ${item ? `<div class="card"><div class="label">Fix this first</div><ol class="why"><li>${item.en}</li></ol></div>` : ''}
+          <div class="card"><div class="label">${i.list === 'no' ? 'Why not, for ClinicBook' : 'Why they fit ClinicBook'}</div>
+            ${i.list === 'no' ? `<p class="p" style="margin:8px 0 0">${i.whyNot.en}</p>` : `<ol class="why">${(i.why ? i.why.en : [i.line.en]).map((w) => `<li>${w}</li>`).join('')}</ol>`}
+          </div>
+        </div>
+        <div>
+          <div class="card"><div class="label">What they fund</div><p style="margin:8px 0 0">${i.line.en}</p></div>
+          ${i.deals ? `<div class="card"><div class="label">Track record</div>
+            <div class="member"><span class="n">A Nairobi clinic chain<div class="porg" style="font-weight:400">Seed stage, 2023</div></span><span class="tag strong">Verified on FoundersLink</span></div>
+            <div class="member"><span class="n">A pharmacy delivery app<div class="porg" style="font-weight:400">Pre-seed stage, 2022</div></span><span class="tag good">Public source</span></div></div>` : ''}
+          ${ask}
+          ${ask && i.list !== 'no' && i.status !== 'In deal room' && !S.requested.has(i.id) ? `<p class="p" style="text-align:center;font-size:13px;margin-top:10px">They get your request. You can message them once they accept.</p>` : ''}
+        </div>
+      </div>`;
+  }
+
+  const webConvs = () => CONVS[W.role].map((c) => ({ ...c, m: [...c.m, ...(S.sentMsgs['web' + W.role + c.id] ?? [])] }));
+  function webMsgs() {
+    return `<div class="wband"><h3>Messages</h3><div class="wsub">You can message people who accepted your request.</div></div>
+      <div class="wpad"><div class="card" style="padding:4px 20px">${webConvs().map((c) => {
+        const last = c.m[c.m.length - 1];
+        return `<div class="conv" data-wgo="chat" data-id="${c.id}">${av(c.who, 46)}
+          <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><span class="pname">${c.title}</span><span class="when">${c.when}</span></div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:3px">${c.tag ? `<span class="tag good">${c.tag}</span>` : ''}<span class="last ${c.unread ? 'unread' : ''}" style="flex:1">${last[0] === 'me' ? 'You: ' : ''}${last[1]}</span>${c.unread ? `<span class="n">${c.unread}</span>` : ''}</div></div></div>`;
+      }).join('')}</div></div>`;
+  }
+
+  function webChat() {
+    const c = webConvs().find((x) => x.id === W.conv) ?? webConvs()[0];
+    let prev = null;
+    const lines = c.m.map(([who, text, when, risky]) => {
+      if (who === 'sys') { prev = null; return `<div class="sysnote"><span>${text}</span></div>`; }
+      const mine = who === 'me';
+      const head = !mine && prev !== who ? `<div class="bname">${who === 'stranger' ? 'Unknown member' : FULL[who]}</div>` : '';
+      prev = who;
+      const warn = risky ? `<div class="careful" style="max-width:60%"><b>Careful</b>This message asks for money. Do not send money outside a closed deal with a verified member.</div>` : '';
+      return `${warn}${head}<div class="bub ${mine ? 'me' : 'them'} ${risky ? 'risky' : ''}">${text}</div><div class="bmeta ${mine ? 'me' : ''}">${when}</div>`;
+    }).join('');
+    return `<div class="wchat"><div class="whead"><button data-wgo="msgs">← Back</button>${av(c.who, 34)}<b>${c.title}</b>${c.tag ? `<span class="tag good">${c.tag}</span>` : ''}</div>
+      <div class="msgs">${lines}</div>
+      <div class="composer"><input id="webMsgIn" placeholder="Write a message" aria-label="Write a message"><button data-wact="send">Send</button></div></div>`;
+  }
+
+  function renderWeb(role = W.role) {
+    if (role !== W.role) { W.role = role; W.page = 'home'; }
+    const w = WEB[W.role];
+    // Investors is the founder's; the others stay on their overview.
+    if (W.role !== 'founder' && (W.page === 'investors' || W.page === 'invpage')) W.page = 'home';
+    const here = pageOf[W.page];
+    const side = w.menu.map(([label, count]) => {
+      if (label.startsWith('#')) return `<div class="grp">${label.slice(1)}</div>`;
+      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') ? ` data-wgo="${WMENU[label]}"` : '';
+      return `<a class="${label === here ? 'on' : ''}"${go}>${label}${count ? ` <small>${count}</small>` : ''}</a>`;
+    }).join('');
+    const urls = { home: w.url, investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
+    document.getElementById('webUrl').textContent = `app.founderslink.co.ke/${urls[W.page]}`;
+    const main = W.page === 'investors' ? webInvestors() : W.page === 'invpage' ? webInvPage() : W.page === 'msgs' ? webMsgs() : W.page === 'chat' ? webChat()
+      : `<div class="wband"><div class="date">Saturday, 14 November</div><h3>Good evening, <b>${w.name}.</b></h3></div>
+        <div class="wcols"><div>${w.left()}</div><div>${w.right()}</div></div>`;
     document.getElementById('webApp').innerHTML = `
       <aside class="side">
         <div class="wordmark">FoundersLink<span>.</span></div>
@@ -1501,11 +1610,30 @@
         <div style="margin-top:auto"><a>Notifications <small>2</small></a><a>Settings</a></div>
         <div class="me">${av(w.me, 36)}<div>${FULL[w.me]}<small>Verified member</small></div></div>
       </aside>
-      <main class="wmain">
-        <div class="wband"><div class="date">Saturday, 14 November</div><h3>Good evening, <b>${w.name}.</b></h3></div>
-        <div class="wcols"><div>${w.left()}</div><div>${w.right()}</div></div>
-      </main>`;
+      <main class="wmain">${main}</main>`;
   }
+  document.getElementById('webApp').addEventListener('click', (e) => {
+    const go = e.target.closest('[data-wgo]');
+    const tab = e.target.closest('[data-wtab]');
+    const act = e.target.closest('[data-wact]');
+    if (act?.dataset.wact === 'connect') { S.requested.add(act.dataset.id); renderWeb(); return; }
+    if (act?.dataset.wact === 'send') {
+      const box = document.getElementById('webMsgIn'); const text = box.value.trim(); if (!text) return;
+      const key = 'web' + W.role + W.conv;
+      S.sentMsgs[key] = [...(S.sentMsgs[key] ?? []), ['me', text, 'Just now']];
+      renderWeb(); return;
+    }
+    if (tab) { W.invTab = tab.dataset.wtab; renderWeb(); return; }
+    if (go) {
+      W.page = go.dataset.wgo;
+      if (go.dataset.id && W.page === 'invpage') W.invId = go.dataset.id;
+      if (go.dataset.id && W.page === 'chat') W.conv = go.dataset.id;
+      renderWeb();
+    }
+  });
+  document.getElementById('webApp').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'webMsgIn') { e.preventDefault(); document.querySelector('[data-wact="send"]').click(); }
+  });
   document.getElementById('webRole').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     document.querySelectorAll('#webRole button').forEach((x) => x.classList.toggle('on', x === b));
