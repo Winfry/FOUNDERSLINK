@@ -34,11 +34,24 @@ export interface ExpertCard {
   verification?: TrustSummary;
 }
 
+/** One step of the path: who often helps, why, and the best verified expert for it. */
+export interface PlanStep {
+  need: string;
+  who: string;
+  why: string;
+  /** "Due diligence", "Terms agreed"... */
+  step: string;
+  /** Null when no verified expert offers it yet. */
+  expert: ExpertCard | null;
+}
+
 /** What the guide understood from a question, why it matters, and who can help. */
 export interface ExpertFindResult {
   understood: { profession: string | null; practice_area: string | null; practice_area_label: string | null; sector: string | null; county: string | null };
   explanation: string;
   experts: ExpertCard[];
+  /** "I'm preparing to raise investment": the whole path, in order. Null for an ordinary question. */
+  plan?: PlanStep[] | null;
   note: string;
 }
 
@@ -50,6 +63,8 @@ export interface ExpertService {
   find(question: string, lang?: 'en' | 'sw'): Promise<ExpertFindResult>;
   /** Ask an expert for a short session about a topic. */
   requestSession(expertId: string, topic: string): Promise<void>;
+  /** The verified experts members can see (GET /experts). */
+  list(): Promise<ExpertCard[]>;
   /** Tell FoundersLink's staff about an expert. It goes to their Reports page. */
   report(expertId: string, reason: string): Promise<{ suspended: boolean }>;
 }
@@ -67,6 +82,9 @@ export const httpExpertService: ExpertService = {
   },
   async requestSession(expertId, topic) {
     await post(`/experts/${expertId}/office-hours`, { topic });
+  },
+  list() {
+    return get<ExpertCard[]>('/experts');
   },
   async report(expertId, reason) {
     const r = await post<{ suspended: boolean }>('/reports', { user_id: expertId, reason });

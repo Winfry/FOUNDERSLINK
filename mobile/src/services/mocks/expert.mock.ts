@@ -1,6 +1,7 @@
 import { KENYAN_COUNTIES } from './kenya-data';
 import { explain, NOT_ADVICE, PRACTICE, rankExperts, readQuestion } from '@shared/expert-question';
 import { allowedAreas, trustSummary } from '@shared/professions';
+import { journeyOf, matchNeeds, planIntro, whoYouMayNeed } from '@shared/deal-experts';
 import type { ExpertCard, ExpertService } from '../http/expert.http';
 import { mockDelay } from './delay';
 import { getMemberById, upsertMember } from './mock-store';
@@ -52,6 +53,11 @@ export const DEMO_EXPERTS: ExpertCard[] = [
   expert('exp-mutua', 'Daniel Mutua', 'accountant', 'Mutua CPA', 'Tax, eTIMS and books for farms and small food businesses.', ['tax', 'bookkeeping'], ['agri', 'retail'], [], 4, 9, '2026-09-15T09:00:00Z'),
   expert('exp-njambi', 'Esther Njambi', 'accountant', 'Njambi & Partners', 'Checks the numbers before you invest: audits and due diligence.', ['audit', 'bookkeeping'], [], ['Nairobi', 'Kiambu'], 2, 5, '2026-10-05T09:00:00Z'),
   expert('exp-ochieng', 'Brian Ochieng', 'mentor', 'Kilimo Ventures Lab', 'Helps agribusiness founders pitch and grow.', ['fundraising', 'business_growth'], ['agri'], [], 3, 14, '2026-09-01T09:00:00Z'),
+  // From the wider list of professions (shared/professions). No land surveyor yet,
+  // so the app shows honestly when nobody offers a need.
+  expert('exp-wafula', 'Peter Wafula', 'valuer', 'Wafula Valuers', 'Values farmland, buildings and equipment for banks and investors.', ['valuation'], ['agri'], ['Nakuru', 'Nairobi', 'Kiambu'], 2, 8, '2026-10-20T09:00:00Z'),
+  expert('exp-chebet', 'Faith Chebet', 'company_secretary', 'Chebet Corporate Services', 'Share allotments, share registers, CR12 updates and annual returns.', ['governance'], [], ['Nairobi'], 3, 12, '2026-11-05T09:00:00Z'),
+  expert('exp-omondi', 'Kevin Omondi', 'insurance_broker', 'Omondi Insurance Brokers', 'Business, asset and staff cover for small businesses.', ['insurance'], [], [], 4, 6, '2026-09-28T09:00:00Z'),
 ];
 
 /** The expert's session requests on demo data. */
@@ -70,6 +76,19 @@ export const mockExpertService: ExpertService = {
   async find(question, lang = 'en') {
     await mockDelay(600);
     const understood = readQuestion(question, COUNTIES, (p, area) => allowedAreas(p).includes(area));
+    // "I'm preparing to raise investment": the whole path, each step with a verified expert.
+    const journey = journeyOf(question);
+    if (journey) {
+      const side = me()?.user.role === 'investor' ? 'investor' : 'founder';
+      const plan = matchNeeds(whoYouMayNeed(journey, { side, sector: understood.sector }), DEMO_EXPERTS, understood.sector);
+      return {
+        understood: { profession: null, practice_area: null, practice_area_label: null, sector: understood.sector ?? null, county: understood.county ?? null },
+        explanation: planIntro(journey, side),
+        experts: [...new Map(plan.flatMap((p) => (p.expert ? [[p.expert.user_id, p.expert] as const] : []))).values()],
+        plan: plan.map((p) => ({ need: p.id, who: p.who, why: p.why, step: p.step, expert: p.expert })),
+        note: NOT_ADVICE[lang],
+      };
+    }
     const ranked = rankExperts(DEMO_EXPERTS, understood, lang, 3);
     return {
       understood: {
@@ -81,6 +100,7 @@ export const mockExpertService: ExpertService = {
       },
       explanation: explain(understood, lang),
       experts: ranked.map((r) => ({ ...r.expert, reasons: r.reasons })),
+      plan: null,
       note: NOT_ADVICE[lang],
     };
   },
@@ -90,6 +110,10 @@ export const mockExpertService: ExpertService = {
     const e = DEMO_EXPERTS.find((x) => x.user_id === expertId);
     if (!e) throw { code: 'NOT_FOUND', message: 'No such expert.' };
     if (e.office_hours.left_this_month === 0) throw { code: 'NO_SLOTS', message: 'This expert has no sessions left this month.' };
+  },
+  async list() {
+    await mockDelay();
+    return DEMO_EXPERTS;
   },
   async report(expertId, reason) {
     await mockDelay();

@@ -347,6 +347,7 @@ export const components: Record<string, Schema> = {
     ),
     parties: arr(obj({ user_id: uuid, full_name: str, role: ROLE, shares_track_record: bool })),
     milestones: arr(ref("DealMilestone")),
+    sector: described(nullable(str), "The founder's business sector, for suggesting who the parties may need. Null without a founder profile."),
     created_at: dateTime,
     closed_at: nullable(dateTime),
     notice: described(str, "A fixed sentence saying FoundersLink records the deal and does not move money."),

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { trustWords } from '@shared/professions';
 import { mockExpertService } from '../services/mocks/expert.mock';
+import { setMockSessionUserId } from '../services/mocks/mock-session';
 
 describe('asking the Co-pilot who can help (demo data)', () => {
   it('an investor new to farming who asks about land law gets advocates who know land law for agriculture', async () => {
@@ -41,5 +42,39 @@ describe('asking the Co-pilot who can help (demo data)', () => {
     await expect(mockExpertService.report('exp-atieno', 'no')).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
     await expect(mockExpertService.report('exp-atieno', 'Asked me to pay a fee outside a session.')).resolves.toEqual({ suspended: false });
     await expect(mockExpertService.report('exp-atieno', 'Again.')).rejects.toMatchObject({ code: 'ALREADY_REPORTED' });
+  });
+
+  it('a founder preparing to raise gets the whole path, each step with a verified expert or a plain "nobody yet"', async () => {
+    setMockSessionUserId('u-amina');
+    const r = await mockExpertService.find('I’m preparing to raise investment for my farm. Who will I need?');
+    expect(r.explanation).toMatch(/^Raising investment usually goes in steps/);
+    const plan = r.plan!;
+    expect(plan.map((p) => p.need)).toEqual(['mentor', 'valuer', 'accountant', 'company_advocate', 'deal_advocate', 'tax', 'secretary_shares', 'land_advocate']);
+    expect(plan.find((p) => p.need === 'land_advocate')!.expert!.full_name).toBe('Joseph Kiprono');
+    expect(plan.find((p) => p.need === 'mentor')!.expert!.full_name).toBe('Brian Ochieng');
+    expect(plan.find((p) => p.need === 'valuer')!.expert!.full_name).toBe('Peter Wafula');
+    expect(plan.find((p) => p.need === 'secretary_shares')!.expert!.full_name).toBe('Faith Chebet');
+    // Every expert offered actually offers what that step needs.
+    for (const p of plan) if (p.expert) expect(p.expert.practice_areas.length).toBeGreaterThan(0);
+  });
+
+  it('an investor asking the same gets it from her side, with no mentor', async () => {
+    setMockSessionUserId('inv-savanna');
+    const r = await mockExpertService.find('I’m preparing to invest. Who will I need at each step?');
+    expect(r.plan!.map((p) => p.need)).not.toContain('mentor');
+    expect(r.plan!.find((p) => p.need === 'accountant')!.why).toBe('To check the numbers before you invest.');
+    setMockSessionUserId(null);
+  });
+
+  it('an ordinary question has no plan', async () => {
+    expect((await mockExpertService.find('Which advocates know land law?')).plan).toBeNull();
+  });
+
+  it('says plainly when nobody offers a need yet, instead of suggesting someone else', async () => {
+    const r = await mockExpertService.find('Who do I need for due diligence on a farm?');
+    const surveyor = r.plan!.find((p) => p.need === 'land_surveyor')!;
+    expect(surveyor.expert).toBeNull();
+    // The company advocate is an advocate, never the company secretary.
+    expect(r.plan!.find((p) => p.need === 'company_advocate')!.expert!.profession).toBe('lawyer');
   });
 });

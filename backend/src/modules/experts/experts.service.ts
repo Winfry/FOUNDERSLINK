@@ -6,6 +6,7 @@ import { z } from "zod";
 import { COUNTIES, PROFESSIONS, SECTORS } from "../../shared/constants.js";
 import { explain, NOT_ADVICE, PRACTICE, PRACTICE_AREAS, rankExperts, readQuestion } from "../../../../shared/expert-question/index.js";
 import { allowedAreas, professionById, trustSummary } from "../../../../shared/professions/index.js";
+import { journeyOf, matchNeeds, planIntro, whoYouMayNeed, type Side } from "../../../../shared/deal-experts/index.js";
 import { prisma } from "../../shared/db.js";
 import { AppError, conflict, notFound } from "../../shared/errors.js";
 import { consented } from "../account/consents.js";
@@ -116,9 +117,26 @@ export async function listExperts(filter: z.infer<typeof filterSchema>, limit = 
  * reasons each fits, and a short plain explanation of why that kind of
  * expert matters. General information, never advice; nothing is booked.
  */
-export async function findExperts(input: z.infer<typeof findSchema>) {
+export async function findExperts(input: z.infer<typeof findSchema>, role = "founder") {
   const understood = readQuestion(input.question, COUNTIES, (p, a) => allowedAreas(p).includes(a));
   const all = await listExperts({}, 200);
+
+  // "I'm preparing to raise investment, who will I need?": not one expert
+  // but the whole path, each step with the best verified expert for it.
+  const journey = journeyOf(input.question);
+  if (journey) {
+    const side: Side = role === "investor" ? "investor" : "founder";
+    const plan = matchNeeds(whoYouMayNeed(journey, { side, sector: understood.sector }), all, understood.sector);
+    const experts = [...new Map(plan.flatMap((p) => (p.expert ? [[p.expert.user_id, p.expert] as const] : []))).values()];
+    return {
+      understood: { profession: null, practice_area: null, practice_area_label: null, sector: understood.sector ?? null, county: understood.county ?? null },
+      explanation: planIntro(journey, side),
+      experts,
+      plan: plan.map((p) => ({ need: p.id, who: p.who, why: p.why, step: p.step, expert: p.expert })),
+      note: NOT_ADVICE[input.lang],
+    };
+  }
+
   const ranked = rankExperts(all, understood, input.lang, 3);
   return {
     understood: {
@@ -130,6 +148,7 @@ export async function findExperts(input: z.infer<typeof findSchema>) {
     },
     explanation: explain(understood, input.lang),
     experts: ranked.map((r) => ({ ...r.expert, reasons: r.reasons })),
+    plan: null,
     note: NOT_ADVICE[input.lang],
   };
 }

@@ -226,6 +226,8 @@ export interface Deal {
   requiredDocuments?: { type: string; title: string; provided: boolean; confirmed?: boolean }[];
   /** When every party agreed to close it (ISO date). */
   closedAt?: string | null;
+  /** The founder's business sector ("agri", "health"...), for who the parties may need. */
+  sector?: string | null;
   /** The goals the parties agreed, e.g. "Sign up 25 clinics". */
   milestones?: DealMilestone[];
   /** Whether the signed-in party lets this closed deal show on track records. */

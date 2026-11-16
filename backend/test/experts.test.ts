@@ -218,6 +218,9 @@ test("an investor new to farming asks in her own words and gets an advocate who 
   assert.equal((await call("POST", "/experts/find", "newcomer", { question: "land law for my farm" })).json.error.code, "APPROVAL_REQUIRED");
 });
 
+// A licence date that is always in the future, whenever the tests run.
+const nextYearEnd = `${new Date().getUTCFullYear() + 1}-12-31`;
+
 test("a profession offers only its own practice areas, and the register is the profession's own", async () => {
   // A mentor cannot offer legal work.
   const mentor = await call("PUT", "/me/expert-profile", "kamau", { profession: "mentor", bio: "I help founders pitch.", practice_areas: ["land_property"] });
@@ -229,12 +232,43 @@ test("a profession offers only its own practice areas, and the register is the p
     profession: "valuer",
     register_body: "Something else",
     register_number: "VRB/123",
-    licence_expires_at: "2026-12-31",
+    licence_expires_at: nextYearEnd,
     bio: "Valuing farmland and equipment.",
     practice_areas: ["valuation"],
   });
   assert.equal(valuer.status, 200);
   assert.equal(valuer.json.register_body, "VRB");
   assert.equal(valuer.json.country, "KE");
-  assert.equal(new Date(valuer.json.licence_expires_at).toISOString().slice(0, 10), "2026-12-31");
+  assert.equal(new Date(valuer.json.licence_expires_at).toISOString().slice(0, 10), nextYearEnd);
+});
+
+test("preparing to raise investment: the whole path, each step with a verified expert, from her side", async () => {
+  const res = await call("POST", "/experts/find", "amina", { question: "I'm preparing to raise investment for my farm. Who will I need?" });
+  assert.equal(res.status, 200);
+  assert.match(res.json.explanation, /^Raising investment usually goes in steps/);
+  const plan = res.json.plan as any[];
+  assert.deepEqual(
+    plan.map((p) => [p.need, p.step]),
+    [
+      ["mentor", "Exploring"],
+      ["valuer", "Exploring"],
+      ["accountant", "Due diligence"],
+      ["company_advocate", "Due diligence"],
+      ["deal_advocate", "Terms agreed"],
+      ["tax", "Terms agreed"],
+      ["secretary_shares", "Documents"],
+      ["land_advocate", "Due diligence"],
+    ],
+  );
+  // Said from the founder's side.
+  assert.equal(plan.find((p) => p.need === "accountant").why, "To get your books and bank statements ready before the investor checks them.");
+  // Each step's expert offers what that step needs: land law for the farm, a valuation for the price.
+  // (Other experts may be in the database, so this checks what they offer, not who they are.)
+  assert.ok(plan.find((p) => p.need === "land_advocate").expert.practice_areas.includes("land_property"));
+  assert.ok(plan.find((p) => p.need === "valuer").expert.practice_areas.includes("valuation"));
+  // A step nobody offers says so (null) rather than suggesting the wrong person.
+  const areaOf: Record<string, string> = { mentor: "fundraising", valuer: "valuation", accountant: "audit", company_advocate: "company", deal_advocate: "investment_deals", tax: "tax", secretary_shares: "governance", land_advocate: "land_property" };
+  for (const p of plan) if (p.expert) assert.ok(p.expert.practice_areas.includes(areaOf[p.need]), p.need);
+  // An ordinary question has no plan.
+  assert.equal((await call("POST", "/experts/find", "amina", { question: "Which advocates know land law?" })).json.plan, null);
 });

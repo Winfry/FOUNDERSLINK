@@ -25,7 +25,7 @@ expertsRouter.get("/experts", ...member, async (req, res) => {
 // "Who can help me with...?" in her own words. Any approved member:
 // founders, and investors checking a business before they put money in.
 expertsRouter.post("/experts/find", ...member, async (req, res) => {
-  res.json(await findExperts(findSchema.parse(req.body)));
+  res.json(await findExperts(findSchema.parse(req.body), req.user!.role));
 });
 
 expertsRouter.post("/experts/:id/office-hours", ...member, async (req, res) => {

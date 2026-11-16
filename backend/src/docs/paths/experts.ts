@@ -39,6 +39,20 @@ export const ops: Op[] = [
         }),
         explanation: str,
         experts: arr(ref("ExpertCard")),
+        plan: described(
+          nullable(
+            arr(
+              obj({
+                need: str,
+                who: described(str, '"An accountant or auditor".'),
+                why: described(str, "Why, from the caller's side (founder or investor)."),
+                step: described(str, '"Due diligence", "Terms agreed"...'),
+                expert: described(nullable(ref("ExpertCard")), "The best verified expert for it, or null when none offers it yet."),
+              }),
+            ),
+          ),
+          'When the question asks for the whole path ("I\'m preparing to raise investment, who will I need?"): who often helps at each step, in order. Null otherwise.',
+        ),
         note: str,
       }),
     },

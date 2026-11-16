@@ -86,7 +86,10 @@ export const checklistSchema = z.object({
 });
 
 const withParties = {
-  parties: { include: { user: { select: { id: true, full_name: true } } }, orderBy: { joined_at: "asc" } },
+  parties: {
+    include: { user: { select: { id: true, full_name: true, founder_profile: { select: { sector: true } } } } },
+    orderBy: { joined_at: "asc" },
+  },
   milestones: { orderBy: { due_date: "asc" } },
 } as const;
 
@@ -132,6 +135,8 @@ function view(deal: LoadedDeal) {
       shares_track_record: p.shares_track_record,
     })),
     milestones: deal.milestones,
+    // The founder's business sector, for "who you may need" in the deal room.
+    sector: deal.parties.find((p) => p.role === "founder")?.user.founder_profile?.sector ?? null,
     created_at: deal.created_at,
     closed_at: deal.closed_at,
     notice: NOTICE,

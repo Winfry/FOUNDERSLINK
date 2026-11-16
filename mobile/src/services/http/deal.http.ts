@@ -14,6 +14,7 @@ interface ApiDeal {
   parties: { user_id: string; full_name: string; role: string; shares_track_record?: boolean }[];
   milestones?: { id: string; title: string; due_date: string | null; status: string }[];
   closed_at?: string | null;
+  sector?: string | null;
 }
 
 interface ApiDocument {
@@ -88,6 +89,7 @@ function base(deal: ApiDeal, me: string | null): Deal {
     timeline: [],
     documents: [],
     closedAt: deal.closed_at ?? null,
+    sector: deal.sector ?? null,
     milestones: (deal.milestones ?? []).map((m) => ({ id: m.id, title: m.title, dueDate: m.due_date, status: m.status === 'done' ? 'done' : 'pending' })),
     sharesTrackRecord: deal.parties.find((p) => p.user_id === me)?.shares_track_record ?? false,
   };

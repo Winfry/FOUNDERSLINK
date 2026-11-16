@@ -7,6 +7,7 @@ import { Avatar, Badge, Button, Card, ConfirmModal } from '../../src/components/
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { useToast } from '../../src/components/ui/Toast';
 import { StageStepper, stageLabel } from '../../src/components/deal/StageStepper';
+import { WhoYouMayNeed } from '../../src/components/deal/WhoYouMayNeed';
 import { dealService } from '../../src/services';
 import { formatKes } from '../../src/services/mocks/kenya-data';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -50,6 +51,7 @@ export default function DealScreen() {
   // Asked again every few seconds: the other party and staff change a deal too.
   const q = useQuery({ queryKey: ['deal', id], queryFn: () => dealService.get(String(id)), refetchInterval: 6000 });
   const me = useAuthStore((s) => s.user?.id);
+  const myRole = useAuthStore((s) => s.user?.role);
   const [busy, setBusy] = useState<string | null>(null);
   // Closing a deal is asked twice: it is the one step that cannot be taken back.
   const [confirmClose, setConfirmClose] = useState(false);
@@ -154,6 +156,9 @@ export default function DealScreen() {
         <Text style={styles.label}>Where the deal stands</Text>
         <StageStepper stage={deal.stage} />
       </Card>
+
+      {/* Who often helps at this step, from her side. An expert in the deal is the help, so she does not see it. */}
+      {myRole === 'founder' || myRole === 'investor' ? <WhoYouMayNeed stage={deal.stage} sector={deal.sector} side={myRole} /> : null}
 
       {isClosed ? (
         <View style={styles.closed}>
