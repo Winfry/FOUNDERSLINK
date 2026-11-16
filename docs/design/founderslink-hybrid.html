@@ -199,6 +199,12 @@
   .field { display: block; margin-top: 12px; font-size: .84em; font-weight: 500; }
   .field input { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; border: 1px solid var(--line2); border-radius: 12px; padding: 10px 12px; font: inherit; font-weight: 400; }
   .field small { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; }
+  .need { border-top: 1px solid var(--line); padding: 12px 0; }
+  .need .row { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
+  .need .row b { display: block; font-weight: 500; font-size: .95em; }
+  .need .row span { font-size: .84em; color: var(--muted); }
+  .need .row em { font-style: normal; color: var(--purple); font-weight: 500; font-size: .84em; white-space: nowrap; padding-top: 2px; }
+  .seeall { border: 0; background: none; padding: 12px 0 0; border-top: 1px solid var(--line); width: 100%; text-align: left; color: var(--purple); font: inherit; font-weight: 500; font-size: .9em; cursor: pointer; }
   .cpq { display: block; width: 100%; text-align: left; border: 1px solid var(--line2); background: #fff; color: var(--purple); border-radius: 12px; padding: 10px 12px; margin-top: 6px; font: inherit; font-size: .88em; cursor: pointer; }
   .tabsrow { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
   .tabsrow button { flex-shrink: 0; border: 1px solid var(--line2); background: #fff; border-radius: 99px; padding: 8px 13px; font-weight: 500; font-size: .84em; color: var(--muted); }
@@ -724,6 +730,9 @@
   const moneyRule = (sw, en, swText) => `<div class="moneyrule"><b>${sw ? 'Pesa' : 'The money'}</b>${sw ? swText : en}</div>`;
 
   const QUESTIONS = [
+    { id: 'raise', q: { en: 'I’m preparing to raise investment. Who will I need?', sw: 'Najiandaa kutafuta uwekezaji. Nitahitaji nani?' },
+      a: { en: 'Raising investment usually goes in steps. Here is who often helps at each one, with a verified expert you can ask:\n01 Exploring · A mentor, to sharpen your pitch (Brian Ochieng)\n02 Exploring · A valuer, to know what ClinicBook is worth (Peter Wafula)\n03 Due diligence · An accountant, to get your books ready (Esther Njambi)\n04 Due diligence · An advocate, to put your company papers in order (Wanjiku Kamau)\n05 Due diligence · Data protection, for your patient records (Wanjiku Kamau)\n06 Terms agreed · An advocate who does investment deals, to read the term sheet with you (Wanjiku Kamau)\n07 Terms agreed · A tax agent or accountant, for the tax on the investment (Daniel Mutua)\n08 Documents · A company secretary, to issue the shares and update the register (Faith Chebet)\nNot every deal needs everyone. Only experts FoundersLink has checked are suggested, and nothing is booked until you ask.',
+           sw: 'Kutafuta uwekezaji kwa kawaida huenda kwa hatua. Hawa ndio husaidia katika kila hatua, na mtaalamu aliyethibitishwa unayeweza kumuuliza:\n01 Kuchunguza · Mshauri, kuboresha uwasilishaji wako (Brian Ochieng)\n02 Kuchunguza · Mthamini, kujua ClinicBook ina thamani gani (Peter Wafula)\n03 Uchunguzi wa kina · Mhasibu, kuandaa hesabu zako (Esther Njambi)\n04 Uchunguzi wa kina · Wakili, kupanga hati za kampuni (Wanjiku Kamau)\n05 Uchunguzi wa kina · Ulinzi wa data, kwa rekodi za wagonjwa (Wanjiku Kamau)\n06 Masharti · Wakili wa mikataba ya uwekezaji, kusoma masharti nawe (Wanjiku Kamau)\n07 Masharti · Wakala wa kodi au mhasibu, kwa kodi ya uwekezaji (Daniel Mutua)\n08 Hati · Katibu wa kampuni, kutoa hisa na kusasisha rejista (Faith Chebet)\nSi kila mkataba unahitaji wote. Wataalamu walioangaliwa na FoundersLink pekee ndio wanapendekezwa, na hakuna kinachowekwa hadi uombe.' } },
     { id: 'week', q: { en: 'What should I do this week?', sw: 'Nifanye nini wiki hii?' },
       a: { en: "Two things will help most this week:\n1. Open a bank account in ClinicBook's name. Fatuma at Pwani Impact Fund needs it before you pitch.\n2. Ask David Otieno to connect. He funds health businesses like yours.",
            sw: 'Mambo mawili yatakusaidia zaidi wiki hii:\n1. Fungua akaunti ya benki kwa jina la ClinicBook. Fatuma wa Pwani Impact Fund anaihitaji kabla hujawasilisha.\n2. Omba kuunganishwa na David Otieno. Yeye hufadhili biashara za afya kama yako.' }, task: true },
@@ -807,7 +816,9 @@
       ['What happened, in grey', '"The deal moved to due diligence."'],
       ['"Careful" when someone asks for money', 'A gold warning above the message. Never send money outside a closed deal.'],
     ] },
-    deals: { title: 'Deals: her deal rooms, a tab of their own', sub: 'Every deal she is in, and which of the six steps it has reached.', items: [
+    deals: { title: 'Deals: her deal rooms, a tab of their own', sub: 'Every deal she is in, which of the six steps it has reached, and who she may need now.', items: [
+      ['Who you may need now', 'Changes with the step and the sector: at due diligence for a clinic, an accountant, an advocate and data protection. Each with a verified expert, said from her side.'],
+      ['"May need", never "must"', 'Not every deal needs everyone. Nothing is booked until she asks. A need nobody offers yet says so.'],
       ['The deal and the investor, by name', 'ClinicBook, seed with Savanna Angels, with Grace beside it.'],
       ['Six steps, one bar', 'Purple for done, gold for where it is now.'],
       ['Each step in words', 'Done, Now, Next.'],
@@ -896,7 +907,7 @@
   const S = {
     role: 'founder', screen: 'home', lang: 'en', large: false,
     done: new Set(['kra', 'brs', 'permit', 'data']), openStep: null, invTab: 'ready', requested: new Set(), openInv: 'david',
-    chat: [], typing: false, cpAsked: [], cpSent: new Set(), cpOpen: null, cpReporting: null, cpReported: new Set(), eCat: 'legal', eProf: 'lawyer', invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
+    chat: [], typing: false, dealOpen: 'accountant', cpAsked: [], cpSent: new Set(), cpOpen: null, cpReporting: null, cpReported: new Set(), eCat: 'legal', eProf: 'lawyer', invId: null, conv: null, sentMsgs: {}, task: null, paidMe: false, toast: null,
     inv: null, asked: new Set(), iRequested: new Set(['njeri']),
     share: Object.fromEntries(INVESTMENTS.map((i) => [i.id, i.share])),
     eAnswer: {}, eDone: new Set(),
@@ -1441,6 +1452,7 @@
         <div class="member"><span class="n">${sw ? 'Taarifa za benki za miezi 6' : '6 months of bank statements'}</span><span class="tag not">${sw ? 'Bado' : 'Not yet'}</span></div></div>
       <div class="card"><p class="h" style="margin:0 0 4px">${sw ? 'Hatua sita' : 'Six steps'}</p>
         ${steps.map((x, i) => `<div class="member"><span class="n">${x}</span><span class="tag ${tone(i)}>${word(i)}</span></div>`).join('')}</div>
+      ${needsCard('founder')}
     </div>`;
   }
 
@@ -1458,6 +1470,36 @@
     return top(`<h1 class="title">${sw ? 'Kila kitu' : 'Everything in your workspace'}</h1><div class="tsub">${sw ? 'Menyu nzima ya pembeni, kwenye simu.' : 'The whole side menu, on your phone.'}</div>`) +
       `<div class="body" style="background:var(--deep)"><div class="side" style="padding:4px 0 20px;background:none">${rows}
         <div class="grp">${sw ? 'Akaunti' : 'Account'}</div><a data-act="noop" style="cursor:pointer">Notifications <small>2</small></a><a data-act="noop" style="cursor:pointer">Settings</a></div></div>`;
+  }
+
+  // ---------------- Who you may need now (shared/deal-experts) ----------------
+  const DEAL_NEEDS = [
+    { id: 'accountant', who: 'An accountant or auditor', expert: 'njambi',
+      why: { founder: 'To get your books and bank statements ready before the investor checks them.', investor: 'To check the numbers before you invest.' } },
+    { id: 'company_advocate', who: 'An advocate', expert: 'kamau',
+      why: { founder: 'To make sure your company papers are in order: registration, CR12 and the contracts you have signed.', investor: 'To check the company papers: who owns it, who runs it, and what it has signed.' } },
+    { id: 'health_data', who: 'A data protection advocate or consultant', expert: 'kamau',
+      why: { founder: 'Patient records are personal data: your ODPC registration and how you keep them.', investor: 'To check patient data is handled lawfully, a common risk in health.' } },
+  ];
+  function needsCard(side) {
+    return `<div class="card"><div class="eyebrow" style="margin-bottom:2px">Due diligence</div><p class="h" style="margin:0">Who you may need now</p>
+      <p class="p" style="font-size:.8em">People who often help at this step. Not every deal needs each one: it depends on the deal’s size and sector. Only experts FoundersLink has checked are shown, and nothing is booked until you ask.</p>
+      ${DEAL_NEEDS.map((n) => {
+        const open = S.dealOpen === n.id;
+        const e = CP_EXPERTS[n.expert]; const first = FULL[n.expert].split(' ')[0]; const key = 'deal-' + n.id;
+        return `<div class="need"><div class="row" data-act="dneed" data-id="${n.id}"><div style="flex:1"><b>${n.who}</b><span>${n.why[side]}</span></div><em>${open ? 'Hide' : 'See who'}</em></div>
+          ${open ? `<div style="margin-top:10px"><div class="person" style="align-items:center">${av(n.expert, 44)}<div style="flex:1"><div class="pname">${FULL[n.expert]}</div><div class="porg">${e.org}</div></div><span class="tag paid">Licensed</span></div>
+            <div class="trustbox"><b>${e.trust}</b><span>On the official register, checked there by FoundersLink.</span></div>
+            <div class="porg" style="margin-top:6px">${e.bio}</div>
+            ${S.cpSent.has(key) ? `<div class="sent" style="margin-top:10px">Request sent. ${first} will answer in your notifications, and you can then message them.</div>` : `<button class="btn soft" style="margin-top:10px" data-act="cpsend" data-id="${key}">Ask ${first} for a session</button>`}
+            ${S.cpReported.has(n.expert) ? `<p class="p" style="color:var(--pos);font-size:.82em;margin:8px 0 0">Thank you. A person at FoundersLink will look into it, and ${first} can respond before anything is decided.</p>` : S.cpReporting === key ? `<div class="reportbox"><b style="font-weight:500;font-size:.88em">What happened?</b>
+                <div class="porg" style="font-size:.76em;margin-top:2px">Only FoundersLink staff read this. ${first} can respond, and one report alone never removes anyone.</div>
+                <textarea aria-label="What happened with ${FULL[n.expert]}"></textarea>
+                <div class="btns two"><button class="btn danger" data-act="cpreportsend" data-id="${n.expert}">Send report</button><button class="btn ghost" data-act="cpreportcancel">Cancel</button></div></div>`
+              : `<button class="reportlink" data-act="cpreport" data-id="${key}">Report this expert</button>`}</div>` : ''}
+        </div>`;
+      }).join('')}
+      ${side === 'founder' ? `<button class="seeall" data-act="dealplan">See who you may need at every step</button>` : ''}</div>`;
   }
 
   // ---------------- The expert sign-up (shared/professions) ----------------
@@ -1631,6 +1673,9 @@
       case 'cpcancel': S.cpOpen = null; render(); renderWeb(); break;
       case 'cpsend': S.cpSent.add(b.dataset.id); S.cpOpen = null; render(); renderWeb(); break;
       case 'cpreport': S.cpReporting = b.dataset.id; render(); renderWeb(); break;
+      case 'dneed': S.dealOpen = S.dealOpen === b.dataset.id ? null : b.dataset.id; render(); renderWeb(); break;
+      // "See who you may need at every step": the guide answers the whole path.
+      case 'dealplan': S.screen = 'guide'; if (!S.chat.some((m) => m.q === 'raise')) S.chat.push({ from: 'me', q: 'raise' }, { from: 'guide', q: 'raise' }); render(); break;
       case 'cpreportcancel': S.cpReporting = null; render(); renderWeb(); break;
       case 'cpreportsend': S.cpReported.add(b.dataset.id); S.cpReporting = null; render(); renderWeb(); break;
       case 'ecat': S.eCat = b.dataset.id; S.eProf = EPROFS.find((p) => p[1] === S.eCat)[0]; render(); break;
@@ -1739,8 +1784,8 @@
   // Section 03 is clickable: Overview, Investors (founder) and Messages open
   // their pages, as in the app on a computer.
   const W = { role: 'founder', page: 'home', invTab: 'ready', invId: 'david', conv: 'c1' };
-  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs', 'Co-pilot': 'copilot', Profile: 'eprofile' };
-  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages', copilot: 'Co-pilot', eprofile: 'Profile' };
+  const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs', 'Co-pilot': 'copilot', Profile: 'eprofile', 'Deal rooms': 'deal' };
+  const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages', copilot: 'Co-pilot', eprofile: 'Profile', deal: 'Deal rooms' };
 
   function webInvestors() {
     const counts = { ready: 3, fix: 2, no: 4 };
@@ -1828,16 +1873,27 @@
     if (W.role !== 'founder' && (W.page === 'investors' || W.page === 'invpage')) W.page = 'home';
     if (W.role !== 'investor' && W.page === 'copilot') W.page = 'home';
     if (W.role !== 'expert' && W.page === 'eprofile') W.page = 'home';
+    if (W.role === 'expert' && W.page === 'deal') W.page = 'home';
     const here = pageOf[W.page];
     const side = w.menu.map(([label, count]) => {
       if (label.startsWith('#')) return `<div class="grp">${label.slice(1)}</div>`;
-      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') && (label !== 'Co-pilot' || W.role === 'investor') && (label !== 'Profile' || W.role === 'expert') ? ` data-wgo="${WMENU[label]}"` : '';
+      const go = WMENU[label] && (label !== 'Investors' || W.role === 'founder') && (label !== 'Co-pilot' || W.role === 'investor') && (label !== 'Profile' || W.role === 'expert') && (label !== 'Deal rooms' || W.role !== 'expert') ? ` data-wgo="${WMENU[label]}"` : '';
       return `<a class="${label === here ? 'on' : ''}"${go}>${label}${count ? ` <small>${count}</small>` : ''}</a>`;
     }).join('');
-    const urls = { home: w.url, eprofile: 'expert-profile', copilot: 'investor-copilot', investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
+    const urls = { home: w.url, deal: 'deal/clinicbook', eprofile: 'expert-profile', copilot: 'investor-copilot', investors: 'matches', invpage: `founder/investor-match/${W.invId}`, msgs: 'conversations', chat: `conversations/${W.conv}` };
     document.getElementById('webUrl').textContent = `app.founderslink.co.ke/${urls[W.page]}`;
     const wrow = (t, l) => `<div class="member" style="padding:12px 0"><span class="n">${t}<div class="porg" style="font-weight:400">${l}</div></span></div>`;
-    const main = W.page === 'eprofile' ? `<div class="wband"><h3>Wanjiku Kamau</h3><div class="wsub">Advocate of the High Court · LSK registered</div></div>
+    const dealSide = W.role === 'investor' ? 'investor' : 'founder';
+    const main = W.page === 'deal' ? `<div class="wband"><h3>ClinicBook — seed with Savanna Angels</h3><div class="wsub">With ${dealSide === 'founder' ? FULL.grace : FULL.amina} · Due diligence</div></div>
+        <div class="wcols"><div>
+          <div class="card"><div class="label">Where the deal stands</div><div class="stages"><i class="on"></i><i class="now"></i><i></i><i></i><i></i><i></i></div>
+            <p class="p" style="margin:0">Due diligence: each side shares its documents, then confirms the terms.</p>
+            <div class="moneyrule"><b>The money</b>The money moves between the parties through their banks. FoundersLink records the deal and never holds the money.</div></div>
+          <div class="card"><div class="label">${dealSide === 'founder' ? 'Due diligence asks you for' : 'What Amina has shared'}</div>
+            <div class="member"><span class="n">KRA PIN certificate</span><span class="tag paid">Shared</span></div>
+            <div class="member"><span class="n">6 months of bank statements</span><span class="tag not">Not yet</span></div></div>
+        </div><div>${needsCard(dealSide)}</div></div>`
+      : W.page === 'eprofile' ? `<div class="wband"><h3>Wanjiku Kamau</h3><div class="wsub">Advocate of the High Court · LSK registered</div></div>
         <div class="wcols"><div>
           <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><p class="h" style="margin:0">Your verification</p><span class="tag paid">Verified</span></div>
             <p class="p">Members can see you and ask you for sessions.</p>
@@ -1876,6 +1932,8 @@
       const q = (document.getElementById('webCpIn')?.value ?? '').trim(); if (q.length < 5) return;
       S.cpAsked.push(q); render(); renderWeb(); return;
     }
+    const dn = e.target.closest('[data-act="dneed"]');
+    if (dn) { S.dealOpen = S.dealOpen === dn.dataset.id ? null : dn.dataset.id; render(); renderWeb(); return; }
     const cp = e.target.closest('[data-act^="cp"]');
     if (cp) {
       const a = cp.dataset.act;
