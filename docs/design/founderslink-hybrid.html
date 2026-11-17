@@ -2217,6 +2217,13 @@
   // The businesses a new investor is shown: only the sectors and stages they fund.
   const FT_BIZ = [['agri', 'mvp', 'Dairy business · Nakuru', 'Agriculture · MVP · Raising KES 2M', 3, 'Fits your sectors and your cheque size'], ['agri', 'early_revenue', 'Farm inputs shop · Eldoret', 'Agriculture · Early revenue · Raising KES 800k', 2, 'Fits your sectors; 2 papers still to come'], ['health', 'early_revenue', 'Clinic booking app · Nairobi', 'Health · Early revenue · Raising KES 1.5M', 3, 'Fits your sectors and your stage']];
   const ftBiz = () => FT_BIZ.filter(([s, st]) => (FT.sectors.size === 0 || FT.sectors.has(s)) && (FT.stages.size === 0 || FT.stages.has(st))).map(([, , ...rest]) => ['', ...rest]);
+  // What the demo app gives this founder (a dairy farm in Nakuru, KES 2M, a first
+  // product, KRA PIN in), word for word: mobile/src/services/mocks/demo-investors.ts.
+  const FT_INV = {
+    ready: [['Angel network', 'Agriculture · KES 500k to KES 2M', 3, 'Backs early businesses around Nairobi and Nakuru'], ['Venture capital fund', 'Agriculture · KES 1M to KES 10M', 3, 'Funds farming and food businesses only'], ['Impact fund', 'Agriculture · KES 250k to KES 2.5M', 3, 'Backs farms and cooperatives outside Nairobi']],
+    fix: [['Angel investor', 'Agriculture · KES 500k to KES 2.5M', 2, 'Needs: CR12']],
+    no: [['Investor', 'KES 1M to KES 5M', 0, 'Funds health and fintech businesses only'], ['Investor', 'KES 300k to KES 1M', 0, 'Funds health businesses only'], ['Investor', 'KES 300k to KES 1.5M', 0, 'Funds health and climate businesses only'], ['Investor', 'KES 2M to KES 15M', 0, 'Funds fintech businesses only']],
+  };
   const ftName = () => (FT.role === 'founder' ? 'Kamande' : 'Njoki');
   const ftKey = () => FT_STEPS[FT.role][FT.step][0];
   const lock = '<span class="ftlock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
@@ -2345,8 +2352,7 @@
     home: () => {
       if (FT.role === 'founder') {
         const people = FT.consent.match
-          ? [['Angel investor', 'Agriculture · KES 500k to 2M', 'Invests in farm and food businesses', 3], ['Impact fund', 'Agriculture · KES 1M to 5M', 'Backs rural businesses with paying customers', 2]]
-            .map(([k, t, l, n]) => `<div class="person">${lock}<div style="flex:1"><div class="pname">${k} · ${t.split(' · ')[0]}</div><div class="porg">Shown once you are verified</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${l}</div><span class="fitw">${meter(n)}${n === 3 ? 'Strong fit' : 'Good fit'}</span></div></div>`).join('')
+          ? FT_INV.ready.slice(0, 2).map(([k, t, n, l]) => `<div class="person">${lock}<div style="flex:1"><div class="pname">${k} · ${t.split(' · ')[0]}</div><div class="porg">Shown once you are verified</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${l}</div><span class="fitw">${meter(n)}${n === 3 ? 'Strong fit' : 'Good fit'}</span></div></div>`).join('')
           : '<p class="p">Matching is off, so no investors are suggested yet.</p><button class="btn soft" data-ft="matchon">Turn on matching</button>';
         return memberTop(`<div class="greet"><div class="date">Tuesday, 17 November</div><h1>Good afternoon, <b>${ftName()}.</b></h1></div>`) + `<div class="body">
           ${verifyCard(false)}
@@ -2369,12 +2375,14 @@
 
     list: () => {
       if (FT.role === 'founder') {
-        const cards = [['Angel investor', 'Agriculture · KES 500k to 2M', 3, 'Invests in farm and food businesses'], ['Impact fund', 'Agriculture · KES 1M to 5M', 3, 'Backs rural businesses with paying customers'], ['Angel network', 'Agriculture, Food · KES 250k to 1M', 2, 'Backs MVPs in the Rift Valley']]
-          .map(([k, t, n, l]) => `<div class="card" style="padding:14px 16px"><div class="person" style="align-items:center">${lock}<div style="flex:1;min-width:0"><div class="pname">${k}</div><div class="porg">${t}</div></div>${meter(n)}</div>
-            <div class="inv-foot"><span>${l}</span><span class="pillbtn">View</span></div></div>`).join('');
+        const tab = FT.invTab ?? 'ready';
+        const cards = FT_INV[tab].map(([k, t, n, l]) => `<div class="card" style="padding:14px 16px"><div class="person" style="align-items:center">${lock}<div style="flex:1;min-width:0"><div class="pname">${k}</div><div class="porg">${t}</div></div>${n ? meter(n, tab === 'fix') : ''}</div>
+            <div class="inv-foot"><span>${l}</span>${tab === 'no' ? '' : `<span class="pillbtn">${tab === 'fix' ? 'See fix' : 'View'}</span>`}</div></div>`).join('');
+        const lead = { ready: 'These investors fit your business today.', fix: 'They fit once one paper is in. Finish it under Readiness.', no: 'Not a fit for now, and why.' }[tab];
         return memberTop('<h1 class="title">Investors who fit you.</h1><div class="tsub">Sorted by how well they fit your business.</div>') + `<div class="body">
           <div class="ftnote"><b>Names are hidden until you verify.</b> You can already see who fits and why.</div>
-          <div class="tabsrow"><button class="on">Ready · 3</button><button>After a fix · 2</button><button>Not a fit · 4</button></div>
+          <div class="tabsrow">${[['ready', 'Ready'], ['fix', 'After a fix'], ['no', 'Not a fit']].map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-ft="invtab" data-tab="${k}">${l} · ${FT_INV[k].length}</button>`).join('')}</div>
+          <p class="p" style="font-size:.84em">${lead}</p>
           ${cards}</div>` + memberNav('list');
       }
       const all = ftBiz();
@@ -2432,6 +2440,7 @@
       case 'toggle': FT.consent[b.dataset.k] = !FT.consent[b.dataset.k]; ftRender(); break;
       case 'matchon': FT.consent.match = true; ftRender(); break;
       case 'kind': FT.kind = b.dataset.id; ftRender(); break;
+      case 'invtab': FT.invTab = b.dataset.tab; ftRender(); break;
       case 'chip': { const set = FT[b.dataset.g]; set.has(b.dataset.id) ? set.delete(b.dataset.id) : set.add(b.dataset.id); ftRender(); break; }
     }
   }
@@ -2485,7 +2494,7 @@
           <div class="wcols"><div>${cards.slice(0, 2).join('')}</div><div>${cards.slice(2).join('')}</div></div>`;
       } else {
         main = `<div class="wband"><h3>${inner(html, '.top h1.title')}</h3><div class="wsub">${inner(html, '.top .tsub')}</div></div>
-          <div class="wpad">${outer(html, '.body > .ftnote')}${outer(html, '.body > .tabsrow')}<div class="wgrid">${outer(html, '.body > .card')}</div></div>`;
+          <div class="wpad">${outer(html, '.body > .ftnote')}${outer(html, '.body > .tabsrow')}${outer(html, '.body > p.p')}<div class="wgrid">${outer(html, '.body > .card')}</div></div>`;
       }
       page = `<aside class="side"><div class="wordmark">FoundersLink<span>.</span></div>${side}
           <div style="margin-top:auto"><a>Notifications</a><a>Settings</a></div>

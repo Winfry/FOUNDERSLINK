@@ -45,6 +45,19 @@ describe('the demo matches a new founder on her own business', () => {
     const m = matchesFor(founder({ sector: 'agri', county: 'Nakuru', fundingAmountKes: 2_000_000 }));
     expect(m.notForYou.length).toBeGreaterThan(0);
     for (const c of m.notForYou) expect(c.reasons[0]!.fits).toBe(false);
+    // What the design page shows for this founder.
+    expect(m.notForYou.map((c) => c.reasons[0]!.text)).toEqual([
+      'Funds health and fintech businesses only',
+      'Funds health businesses only',
+      'Funds health and climate businesses only',
+      'Funds fintech businesses only',
+    ]);
+    expect(m.applyNow.map((c) => [c.ticket, c.reasons[0]!.text])).toEqual([
+      ['KES 500k to KES 2M', 'Backs early businesses around Nairobi and Nakuru'],
+      ['KES 1M to KES 10M', 'Funds farming and food businesses only'],
+      ['KES 250k to KES 2.5M', 'Backs farms and cooperatives outside Nairobi'],
+    ]);
+    expect(m.applyAfter.map((c) => [c.ticket, c.gaps[0]!.text])).toEqual([['KES 500k to KES 2.5M', 'CR12']]);
   });
 
   it('an investor waiting for a paper is "after a fix", and ready once she has it', () => {

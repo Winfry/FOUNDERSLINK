@@ -63,6 +63,8 @@ function short(n: number): string {
   if (n >= 1_000_000) return `KES ${Number((n / 1_000_000).toFixed(1))}M`;
   return `KES ${Math.round(n / 1000)}k`;
 }
+/** "health", "health and fintech", "health, agriculture and education". */
+const andList = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
 const ticketOf = (i: DemoInvestor) => `${short(i.min)} to ${short(i.max)}`;
 
 type Verdict = { list: 'now' | 'after' | 'no'; band: MatchBand; reasons: MatchReason[]; gap?: string };
@@ -74,7 +76,7 @@ export function judge(i: DemoInvestor, p: Pick<FounderProfile, 'sector' | 'stage
   const county = i.counties.length === 0 || i.counties.includes(p.county);
   const amount = ask >= i.min && ask <= i.max;
   const stage = i.stages.includes(p.stage);
-  const sectorWords = i.sectors.includes('any') ? 'Funds every sector' : `Funds ${i.sectors.map((s) => SECTOR[s] ?? s).join(', ').toLowerCase()} businesses`;
+  const sectorWords = i.sectors.includes('any') ? 'Funds every sector' : `Funds ${andList(i.sectors.map((s) => (SECTOR[s] ?? s).toLowerCase()))} businesses`;
 
   // The first thing that rules them out is the one reason given.
   if (!sector) return { list: 'no', band: 'not_a_fit', reasons: [{ signal: 'sector', fits: false, text: `${sectorWords} only` }] };
