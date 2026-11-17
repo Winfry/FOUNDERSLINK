@@ -108,8 +108,8 @@ function Screens({ wide }: { wide: boolean }) {
 
 /**
  * Signed in on a computer: the side menu, and the workspace beside it.
- * Otherwise (a phone, or the welcome and login screens) the app is a
- * phone-width column, centred on a wide window.
+ * The opening logo and Welcome fill the window. Otherwise (a phone, or the
+ * login screens) the app is a phone-width column, centred on a wide window.
  */
 function Shell() {
   const wide = useWideLayout();
@@ -133,6 +133,15 @@ function Shell() {
         <View style={{ width: 520, backgroundColor: colors.white, paddingHorizontal: 20 }}>
           <Screens wide={false} />
         </View>
+      </View>
+    );
+  }
+  // The opening logo and Welcome fill the whole window: the handshake covers
+  // the screen edge to edge on a computer too, not a phone-width strip.
+  if (area === 'welcome' || area === 'splash' || area === undefined) {
+    return (
+      <View style={{ flex: 1, backgroundColor: area === 'welcome' ? colors.primaryDark : colors.white }}>
+        <Screens wide={false} />
       </View>
     );
   }

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../src/components/ui/Text';
@@ -38,6 +38,8 @@ function PhotoShade() {
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // On a computer the words sit further in from the edge of the window.
+  const side = useWindowDimensions().width >= 900 ? 64 : spacing[3];
 
   // Remembering that the welcome was seen is a nicety: if storage is not
   // available (a private browser window), the buttons still work.
@@ -57,7 +59,7 @@ export default function WelcomeScreen() {
       />
       <PhotoShade />
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing[3], paddingBottom: insets.bottom + spacing[3] }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing[3], paddingBottom: insets.bottom + spacing[3], paddingHorizontal: side }]}
         bounces={false}
       >
         {/* The words at the top and the buttons at the bottom, so the
