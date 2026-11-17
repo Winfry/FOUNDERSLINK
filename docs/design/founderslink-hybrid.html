@@ -381,6 +381,61 @@
   .mix .from.new { background: var(--pos-light); color: var(--pos); }
   footer { padding: 56px 0 64px; color: var(--dim); font-size: 13px; }
 
+  /* ---------- 03 First time, on a computer ---------- */
+  .webctl { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+  .webctl .seg { margin: 0; width: 420px; max-width: 100%; }
+  .wfjump { flex-direction: row; flex-wrap: wrap; margin-bottom: 18px; }
+  .wfjump[hidden] { display: none; }
+  .wfjump button { padding: 8px 12px; font-size: 13px; }
+  .wf { grid-column: 1 / -1; min-height: 680px; background: #F7F5FB; font-size: 15px; }
+  .wfwel { display: grid; grid-template-columns: 1.1fr 360px; gap: 48px; align-items: center; padding: 34px 56px 44px; min-height: 680px; box-sizing: border-box; background: linear-gradient(118deg, #28184E 0%, #5634A5 60%, #765BB8 100%); color: #fff; }
+  .wfwel .wordmark { font-size: 20px; margin-bottom: 40px; }
+  .wfwel .chip { font-size: 13px; }
+  .wfwel h1 { font-weight: 500; font-size: 50px; line-height: 1.04; letter-spacing: -0.035em; margin: 20px 0 16px; }
+  .wfwel h1 span { color: #D9CCF5; font-weight: 300; }
+  .wfwel p { color: rgba(255,255,255,.8); font-size: 17px; margin: 0 0 28px; max-width: 460px; }
+  .wfbtns { display: flex; gap: 10px; }
+  .wfbtns .btn { width: auto; padding: 12px 28px; }
+  .wfbtns .btn.gold { background: var(--gold); color: var(--deep); }
+  .wfbtns .btn.out { background: transparent; color: #fff; border-color: rgba(255,255,255,.35); }
+  .wfprom { display: flex; gap: 22px; margin-top: 34px; font-size: 14px; color: rgba(255,255,255,.85); }
+  .wfprom span { display: flex; align-items: center; gap: 8px; }
+  .wfarch { height: 460px; border-radius: 200px 200px 22px 22px; overflow: hidden; box-shadow: 0 24px 55px rgba(0,0,0,.25); }
+  .wfarch img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; display: block; }
+  .wfauth { display: grid; grid-template-columns: 1fr 1.15fr; min-height: 680px; }
+  .wfpanel { background: linear-gradient(160deg, #28184E 0%, #5634A5 65%, #765BB8 100%); color: #fff; padding: 34px 40px; display: flex; flex-direction: column; gap: 22px; }
+  .wfpanel .wordmark { font-size: 20px; }
+  .wfpanel .wfarch { height: 300px; max-width: 300px; width: 100%; align-self: center; }
+  .wfpanel p { margin: 0; font-size: 15px; color: rgba(255,255,255,.85); }
+  .wfpanel p b { display: block; color: #fff; font-weight: 500; font-size: 22px; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .wfformbox { background: #fff; padding: 40px 56px; }
+  .wfformbox > div { max-width: 460px; }
+  .wfformbox h1 { font-weight: 400; font-size: 32px; letter-spacing: -0.025em; margin: 14px 0 4px; color: var(--deep); }
+  .wfformbox .lead { color: var(--muted); margin: 0 0 18px; }
+  .wfbar { background: var(--deep); color: #fff; display: flex; align-items: center; gap: 32px; padding: 18px 32px; }
+  .wfbar .wordmark { font-size: 17px; }
+  .wfstepper { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; font-size: 13px; color: rgba(255,255,255,.55); }
+  .wfstepper li { display: flex; align-items: center; gap: 8px; }
+  .wfstepper i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); display: grid; place-items: center; font-style: normal; font-size: 11px; }
+  .wfstepper li.on { color: #fff; }
+  .wfstepper li.on i { background: var(--gold); border-color: var(--gold); color: var(--deep); font-weight: 600; }
+  .wfstepper li.done i { background: rgba(255,255,255,.2); border-color: transparent; color: #fff; }
+  .wfcols { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 22px; padding: 28px 32px 36px; align-items: start; }
+  .wfmain { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 26px 30px; box-shadow: var(--shadow); }
+  .wfmain h2 { margin: 0 0 4px; font-weight: 400; font-size: 28px; letter-spacing: -0.025em; color: var(--deep); }
+  .wfmain > .lead { color: var(--muted); margin: 0 0 18px; }
+  .wfmain .btns.two { max-width: 420px; margin-left: auto; }
+  .wfme { display: flex; gap: 10px; align-items: center; }
+  .wfme .av { width: 36px; height: 36px; font-size: 12px; }
+  @media (max-width: 1100px) {
+    .wfwel { grid-template-columns: 1fr 260px; padding: 30px 32px; gap: 28px; }
+    .wfwel h1 { font-size: 40px; }
+    .wfarch { height: 360px; }
+    .wfformbox { padding: 32px; }
+    .wfcols { grid-template-columns: 1fr; }
+    .wfstepper span { display: none; }
+  }
+
   /* ---------- 02b First time ---------- */
   .ftscroll { flex: 1; overflow-y: auto; scrollbar-width: none; background: #FBFAFD; }
   .ftscroll::-webkit-scrollbar { display: none; }
@@ -434,6 +489,7 @@
   .ftwarm { border-color: rgba(227,182,93,.6); }
   @media (max-width: 1150px) {
     .proto { grid-template-columns: 1fr; }
+    table.mix { display: block; overflow-x: auto; }
     .notes { position: static; }
     .controls .jump { flex-direction: row; flex-wrap: wrap; }
     .hero-body { grid-template-columns: 1fr 300px; }
@@ -452,7 +508,6 @@
     .swatches { grid-template-columns: repeat(2, 1fr); }
     .phone { width: 100%; padding: 8px; border-radius: 42px; }
     .screen { border-radius: 34px; }
-    table.mix { display: block; overflow-x: auto; }
   }
 </style>
 </head>
@@ -533,15 +588,19 @@
   </section>
 
   <!-- 03 Web app -->
-  <section class="sec">
+  <section class="sec" id="web-app">
     <div class="sec-head">
       <div class="no">03 — Web app</div>
       <div>
         <h2>The same app on a computer. <span>Just wider.</span></h2>
-        <p>On a computer, each member sees exactly what the phone shows: the purple band with the greeting, then the same cards in the same order and the same words. The phone's bottom tabs become a side menu in words, with a count beside each place, and the cards spread over two columns. No empty margins. Click Overview, Investors and Messages in the side menu to open their pages.</p>
+        <p>On a computer, each member sees exactly what the phone shows: the purple band with the greeting, then the same cards in the same order and the same words. The phone's bottom tabs become a side menu in words, with a count beside each place, and the cards spread over two columns. No empty margins. Click Overview, Investors and Messages in the side menu to open their pages. Choose <b>First time</b> to see a new founder or investor join on a computer, from the handshake welcome to their Home.</p>
       </div>
     </div>
-    <div class="seg" id="webRole" style="max-width:420px;margin-bottom:18px"><button data-r="founder" class="on">Founder</button><button data-r="investor">Investor</button><button data-r="expert">Expert</button></div>
+    <div class="webctl">
+      <div class="seg" id="webRole"><button data-r="founder" class="on">Founder</button><button data-r="investor">Investor</button><button data-r="expert">Expert</button></div>
+      <div class="seg" id="webMode"><button data-m="member" class="on">Existing member</button><button data-m="first">First time</button></div>
+    </div>
+    <div class="jump wfjump" id="wfJump" hidden></div>
     <div class="browser">
       <div class="browser-bar"><i></i><i></i><i></i><span class="url" id="webUrl">app.founderslink.co.ke/home</span></div>
       <div class="scroller">
@@ -1910,6 +1969,7 @@
   // Section 03 is clickable: Overview, Investors (founder) and Messages open
   // their pages, as in the app on a computer.
   const W = { role: 'founder', page: 'home', invTab: 'ready', invId: 'david', conv: 'c1' };
+  var WF_ON = false; // 03 shows the first-time journey instead of an existing member
   const WMENU = { Overview: 'home', Investors: 'investors', Messages: 'msgs', 'Co-pilot': 'copilot', Profile: 'eprofile', 'Deal rooms': 'deal' };
   const pageOf = { home: 'Overview', investors: 'Investors', invpage: 'Investors', msgs: 'Messages', chat: 'Messages', copilot: 'Co-pilot', eprofile: 'Profile', deal: 'Deal rooms' };
 
@@ -1993,6 +2053,7 @@
   }
 
   function renderWeb(role = W.role) {
+    if (WF_ON) { if ((role === 'founder' || role === 'investor') && role !== FT.role) ftSetRole(role); else webFT(); return; }
     if (role !== W.role) { W.role = role; W.page = 'home'; }
     const w = WEB[W.role];
     // Investors is the founder's; the others stay on their overview.
@@ -2310,15 +2371,15 @@
     document.querySelectorAll('#ftRole button').forEach((b) => b.classList.toggle('on', b.dataset.r === FT.role));
     const [title, sub, items] = FT_NOTES[key];
     document.getElementById('ftNotes').innerHTML = `<h3>${title}</h3><p class="sub">${sub}</p><ol>${items.map(([b, s], i) => `<li><i>0${i + 1}</i><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>`;
+    if (WF_ON) webFT();
   }
   const ftTo = (step) => { FT.step = Math.max(0, Math.min(step, FT_STEPS[FT.role].length - 1)); ftRender(); };
   // Switching side keeps the same place: Welcome, sign up, the code, Home or the list; a set-up step opens the other side's first one.
   const ftSetRole = (r) => { const at = ftKey(); FT.role = r; const i = FT_STEPS[r].findIndex(([k]) => k === at); FT.step = i >= 0 ? i : 3; ftRender(); };
   document.getElementById('ftRole').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftSetRole(b.dataset.r); });
   document.getElementById('ftJump').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftTo(+b.dataset.i); });
-  document.getElementById('ftScreen').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-ft]');
-    if (!b) return;
+  // One set of actions, from the phone in 02b or the computer in 03.
+  function ftAct(b) {
     const steps = FT_STEPS[FT.role];
     switch (b.dataset.ft) {
       case 'next': ftTo(FT.step + 1); break;
@@ -2331,11 +2392,92 @@
       case 'kind': FT.kind = b.dataset.id; ftRender(); break;
       case 'chip': { const set = FT[b.dataset.g]; set.has(b.dataset.id) ? set.delete(b.dataset.id) : set.add(b.dataset.id); ftRender(); break; }
     }
-  });
+  }
+  document.getElementById('ftScreen').addEventListener('click', (e) => { const b = e.target.closest('[data-ft]'); if (b) ftAct(b); });
+
+  // ---------------- 03 First time, on a computer ----------------
+  // The same steps and the same words as the phone, laid out wider. Each page
+  // is built from the phone's screen, so the two never drift apart.
+  const pick = (html, sel) => { const t = document.createElement('template'); t.innerHTML = html; return [...t.content.querySelectorAll(sel)]; };
+  const inner = (html, sel) => pick(html, sel)[0]?.innerHTML ?? '';
+  const outer = (html, sel) => pick(html, sel).map((e) => e.outerHTML).join('');
+  const SETUP_NAMES = { founder: ['Describe', 'Check', 'Sharing'], investor: ['Who you invest for', 'What you fund'] };
+  const NEXT_WORDS = {
+    founder: ['Three short steps, then your Home.', 'Only what investors are matched on is asked now. Verifying comes later, from your Home.', 'Until you verify, investors see your business but not your name.'],
+    investor: ['Two short steps, then your Home.', 'Founders are matched to what you say here. You can change it any time from “What you fund”.', 'Until you verify, you see each business but not the founder’s name.'],
+  };
+  function webFT() {
+    const key = ftKey();
+    const html = FT_SCREENS[key]();
+    const f = FT.role === 'founder';
+    const photo = `<div class="wfarch"><img src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"></div>`;
+    const urls = { welcome: 'founderslink.co.ke', signup: 'app.founderslink.co.ke/auth/signup', code: 'app.founderslink.co.ke/auth/verify-email', home: `app.founderslink.co.ke/${f ? 'home' : 'overview'}`, list: `app.founderslink.co.ke/${f ? 'matches' : 'discover'}` };
+    document.getElementById('webUrl').textContent = urls[key] ?? `app.founderslink.co.ke/${FT.role}/onboarding`;
+    let page;
+    if (key === 'welcome') {
+      page = `<div class="wfwel"><div>
+          <div class="wordmark">FoundersLink<span>.</span></div>
+          <span class="chip"><span class="dot"></span>Every member is verified</span>
+          <h1><span>Meet investors who fit.</span> Close deals you can trust.</h1>
+          <p>No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</p>
+          <div class="wfbtns"><button class="btn gold" data-ft="next">Get started</button><button class="btn out">Log in</button></div>
+          <div class="wfprom"><span><i class="dot"></i>Everyone you talk to has been checked.</span><span><i class="dot"></i>FoundersLink never holds your money.</span></div>
+        </div>${photo}</div>`;
+    } else if (key === 'signup' || key === 'code') {
+      const form = pick(html, '.ftform')[0];
+      form.querySelector('.status')?.remove();
+      page = `<div class="wfauth"><div class="wfpanel"><div class="wordmark">FoundersLink<span>.</span></div>${photo}
+          <p><b>${f ? 'Meet investors who fit.' : 'Meet founders who fit.'}</b>Everyone you talk to has been checked, and FoundersLink never holds your money.</p></div>
+        <div class="wfformbox"><div>${form.innerHTML}</div></div></div>`;
+    } else if (key === 'home' || key === 'list') {
+      const menu = f ? [['Overview', 'home'], ['Investors', 'list'], ['Readiness', '', '1/7'], ['Deal rooms'], ['Messages'], ['#Community'], ['Network'], ['Chamas'], ['#Assistant'], ['Co-pilot']]
+        : [['Overview', 'home'], ['Businesses', 'list'], ['Requests'], ['Deal rooms'], ['Messages'], ['#Portfolio'], ['My investments'], ['#Your fund'], ['What you fund'], ['Profile'], ['#Assistant'], ['Co-pilot']];
+      const side = menu.map(([l, to, n]) => (l.startsWith('#') ? `<div class="grp">${l.slice(1)}</div>`
+        : `<a class="${to === key ? 'on' : ''}"${to ? ` data-ft="go" data-to="${to}" style="cursor:pointer"` : ''}>${l}${n ? ` <small>${n}</small>` : ''}</a>`)).join('');
+      let main;
+      if (key === 'home') {
+        const cards = pick(html, '.body > .card').map((e) => e.outerHTML);
+        const greet = pick(html, '.greet')[0];
+        main = `<div class="wband"><div class="date">${greet.querySelector('.date').textContent}</div><h3>${greet.querySelector('h1').innerHTML}</h3></div>
+          <div class="wcols"><div>${cards.slice(0, 2).join('')}</div><div>${cards.slice(2).join('')}</div></div>`;
+      } else {
+        main = `<div class="wband"><h3>${inner(html, '.top h1.title')}</h3><div class="wsub">${inner(html, '.top .tsub')}</div></div>
+          <div class="wpad">${outer(html, '.body > .ftnote')}${outer(html, '.body > .tabsrow')}<div class="wgrid">${outer(html, '.body > .card')}</div></div>`;
+      }
+      page = `<aside class="side"><div class="wordmark">FoundersLink<span>.</span></div>${side}
+          <div style="margin-top:auto"><a>Notifications</a><a>Settings</a></div>
+          <div class="me wfme"><span class="av">${f ? 'KO' : 'NW'}</span><div>${f ? 'Kamande Otieno' : 'Njoki Wanjiru'}<small>Not verified yet</small></div></div></aside>
+        <main class="wmain">${main}</main>`;
+    } else {
+      const names = SETUP_NAMES[FT.role];
+      const n = FT.step - 2;
+      page = `<div class="wfbar"><div class="wordmark">FoundersLink<span>.</span></div>
+          <ol class="wfstepper">${names.map((s, i) => `<li class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"><i>${i + 1 < n ? '✓' : i + 1}</i><span>${s}</span></li>`).join('')}</ol></div>
+        <div class="wfcols"><div class="wfmain"><h2>${inner(html, '.top h1.title')}</h2><p class="lead">${inner(html, '.top .tsub')} Step ${n} of ${names.length}.</p>${inner(html, '.body')}</div>
+          <aside class="card"><div class="label">What happens next</div>${NEXT_WORDS[FT.role].map((t) => `<p class="p" style="margin:10px 0 0">${t}</p>`).join('')}</aside></div>`;
+    }
+    // The whole width: the first-time pages have no side menu until Home.
+    document.getElementById('webApp').innerHTML = `<div class="wf" style="${key === 'home' || key === 'list' ? 'display:grid;grid-template-columns:inherit' : ''}">${page}</div>`;
+    document.getElementById('wfJump').innerHTML = FT_STEPS[FT.role].map(([, l], i) => `<button class="${FT.step === i ? 'on' : ''}" data-i="${i}">${i + 1}. ${l}</button>`).join('');
+    document.querySelectorAll('#webRole button').forEach((x) => x.classList.toggle('on', x.dataset.r === FT.role));
+  }
+  WF_ON = false;
+  const setWebMode = (on) => {
+    WF_ON = on;
+    document.querySelectorAll('#webMode button').forEach((x) => x.classList.toggle('on', (x.dataset.m === 'first') === on));
+    document.querySelector('#webRole [data-r="expert"]').hidden = on;
+    document.getElementById('wfJump').hidden = !on;
+    if (on) webFT();
+    else { document.querySelectorAll('#webRole button').forEach((x) => x.classList.toggle('on', x.dataset.r === W.role)); renderWeb(); }
+  };
+  document.getElementById('webMode').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setWebMode(b.dataset.m === 'first'); });
+  document.getElementById('wfJump').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftTo(+b.dataset.i); });
+  document.getElementById('webApp').addEventListener('click', (e) => { if (!WF_ON) return; const b = e.target.closest('[data-ft]'); if (b) ftAct(b); });
   // Open it from the address, e.g. #first-time/investor.
   const [ftHash, ftWho] = decodeURIComponent(location.hash.slice(1)).split('/');
-  if (ftHash === 'first-time' && (ftWho === 'founder' || ftWho === 'investor')) FT.role = ftWho;
+  if ((ftHash === 'first-time' || ftHash === 'web-first-time') && (ftWho === 'founder' || ftWho === 'investor')) FT.role = ftWho;
   ftRender();
+  if (ftHash === 'web-first-time') { setWebMode(true); document.getElementById('web-app').scrollIntoView(); }
   render();
 })();
 </script>
