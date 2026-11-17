@@ -381,6 +381,57 @@
   .mix .from.new { background: var(--pos-light); color: var(--pos); }
   footer { padding: 56px 0 64px; color: var(--dim); font-size: 13px; }
 
+  /* ---------- 02b First time ---------- */
+  .ftscroll { flex: 1; overflow-y: auto; scrollbar-width: none; background: #FBFAFD; }
+  .ftscroll::-webkit-scrollbar { display: none; }
+  .fthero { background: linear-gradient(160deg, #28184E 0%, #5634A5 62%, #765BB8 100%); color: #fff; border-radius: 0 0 28px 28px; padding: 16px 22px 24px; }
+  .fthero .status { margin: -2px 0 14px; }
+  .fthero .wordmark { font-size: 17px; }
+  .fthero .chip { margin-top: 18px; font-size: 12px; }
+  .fthero h1 { font-size: 2em; line-height: 1.06; font-weight: 500; letter-spacing: -0.035em; margin: 14px 0 10px; }
+  .fthero h1 span { font-weight: 300; color: #D9CCF5; }
+  .fthero p { color: rgba(255,255,255,.8); font-size: .9em; margin: 0 0 18px; }
+  .fthero .btn.gold { background: var(--gold); color: var(--deep); width: auto; padding: 12px 26px; display: inline-flex; }
+  .ftarch { height: 210px; border-radius: 120px 120px 18px 18px; overflow: hidden; margin-top: 22px; box-shadow: 0 18px 40px rgba(0,0,0,.25); }
+  .ftarch img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; display: block; }
+  .ftpromise { background: #fff; border: 1px solid var(--line); border-radius: 18px; margin: 18px 16px 0; padding: 4px 16px; }
+  .ftpromise div { padding: 12px 0; font-size: .9em; }
+  .ftpromise div + div { border-top: 1px solid var(--line); }
+  .ftform { flex: 1; overflow-y: auto; padding: 14px 20px 24px; background: #fff; scrollbar-width: none; }
+  .ftform::-webkit-scrollbar { display: none; }
+  .ftform .status { color: var(--muted); margin: 0 0 18px; }
+  .ftform h1 { font-weight: 400; font-size: 1.6em; letter-spacing: -0.025em; line-height: 1.15; margin: 12px 0 4px; color: var(--deep); }
+  .ftform .lead { color: var(--muted); margin: 0 0 16px; font-size: .93em; }
+  .ftlogo { width: 50px; height: 50px; object-fit: contain; display: block; }
+  .ftrules { list-style: none; padding: 0; margin: 8px 0 0; font-size: .8em; color: var(--muted); }
+  .ftrules li { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
+  .ftrules li::before { content: "✓"; width: 16px; height: 16px; border-radius: 50%; background: var(--pos-light); color: var(--pos); display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+  .ftcheck { display: flex; gap: 10px; align-items: flex-start; font-size: .84em; margin: 16px 0; color: var(--text); }
+  .ftcheck i { width: 18px; height: 18px; border-radius: 5px; background: var(--purple); flex-shrink: 0; margin-top: 1px; position: relative; }
+  .ftcheck i::after { content: "✓"; color: #fff; font-size: 12px; font-style: normal; position: absolute; inset: 0; display: grid; place-items: center; }
+  .ftcode { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 8px 0 16px; }
+  .ftcode span { border: 1px solid var(--line2); border-radius: 12px; height: 50px; display: grid; place-items: center; font-size: 1.3em; color: var(--deep); }
+  .ftcode span.on { border-color: var(--purple); box-shadow: 0 0 0 1px var(--purple) inset; }
+  .ftsteps { display: grid; gap: 4px; margin-top: 14px; position: relative; z-index: 1; }
+  .ftsteps i { height: 4px; border-radius: 2px; background: rgba(255,255,255,.2); }
+  .ftsteps i.on { background: var(--gold); }
+  .ftstepno { color: rgba(255,255,255,.6); font-size: .78em; margin-top: 8px; position: relative; z-index: 1; }
+  .field textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; border: 1px solid var(--line2); border-radius: 12px; padding: 10px 12px; font: inherit; font-weight: 400; min-height: 96px; resize: none; }
+  .field input.got, .field textarea.got { border-color: rgba(86,52,165,.45); background: #FCFBFF; }
+  .ftsug { display: inline-block; font-size: .72em; font-weight: 500; color: var(--purple); background: var(--lav); border-radius: 99px; padding: 1px 8px; margin-left: 6px; }
+  .fttog { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); cursor: pointer; }
+  .fttog:first-of-type { border-top: 0; }
+  .fttog b { display: block; font-weight: 500; font-size: .95em; }
+  .fttog span { font-size: .82em; color: var(--muted); }
+  .fttog .sw { width: 44px; height: 26px; border-radius: 99px; background: var(--line2); position: relative; flex-shrink: 0; transition: background .2s; margin-left: auto; }
+  .fttog .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .2s; }
+  .fttog .sw.on { background: var(--purple); }
+  .fttog .sw.on::after { left: 21px; }
+  .ftlock { width: 46px; height: 46px; border-radius: 50%; background: var(--lav); display: grid; place-items: center; flex-shrink: 0; }
+  .ftlock svg { width: 18px; height: 18px; fill: none; stroke: var(--purple); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ftnote { background: var(--lav); color: var(--purple); border-radius: 14px; padding: 10px 12px; font-size: .82em; margin-bottom: 12px; }
+  .ftnote b { font-weight: 500; }
+  .ftwarm { border-color: rgba(227,182,93,.6); }
   @media (max-width: 1150px) {
     .proto { grid-template-columns: 1fr; }
     .notes { position: static; }
@@ -401,6 +452,7 @@
     .swatches { grid-template-columns: repeat(2, 1fr); }
     .phone { width: 100%; padding: 8px; border-radius: 42px; }
     .screen { border-radius: 34px; }
+    table.mix { display: block; overflow-x: auto; }
   }
 </style>
 </head>
@@ -456,6 +508,27 @@
       </div>
       <div><div class="phone"><div class="screen" id="screen"></div></div></div>
       <div class="notes panel" id="notes"></div>
+    </div>
+  </section>
+
+  <!-- 02b First time: a new founder or investor joins -->
+  <section class="sec" id="first-time">
+    <div class="sec-head">
+      <div class="no">02b — First time</div>
+      <div>
+        <h2>A new member joins. <span>Then lands where everyone else does.</span></h2>
+        <p>What someone sees the very first time they open FoundersLink. They give only the details that matter, and are then taken to the same Home an existing member has. A founder scrolls through investors and an investor scrolls through founders. Names stay hidden until they verify. Tap the buttons on the phone to move forward.</p>
+      </div>
+    </div>
+    <div class="proto">
+      <div class="controls panel">
+        <h4>Joining as</h4>
+        <div class="seg" id="ftRole"><button data-r="founder" class="on">Founder</button><button data-r="investor">Investor</button></div>
+        <h4>Step</h4>
+        <div class="jump" id="ftJump"></div>
+      </div>
+      <div><div class="phone"><div class="screen" id="ftScreen"></div></div></div>
+      <div class="notes panel" id="ftNotes"></div>
     </div>
   </section>
 
@@ -2042,6 +2115,227 @@
     if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
     else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'investor' && where === 'icopilot') || (role === 'expert' && where === 'esignup') || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)))) S.screen = where;
   }
+  // ---------------- 02b First time: a new founder or investor joins ----------------
+  // The real journey, step by step: Welcome (the handshake), sign up, the email
+  // code, only the details that matter, then the same Home an existing member has.
+  const IMG = '../../mobile/assets/images/';
+  const FT_STEPS = {
+    founder: [['welcome', 'Welcome'], ['signup', 'Sign up'], ['code', 'Email code'], ['describe', 'Set up 1 · Describe'], ['confirm', 'Set up 2 · Check'], ['consent', 'Set up 3 · Sharing'], ['home', 'Home, like any member'], ['list', 'Scroll through investors']],
+    investor: [['welcome', 'Welcome'], ['signup', 'Sign up'], ['code', 'Email code'], ['who', 'Set up 1 · Who you invest for'], ['what', 'Set up 2 · What you fund'], ['home', 'Home, like any member'], ['list', 'Scroll through founders']],
+  };
+  const FT = { role: 'founder', step: 0, suggested: false, consent: { show: false, match: false, contact: false }, kind: 'angel', sectors: new Set(['agri', 'health']), stages: new Set(['mvp', 'early_revenue']), ways: new Set(['equity']) };
+  const FT_TEXT = 'We run Shamba Fresh, a dairy farm in Nakuru. We collect milk from 60 farmers and need KES 2 million for a cooler.';
+  // The businesses a new investor is shown: only the sectors and stages they fund.
+  const FT_BIZ = [['agri', 'mvp', 'Dairy business · Nakuru', 'Agriculture · MVP · Raising KES 2M', 3, 'Fits your sectors and your cheque size'], ['agri', 'early_revenue', 'Farm inputs shop · Eldoret', 'Agriculture · Early revenue · Raising KES 800k', 2, 'Fits your sectors; 2 papers still to come'], ['health', 'early_revenue', 'Clinic booking app · Nairobi', 'Health · Early revenue · Raising KES 1.5M', 3, 'Fits your sectors and your stage']];
+  const ftBiz = () => FT_BIZ.filter(([s, st]) => (FT.sectors.size === 0 || FT.sectors.has(s)) && (FT.stages.size === 0 || FT.stages.has(st))).map(([, , ...rest]) => ['', ...rest]);
+  const ftName = () => (FT.role === 'founder' ? 'Kamande' : 'Njoki');
+  const ftKey = () => FT_STEPS[FT.role][FT.step][0];
+  const lock = '<span class="ftlock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+  const status = '<div class="status"><span>9:41</span><span>5G</span></div>';
+  const chips = (group, set, opts) => `<div class="chiprow">${opts.map(([id, l]) => `<button class="${set.has(id) ? 'on' : ''}" data-ft="chip" data-g="${group}" data-id="${id}">${l}</button>`).join('')}</div>`;
+  // The purple band of a set-up step: its title, and how far along she is.
+  const setupTop = (title, sub, n, of) => `<div class="top">${status}
+      <div class="top-row"><div class="wordmark">FoundersLink<span>.</span></div></div>
+      <h1 class="title">${title}</h1><div class="tsub">${sub}</div>
+      <div class="ftsteps" style="grid-template-columns:repeat(${of},1fr)">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="ftstepno">Step ${n} of ${of}</div></div>`;
+  // Home and the list: the member's own app, with its bottom tabs.
+  const memberTop = (inner) => `<div class="top">${status}
+      <div class="top-row"><div class="wordmark">FoundersLink<span>.</span></div>
+        <div class="top-right"><button class="msg-pill">Messages</button><span class="av" style="width:32px;height:32px;font-size:12px">${FT.role === 'founder' ? 'KO' : 'NW'}</span></div></div>${inner}</div>`;
+  const memberNav = (on) => {
+    const order = FT.role === 'founder' ? ORDERS.founder : ORDERS.investor;
+    const here = { home: order[0], list: order[1] }[on];
+    return `<nav class="nav" style="grid-template-columns:repeat(${order.length},1fr)">${order.map((k, i) => `<button class="${k === here ? 'on' : ''}" ${i < 2 ? `data-ft="go" data-to="${i === 0 ? 'home' : 'list'}"` : ''}>${icon(k)}${navName(k, 'en')}</button>`).join('')}</nav>`;
+  };
+  const verifyCard = (warm) => `<div class="card ${warm ? 'ftwarm' : ''}"><div class="eyebrow">${warm ? 'Needs your attention' : 'Your next step'}</div>
+      <p class="h">${FT.role === 'founder' ? 'Verify to connect' : 'Verify to see who they are'}</p>
+      <p class="p">${FT.role === 'founder' ? 'Verify once to see investor names and send them a request to connect.' : 'Verify once to see founder names, open their pages and ask to join.'}</p>
+      <button class="btn primary">Start verification</button></div>`;
+
+  const FT_SCREENS = {
+    welcome: () => `<div class="ftscroll"><div class="fthero">${status}
+        <div class="wordmark">FoundersLink<span>.</span></div>
+        <span class="chip"><span class="dot"></span>Every member is verified</span>
+        <h1><span>Meet investors who fit.</span> Close deals you can trust.</h1>
+        <p>No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</p>
+        <button class="btn gold" data-ft="next">Get started</button>
+        <div class="ftarch"><img src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"></div>
+      </div>
+      <div class="ftpromise"><div>Everyone you talk to has been checked.</div><div>FoundersLink never holds your money.</div></div>
+      <div style="padding:18px 16px 24px;text-align:center"><div class="label" style="margin-bottom:8px">Already a member?</div><button class="btn ghost">Log in</button></div></div>`,
+
+    signup: () => `<div class="ftform">${status}
+        <img class="ftlogo" src="${IMG}logo-mark.png" alt="FoundersLink: two people shaking hands">
+        <h1>Create your account</h1><p class="lead">It takes about two minutes.</p>
+        <div class="label" style="margin-bottom:8px;color:var(--text);font-weight:500">I am joining as</div>
+        <div class="profcards">
+          <button class="${FT.role === 'founder' ? 'on' : ''}" data-ft="role" data-r="founder"><b>Founder</b><span>I am raising money for my business.</span></button>
+          <button class="${FT.role === 'investor' ? 'on' : ''}" data-ft="role" data-r="investor"><b>Investor</b><span>I am looking for businesses to back.</span></button>
+          <button style="grid-column:1/-1;opacity:.7"><b>Expert</b><span>I am a professional who helps businesses: an advocate, accountant, valuer, surveyor, mentor and more. (Shown in 02, Expert.)</span></button>
+        </div>
+        <label class="field">Full name<input value="${FT.role === 'founder' ? 'Kamande Otieno' : 'Njoki Wanjiru'}"></label>
+        <label class="field">Email<input value="${FT.role === 'founder' ? 'kamande@shambafresh.co.ke' : 'njoki@example.com'}"></label>
+        <label class="field">Password<input type="password" value="Shamba2026!"></label>
+        <ul class="ftrules"><li>At least 8 characters</li><li>An uppercase and a lowercase letter</li><li>A number</li></ul>
+        <div class="ftcheck"><i></i><span>I agree to the terms and the privacy notice. ${FT.role === 'founder' ? 'FoundersLink is free for founders.' : ''}</span></div>
+        <button class="btn primary" data-ft="next">Create account</button>
+        <p class="p" style="text-align:center;margin:14px 0 0">Already a member? <b style="color:var(--purple);font-weight:500">Log in</b></p></div>`,
+
+    code: () => `<div class="ftform">${status}
+        <img class="ftlogo" src="${IMG}logo-mark.png" alt="FoundersLink: two people shaking hands">
+        <h1>Check your email</h1><p class="lead">We sent a six-digit code to ${FT.role === 'founder' ? 'kamande@shambafresh.co.ke' : 'njoki@example.com'}. It works for 15 minutes.</p>
+        <div class="label" style="color:var(--text);font-weight:500">Six-digit code</div>
+        <div class="ftcode">${'123456'.split('').map((d, i) => `<span class="${i === 5 ? 'on' : ''}">${d}</span>`).join('')}</div>
+        <button class="btn primary" data-ft="next">Verify email</button>
+        <button class="btn ghost" style="margin-top:8px">Send the code again</button>
+        <div class="ftnote" style="margin-top:16px">Next: ${FT.role === 'founder' ? '<b>set up your profile</b>, in three short steps.' : '<b>say what you fund</b>, in two short steps.'} Nothing more is asked before you see the app.</div></div>`,
+
+    describe: () => setupTop('Set up your profile', 'So we can match you with investors who fit.', 1, 3) + `<div class="body">
+        <p class="h">Tell us about your business</p>
+        <label class="field">Your business, in your own words<textarea class="got">${FT_TEXT}</textarea><small>English, Kiswahili or Sheng is fine.</small></label>
+        <div class="label" style="margin-top:14px">Not sure how to start? Tap an example and edit it.</div>
+        <div class="chiprow"><button>We run a booking app for small clinics in Nairobi…</button><button>Tunatengeneza app ya kubook clinic visits…</button></div>
+        <div class="btns"><button class="btn primary" data-ft="suggest">Suggest fields</button><button class="btn ghost" data-ft="next">Fill it in myself</button></div></div>`,
+
+    confirm: () => {
+      const s = FT.suggested ? '<span class="ftsug">From what you wrote</span>' : '';
+      const v = (x) => (FT.suggested ? x : '');
+      return setupTop('Set up your profile', 'So we can match you with investors who fit.', 2, 3) + `<div class="body">
+        <p class="h">Check your details</p><p class="p">Investors are matched to you on these, so make sure they are right.</p>
+        <label class="field">Business name ${s}<input class="${FT.suggested ? 'got' : ''}" value="${v('Shamba Fresh')}" placeholder="Your business name"></label>
+        <label class="field">Sector ${s}<input class="${FT.suggested ? 'got' : ''}" value="${v('Agriculture')}" placeholder="Choose a sector"></label>
+        <label class="field">County ${s}<input class="${FT.suggested ? 'got' : ''}" value="${v('Nakuru')}" placeholder="Choose a county"></label>
+        <label class="field">Stage ${s}<input class="${FT.suggested ? 'got' : ''}" value="${v('MVP')}" placeholder="Choose a stage"></label>
+        <label class="field">How much you want to raise ${s}<input class="${FT.suggested ? 'got' : ''}" value="${v('KES 2,000,000')}" placeholder="KES"></label>
+        <label class="field">Business status<input placeholder="Choose how your business is registered"><small>Choose how your business is registered. This one is yours to answer.</small></label>
+        <div class="label" style="margin-top:14px">What you already have · tick what is in place. It is fine if nothing is yet.</div>
+        <div class="chiprow"><button class="on">KRA PIN</button><button>Business registration (BRS)</button><button>CR12</button><button>County business permit</button></div>
+        <div class="btns two"><button class="btn ghost" data-ft="back">Back</button><button class="btn primary" data-ft="next">Continue</button></div></div>`;
+    },
+
+    consent: () => setupTop('Set up your profile', 'So we can match you with investors who fit.', 3, 3) + `<div class="body">
+        <p class="h">You decide what is shared</p><p class="p">Everything is off until you turn it on.</p>
+        <div class="card" style="padding:4px 16px">
+          ${[['show', 'Show my profile', 'Verified investors and members can see your business profile.'], ['match', 'Match me with investors', 'Your business details are used to suggest investors who fit.'], ['contact', 'Contact me', 'FoundersLink can reach you by SMS or WhatsApp.']].map(([k, b, sub]) => `<div class="fttog" data-ft="toggle" data-k="${k}"><div><b>${b}</b><span>${sub}</span></div><i class="sw ${FT.consent[k] ? 'on' : ''}"></i></div>`).join('')}
+        </div>
+        ${FT.consent.match ? '' : '<div class="ftnote">Matching is off, so no investors will be suggested yet. You can turn it on now or later from Home.</div>'}
+        <div class="btns two"><button class="btn ghost" data-ft="back">Back</button><button class="btn primary" data-ft="next">Finish</button></div></div>`,
+
+    who: () => setupTop('What do you fund?', 'So we can show you founders that fit.', 1, 2) + `<div class="body">
+        <p class="h">Who you invest for</p><p class="p">Founders see this name when you ask to connect, and our team checks it when you verify.</p>
+        <label class="field">Organisation or fund name<input class="got" value="Njoki Wanjiru"><small>If you invest alone, use your own name.</small></label>
+        <label class="field">Your role there (optional)<input placeholder="e.g. Managing partner"></label>
+        <div class="label" style="margin:16px 0 8px;color:var(--text);font-weight:500">What kind of investor are you?</div>
+        <div class="profcards">${[['angel', 'Angel investor', 'You invest your own money.'], ['vc', 'Venture capital fund', 'You invest on behalf of a fund.'], ['acc', 'Accelerator', 'You run a programme that backs startups.'], ['other', 'Something else', 'A family office, a chama or a company.']].map(([id, b, sub]) => `<button class="${FT.kind === id ? 'on' : ''}" data-ft="kind" data-id="${id}"><b>${b}</b><span>${sub}</span></button>`).join('')}</div>
+        <button class="btn primary" style="margin-top:16px" data-ft="next">Continue</button></div>`,
+
+    what: () => setupTop('What do you fund?', 'So we can show you founders that fit.', 2, 2) + `<div class="body">
+        <p class="h">What you fund</p><p class="p">We use this to show you founders that fit, and to tell founders whether to pitch you.</p>
+        <div class="label" style="color:var(--text);font-weight:500">Sectors</div>
+        ${chips('sectors', FT.sectors, [['agri', 'Agriculture'], ['health', 'Health'], ['fintech', 'Fintech'], ['education', 'Education'], ['retail', 'Retail'], ['energy', 'Energy']])}
+        <div class="label" style="color:var(--text);font-weight:500">Stages</div>
+        ${chips('stages', FT.stages, [['idea', 'Idea'], ['mvp', 'MVP'], ['early_revenue', 'Early revenue'], ['growth', 'Growth']])}
+        <div class="label" style="color:var(--text);font-weight:500">How you invest</div>
+        ${chips('ways', FT.ways, [['equity', 'Equity'], ['convertible_note', 'Convertible note'], ['loan', 'Loan'], ['grant', 'Grant']])}
+        <label class="field">Counties (optional)<input value="Anywhere in Kenya"><small>Leave empty for anywhere in Kenya.</small></label>
+        <div class="btns two" style="margin-top:0"><label class="field">Smallest amount<input value="KES 500,000"></label><label class="field">Largest amount<input value="KES 2,000,000"></label></div>
+        <label class="field">What are you looking for?<textarea style="min-height:70px">Farm and food businesses outside Nairobi with paying customers.</textarea></label>
+        <div class="btns two" style="margin-top:16px"><button class="btn ghost" data-ft="back">Back</button><button class="btn primary" data-ft="next">Save and see founders</button></div></div>`,
+
+    home: () => {
+      if (FT.role === 'founder') {
+        const people = FT.consent.match
+          ? [['Angel investor', 'Agriculture · KES 500k to 2M', 'Invests in farm and food businesses', 3], ['Impact fund', 'Agriculture · KES 1M to 5M', 'Backs rural businesses with paying customers', 2]]
+            .map(([k, t, l, n]) => `<div class="person">${lock}<div style="flex:1"><div class="pname">${k} · ${t.split(' · ')[0]}</div><div class="porg">Shown once you are verified</div><div class="porg" style="color:var(--text);margin:4px 0 6px">${l}</div><span class="fitw">${meter(n)}${n === 3 ? 'Strong fit' : 'Good fit'}</span></div></div>`).join('')
+          : '<p class="p">Matching is off, so no investors are suggested yet.</p><button class="btn soft" data-ft="matchon">Turn on matching</button>';
+        return memberTop(`<div class="greet"><div class="date">Tuesday, 17 November</div><h1>Good afternoon, <b>${ftName()}.</b></h1></div>`) + `<div class="body">
+          ${verifyCard(false)}
+          <div class="card"><div class="label">Getting ready</div><div class="bignum" style="margin-top:6px"><span class="num">1</span><span class="muted">/ 7</span></div>
+            <div class="segbar">${Array.from({ length: 7 }, (_, i) => `<i class="${i < 1 ? 'on' : ''}"></i>`).join('')}</div><p class="p" style="margin:0">1 of 7 things investors look for. Your KRA PIN is in.</p></div>
+          <div class="card"><div class="label" style="margin-bottom:12px">People who may fund you</div>${people}
+            ${FT.consent.match ? '<div style="margin-top:14px"><button class="btn soft" data-ft="go" data-to="list">See all investors</button></div>' : ''}</div>
+          <div class="card"><div class="person"><span class="ai-mark">AI</span><div><div class="pname">Ask the guide</div><div class="porg">What to do next, in your own words.</div></div></div></div>
+        </div>` + memberNav('home');
+      }
+      const n = ftBiz().length;
+      const sec = [...FT.sectors].map((s) => ({ agri: 'Agriculture', health: 'Health', fintech: 'Fintech', education: 'Education', retail: 'Retail', energy: 'Energy' }[s])).join(', ');
+      return memberTop(`<div class="greet"><div class="date">Tuesday, 17 November</div><h1>Good afternoon, <b>${ftName()}.</b></h1></div>`) + `<div class="body">
+        ${verifyCard(true)}
+        <div class="card"><div class="label">Your investments</div><p class="h" style="font-weight:300;font-size:1.5em;margin:6px 0">None closed yet</p><p class="p">Closed deals appear here, with how each business is doing.</p><button class="btn soft">See my investments</button></div>
+        <div class="card"><p class="h">${n ? `${n} business${n === 1 ? ' fits' : 'es fit'} what you fund` : 'Businesses for you'}</p><p class="p">${sec || 'Any sector'}, KES 500,000 to KES 2,000,000.</p><button class="btn soft" data-ft="go" data-to="list">See businesses</button></div>
+        <div class="card"><div class="person"><span class="ai-mark">AI</span><div><div class="pname">Not sure what to check?</div><div class="porg">Ask in your own words, like "Who knows land law for farms?". The Co-pilot finds verified experts.</div></div></div></div>
+      </div>` + memberNav('home');
+    },
+
+    list: () => {
+      if (FT.role === 'founder') {
+        const cards = [['Angel investor', 'Agriculture · KES 500k to 2M', 3, 'Invests in farm and food businesses'], ['Impact fund', 'Agriculture · KES 1M to 5M', 3, 'Backs rural businesses with paying customers'], ['Angel network', 'Agriculture, Food · KES 250k to 1M', 2, 'Backs MVPs in the Rift Valley']]
+          .map(([k, t, n, l]) => `<div class="card" style="padding:14px 16px"><div class="person" style="align-items:center">${lock}<div style="flex:1;min-width:0"><div class="pname">${k}</div><div class="porg">${t}</div></div>${meter(n)}</div>
+            <div class="inv-foot"><span>${l}</span><span class="pillbtn">View</span></div></div>`).join('');
+        return memberTop('<h1 class="title">Investors who fit you.</h1><div class="tsub">Sorted by how well they fit your business.</div>') + `<div class="body">
+          <div class="ftnote"><b>Names are hidden until you verify.</b> You can already see who fits and why.</div>
+          <div class="tabsrow"><button class="on">Ready · 3</button><button>After a fix · 2</button><button>Not a fit · 4</button></div>
+          ${cards}</div>` + memberNav('list');
+      }
+      const all = ftBiz();
+      const cards = all.map(([, k, t, n, l]) => `<div class="card" style="padding:14px 16px"><div class="person" style="align-items:center">${lock}<div style="flex:1;min-width:0"><div class="pname">${k}</div><div class="porg">${t}</div></div>${meter(n, n < 3)}</div>
+          <div class="inv-foot"><span>${l}</span><span class="pillbtn">View</span></div></div>`).join('');
+      return memberTop('<h1 class="title">Businesses for you</h1><div class="tsub">Only the sectors and stages you fund.</div>') + `<div class="body">
+        <div class="ftnote"><b>Founder names are hidden until you verify.</b> You can already see the business, the fit and the amount.</div>
+        ${cards || '<div class="card"><p class="h">No businesses fit your fund yet</p><p class="p">Choose more sectors or stages to see more.</p></div>'}</div>` + memberNav('list');
+    },
+  };
+
+  const FT_NOTES = {
+    welcome: ['Welcome', 'The first thing anyone sees: the handshake, the one promise and one gold button.', [['The handshake photo', 'Two people closing a deal, in the arch. It says what FoundersLink is for before a word is read.'], ['One action', '“Get started” goes to sign up. “Log in” is there for members.'], ['Two promises', 'Everyone has been checked, and FoundersLink never holds money.']]],
+    signup: ['Sign up', 'One short form. Choosing Founder or Investor decides what comes next.', [['The handshake mark', 'The FoundersLink logo sits on every sign-in screen.'], ['Founder, Investor or Expert', 'Tap Investor here to see the investor journey.'], ['The password rules', 'Ticked off as they are met, so nobody guesses.']]],
+    code: ['Check your email', 'A six-digit code proves the email is theirs.', [['Straight on', 'After the code, a new member goes to their set-up, never back to Welcome.'], ['Demo code', 'In the demo, the code is 123456.']]],
+    describe: ['Set up 1 of 3: Describe', 'The founder writes about the business in their own words.', [['Any language', 'English, Kiswahili or Sheng.'], ['Suggest fields', 'Reads the description and fills in the sector, county, stage, amount and a likely name.'], ['Or by hand', '“Fill it in myself” skips the suggestion.']]],
+    confirm: ['Set up 2 of 3: Check', 'What was understood, for the founder to check. Nothing is made up.', [['Marked suggestions', 'Fields filled from the description say so.'], ['Theirs to answer', 'Business status is never guessed.'], ['What they already have', 'Each tick counts towards “Getting ready”.']]],
+    consent: ['Set up 3 of 3: Sharing', 'Everything is off until the founder turns it on.', [['Match me with investors', 'With this on, Home shows people who may fund them. Off, Home says so and offers to turn it on.'], ['Show my profile', 'Only verified members can see it.']]],
+    who: ['Set up 1 of 2: Who you invest for', 'The name founders will see, and the kind of investor.', [['Your own name is fine', 'An angel who invests alone uses their own name.'], ['Checked later', 'Staff check this name when the investor verifies.']]],
+    what: ['Set up 2 of 2: What you fund', 'Sectors, stages, how they invest and how much. Tap the chips: the list on the last step follows them.', [['Used for matching', 'Founders are shown only if they fit these.'], ['In your own words', '“What are you looking for?” helps the match explain itself.'], ['Save and see founders', 'Goes straight to Home.']]],
+    home: ['Home, like any member', 'After set-up, the new member lands on the same Home an existing member has.', [['One next step', 'Verify, so names can be shown and requests sent.'], ['Already useful', 'Who fits is shown at once, with the names hidden.'], ['Empty where it should be', 'No sample messages or requests: a new account starts with an empty inbox.']]],
+    list: ['Scroll through the other side', 'A founder scrolls through investors; an investor scrolls through founders.', [['Sorted by fit', 'The best fits first, with why.'], ['Names after verifying', 'The fit, the amount and the reason show now; the name shows once they verify.'], ['Same screen as members', 'This is the same Investors or Businesses tab Amina and Grace use.']]],
+  };
+
+  function ftRender() {
+    const key = ftKey();
+    const el = document.getElementById('ftScreen');
+    el.className = 'screen';
+    el.innerHTML = FT_SCREENS[key]();
+    el.querySelector('.body, .ftscroll, .ftform')?.scrollTo(0, 0);
+    document.getElementById('ftJump').innerHTML = FT_STEPS[FT.role].map(([, l], i) => `<button class="${FT.step === i ? 'on' : ''}" data-i="${i}">${i + 1}. ${l}</button>`).join('');
+    document.querySelectorAll('#ftRole button').forEach((b) => b.classList.toggle('on', b.dataset.r === FT.role));
+    const [title, sub, items] = FT_NOTES[key];
+    document.getElementById('ftNotes').innerHTML = `<h3>${title}</h3><p class="sub">${sub}</p><ol>${items.map(([b, s], i) => `<li><i>0${i + 1}</i><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>`;
+  }
+  const ftTo = (step) => { FT.step = Math.max(0, Math.min(step, FT_STEPS[FT.role].length - 1)); ftRender(); };
+  // Switching side keeps the same place: Welcome, sign up, the code, Home or the list; a set-up step opens the other side's first one.
+  const ftSetRole = (r) => { const at = ftKey(); FT.role = r; const i = FT_STEPS[r].findIndex(([k]) => k === at); FT.step = i >= 0 ? i : 3; ftRender(); };
+  document.getElementById('ftRole').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftSetRole(b.dataset.r); });
+  document.getElementById('ftJump').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftTo(+b.dataset.i); });
+  document.getElementById('ftScreen').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ft]');
+    if (!b) return;
+    const steps = FT_STEPS[FT.role];
+    switch (b.dataset.ft) {
+      case 'next': ftTo(FT.step + 1); break;
+      case 'back': ftTo(FT.step - 1); break;
+      case 'go': ftTo(steps.findIndex(([k]) => k === b.dataset.to)); break;
+      case 'role': ftSetRole(b.dataset.r); break;
+      case 'suggest': FT.suggested = true; ftTo(FT.step + 1); break;
+      case 'toggle': FT.consent[b.dataset.k] = !FT.consent[b.dataset.k]; ftRender(); break;
+      case 'matchon': FT.consent.match = true; ftRender(); break;
+      case 'kind': FT.kind = b.dataset.id; ftRender(); break;
+      case 'chip': { const set = FT[b.dataset.g]; set.has(b.dataset.id) ? set.delete(b.dataset.id) : set.add(b.dataset.id); ftRender(); break; }
+    }
+  });
+  // Open it from the address, e.g. #first-time/investor.
+  const [ftHash, ftWho] = decodeURIComponent(location.hash.slice(1)).split('/');
+  if (ftHash === 'first-time' && (ftWho === 'founder' || ftWho === 'investor')) FT.role = ftWho;
+  ftRender();
   render();
 })();
 </script>
