@@ -1,8 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuthStore } from '../src/stores/authStore';
-import { colors } from '../src/theme/tokens';
+import { LogoScreen } from '../src/components/auth/LogoScreen';
 
 export default function Index() {
   const { hydrated, hydrate, user } = useAuthStore();
@@ -11,13 +10,9 @@ export default function Index() {
     hydrate();
   }, [hydrate]);
 
-  if (!hydrated) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  // While the session is restored, the logo stays on screen: the first thing
+  // anyone sees is FoundersLink, never a spinner.
+  if (!hydrated) return <LogoScreen />;
 
   if (!user) {
     return <Redirect href="/splash" />;
@@ -49,6 +44,3 @@ export default function Index() {
   return <Redirect href="/welcome" />;
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
-});
