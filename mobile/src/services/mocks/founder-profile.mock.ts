@@ -2,6 +2,7 @@ import type { FounderService } from '../types/api';
 import type { FounderProfile } from '../../types';
 import { readQuestion } from '@shared/expert-question';
 import { mockDelay } from './delay';
+import { matchesFor } from './demo-investors';
 import { KENYAN_COUNTIES } from './kenya-data';
 import { getMemberById, upsertMember } from './mock-store';
 import { getMockSessionUserId } from './mock-session';
@@ -77,6 +78,9 @@ export const mockFounderService: FounderService = {
     };
     member.founderProfile = saved;
     member.user.founderOnboardingComplete = true;
+    // A founder still being checked is matched on her own business, as the
+    // real server does. A verified demo founder (Amina) keeps her named list.
+    if (member.user.approvalStatus !== 'approved') member.matches = matchesFor(saved);
     upsertMember(member);
     return saved;
   },

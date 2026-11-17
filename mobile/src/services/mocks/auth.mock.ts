@@ -3,7 +3,7 @@ import type { SessionUser, SignupInput } from '../../types';
 import { mockDelay } from './delay';
 import { DEMO_CODE } from './demo-code';
 import { showDemoCode } from '../http/demo-code';
-import { getMemberByEmail, getMemberById, upsertMember, type MockMemberState, anonymisedMatches } from './mock-store';
+import { getMemberByEmail, getMemberById, upsertMember, type MockMemberState } from './mock-store';
 import { getMockSessionUserId } from './mock-session';
 
 function tokensFor(userId: string) {
@@ -58,8 +58,9 @@ export const mockAuthService: AuthService = {
       consents: { profile_visibility: false, ai_matching: false, contact: false },
       vetting: { approvalStatus: 'draft' },
       // A new founder is matched like any founder not yet verified: what each
-      // investor funds, without names (once she turns matching on).
-      matches: input.role === 'founder' ? anonymisedMatches : { applyNow: [], applyAfter: [], notForYou: [] },
+      // investor funds, without names, built from her business profile once
+      // she has saved it (and turned matching on).
+      matches: { applyNow: [], applyAfter: [], notForYou: [] },
       deals: [],
     };
     upsertMember(state);

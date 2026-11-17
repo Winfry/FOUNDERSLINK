@@ -37,16 +37,18 @@ export const mockComplianceService: ComplianceService = {
     const updated = { ...item, status };
     const uid = getMockSessionUserId();
     const member = uid ? getMemberById(uid) : null;
-    if (member && itemId === 'kra_pin' && status === 'complete') {
+    if (member && status === 'complete') {
       member.founderProfile = member.founderProfile
         ? {
             ...member.founderProfile,
-            alreadyHave: [...new Set([...member.founderProfile.alreadyHave, 'kra_pin'])],
+            alreadyHave: [...new Set([...member.founderProfile.alreadyHave, itemId])],
           }
         : null;
-      member.matches.applyAfter = member.matches.applyAfter.filter(
-        (c) => !c.gaps.some((g) => g.complianceItemId === 'kra_pin'),
-      );
+      // An investor who was waiting only for this paper is now ready to pitch.
+      const waiting = member.matches.applyAfter.filter((c) => c.gaps.some((g) => g.complianceItemId === itemId));
+      const ready = waiting.filter((c) => c.gaps.every((g) => g.complianceItemId === itemId));
+      member.matches.applyAfter = member.matches.applyAfter.filter((c) => !ready.includes(c));
+      member.matches.applyNow = [...member.matches.applyNow, ...ready.map((c) => ({ ...c, gaps: [] }))];
     }
     return updated;
   },
