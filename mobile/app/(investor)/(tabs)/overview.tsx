@@ -12,6 +12,7 @@ import { useWideLayout } from '../../../src/hooks/useWideLayout';
 import { verificationInvite } from '../../../src/lib/verification-invite';
 import { colors, spacing } from '../../../src/theme/tokens';
 import { Text } from '../../../src/components/ui/Text';
+import { words } from '../../../src/components/matches/parts';
 import type { MatchBand } from '../../../src/types';
 
 const FIT: Record<MatchBand, { label: string; filled: number }> = {
@@ -21,8 +22,6 @@ const FIT: Record<MatchBand, { label: string; filled: number }> = {
   not_a_fit: { label: 'Not a fit', filled: 0 },
 };
 
-// Option ids as words: "early_revenue" is "Early revenue", "mvp" is "MVP".
-const words = (id: string) => (id === 'mvp' ? 'MVP' : (id.charAt(0).toUpperCase() + id.slice(1)).replace(/_/g, ' '));
 
 /**
  * The investor's home, in the approved design: what needs her first, the
@@ -101,7 +100,7 @@ export default function InvestorOverview() {
 
   const businessesCard = (
     <Card style={styles.card}>
-      <Text style={styles.cardTitle}>{fits.length ? `${fits.length} business${fits.length === 1 ? '' : 'es'} fit what you fund` : 'Businesses for you'}</Text>
+      <Text style={styles.cardTitle}>{fits.length ? `${fits.length} business${fits.length === 1 ? ' fits' : 'es fit'} what you fund` : 'Businesses for you'}</Text>
       <Text style={styles.small}>
         {setup ? `${setup.sectors.map(words).join(', ')}, ${kes(setup.ticketMinKes)} to ${kes(setup.ticketMaxKes)}.` : 'Say what you fund to see who fits.'}
       </Text>
