@@ -388,7 +388,7 @@
   .wfjump[hidden] { display: none; }
   .wfjump button { padding: 8px 12px; font-size: 13px; }
   .wf { grid-column: 1 / -1; min-height: 680px; background: #F7F5FB; font-size: 15px; }
-  .wfwel { display: grid; grid-template-columns: 1.1fr 360px; gap: 48px; align-items: center; padding: 34px 56px 44px; min-height: 680px; box-sizing: border-box; background: linear-gradient(118deg, #28184E 0%, #5634A5 60%, #765BB8 100%); color: #fff; }
+  .wfwel { display: flex; align-items: center; padding: 34px 56px 44px; min-height: 680px; box-sizing: border-box; background: var(--deep); color: #fff; }
   .wfwel .wordmark { font-size: 20px; margin-bottom: 40px; }
   .wfwel .chip { font-size: 13px; }
   .wfwel h1 { font-weight: 500; font-size: 50px; line-height: 1.04; letter-spacing: -0.035em; margin: 20px 0 16px; }
@@ -428,13 +428,41 @@
   .wfme { display: flex; gap: 10px; align-items: center; }
   .wfme .av { width: 36px; height: 36px; font-size: 12px; }
   @media (max-width: 1100px) {
-    .wfwel { grid-template-columns: 1fr 260px; padding: 30px 32px; gap: 28px; }
+    .wfwel { padding: 30px 32px; }
     .wfwel h1 { font-size: 40px; }
     .wfarch { height: 360px; }
     .wfformbox { padding: 32px; }
     .wfcols { grid-template-columns: 1fr; }
     .wfstepper span { display: none; }
   }
+
+  /* The handshake behind everything, and the purple over it. */
+  .ftbg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 55% 60%; display: block; }
+  .ftlogoscreen, .wflogo { flex: 1; display: grid; place-items: center; background: #fff; cursor: pointer; }
+  .ftlogoscreen img { width: 200px; }
+  .wflogo { min-height: 680px; }
+  .wflogo img { width: 260px; }
+  .ftfull { flex: 1; position: relative; overflow: hidden; background: var(--deep); color: #fff; }
+  .ftshade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(40,24,78,.95) 0%, rgba(40,24,78,.82) 30%, rgba(86,52,165,.12) 46%, rgba(86,52,165,.1) 66%, rgba(40,24,78,.85) 78%, rgba(40,24,78,.97) 100%); }
+  .ftfullin { position: relative; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 22px 26px; }
+  .ftfullin .status { margin: -2px 0 14px; }
+  .ftfullin .wordmark { font-size: 17px; }
+  .ftfullin .chip { margin-top: 14px; font-size: 12px; }
+  .ftfullin h1 { font-size: 2em; line-height: 1.06; font-weight: 500; letter-spacing: -0.035em; margin: 14px 0 10px; }
+  .ftfullin h1 span { font-weight: 300; color: #D9CCF5; }
+  .ftfullin p { color: rgba(255,255,255,.85); font-size: .9em; margin: 0; }
+  .ftprom { display: grid; gap: 6px; font-size: .84em; margin-bottom: 14px; color: rgba(255,255,255,.92); }
+  .ftprom span, .wfprom span { display: flex; align-items: center; gap: 8px; }
+  .ftfullin .btn.gold { background: var(--gold); color: var(--deep); }
+  .ftalready { text-align: center; font-size: .8em; color: rgba(255,255,255,.75); margin: 12px 0 8px; }
+  .wfwel { position: relative; overflow: hidden; }
+  /* On a computer the photo sits to the right, so the hands meet beside the words, not behind them. */
+  .wfwel .ftbg { left: 28%; width: 72%; object-position: 50% 62%; }
+  .wfshade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(40,24,78,1) 0%, rgba(40,24,78,.97) 30%, rgba(40,24,78,.55) 46%, rgba(86,52,165,.12) 62%, rgba(86,52,165,.05) 100%); }
+  .wfwelin { position: relative; max-width: 560px; }
+  .wfpanel { position: relative; overflow: hidden; justify-content: space-between; }
+  .wfpanel > *:not(.ftbg):not(.wfpshade) { position: relative; }
+  .wfpshade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(40,24,78,.9) 0%, rgba(40,24,78,.2) 30%, rgba(86,52,165,.1) 60%, rgba(40,24,78,.92) 85%); }
 
   /* ---------- 02b First time ---------- */
   .ftscroll { flex: 1; overflow-y: auto; scrollbar-width: none; background: #FBFAFD; }
@@ -2181,8 +2209,8 @@
   // code, only the details that matter, then the same Home an existing member has.
   const IMG = '../../mobile/assets/images/';
   const FT_STEPS = {
-    founder: [['welcome', 'Welcome'], ['signup', 'Sign up'], ['code', 'Email code'], ['describe', 'Set up 1 · Describe'], ['confirm', 'Set up 2 · Check'], ['consent', 'Set up 3 · Sharing'], ['home', 'Home, like any member'], ['list', 'Scroll through investors']],
-    investor: [['welcome', 'Welcome'], ['signup', 'Sign up'], ['code', 'Email code'], ['who', 'Set up 1 · Who you invest for'], ['what', 'Set up 2 · What you fund'], ['home', 'Home, like any member'], ['list', 'Scroll through founders']],
+    founder: [['logo', 'Opening · the logo'], ['welcome', 'Welcome'], ['signup', 'Sign up'], ['code', 'Email code'], ['describe', 'Set up 1 · Describe'], ['confirm', 'Set up 2 · Check'], ['consent', 'Set up 3 · Sharing'], ['home', 'Home, like any member'], ['list', 'Scroll through investors']],
+    investor: [['logo', 'Opening · the logo'], ['welcome', 'Welcome'], ['signup', 'Sign up'], ['code', 'Email code'], ['who', 'Set up 1 · Who you invest for'], ['what', 'Set up 2 · What you fund'], ['home', 'Home, like any member'], ['list', 'Scroll through founders']],
   };
   const FT = { role: 'founder', step: 0, suggested: false, consent: { show: false, match: false, contact: false }, kind: 'angel', sectors: new Set(['agri', 'health']), stages: new Set(['mvp', 'early_revenue']), ways: new Set(['equity']) };
   const FT_TEXT = 'We run Shamba Fresh, a dairy farm in Nakuru. We collect milk from 60 farmers and need KES 2 million for a cooler.';
@@ -2215,16 +2243,26 @@
       <button class="btn primary">Start verification</button></div>`;
 
   const FT_SCREENS = {
-    welcome: () => `<div class="ftscroll"><div class="fthero">${status}
-        <div class="wordmark">FoundersLink<span>.</span></div>
-        <span class="chip"><span class="dot"></span>Every member is verified</span>
-        <h1><span>Meet investors who fit.</span> Close deals you can trust.</h1>
-        <p>No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</p>
-        <button class="btn gold" data-ft="next">Get started</button>
-        <div class="ftarch"><img src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"></div>
-      </div>
-      <div class="ftpromise"><div>Everyone you talk to has been checked.</div><div>FoundersLink never holds your money.</div></div>
-      <div style="padding:18px 16px 24px;text-align:center"><div class="label" style="margin-bottom:8px">Already a member?</div><button class="btn ghost">Log in</button></div></div>`,
+    // The first thing anyone sees: the logo on white, exactly as the phone's own start-up screen.
+    logo: () => `<div class="ftlogoscreen" data-ft="next"><img src="${IMG}logo.png" alt="FoundersLink"></div>`,
+
+    // The handshake fills the whole screen. The words sit at the top and the
+    // buttons at the bottom, so the hands meeting show clearly in the middle.
+    welcome: () => `<div class="ftfull"><img class="ftbg" src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"><div class="ftshade"></div>
+        <div class="ftfullin">
+          <div>${status}
+            <div class="wordmark">FoundersLink<span>.</span></div>
+            <span class="chip"><span class="dot"></span>Every member is verified</span>
+            <h1><span>Meet investors who fit.</span> Close deals you can trust.</h1>
+            <p>No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</p>
+          </div>
+          <div>
+            <div class="ftprom"><span><i class="dot"></i>Everyone you talk to has been checked.</span><span><i class="dot"></i>FoundersLink never holds your money.</span></div>
+            <button class="btn gold" data-ft="next">Get started</button>
+            <div class="ftalready">Already a member?</div>
+            <button class="btn ghost">Log in</button>
+          </div>
+        </div></div>`,
 
     signup: () => `<div class="ftform">${status}
         <img class="ftlogo" src="${IMG}logo-mark.png" alt="FoundersLink: two people shaking hands">
@@ -2349,7 +2387,8 @@
   };
 
   const FT_NOTES = {
-    welcome: ['Welcome', 'The first thing anyone sees: the handshake, the one promise and one gold button.', [['The handshake photo', 'Two people closing a deal, in the arch. It says what FoundersLink is for before a word is read.'], ['One action', '“Get started” goes to sign up. “Log in” is there for members.'], ['Two promises', 'Everyone has been checked, and FoundersLink never holds money.']]],
+    logo: ['Opening: the logo', 'The very first thing anyone sees when they open FoundersLink.', [['The logo, on white', 'The phone shows it the moment the app is tapped, and it stays while the app gets ready: no spinner in between.'], ['Then Welcome', 'A first-time visitor goes on to Welcome by themselves; a member who has been here before goes to Log in, and a signed-in member to their Home.'], ['On this page', 'Tap the phone, or wait a moment, to go on.']]],
+    welcome: ['Welcome', 'The handshake fills the whole screen, with one promise and one gold button.', [['The handshake photo, full screen', 'Two people closing a deal, behind everything. It says what FoundersLink is for before a word is read.'], ['Words at the top, buttons at the bottom', 'So the hands meeting show clearly in the middle. The purple is deep only where words sit, so they stay easy to read.'], ['One action', '“Get started” goes to sign up. “Log in” is there for members.']]],
     signup: ['Sign up', 'One short form. Choosing Founder or Investor decides what comes next.', [['The handshake mark', 'The FoundersLink logo sits on every sign-in screen.'], ['Founder, Investor or Expert', 'Tap Investor here to see the investor journey.'], ['The password rules', 'Ticked off as they are met, so nobody guesses.']]],
     code: ['Check your email', 'A six-digit code proves the email is theirs.', [['Straight on', 'After the code, a new member goes to their set-up, never back to Welcome.'], ['Demo code', 'In the demo, the code is 123456.']]],
     describe: ['Set up 1 of 3: Describe', 'The founder writes about the business in their own words.', [['Any language', 'English, Kiswahili or Sheng.'], ['Suggest fields', 'Reads the description and fills in the sector, county, stage, amount and a likely name.'], ['Or by hand', '“Fill it in myself” skips the suggestion.']]],
@@ -2367,6 +2406,9 @@
     el.className = 'screen';
     el.innerHTML = FT_SCREENS[key]();
     el.querySelector('.body, .ftscroll, .ftform')?.scrollTo(0, 0);
+    clearTimeout(FT.timer);
+    if (key === 'logo' && FT.auto) FT.timer = setTimeout(() => { if (ftKey() === 'logo') ftTo(FT.step + 1); }, 1600);
+    FT.auto = true;
     document.getElementById('ftJump').innerHTML = FT_STEPS[FT.role].map(([, l], i) => `<button class="${FT.step === i ? 'on' : ''}" data-i="${i}">${i + 1}. ${l}</button>`).join('');
     document.querySelectorAll('#ftRole button').forEach((b) => b.classList.toggle('on', b.dataset.r === FT.role));
     const [title, sub, items] = FT_NOTES[key];
@@ -2375,7 +2417,7 @@
   }
   const ftTo = (step) => { FT.step = Math.max(0, Math.min(step, FT_STEPS[FT.role].length - 1)); ftRender(); };
   // Switching side keeps the same place: Welcome, sign up, the code, Home or the list; a set-up step opens the other side's first one.
-  const ftSetRole = (r) => { const at = ftKey(); FT.role = r; const i = FT_STEPS[r].findIndex(([k]) => k === at); FT.step = i >= 0 ? i : 3; ftRender(); };
+  const ftSetRole = (r) => { const at = ftKey(); FT.role = r; const i = FT_STEPS[r].findIndex(([k]) => k === at); FT.step = i >= 0 ? i : 4; ftRender(); };
   document.getElementById('ftRole').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftSetRole(b.dataset.r); });
   document.getElementById('ftJump').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) ftTo(+b.dataset.i); });
   // One set of actions, from the phone in 02b or the computer in 03.
@@ -2410,23 +2452,24 @@
     const key = ftKey();
     const html = FT_SCREENS[key]();
     const f = FT.role === 'founder';
-    const photo = `<div class="wfarch"><img src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"></div>`;
-    const urls = { welcome: 'founderslink.co.ke', signup: 'app.founderslink.co.ke/auth/signup', code: 'app.founderslink.co.ke/auth/verify-email', home: `app.founderslink.co.ke/${f ? 'home' : 'overview'}`, list: `app.founderslink.co.ke/${f ? 'matches' : 'discover'}` };
+    const urls = { logo: 'app.founderslink.co.ke', welcome: 'app.founderslink.co.ke/welcome', signup: 'app.founderslink.co.ke/auth/signup', code: 'app.founderslink.co.ke/auth/verify-email', home: `app.founderslink.co.ke/${f ? 'home' : 'overview'}`, list: `app.founderslink.co.ke/${f ? 'matches' : 'discover'}` };
     document.getElementById('webUrl').textContent = urls[key] ?? `app.founderslink.co.ke/${FT.role}/onboarding`;
     let page;
-    if (key === 'welcome') {
-      page = `<div class="wfwel"><div>
+    if (key === 'logo') {
+      page = `<div class="wflogo" data-ft="next"><img src="${IMG}logo.png" alt="FoundersLink"></div>`;
+    } else if (key === 'welcome') {
+      page = `<div class="wfwel"><img class="ftbg" src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"><div class="wfshade"></div><div class="wfwelin">
           <div class="wordmark">FoundersLink<span>.</span></div>
           <span class="chip"><span class="dot"></span>Every member is verified</span>
           <h1><span>Meet investors who fit.</span> Close deals you can trust.</h1>
           <p>No cold pitches. No strangers. Only people who fit, and a clear path to a closed deal.</p>
           <div class="wfbtns"><button class="btn gold" data-ft="next">Get started</button><button class="btn out">Log in</button></div>
           <div class="wfprom"><span><i class="dot"></i>Everyone you talk to has been checked.</span><span><i class="dot"></i>FoundersLink never holds your money.</span></div>
-        </div>${photo}</div>`;
+        </div></div>`;
     } else if (key === 'signup' || key === 'code') {
       const form = pick(html, '.ftform')[0];
       form.querySelector('.status')?.remove();
-      page = `<div class="wfauth"><div class="wfpanel"><div class="wordmark">FoundersLink<span>.</span></div>${photo}
+      page = `<div class="wfauth"><div class="wfpanel"><img class="ftbg" src="${IMG}welcome-photo.jpg" alt="Two business people shaking hands"><div class="wfpshade"></div><div class="wordmark">FoundersLink<span>.</span></div>
           <p><b>${f ? 'Meet investors who fit.' : 'Meet founders who fit.'}</b>Everyone you talk to has been checked, and FoundersLink never holds your money.</p></div>
         <div class="wfformbox"><div>${form.innerHTML}</div></div></div>`;
     } else if (key === 'home' || key === 'list') {
@@ -2450,7 +2493,7 @@
         <main class="wmain">${main}</main>`;
     } else {
       const names = SETUP_NAMES[FT.role];
-      const n = FT.step - 2;
+      const n = FT.step - 3;
       page = `<div class="wfbar"><div class="wordmark">FoundersLink<span>.</span></div>
           <ol class="wfstepper">${names.map((s, i) => `<li class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"><i>${i + 1 < n ? '✓' : i + 1}</i><span>${s}</span></li>`).join('')}</ol></div>
         <div class="wfcols"><div class="wfmain"><h2>${inner(html, '.top h1.title')}</h2><p class="lead">${inner(html, '.top .tsub')} Step ${n} of ${names.length}.</p>${inner(html, '.body')}</div>
