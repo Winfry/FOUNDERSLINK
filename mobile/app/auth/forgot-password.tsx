@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen() {
       )} />
       <View style={styles.action}>
         <FormError message={refused} />
-        <Button title="Send code" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+        <Button title="Send code" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
       </View>
     </AuthShell>
   );

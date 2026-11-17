@@ -103,7 +103,7 @@ function ReadinessScreen() {
                 <SegmentBar done={done} total={items.length} />
                 <Text style={styles.note}>{progressNote(done, items.length)}</Text>
               </View>
-            ) : null
+            ) : undefined
           }
           ListHeaderComponentStyle={styles.hero}
           ListEmptyComponent={

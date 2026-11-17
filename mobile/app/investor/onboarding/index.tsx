@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -35,7 +36,7 @@ export default function InvestorOnboardingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { show } = useToast();
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   // Arriving from her profile leaves history; being sent here for a first setup does not.
   const [cameFromApp] = useState(() => router.canGoBack());
 

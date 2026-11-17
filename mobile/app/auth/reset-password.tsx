@@ -65,7 +65,7 @@ export default function ResetPasswordScreen() {
       )} />
       <View style={styles.action}>
         <FormError message={refused} />
-        <Button title="Save password" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+        <Button title="Save password" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
       </View>
     </AuthShell>
   );

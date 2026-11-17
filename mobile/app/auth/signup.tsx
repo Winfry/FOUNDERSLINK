@@ -130,7 +130,7 @@ export default function SignupScreen() {
       />
       <View style={styles.action}>
         <FormError message={refused} />
-        <Button title="Create account" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+        <Button title="Create account" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
       </View>
       <View style={styles.switch}>
         <Text style={styles.switchText}>Already have an account?</Text>

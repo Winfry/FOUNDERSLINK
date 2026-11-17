@@ -80,7 +80,7 @@ export default function LoginScreen() {
       </View>
       <View style={styles.action}>
         <FormError message={refused} />
-        <Button title="Log in" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+        <Button title="Log in" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
       </View>
       <View style={styles.switch}>
         <Text style={styles.switchText}>New to FoundersLink?</Text>

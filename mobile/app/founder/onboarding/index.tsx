@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -44,7 +45,7 @@ export default function FounderOnboardingScreen() {
   const router = useRouter();
   const { show } = useToast();
   const markComplete = useAuthStore((s) => s.markFounderOnboardingComplete);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const [step, setStepState] = useState(1);
   const [description, setDescription] = useState('');
   const [profile, setProfile] = useState<Partial<FounderProfile>>({

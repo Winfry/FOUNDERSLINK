@@ -1,3 +1,4 @@
+import type { TextInputInstance } from 'react-native';
 import { forwardRef } from 'react';
 import {
   StyleSheet,
@@ -74,7 +75,7 @@ export function Text({ style, ...props }: TextProps) {
 }
 
 // Screens hold a ref to an input (to focus the next field), so it is passed on.
-export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, ...props }, ref) {
+export const TextInput = forwardRef<TextInputInstance, TextInputProps>(function TextInput({ style, ...props }, ref) {
   // An input keeps the height its screen gave it, so only the font and size are set.
   const { lineHeight: _lineHeight, ...text } = scaled(style);
   // In a browser, a focused field gets the browser's own outline, which

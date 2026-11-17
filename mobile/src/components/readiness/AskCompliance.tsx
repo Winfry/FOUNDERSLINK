@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from 'react-native';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '../ui/Button';
@@ -120,7 +121,7 @@ export function AskCompliance() {
   const [draft, setDraft] = useState('');
   const [waiting, setWaiting] = useState(false);
   const nextId = useRef(1);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
 
   const add = (turn: { kind: 'question'; text: string } | { kind: 'answer'; answer: ComplianceAskAnswer } | { kind: 'notice'; text: string }) =>
     setTurns((t) => [...t, { ...turn, id: nextId.current++ } as Turn]);

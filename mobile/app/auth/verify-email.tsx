@@ -88,7 +88,7 @@ export default function VerifyEmailScreen() {
         )}
       </View>
       <View style={styles.actions}>
-        <Button title="Verify email" loading={isSubmitting} onPress={handleSubmit(onSubmit)} />
+        <Button title="Verify email" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
         <Button title="Continue exploring" variant="secondary" onPress={() => router.replace('/')} />
       </View>
       <Text style={styles.note}>

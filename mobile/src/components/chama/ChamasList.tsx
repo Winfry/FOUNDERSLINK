@@ -110,10 +110,10 @@ export function ChamasList() {
               FoundersLink never holds the money. It records what members pay into the chama's own Paybill or account.
             </Text>
           </View>
-        ) : null
+        ) : undefined
       }
       ListEmptyComponent={
-        creating ? null : (
+        creating ? undefined : (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>Save together with founders you trust</Text>
             <Text style={styles.emptyBody}>

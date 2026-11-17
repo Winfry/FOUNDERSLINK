@@ -1,3 +1,4 @@
+import type { TextInputInstance } from 'react-native';
 import { forwardRef, useState, type ReactNode } from 'react';
 import {
   StyleSheet,
@@ -15,7 +16,7 @@ interface InputProps extends TextInputProps {
   right?: ReactNode;
 }
 
-export const Input = forwardRef<TextInput, InputProps>(function Input(
+export const Input = forwardRef<TextInputInstance, InputProps>(function Input(
   { label, error, hint, right, style, onFocus, onBlur, ...rest },
   ref,
 ) {
