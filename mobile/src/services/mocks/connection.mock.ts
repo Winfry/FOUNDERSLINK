@@ -1,6 +1,10 @@
 import type { ConnectionService } from '../types/api';
 import type { ConnectionJoinRequest } from '../../types';
 import { mockDelay } from './delay';
+import { getMockSessionUserId, hasSampleInbox } from './mock-session';
+
+// Whose list each request is on.
+const owner = new Map<string, string>();
 
 const seedRequests: ConnectionJoinRequest[] = [
   {
@@ -22,13 +26,19 @@ const seedRequests: ConnectionJoinRequest[] = [
 export const mockConnectionService: ConnectionService = {
   async list() {
     await mockDelay();
-    return seedRequests;
+    // The demo accounts see the sample; a new account sees only its own requests.
+    if (hasSampleInbox()) return seedRequests;
+    const me = getMockSessionUserId();
+    return seedRequests.filter((r) => me !== null && owner.get(r.id) === me);
   },
 
   async request(userId, message) {
     await mockDelay();
+    const id = `conn-${Date.now()}`;
+    const me = getMockSessionUserId();
+    if (me) owner.set(id, me);
     seedRequests.push({
-      id: `conn-${Date.now()}`,
+      id,
       direction: 'sent',
       status: 'pending',
       withUserId: userId,

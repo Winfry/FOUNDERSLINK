@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
@@ -18,6 +18,8 @@ type Form = z.infer<typeof otpSchema>;
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  // "start": she has just signed up, and goes on to set up her profile.
+  const { then } = useLocalSearchParams<{ then?: string }>();
   const { show } = useToast();
   const user = useAuthStore((s) => s.user);
   const markEmailVerified = useAuthStore((s) => s.markEmailVerified);
@@ -33,7 +35,9 @@ export default function VerifyEmailScreen() {
       await authService.verifyEmailOtp(data.otp);
       await markEmailVerified();
       show('Email verified', 'success');
-      if (router.canGoBack()) router.back();
+      // Straight after signing up, the screen before is Welcome: she goes on
+      // to set up her profile instead. From her verification page, back.
+      if (then !== 'start' && router.canGoBack()) router.back();
       else router.replace('/');
     } catch (e: unknown) {
       setError('otp', {

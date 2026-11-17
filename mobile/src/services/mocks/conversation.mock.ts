@@ -1,7 +1,7 @@
 import type { ConversationService } from '../types/api';
 import type { ChatMessage } from '../../types';
 import { mockDelay } from './delay';
-import { getMockSessionUserId } from './mock-session';
+import { getMockSessionUserId, hasSampleInbox } from './mock-session';
 
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60000).toISOString();
 
@@ -38,6 +38,7 @@ const messages: ChatMessage[] = [
 export const mockConversationService: ConversationService = {
   async list() {
     await mockDelay();
+    if (!hasSampleInbox()) return [];
     return conversations;
   },
 

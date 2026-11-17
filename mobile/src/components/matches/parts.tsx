@@ -38,6 +38,7 @@ export function topReasons(reasons: MatchReason[], count: number, missesFirst: b
 export function words(value: string): string {
   const s = value.replace(/_/g, ' ').trim();
   if (s.toLowerCase() === 'mvp') return 'MVP';
+  if (s.toLowerCase() === 'agri') return 'Agriculture';
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 

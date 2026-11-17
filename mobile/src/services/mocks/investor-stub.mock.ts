@@ -39,6 +39,9 @@ export const mockInvestorStub: InvestorService = {
     const search = params?.search?.trim().toLowerCase();
     const founders = demoBusinesses
       .map((b) => b.card)
+      // What she said she funds decides who fits.
+      .filter((c) => member.investorSetup!.sectors.length === 0 || member.investorSetup!.sectors.includes(c.sector))
+      .filter((c) => member.investorSetup!.stages.length === 0 || (c.stage !== null && member.investorSetup!.stages.includes(c.stage)))
       .filter((c) => !params?.sector || c.sector === params.sector)
       .filter((c) => !params?.county || c.county === params.county)
       .filter((c) => !params?.stage || c.stage === params.stage)

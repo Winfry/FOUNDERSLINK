@@ -1,6 +1,7 @@
 import type { NotificationService } from '../types/api';
 import type { AppNotification } from '../../types';
 import { mockDelay } from './delay';
+import { hasSampleInbox } from './mock-session';
 
 let notifications: AppNotification[] = [
   {
@@ -24,6 +25,7 @@ let notifications: AppNotification[] = [
 export const mockNotificationService: NotificationService = {
   async list() {
     await mockDelay();
+    if (!hasSampleInbox()) return { unreadCount: 0, notifications: [] };
     const unreadCount = notifications.filter((n) => !n.read).length;
     return { unreadCount, notifications: [...notifications] };
   },

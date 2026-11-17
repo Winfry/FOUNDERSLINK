@@ -48,7 +48,8 @@ export default function SignupScreen() {
         role: data.role,
         acceptTerms: data.acceptTerms,
       });
-      router.replace('/auth/verify-email');
+      // A new member goes on to set up her profile once her email is confirmed.
+      router.replace({ pathname: '/auth/verify-email', params: { then: 'start' } });
     } catch (e: unknown) {
       setRefused((e as { message?: string })?.message ?? 'We could not create your account. Please try again.');
     }

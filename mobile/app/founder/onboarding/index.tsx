@@ -60,7 +60,19 @@ export default function FounderOnboardingScreen() {
   // What to show for each option id. The mock sends none, so ids are tidied up instead.
   const [labels, setLabels] = useState<Record<string, string>>({});
   const labelOf = (id: string) => {
-    const words = labels[id] ?? id.replace(/_/g, ' ');
+    if (labels[id]) return labels[id];
+    const known: Record<string, string> = {
+      mvp: 'MVP',
+      agri: 'Agriculture',
+      fintech: 'Fintech',
+      kra_pin: 'KRA PIN',
+      brs: 'Business registration (BRS)',
+      cr12: 'CR12',
+      tax_compliance: 'Tax compliance certificate',
+      single_business_permit: 'County business permit',
+    };
+    if (known[id]) return known[id];
+    const words = id.replace(/_/g, ' ');
     return words.charAt(0).toUpperCase() + words.slice(1);
   };
   const [saving, setSaving] = useState(false);

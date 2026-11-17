@@ -8,6 +8,7 @@ import { greeting } from '../../../src/components/layout/workspace';
 import {
   complianceService,
   connectionService,
+  consentService,
   dealService,
   founderService,
   fundingService,
@@ -59,6 +60,9 @@ export default function FounderHome() {
   const checklistQ = useQuery({ queryKey: ['compliance'], queryFn: () => complianceService.listItems() });
   const dealsQ = useQuery({ queryKey: ['deals'], queryFn: () => dealService.list() });
   const peopleQ = useQuery({ queryKey: ['connections'], queryFn: () => connectionService.list() });
+  // Matching is her choice: until she turns it on, no investors are suggested.
+  const consentQ = useQuery({ queryKey: ['consents'], queryFn: () => consentService.list() });
+  const matchingOff = consentQ.data ? !(consentQ.data.find((c) => c.purpose === 'ai_matching')?.granted ?? false) : false;
   const pull = usePullToRefresh(() =>
     Promise.all([profileQ.refetch(), matchesQ.refetch(), checklistQ.refetch(), dealsQ.refetch(), peopleQ.refetch()]),
   );
@@ -148,8 +152,13 @@ export default function FounderHome() {
   const peopleCard = (
     <Card style={styles.card}>
       <Text style={styles.label}>People who may fund you</Text>
-      {ready.length === 0 ? (
-        <Empty text={matchesQ.isLoading ? 'Finding investors who fit…' : 'Investors who fit your business appear here once your profile is in.'} />
+      {matchingOff ? (
+        <>
+          <Empty text="Matching is off, so no investors are suggested yet. Turn it on and investors who fit your business appear here." />
+          <Button title="Turn on matching" variant="soft" onPress={() => router.push('/settings/consents' as never)} style={styles.topGap} />
+        </>
+      ) : ready.length === 0 ? (
+        <Empty text={matchesQ.isLoading ? 'Finding investors who fit…' : 'No investor fits your business yet. Check your profile is complete, or come back soon: new investors join every week.'} />
       ) : (
         ready.slice(0, wide ? 3 : 2).map((m, i) => (
           <Pressable key={m.investorUserId} onPress={() => openInvestor(m)} style={[styles.person, i > 0 && styles.personLine]} accessibilityRole="link">

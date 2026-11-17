@@ -3,7 +3,7 @@ import type { SessionUser, SignupInput } from '../../types';
 import { mockDelay } from './delay';
 import { DEMO_CODE } from './demo-code';
 import { showDemoCode } from '../http/demo-code';
-import { getMemberByEmail, getMemberById, upsertMember, type MockMemberState } from './mock-store';
+import { getMemberByEmail, getMemberById, upsertMember, type MockMemberState, anonymisedMatches } from './mock-store';
 import { getMockSessionUserId } from './mock-session';
 
 function tokensFor(userId: string) {
@@ -45,8 +45,11 @@ export const mockAuthService: AuthService = {
       emailVerified: false,
       approvalStatus: 'draft',
       preferredLanguage: 'en',
-      founderOnboardingComplete: false,
-      investorOnboardingComplete: input.role !== 'founder',
+      // Each new member sets up her own side first: a founder her business,
+      // an investor what she funds, an expert what she does.
+      founderOnboardingComplete: input.role !== 'founder',
+      investorOnboardingComplete: input.role !== 'investor',
+      expertOnboardingComplete: input.role !== 'expert',
     };
     const state: MockMemberState = {
       user,
@@ -54,11 +57,9 @@ export const mockAuthService: AuthService = {
       founderProfile: null,
       consents: { profile_visibility: false, ai_matching: false, contact: false },
       vetting: { approvalStatus: 'draft' },
-      matches: {
-        applyNow: [],
-        applyAfter: [],
-        notForYou: [],
-      },
+      // A new founder is matched like any founder not yet verified: what each
+      // investor funds, without names (once she turns matching on).
+      matches: input.role === 'founder' ? anonymisedMatches : { applyNow: [], applyAfter: [], notForYou: [] },
       deals: [],
     };
     upsertMember(state);

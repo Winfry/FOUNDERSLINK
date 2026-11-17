@@ -117,7 +117,7 @@ export const INVESTOR_FACTS: Record<string, { title: string; dealsClosed: number
 };
 
 // Before she is verified, a founder sees what each investor funds, not who they are.
-const anonymisedMatches: FundingMatches = {
+export const anonymisedMatches: FundingMatches = {
   applyNow: aminaMatches.applyNow.map((m) => ({ ...m, displayName: 'Angel investor · Health', organisationName: undefined, anonymised: true })),
   applyAfter: aminaMatches.applyAfter.map((m) => ({ ...m, displayName: 'Angel investor · Health', organisationName: undefined, anonymised: true })),
   notForYou: aminaMatches.notForYou.map((m) => ({ ...m, displayName: 'Investor', organisationName: undefined, anonymised: true })),

@@ -28,8 +28,10 @@ type Meta = { sectors: string[]; stages: string[]; instruments: string[]; counti
 
 const messageOf = (e: unknown, fallback: string) => (e as { message?: string })?.message ?? fallback;
 const tidy = (id: string) => {
+  const known: Record<string, string> = { mvp: 'MVP', agri: 'Agriculture', fintech: 'Fintech' };
+  if (known[id]) return known[id];
   const s = id.replace(/_/g, ' ');
-  return s.toLowerCase() === 'mvp' ? 'MVP' : s.charAt(0).toUpperCase() + s.slice(1);
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 export default function InvestorOnboardingScreen() {
