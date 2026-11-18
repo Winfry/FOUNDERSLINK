@@ -6,7 +6,8 @@ import { conflict, unauthorized } from "../../shared/errors.js";
 import { sessionExpiry, signPendingToken, signToken } from "../../shared/token.js";
 import { completedFor } from "../compliance/status.js";
 import { profileCompleteness } from "../profile/profile.schema.js";
-import { sendVerificationCode } from "./email-codes.js";
+import { sendVerificationCode } from "./email-codes.js";import { photoUrlFor } from "../photos/photos.service.js";
+
 
 // A person picks founder, investor or expert at sign-up. `admin` is not
 // in the list, so nobody can make themselves one: admins are created
@@ -91,9 +92,12 @@ export async function getMe(userId: string) {
     },
   });
   if (!user) throw unauthorized();
-  if (!user.founder_profile) return user;
+  // Her own photo, if she added one.
+  const photo_url = await photoUrlFor(userId);
+  if (!user.founder_profile) return { ...user, photo_url };
   return {
     ...user,
+    photo_url,
     founder_profile: {
       ...user.founder_profile,
       already_have: await completedFor(userId),

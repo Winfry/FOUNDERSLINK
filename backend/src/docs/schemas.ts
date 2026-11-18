@@ -234,7 +234,7 @@ export const components: Record<string, Schema> = {
     headline: described(str, 'What the funder funds, with nothing that identifies it, e.g. "Angel investor · health, fintech · KSh 500,000 to KSh 5,000,000".'),
     source: described(oneOf(["public_information", "maintained_by_funder"]), "`maintained_by_funder` when an approved investor keeps the record."),
     investor: described(
-      nullable(obj({ user_id: uuid, full_name: str, organisation_name: nullable(str), job_title: nullable(str) })),
+      nullable(obj({ user_id: uuid, full_name: str, organisation_name: nullable(str), job_title: nullable(str), photo_url: nullable(str) })),
       "The person behind a maintained record. Only for an approved founder, and only if the investor agreed to be visible.",
     ),
     investor_locked: described(bool, "There is an investor behind this record, hidden because the founder is not approved yet."),

@@ -209,5 +209,6 @@ export async function purgeExpired(now = new Date()) {
 export async function removeFilesOf(userId: string) {
   const documents = await prisma.vettingDocument.findMany({ where: { application: { user_id: userId } }, select: { storage_key: true } });
   const shared = await prisma.dealDocument.findMany({ where: { user_id: userId }, select: { storage_key: true } });
-  await Promise.all([...documents, ...shared].map((d) => removeFile(d.storage_key)));
+  const photo = await prisma.profilePhoto.findMany({ where: { user_id: userId }, select: { storage_key: true } });
+  await Promise.all([...documents, ...shared, ...photo].map((d) => removeFile(d.storage_key)));
 }

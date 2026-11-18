@@ -16,6 +16,7 @@ import { fundingRouter } from "./modules/funding/funding.routes.js";
 import { messagingRouter } from "./modules/messaging/messaging.routes.js";
 import { networkRouter } from "./modules/network/network.routes.js";
 import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
+import { photosRouter } from "./modules/photos/photos.routes.js";
 import { profileRouter } from "./modules/profile/profile.routes.js";
 import { vettingRouter } from "./modules/vetting/vetting.routes.js";
 import * as options from "./shared/constants.js";
@@ -87,6 +88,7 @@ app.use(circlesRouter);
 app.use(expertsRouter);
 app.use(copilotRouter);
 app.use(notificationsRouter);
+app.use(photosRouter);
 
 // API documentation. The spec is built from the routers' own Zod schemas
 // (src/docs), and test/openapi.test.ts fails if it misses a route.

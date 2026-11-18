@@ -205,7 +205,7 @@ test("an investor new to farming asks in her own words and gets an advocate who 
     question: "I would love to invest in a founder in agriculture but I do not know the laws. Which advocates know land law?",
   });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.json.understood, { profession: "lawyer", practice_area: "land_property", practice_area_label: "Land and property law", sector: "agri", county: null });
+  assert.deepEqual(res.json.understood, { profession: "lawyer", practice_area: "land_property", practice_area_label: "Land and property law", sector: "agri", county: null, budget_kes: null });
   assert.match(res.json.explanation, /land is often the biggest risk/);
   assert.match(res.json.note, /not legal, tax or financial advice/);
   const found = mine(res.json.experts);

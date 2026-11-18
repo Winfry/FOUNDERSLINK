@@ -58,6 +58,7 @@ export const ops: Op[] = [
         full_name: str,
         role: ROLE,
         approval_status: APPROVAL_STATUS,
+        photo_url: described(nullable(str), "Her photo's address, relative to the API (`/media/photos/<token>`). Null when she has not added one."),
         totp_enabled: bool,
         email_verified_at: nullable(dateTime),
         phone: nullable(str),

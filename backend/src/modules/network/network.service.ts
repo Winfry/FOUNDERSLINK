@@ -13,7 +13,8 @@ import { conflict, notFound } from "../../shared/errors.js";
 import { listComplianceItems, toMatchFunder, toMatchProfile } from "../funding/funding.service.js";
 import { assessReadiness } from "../funding/readiness.js";
 import { connectionBetween, contactOf } from "./connections.js";
-import { publicPortfolio, publicVentures } from "./track-record.js";
+import { publicPortfolio, publicVentures } from "./track-record.js";import { photoUrlFor, photoUrls } from "../photos/photos.service.js";
+
 
 // The record an investor's matches are run on: the one she maintains,
 // or, before approval, the one she has asked to take over.
@@ -143,6 +144,8 @@ export async function getInvestorMatches(userId: string, filter: z.infer<typeof 
     };
   }
 
+  // Named founders are shown with their photos; anonymised ones never are.
+  const photos = await photoUrls(fitting.map(({ profile }) => profile.user.id));
   return {
     approved: true,
     count,
@@ -151,6 +154,7 @@ export async function getInvestorMatches(userId: string, filter: z.infer<typeof 
       anonymised: false,
       user_id: profile.user.id,
       full_name: profile.user.full_name,
+      photo_url: photos.get(profile.user.id) ?? null,
       business_name: profile.business_name,
       journey_type: profile.journey_type,
       sector: profile.sector,
@@ -205,6 +209,8 @@ export async function getProfile(viewerId: string, targetId: string) {
   const base = {
     id: target.id,
     full_name: target.full_name,
+    // Her face goes with her name: this page is only for approved members who agreed to be seen.
+    photo_url: await photoUrlFor(target.id),
     role: target.role,
     badges: ["Checked by FoundersLink"],
     // none | pending | accepted | declined: drives the Connect button.

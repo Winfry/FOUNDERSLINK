@@ -106,8 +106,28 @@ model User {
   notifications        Notification[]
   office_hours_asked   OfficeHour[]         @relation("requester")
   reports_received     UserReport[]         @relation("reported")
+  photo                ProfilePhoto?
 
   @@map("users")
+}
+
+// A member's photo, so people can put a face to a business. Optional.
+// The file is stored encrypted, like documents (vetting/documents.ts
+// storeFile). It is served at /media/photos/<token>: the token is random
+// and is only given out where her name is shown, so a member whose name
+// is hidden (not yet verified, or not visible) has a hidden face too. A
+// new photo gets a new token, so an old address stops working.
+model ProfilePhoto {
+  user_id     String   @id @db.Uuid
+  token       String   @unique
+  storage_key String
+  mime_type   String
+  size_bytes  Int
+  updated_at  DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("profile_photos")
 }
 
 // Fields follow docs/FUNDING_FLOW.md section 3.

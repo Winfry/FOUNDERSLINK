@@ -17,6 +17,7 @@ const signal = obj({ signal: str, fits: bool, text: str });
 const profileBase = {
   id: uuid,
   full_name: str,
+  photo_url: described(nullable(str), "Her photo's address, e.g. `/media/photos/<token>`, relative to the API. Null when she has not added one."),
   role: ROLE,
   badges: arr(str),
   connection: described(
@@ -69,6 +70,7 @@ export const ops: Op[] = [
           obj({
             user_id: uuid,
             full_name: str,
+            photo_url: described(nullable(str), "Her photo's address, e.g. `/media/photos/<token>`, relative to the API. Null when she has not added one."),
             business_name: nullable(str),
             journey_type: oneOf(JOURNEY_TYPES),
             sector: str,
@@ -83,7 +85,7 @@ export const ops: Op[] = [
             ready: described(bool, "She already meets everything this funder requires."),
             anonymised: bool,
             headline: described(str, 'Only on an anonymised card, e.g. "Health startup, Nairobi, mvp, seeking KSh 1,000,000".'),
-          }, ["user_id", "full_name", "business_name", "journey_type", "description", "use_of_funds", "signals", "match_reasons", "headline"]),
+          }, ["user_id", "full_name", "photo_url", "business_name", "journey_type", "description", "use_of_funds", "signals", "match_reasons", "headline"]),
         ),
       }),
     },

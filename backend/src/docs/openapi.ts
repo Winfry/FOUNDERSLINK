@@ -18,6 +18,7 @@ import * as messaging from "./paths/messaging.js";
 import * as meta from "./paths/meta.js";
 import * as network from "./paths/network.js";
 import * as notifications from "./paths/notifications.js";
+import * as photos from "./paths/photos.js";
 import * as profile from "./paths/profile.js";
 import * as vetting from "./paths/vetting.js";
 import { components } from "./schemas.js";
@@ -39,6 +40,7 @@ const modules: { tag: { name: string; description: string }; ops: Op[] }[] = [
   experts,
   copilot,
   notifications,
+  photos,
 ];
 
 const DESCRIPTION = `

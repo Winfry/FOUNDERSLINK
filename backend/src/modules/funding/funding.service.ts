@@ -5,7 +5,8 @@ import { prisma } from "../../shared/db.js";
 import { conflict } from "../../shared/errors.js";
 import { consented, hasConsent } from "../account/consents.js";
 import { completedFor } from "../compliance/status.js";
-import { assessReadiness, type Group } from "./readiness.js";
+import { assessReadiness, type Group } from "./readiness.js";import { photoUrls } from "../photos/photos.service.js";
+
 
 const funderFields = {
   id: true,
@@ -146,6 +147,8 @@ export async function getMatches(userId: string) {
   const owners = funders.flatMap((f) => (f.claimed_by ? [f.claimed_by.id] : []));
   const visibleOwners = await consented(owners, "profile_visibility");
   const byFunder = new Map(results.map((r) => [r.funder_id, r]));
+  // Faces go with names: only for a verified founder, only for investors who agreed to be seen.
+  const photos = approved ? await photoUrls([...visibleOwners]) : new Map<string, string>();
 
   const cards = funders.map(({ claimed_by, ...record }) => {
     const match = byFunder.get(record.id)!;
@@ -178,6 +181,7 @@ export async function getMatches(userId: string) {
               full_name: claimed_by.full_name,
               organisation_name: claimed_by.investor_profile?.organisation_name ?? null,
               job_title: claimed_by.investor_profile?.job_title ?? null,
+              photo_url: photos.get(claimed_by.id) ?? null,
             }
           : null,
       investor_locked: claimed_by !== null && visibleOwners.has(claimed_by.id) && !approved,
