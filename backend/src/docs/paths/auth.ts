@@ -42,7 +42,10 @@ export const ops: Op[] = [
         oneOf: [ref("Session"), obj({ two_factor_required: { type: "boolean", const: true }, pending_token: str })],
       },
     },
-    errors: [[401, "UNAUTHORIZED", "Wrong email or password. The same answer for both, so it does not reveal which emails have accounts."]],
+    errors: [
+      [401, "UNAUTHORIZED", "Wrong email or password. The same answer for both, so it does not reveal which emails have accounts."],
+      [429, "TOO_MANY_ATTEMPTS", "10 wrong passwords in 15 minutes for this email, or 50 from this address across all emails. Signing in is paused until the oldest of them is 15 minutes old."],
+    ],
   },
   {
     method: "get",

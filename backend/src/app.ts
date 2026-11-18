@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
 import { openapiSpec } from "./docs/openapi.js";
@@ -37,6 +38,14 @@ if (env.NODE_ENV === "development") {
   });
 }
 
+// Standard security headers on every response (no sniffing file types, no
+// framing, strict transport on HTTPS, and so on). The API documentation page
+// loads its own scripts and styles, so its content policy is relaxed there.
+// Photos are loaded by the app from another origin, so resources may be
+// read cross-origin; the API's own CORS list still decides who may call it.
+const apiHeaders = helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } });
+const docsHeaders = helmet({ contentSecurityPolicy: false });
+app.use((req, res, next) => (req.path.startsWith("/docs") ? docsHeaders : apiHeaders)(req, res, next));
 app.use(cors({ origin: env.CORS_ORIGIN.split(",") }));
 // A statement upload carries a whole statement as text, so it alone may
 // be larger than an ordinary request.

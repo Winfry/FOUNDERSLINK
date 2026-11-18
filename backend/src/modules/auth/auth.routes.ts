@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.js";
-import { forbidden } from "../../shared/errors.js";
+import { AppError, forbidden } from "../../shared/errors.js";
+import { checkLoginAllowed, recordLoginFailure, recordLoginSuccess } from "./login-limit.js";
 import { getMe, login, loginSchema, register, registerSchema } from "./auth.service.js";
 import { enable, enableSchema, setup, verify, verifySchema } from "./two-factor.js";
 import {
@@ -20,7 +21,18 @@ authRouter.post("/auth/register", async (req, res) => {
 });
 
 authRouter.post("/auth/login", async (req, res) => {
-  res.json(await login(loginSchema.parse(req.body)));
+  const input = loginSchema.parse(req.body);
+  const ip = req.ip ?? "unknown";
+  // Paused after too many wrong passwords for this account or from this address.
+  checkLoginAllowed(input.email, ip);
+  try {
+    const answer = await login(input);
+    recordLoginSuccess(input.email);
+    res.json(answer);
+  } catch (e) {
+    if (e instanceof AppError && e.status === 401) recordLoginFailure(input.email, ip);
+    throw e;
+  }
 });
 
 authRouter.get("/me", requireAuth, async (req, res) => {
