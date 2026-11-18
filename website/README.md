@@ -63,3 +63,12 @@ In `assets/photos/`, shrunk to 1600 px wide with the camera data removed. All ar
 | hero-handshake.jpg | A handshake, Nairobi | Unsplash, Cytonn Photography: https://unsplash.com/photos/two-people-shaking-hands-n95VMLxqM2I |
 
 Replace any of them with FoundersLink's own photos (of people who agreed to be shown) by keeping the same file name.
+
+## Get started and Log in, on a laptop
+
+The buttons point at the live app (`https://app.founderslink.co.ke`). When the page is opened from a file or from `localhost`, a few lines at the top of the page's script point them at the demo app on this computer instead: `http://localhost:8081/auth/signup` and `/auth/login`. Start the demo first:
+
+```powershell
+cd mobile
+$env:EXPO_NO_DOTENV='1'; $env:EXPO_PUBLIC_API_URL=''; npx expo start --web
+```

@@ -1039,6 +1039,16 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
+  /* ---------- Opened on a laptop: the buttons open the local demo app ----------
+     The links point at the live app. When this page is opened from a file or
+     from localhost, they open the demo app running on this computer instead
+     (start it with: cd mobile, then npx expo start --web). */
+  var LIVE = 'https://app.founderslink.co.ke';
+  var LOCAL_DEMO = 'http://localhost:8081';
+  if (location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+    $$('a[href^="' + LIVE + '"]').forEach(function (a) { a.href = LOCAL_DEMO + a.getAttribute('href').slice(LIVE.length); });
+  }
+
   /* ---------- A "Who it's for" card opens its tab in How it works ---------- */
   $$('[data-open-tab]').forEach(function (card) {
     card.addEventListener('click', function () {
