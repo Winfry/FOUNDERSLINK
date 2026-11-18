@@ -381,6 +381,19 @@
   .mix .from.new { background: var(--pos-light); color: var(--pos); }
   footer { padding: 56px 0 64px; color: var(--dim); font-size: 13px; }
 
+  /* ---------- Photos: a cover across the top of a person's page ---------- */
+  .cover { position: relative; margin: -16px -16px 14px; height: 300px; background-repeat: no-repeat; background-color: var(--deep); display: flex; flex-direction: column; justify-content: flex-end; padding: 18px 20px 20px; color: #fff; overflow: hidden; }
+  .cover::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(40,24,78,.35) 0%, rgba(40,24,78,0) 38%, rgba(40,24,78,.35) 62%, rgba(40,24,78,.95) 100%); }
+  .cover > * { position: relative; }
+  .cover .role { font-size: .8em; color: rgba(255,255,255,.82); }
+  .cover .nm { font-weight: 300; font-size: 2em; letter-spacing: -0.03em; line-height: 1.1; margin: 2px 0 10px; }
+  .cover .fitpill { align-self: flex-start; background: #fff; border-radius: 99px; padding: 5px 12px; }
+  .card > .cover { margin: -16px -16px 16px; border-radius: 18px 18px 0 0; height: 340px; }
+  .photocard .row { display: flex; gap: 14px; align-items: center; }
+  .photocard .btns { margin-top: 12px; }
+  .photocard .small { font-size: .78em; color: var(--muted); margin: 10px 0 0; }
+  .top .av.tap { cursor: pointer; }
+
   /* ---------- 03 First time, on a computer ---------- */
   .webctl { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
   .webctl .seg { margin: 0; width: 420px; max-width: 100%; }
@@ -720,16 +733,28 @@
   function av(id, size = 44) {
     const p = PEOPLE[id];
     const box = `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.34)}px`;
-    if (!p.photo) return `<span class="av" style="${box}">${initials(p.n)}</span>`;
+    if (!p.photo || removedPhotos.has(id)) return `<span class="av" style="${box}">${initials(p.n)}</span>`;
     const w = size * p.photo.k, h = w * 500 / 612;
     return `<span class="av" style="${box}"><img src="${PHOTO}" alt="${p.n}" style="width:${w}px;height:${h}px;left:${size / 2 - p.photo.fx * w}px;top:${size / 2 - p.photo.fy * h}px"></span>`;
   }
   const FULL = Object.fromEntries(Object.entries(PEOPLE).map(([k, v]) => [k, v.n]));
+  // Photos a member has removed on her Profile: she is shown by her initials again.
+  const removedPhotos = new Set();
+  const hasPhoto = (id) => Boolean(PEOPLE[id]?.photo) && !removedPhotos.has(id);
+  // Her photo across the top of her page, framed on the face, with her name over it.
+  // A face goes with a name: shown only where her name is.
+  // On a phone the photo is drawn large and framed on the face; on a wide
+  // card it is drawn less large, so the whole face stays in view.
+  function cover(id, inner, wide = false) {
+    const f = PEOPLE[id].photo;
+    const pos = wide ? `${(f.fx * 100).toFixed(1)}% 4%` : `${(f.fx * 100).toFixed(1)}% ${Math.min(100, f.fy * 100 + 6).toFixed(1)}%`;
+    return `<div class="cover" style="background-image:url('${PHOTO}');background-size:${wide ? 125 : 230}% auto;background-position:${pos}">${inner}</div>`;
+  }
 
   // ---------------- Words ----------------
   const T = {
     en: {
-      nav: { home: 'Home', investors: 'Investors', ready: 'Readiness', deals: 'Deals', more: 'More', guide: 'Co-pilot', chamas: 'Chamas' },
+      nav: { home: 'Home', investors: 'Investors', ready: 'Readiness', deals: 'Deals', more: 'More', guide: 'Co-pilot', chamas: 'Chamas', profile: 'Profile' },
       date: 'Saturday, 14 November', hello: 'Good evening,', name: 'Amina.', messages: 'Messages',
       nextStep: 'Your next step', showHow: 'Show me how', doneIt: "I've done this",
       allDone: "You've done everything on your list. Investors can see you're ready.",
@@ -755,7 +780,7 @@
       openChat: 'Open the group chat', noMoney: "Money goes to the chama's own account. FoundersLink never holds it.",
     },
     sw: {
-      nav: { home: 'Nyumbani', investors: 'Wawekezaji', ready: 'Utayari', deals: 'Mikataba', more: 'Zaidi', guide: 'Msaidizi', chamas: 'Chama' },
+      nav: { home: 'Nyumbani', investors: 'Wawekezaji', ready: 'Utayari', deals: 'Mikataba', more: 'Zaidi', guide: 'Msaidizi', chamas: 'Chama', profile: 'Wasifu' },
       date: 'Jumamosi, 14 Novemba', hello: 'Habari za jioni,', name: 'Amina.', messages: 'Ujumbe',
       nextStep: 'Hatua yako inayofuata', showHow: 'Nionyeshe jinsi', doneIt: 'Nimeshafanya',
       allDone: 'Umekamilisha kila kitu kwenye orodha yako. Wawekezaji wanaona uko tayari.',
@@ -971,10 +996,17 @@
       ['She decides', 'Nothing is booked until she sends a request. General information, never legal advice.'],
     ] },
     invpage: { title: 'An investor\'s page', sub: 'What a founder sees after tapping "View".', items: [
+      ['Their photo, across the top', 'David added one, so it fills the top of his page with his name over it. Someone without a photo (Grace) is shown with initials. A face goes with a name: a founder who is not verified yet sees neither.'],
       ['Role and firm, then the name', '"Partner · Lakeside Ventures", then David Otieno, large.'],
       ['Three facts', 'Ticket, deals closed, investing since.'],
       ['Why they fit, numbered', '01, 02, 03, about her own business.'],
       ['One ask', '"Request introduction". In a deal room already, it opens the deal room.'],
+    ] },
+    profile: { title: 'Profile, and your photo', sub: 'Reached from her picture in the top bar, or from More.', items: [
+      ['Optional', 'Put a face to your name. Without one, your initials are shown.'],
+      ['Choose one, or take one', 'It is cropped square and made small before it is sent. Change or remove it any time.'],
+      ['Not an ID', '"A photo of you, not of your ID." FoundersLink never asks for ID documents.'],
+      ['Shown where her name is', 'To verified members only. Try Remove photo: Amina becomes "AW" everywhere, then Choose a photo brings her back.'],
     ] },
     msgs: { title: 'Messages', sub: 'Everyone she can talk to, newest first.', items: [
       ['A face and a name', 'Then the last message, and how many are unread.'],
@@ -1102,7 +1134,7 @@
         <div class="wordmark">FoundersLink<span>.</span></div>
         <div class="top-right">
           <button class="msg-pill" data-act="go" data-to="msgs">${t().messages} <span class="count">2</span></button>
-          ${av(me, 32)}
+          <span data-act="go" data-to="${S.role === 'expert' ? 'eprofile' : 'profile'}" title="Your profile" style="cursor:pointer;display:inline-flex">${av(me, 32)}</span>
         </div>
       </div>
       ${inner}
@@ -1176,15 +1208,17 @@
       : i.status === 'In deal room' ? `<button class="btn primary" data-act="go" data-to="deals">${sw ? 'Fungua chumba cha mkataba' : 'Open the deal room'}</button>`
       : i.list === 'no' ? '' : (item && !fixed) ? `<button class="btn soft" data-act="go" data-to="ready" data-open="${item.id}">${t().goFix}</button>`
       : `<button class="btn primary" data-act="connect" data-id="${i.id}">${sw ? 'Omba kutambulishwa' : 'Request introduction'}</button>`;
+    const roleLine = i.title ? `${i.title} · ${i.org}` : i.org;
+    const fitLine = `<span class="fitw">${meter(i.n, i.list === 'fix')}${L(i.fitText)}${i.deals ? ' · Verified' : ''}</span>`;
     return top(`<button class="backlink" data-act="go" data-to="investors" style="color:#fff;padding:14px 0 0;position:relative;z-index:1">← ${sw ? 'Rudi' : 'Back'}</button>`) + `<div class="body">
-      <div class="person" style="align-items:flex-start">
+      ${hasPhoto(i.id) ? cover(i.id, `<div class="role">${roleLine}</div><div class="nm">${FULL[i.id]}</div><div class="fitpill">${fitLine}</div>`) : `<div class="person" style="align-items:flex-start">
         <div style="flex:1">
-          ${i.title ? `<div class="label">${i.title} · ${i.org}</div>` : `<div class="label">${i.org}</div>`}
+          <div class="label">${roleLine}</div>
           <div style="font-weight:300;font-size:1.9em;letter-spacing:-0.03em;line-height:1.1;margin:4px 0 8px">${FULL[i.id]}</div>
-          <span class="fitw">${meter(i.n, i.list === 'fix')}${L(i.fitText)}${i.deals ? ' · Verified' : ''}</span>
+          ${fitLine}
         </div>
         ${av(i.id, 72)}
-      </div>
+      </div>`}
       ${i.list === 'no' ? '' : `<div class="facts">${facts.map(([v, k]) => `<div><div class="v">${v}</div><div class="k">${k}</div></div>`).join('')}</div>`}
       ${item ? `<div class="card" style="margin-top:12px"><div class="label">${t().fixFirst}</div><ol class="why"><li>${L(item)}</li></ol></div>` : ''}
       <div class="card" style="margin-top:12px">
@@ -1568,6 +1602,7 @@
         ${row(S.lang === 'sw' ? 'Leseni yako inaisha' : 'Your licence runs to', '31 Dec 2026', '')}
         ${row(tt.myVerif, tt.myVerifLine, tt.open)}
       </div>
+      ${photoCard('kamau')}
       <div class="card">
         <p class="h" style="margin:0">${tt.seeYou}</p>
         <p class="p">${tt.seeYouSub}</p>
@@ -1630,10 +1665,40 @@
 
   // Everyone: "More" is the whole side menu, on the phone.
   const MORE = {
-    founder: [['Overview', '', 'home'], ['Investors', '3', 'investors'], ['Readiness', '4/7', 'ready'], ['Deal rooms', '1', 'deals'], ['Messages', '2'], ['#Community'], ['Network'], ['Chamas', '', 'chamas'], ['#Assistant'], ['Co-pilot', '', 'guide']],
-    investor: [['Overview', '', 'ihome'], ['Businesses', '3', 'ibiz'], ['Requests', '1', 'ireq'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments', '', 'iport'], ['#Your fund'], ['What you fund'], ['Profile'], ['#Assistant'], ['Co-pilot', '', 'icopilot']],
+    founder: [['Overview', '', 'home'], ['Investors', '3', 'investors'], ['Readiness', '4/7', 'ready'], ['Deal rooms', '1', 'deals'], ['Messages', '2'], ['#Community'], ['Network'], ['Chamas', '', 'chamas'], ['#Assistant'], ['Co-pilot', '', 'guide'], ['#You'], ['Profile', '', 'profile']],
+    investor: [['Overview', '', 'ihome'], ['Businesses', '3', 'ibiz'], ['Requests', '1', 'ireq'], ['Deal rooms', '1'], ['Messages', '1'], ['#Portfolio'], ['My investments', '', 'iport'], ['#Your fund'], ['What you fund'], ['Profile', '', 'profile'], ['#Assistant'], ['Co-pilot', '', 'icopilot']],
     expert: [['Overview', '2', 'ehome'], ['Deal rooms'], ['Messages', '1'], ['#Your practice'], ['Profile', '', 'eprofile']],
   };
+  // "Your photo": optional, a photo of her and never of an ID, shown to
+  // verified members wherever her name is.
+  function photoCard(id) {
+    const sw = S.lang === 'sw';
+    const has = hasPhoto(id);
+    return `<div class="card photocard">
+      <div class="row">${av(id, 72)}<div><p class="h" style="margin:0 0 4px">${sw ? 'Picha yako' : 'Your photo'}</p>
+        <p class="p" style="margin:0;font-size:.84em">${sw ? 'Si lazima. Weka uso kwa jina lako. Wanachama waliothibitishwa wanaiona popote jina lako linapoonekana.' : 'Optional. Put a face to your name. Verified members see it wherever your name is shown.'}</p></div></div>
+      <p class="small">${sw ? 'Picha yako, si ya kitambulisho chako. FoundersLink haiombi vitambulisho kamwe.' : 'A photo of you, not of your ID. FoundersLink never asks for ID documents.'}</p>
+      <div class="btns two">
+        <button class="btn ${has ? 'ghost' : 'primary'}" data-act="photo" data-id="${id}" data-do="choose">${has ? (sw ? 'Badilisha picha' : 'Change photo') : (sw ? 'Chagua picha' : 'Choose a photo')}</button>
+        <button class="btn ghost" data-act="photo" data-id="${id}" data-do="camera">${sw ? 'Piga picha' : 'Take a photo'}</button>
+      </div>
+      ${has ? `<button class="btn" style="background:none;color:var(--purple);margin-top:4px" data-act="photo" data-id="${id}" data-do="remove">${sw ? 'Ondoa picha' : 'Remove photo'}</button>` : ''}
+    </div>`;
+  }
+  function profile() {
+    const sw = S.lang === 'sw';
+    const me = S.role === 'investor' ? 'grace' : 'amina';
+    const email = me === 'grace' ? 'grace@savanna.demo' : 'amina@healthlink.demo';
+    const about = me === 'grace'
+      ? `<div class="card"><div class="label">${sw ? 'Unachofadhili' : 'What you fund'}</div><p class="h" style="margin:6px 0 4px">Savanna Angels</p><p class="p" style="margin:0">${sw ? 'Afya, kilimo, elimu · KES 500,000 hadi 2,000,000' : 'Health, agriculture, education · KES 500,000 to KES 2,000,000'}</p></div>`
+      : `<div class="card"><div class="label">${sw ? 'Biashara yako' : 'Your business'}</div><p class="h" style="margin:6px 0 4px">ClinicBook Health</p><p class="p" style="margin:0">${sw ? 'Afya · MVP · Nairobi · KES 1,000,000' : 'Health · MVP · Nairobi · KES 1,000,000'}</p></div>`;
+    return top(`<h1 class="title">${sw ? 'Wasifu' : 'Profile'}</h1><div class="tsub">${sw ? 'Wewe, uthibitisho wako na akaunti yako.' : me === 'grace' ? 'You, what you fund and your account.' : 'Your business, your verification and your account.'}</div>`) + `<div class="body">
+      <div class="card"><div class="person" style="align-items:center">${av(me, 64)}<div><div class="pname" style="font-size:1.15em">${FULL[me]}</div><div class="porg">${email}</div><span class="tag paid" style="display:inline-block;margin-top:6px">${sw ? 'Mwanachama aliyethibitishwa' : 'Verified member'}</span></div></div></div>
+      ${photoCard(me)}
+      ${about}
+    </div>`;
+  }
+
   function more() {
     const sw = S.lang === 'sw';
     const rows = MORE[S.role].map(([label, count, to]) => label.startsWith('#')
@@ -1839,7 +1904,7 @@
       <div class="composer"><input id="cpIn" placeholder="Ask in your own words…" aria-label="Your question"><button data-act="cpask">Ask</button></div>`;
   }
 
-  const SCREENS = { home, investors, invpage, ready, deals, more, guide, chamas, msgs, chatv, icopilot, esignup, ihome, ibiz, ireq, iport, ehome, eprofile };
+  const SCREENS = { home, investors, invpage, ready, deals, more, guide, chamas, msgs, chatv, icopilot, esignup, ihome, ibiz, ireq, iport, ehome, eprofile, profile };
   const ORDERS = { founder: ['home', 'investors', 'ready', 'deals', 'more'], investor: ['ihome', 'ibiz', 'ireq', 'iport', 'more'], expert: ['ehome', 'eprofile', 'more'] };
   // Screens reached from "More" (Chamas, Co-pilot) light up the More tab.
   const tabOf = (k) => (ORDERS[S.role].includes(k) ? k : k === 'invpage' ? 'investors' : k === 'msgs' || k === 'chatv' ? null : 'more');
@@ -1859,7 +1924,7 @@
     const body = el.querySelector('.body');
     if (body) body.scrollTop = S.screen === 'guide' || S.screen === 'chatv' || (S.screen === 'icopilot' && S.cpScroll) ? body.scrollHeight : keep;
     S.cpScroll = false;
-    document.getElementById('jump').innerHTML = [...ORDER, ...(S.role === 'founder' ? ['chamas', 'guide'] : [])].map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-to="${k}">${navName(k, 'en')}${S.lang === 'sw' ? ` · ${navName(k, 'sw')}` : ''}</button>`).join('');
+    document.getElementById('jump').innerHTML = [...ORDER, ...(S.role === 'founder' ? ['chamas', 'guide', 'profile'] : S.role === 'investor' ? ['profile'] : [])].map((k) => `<button class="${S.screen === k ? 'on' : ''}" data-to="${k}">${navName(k, 'en')}${S.lang === 'sw' ? ` · ${navName(k, 'sw')}` : ''}</button>`).join('');
     const n = NOTES[S.screen === 'iport' && S.inv ? 'idetail' : S.screen] ?? NOTES.home;
     document.getElementById('notes').innerHTML = `<h3>${n.title}</h3><p class="sub">${n.sub}</p><ol>${n.items.map(([b, s], i) => `<li><i>0${i + 1}</i><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>`;
   }
@@ -1900,6 +1965,15 @@
         render(); break;
       }
       case 'connect': S.requested.add(b.dataset.id); render(); break;
+      case 'photo': {
+        const sw = S.lang === 'sw';
+        if (b.dataset.do === 'remove') { removedPhotos.add(b.dataset.id); toast(sw ? 'Picha imeondolewa. Herufi zako zinaonyeshwa.' : 'Your photo is removed. Your initials are shown instead.'); renderWeb(); break; }
+        // The design has one photo per person; on a phone her photos or camera open
+        // here, she crops it square, and it is made small before it is sent.
+        if (PEOPLE[b.dataset.id].photo) { removedPhotos.delete(b.dataset.id); toast(sw ? 'Picha yako imewekwa.' : 'Your photo is saved.'); renderWeb(); break; }
+        toast(b.dataset.do === 'camera' ? (sw ? 'Kamera inafunguka hapa, kwenye simu.' : 'On a phone, the camera opens here.') : (sw ? 'Picha zako zinafunguka hapa, kwenye simu.' : 'On a phone, your photos open here.'));
+        break;
+      }
       case 'ask': {
         const q = QUESTIONS.find((x) => x.id === b.dataset.q);
         S.chat.push({ from: 'me', q: q.id }); S.typing = true; render();
@@ -2030,11 +2104,11 @@
       <div class="wcols">
         <div>
           <div class="card">
-            <div class="person" style="align-items:flex-start"><div style="flex:1">
+            ${hasPhoto(i.id) ? cover(i.id, `<div class="role">${i.title ? `${i.title} · ` : ''}${i.org}</div><div class="nm" style="font-size:40px">${FULL[i.id]}</div><div class="fitpill"><span class="fitw">${meter(i.n, i.list === 'fix')}${i.fitText.en}${i.deals ? ' · Verified' : ''}</span></div>`, true) : `<div class="person" style="align-items:flex-start"><div style="flex:1">
               <div class="label">${i.title ? `${i.title} · ` : ''}${i.org}</div>
               <div style="font-weight:300;font-size:34px;letter-spacing:-0.03em;line-height:1.1;margin:6px 0 10px">${FULL[i.id]}</div>
               <span class="fitw">${meter(i.n, i.list === 'fix')}${i.fitText.en}${i.deals ? ' · Verified' : ''}</span>
-            </div>${av(i.id, 84)}</div>
+            </div>${av(i.id, 84)}</div>`}
             ${i.list === 'no' ? '' : `<div class="facts">${facts.map(([v, k]) => `<div><div class="v">${v}</div><div class="k">${k}</div></div>`).join('')}</div>`}
           </div>
           ${item ? `<div class="card"><div class="label">Fix this first</div><ol class="why"><li>${item.en}</li></ol></div>` : ''}
@@ -2202,7 +2276,7 @@
   if (role === 'investor' || role === 'founder' || role === 'expert') {
     document.querySelector(`#roleSeg [data-role="${role}"]`).click();
     if (role === 'investor' && INVESTMENTS.some((i) => i.id === where)) { S.screen = 'iport'; S.inv = where; }
-    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'investor' && where === 'icopilot') || (role === 'expert' && where === 'esignup') || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)))) S.screen = where;
+    else if (where && SCREENS[where] && (ORDERS[role].includes(where) || ['msgs', 'chatv'].includes(where) || (role === 'investor' && where === 'icopilot') || (role === 'expert' && where === 'esignup') || (role === 'founder' && ['chamas', 'guide', 'invpage'].includes(where)) || (role !== 'expert' && where === 'profile'))) S.screen = where;
   }
   // ---------------- 02b First time: a new founder or investor joins ----------------
   // The real journey, step by step: Welcome (the handshake), sign up, the email
