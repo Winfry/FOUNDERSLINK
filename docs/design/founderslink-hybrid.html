@@ -242,6 +242,23 @@
   .termscard .kv { display: flex; gap: 22px; font-size: .86em; }
   .termscard .kv span { display: block; color: rgba(255,255,255,.6); font-size: .82em; }
   .termscard .fine { border-top: 1px solid rgba(255,255,255,.18); margin-top: 12px; padding-top: 10px; font-size: .8em; color: rgba(255,255,255,.8); }
+  .mflow { list-style: none; margin: 0 0 20px; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+  .mflow li { background: var(--card, #fff); border: 1px solid var(--line); border-radius: 18px; padding: 16px 14px; font-size: 14px; position: relative; }
+  .mflow li i { font-style: normal; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--deep); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+  .mflow li b { display: block; font-weight: 500; color: var(--deep); margin-bottom: 4px; }
+  .mflow li span { color: var(--muted); }
+  .mflow li em { font-style: normal; color: var(--purple); font-weight: 500; }
+  .mstages { margin-bottom: 20px; }
+  .mstages h4 { margin: 0 0 12px; }
+  .mstagerow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; border-top: 3px solid var(--purple); }
+  .mstagerow div { padding: 12px 12px 4px 0; font-size: 14px; }
+  .mstagerow b { display: block; font-weight: 500; color: var(--deep); }
+  .mstagerow span { color: var(--muted); font-size: 13px; }
+  .mnote { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+  .mrule { background: var(--deep); color: #fff; border-radius: 18px; padding: 20px 22px; font-size: 16px; line-height: 1.5; }
+  .mrule b { display: block; color: var(--gold); font-weight: 500; margin-bottom: 4px; }
+  @media (max-width: 1150px) { .mflow { grid-template-columns: repeat(4, 1fr); } .mstagerow { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .mflow { grid-template-columns: 1fr 1fr; } .mstagerow { grid-template-columns: 1fr 1fr; } }
   .moneyrule { background: var(--lav); border-radius: 14px; padding: 12px 14px; font-size: .86em; color: var(--text); margin-top: 12px; }
   .moneyrule b { display: block; font-weight: 500; color: var(--purple); margin-bottom: 2px; }
 
@@ -653,6 +670,42 @@
       <div class="scroller">
         <div class="app" id="webApp"></div>
       </div>
+    </div>
+  </section>
+
+  <!-- 03b Following the money -->
+  <section class="sec" id="money">
+    <div class="sec-head">
+      <div class="no">03b — The money</div>
+      <div>
+        <h2>Following the money. <span>From an offer to an investment on record.</span></h2>
+        <p>The money is in view from the very first message, but it never passes through FoundersLink. Here is the whole path, step by step, with Grace investing in Amina's ClinicBook. You can tap through steps 3 and 5 yourself in the founder's Deals, on the phone above or the web app.</p>
+      </div>
+    </div>
+    <ol class="mflow">
+      <li><i>1</i><b>The offer</b><span>Grace's request to connect already names the amount, <em>KSh 1,000,000</em>, with her pitch and what she brings beyond the cash. Amina knows what is on the table before she says yes.</span></li>
+      <li><i>2</i><b>The private chat</b><span>Amina accepts, and a chat opens with "Grace Njoroge accepted your request". Only the two of them can read it.</span></li>
+      <li><i>3</i><b>The terms in writing</b><span>In the deal room: KSh 1,000,000, as equity, for 12% of the company, plus a board observer seat. Self-reported by the parties, not a legal document.</span></li>
+      <li><i>4</i><b>Due diligence</b><span>Each side shares the papers the deal needs, such as a KRA PIN certificate and six months of bank statements. Nobody hands over an ID number in a chat.</span></li>
+      <li><i>5</i><b>Both sides confirm</b><span>Terms count only when Amina <em>and</em> Grace press Confirm terms. Until then the app shows who is still waiting. Closing works the same way.</span></li>
+      <li><i>6</i><b>Bank to bank</b><span>Grace's bank pays Amina's bank directly. FoundersLink never holds, touches or forwards a shilling.</span></li>
+      <li><i>7</i><b>On record</b><span>The deal moves to Closed, then Active, and appears in Grace's <em>My investments</em>, with the agreed goals, how ClinicBook is doing, and a button to ask for an update.</span></li>
+    </ol>
+    <div class="mstages panel">
+      <h4>The six stages of a deal, always in view</h4>
+      <div class="mstagerow">
+        <div><b>Exploring</b><span>Amount and equity set</span></div>
+        <div><b>Due diligence</b><span>Each side shares its papers</span></div>
+        <div><b>Terms agreed</b><span>Both sides must confirm</span></div>
+        <div><b>Documents &amp; compliance</b><span>The paperwork is finished</span></div>
+        <div><b>Closed</b><span>Money moves bank to bank</span></div>
+        <div><b>Active</b><span>In the investor's My investments</span></div>
+      </div>
+      <p class="mnote">Each stage says what is happening to the money, so neither side is left asking "pesa iko wapi?" ("where is the money?").</p>
+    </div>
+    <div class="mrule">
+      <b>Put simply</b>
+      FoundersLink is where the deal is agreed and remembered. The banks are where the money moves. We keep the record of who agreed what, when, and for how much, and never stand between an investor and a founder's account. So any message asking you to "send a fee first" is, by definition, not us.
     </div>
   </section>
 
