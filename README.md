@@ -25,3 +25,15 @@ It starts the AI service, the backend, the staff dashboard (http://localhost:300
 Ask Compliance writes answers about a minute after the start, once the line `Ask Compliance is ready` appears (`ai/README.md`).
 
 Start with `docs/TEAM_DECISIONS.md`. Copy `.env.example` to `.env` for local secrets; never commit `.env`.
+
+## Install it as an app on any phone (PWA)
+
+The mobile app also builds as a progressive web app: people open a link, tap "Add to Home screen" (Android) or Share, then "Add to Home Screen" (iPhone), and FoundersLink gets its own icon, opens full screen and still opens without a network.
+
+```bash
+cd mobile
+pnpm build:pwa                                # the demo: demo accounts and data, no server needed
+pnpm build:pwa https://<your backend address> # the live app, once the backend is hosted
+```
+
+The app is written to `mobile/dist/`. Upload that folder to any static host with HTTPS, such as Cloudflare Pages, Netlify or Vercel; each gives a free address (for example `founderslink.pages.dev`), so no domain is needed. The build stops if it still points at a local Wi-Fi address. The service worker saves only the app itself, never members' data, and is not used on localhost, so development always sees the latest code.

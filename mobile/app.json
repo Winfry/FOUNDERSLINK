@@ -22,7 +22,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single",
+      "name": "FoundersLink",
+      "shortName": "FoundersLink",
+      "description": "Verified founders, investors and experts in Kenya.",
+      "themeColor": "#28184E",
+      "backgroundColor": "#FFFFFF",
+      "lang": "en"
     },
     "plugins": [
       "expo-router",
