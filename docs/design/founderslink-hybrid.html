@@ -719,6 +719,7 @@
     achieng: { n: 'Achieng Otieno' },
     halima:  { n: 'Halima Abdi' },
     njeri:   { n: 'Njeri Kariuki' },
+    chama:   { n: 'Nairobi Health Founders' },
     wairimu: { n: 'Wairimu Kimani' },
     james:   { n: 'James Mutua' },
     ann:     { n: 'Ann Njoroge' },
@@ -1010,7 +1011,7 @@
     ] },
     msgs: { title: 'Messages', sub: 'Everyone she can talk to, newest first.', items: [
       ['A face and a name', 'Then the last message, and how many are unread.'],
-      ['Deal room chats are marked', 'A "Deal room" tag on the chat with Grace.'],
+      ['Deal room and chama chats are marked', 'A "Deal room" tag on the chat with Grace, a "Chama" tag on her chama’s group chat.'],
       ['Only people who said yes', 'A founder can message an investor once they accept her request.'],
     ] },
     chatv: { title: 'A chat', sub: 'The name at the top, messages in the middle, a box to write at the bottom.', items: [
@@ -1077,6 +1078,7 @@
       ['One clear action', '"Record my contribution", with a thank-you.'],
       ['The money rule, stated', 'FoundersLink never holds the money.'],
       ["The chama's own Paybill", 'Members pay into it by M-Pesa or bank. FoundersLink only records who paid.'],
+      ['Its own group chat', 'Every chama has one, and only its members can read it. Tap "Open the group chat": they agree the month’s amount, see each payment recorded, and plan together.'],
     ] },
     ihome: { title: 'Investor home: what needs Grace first', sub: 'The same idea as the founder\'s Home.', items: [
       ['"Needs your attention" at the top', 'A late check-in, said in a sentence, with one button.'],
@@ -1234,6 +1236,16 @@
   // m: [who, text, when]. who is 'me', 'sys', or a person; risky: asks for money.
   const CONVS = {
     founder: [
+      // The chama's group chat: only its members can read and write here.
+      { id: 'chama', who: 'chama', title: 'Nairobi Health Founders', tag: 'Chama', sub: 'Chama · 5 members', when: '16:10', unread: 2, m: [
+        ['sys', 'Amina Wanjiru started the chama. Members of the chama can talk here.', '1 Oct'],
+        ['me', 'Karibuni wote! This month we each put in 5,000 towards the shared office.', '12 Nov, 09:00'],
+        ['wanjiku', 'Noted. I have sent mine to the chama Paybill, 303030.', '12 Nov, 10:14'],
+        ['sys', 'Wanjiku Maina’s 5,000 is recorded.', '12 Nov'],
+        ['achieng', 'Poa, nimetuma yangu pia. Who is the lawyer who helped with the clinic contracts?', '14 Nov, 18:02'],
+        ['me', 'Wanjiku Kamau. I will ask her for a group session before we sign the office lease.', '14 Nov, 18:20'],
+        ['halima', 'Nitatuma Ijumaa. Can we meet on Saturday to plan the next goal?', '16:10'],
+      ] },
       { id: 'c1', who: 'grace', title: 'Grace Njoroge', tag: 'Deal room', when: '15:40', unread: 1, m: [
         ['sys', 'Grace Njoroge accepted your request. This is your deal room chat.', '10 Nov'],
         ['grace', 'We reviewed ClinicBook. It is a strong fit for our health mandate.', '10 Nov, 16:04'],
@@ -1304,7 +1316,7 @@
       return `${warn}${head}<div class="bub ${mine ? 'me' : 'them'} ${risky ? 'risky' : ''}">${text}</div><div class="bmeta ${mine ? 'me' : ''}">${when}</div>`;
     }).join('');
     return top(`<button class="backlink" data-act="go" data-to="msgs" style="color:#fff;padding:14px 0 0;position:relative;z-index:1">← ${sw ? 'Ujumbe' : 'Messages'}</button>
-      <div class="person" style="margin-top:8px;align-items:center;position:relative;z-index:1">${av(c.who, 40)}<div><div class="pname" style="color:#fff">${c.title}</div>${c.tag ? `<div class="tsub" style="margin:0">${c.tag} · ClinicBook</div>` : ''}</div></div>`) +
+      <div class="person" style="margin-top:8px;align-items:center;position:relative;z-index:1">${av(c.who, 40)}<div><div class="pname" style="color:#fff">${c.title}</div>${c.sub ? `<div class="tsub" style="margin:0">${c.sub}</div>` : c.tag ? `<div class="tsub" style="margin:0">${c.tag} · ClinicBook</div>` : ''}</div></div>`) +
       `<div class="body" style="padding-top:8px">${lines}</div>
       <div class="composer"><input id="msgIn" placeholder="${sw ? 'Andika ujumbe' : 'Write a message'}" aria-label="${sw ? 'Andika ujumbe' : 'Write a message'}"><button data-act="sendmsg">${sw ? 'Tuma' : 'Send'}</button></div>`;
   }
@@ -1375,6 +1387,12 @@
         <p class="p" style="margin:0;color:var(--text)">${t().goal}</p>
       </div>
       <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div class="label">${S.lang === 'sw' ? 'Mazungumzo ya chama' : 'Chama chat'}</div><span class="tag fix">${S.lang === 'sw' ? 'Mpya 2' : '2 new'}</span></div>
+        <p class="p" style="margin:8px 0 4px;color:var(--text)"><b style="font-weight:500">Halima Abdi:</b> Nitatuma Ijumaa. Can we meet on Saturday to plan the next goal?</p>
+        <p class="p" style="font-size:.8em;margin:0 0 12px">${S.lang === 'sw' ? 'Wanachama wa chama pekee wanaweza kusoma na kuandika hapa.' : "Only the chama's members can read and write here."}</p>
+        <button class="btn primary" data-act="openconv" data-id="chama">${t().openChat}</button>
+      </div>
+      <div class="card">
         <div class="label" style="margin-bottom:4px">${t().thisMonth}</div>
         ${MEMBERS.map((m) => {
           const paid = m.you ? S.paidMe : m.paid;
@@ -1382,7 +1400,7 @@
         }).join('')}
         <div class="btns" style="margin-top:12px">
           ${S.paidMe ? `<div class="sent">${t().recorded}</div>` : `<button class="btn primary" data-act="pay">${t().record}</button>`}
-          <button class="btn soft" data-act="noop">${t().openChat}</button>
+          <button class="btn soft" data-act="openconv" data-id="chama">${t().openChat}</button>
         </div>
       </div>
       <div class="card"><div class="label">${S.lang === 'sw' ? 'Paybill au Till ya chama yenyewe' : "The chama's own Paybill or Till"}</div>
