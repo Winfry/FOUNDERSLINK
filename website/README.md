@@ -37,8 +37,8 @@ To host it, upload the folder as it is to any static host.
 
 | Link | Goes to |
 |---|---|
-| Get started, Join as a founder / investor / expert | `https://sparkling-meerkat-7c652f.netlify.app/auth/signup` |
-| Log in | `https://sparkling-meerkat-7c652f.netlify.app/auth/login` |
+| Get started, Join as a founder / investor / expert | `https://founderslink-demo.netlify.app/auth/signup` |
+| Log in | `https://founderslink-demo.netlify.app/auth/login` |
 | How it works, Trust, Features | Sections on this page |
 | Privacy, Terms | `#` for now: replace with the real pages before launch |
 
@@ -66,6 +66,6 @@ Replace any of them with FoundersLink's own photos (of people who agreed to be s
 
 ## Get started and Log in
 
-The buttons open the FoundersLink app, installed as a PWA on Netlify (`https://sparkling-meerkat-7c652f.netlify.app`). It is the demo: demo accounts and data, no server, so it works the same from a laptop, a phone, or this page opened as a file. Anyone can try it with the demo accounts listed on its Log in screen.
+The buttons open the FoundersLink app, installed as a PWA on Netlify (`https://founderslink-demo.netlify.app`). It is the demo: demo accounts and data, no server, so it works the same from a laptop, a phone, or this page opened as a file. Anyone can try it with the demo accounts listed on its Log in screen.
 
 To publish a new version of the app: `cd mobile`, `pnpm build:pwa`, then drag `mobile/dist` onto the project's Deploys page on Netlify. When FoundersLink has its own address, change the links in `index.html` to it.
