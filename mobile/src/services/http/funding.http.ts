@@ -3,6 +3,7 @@ import type { ApprovalStatus, FundingMatches, InvestorMatchCard, MatchBand, Matc
 import { get } from './client';
 import { syncSessionUser } from './session-sync';
 import { shortTicket } from '../../lib/ticket';
+import { photoUri } from '../../lib/photo-url';
 
 /** One card of `GET /funding/matches`. Only the fields used here. */
 interface ApiCard {
@@ -17,7 +18,7 @@ interface ApiCard {
   };
   anonymised: boolean;
   headline: string;
-  investor: { user_id: string; full_name: string; organisation_name: string | null } | null;
+  investor: { user_id: string; full_name: string; organisation_name: string | null; photo_url?: string | null } | null;
   band: MatchBand | null;
   explanation: string;
   reasons: MatchReason[];
@@ -56,6 +57,8 @@ function toCard(card: ApiCard): InvestorMatchCard {
     anonymised: card.anonymised,
     personUserId: card.investor?.user_id,
     ticket: shortTicket(card.funder.ticket_min_kes, card.funder.ticket_max_kes),
+    // Only there when the investor is named to her (a verified founder).
+    photoUrl: photoUri(card.investor?.photo_url),
   };
 }
 
@@ -111,6 +114,8 @@ export const httpFundingService: FundingService = {
       riskFactors: card.risk_factors,
       trackRecord,
       organisationName: card.investor?.organisation_name ?? null,
+      // Their photo, only when they are named to her.
+      photoUrl: card.investor?.photo_url ?? null,
       // Facts for the top of the page, from the track record she shared.
       dealsClosed: card.investor ? trackRecord.length : null,
       investingSince: years.length ? Math.min(...years) : null,

@@ -13,6 +13,7 @@ import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, spacing } from '../../../src/theme/tokens';
 import type { ApprovalStatus } from '../../../src/types';
 import { SkeletonCard } from '../../../src/components/ui/Skeleton';
+import { ProfilePhoto } from '../../../src/components/profile/ProfilePhoto';
 
 /** Her verification state in words, and what the card under it should offer. */
 function verification(status: ApprovalStatus | undefined): {
@@ -82,8 +83,10 @@ function InvestorProfileTab() {
       <PageTitle
         title={user?.fullName || 'Your profile'}
         subtitle={user?.email}
-        right={user?.fullName ? <Avatar name={user.fullName} size={56} /> : undefined}
+        right={user?.fullName ? <Avatar name={user.fullName} uri={user.avatarUrl} size={56} /> : undefined}
       />
+
+      <ProfilePhoto />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>What you fund</Text>

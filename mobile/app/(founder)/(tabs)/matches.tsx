@@ -235,7 +235,7 @@ function MatchCard({ item, segment, status, onPress }: { item: InvestorMatchCard
         style={({ pressed }) => [pressed && styles.dim]}
       >
         <View style={styles.person}>
-          <Avatar name={name} size={48} />
+          <Avatar name={name} uri={item.anonymised ? undefined : item.photoUrl} size={48} />
           <View style={styles.flexOne}>
             <Text style={styles.name} numberOfLines={1}>{name}</Text>
             {sub ? <Text style={styles.org} numberOfLines={2}>{sub}</Text> : null}

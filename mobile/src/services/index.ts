@@ -48,6 +48,8 @@ import { mockCopilotService } from './mocks/copilot.mock';
 import { httpComplianceService } from './http/compliance.http';
 import { httpNotificationService } from './http/notifications.http';
 import { httpReferenceDataService } from './http/reference.http';
+import { httpPhotoService, type PhotoService } from './http/photo.http';
+import { mockPhotoService } from './mocks/photo.mock';
 
 /**
  * Each service uses the backend when EXPO_PUBLIC_API_URL is set, and its
@@ -77,9 +79,11 @@ export const investorService: InvestorService = live('investor') ? httpInvestorS
 export const chatService = mockChatAdapter;
 export const expertService: ExpertService = live('expert') ? httpExpertService : mockExpertService;
 export const copilotService: CopilotService = live('copilot') ? httpCopilotService : mockCopilotService;
+export const photoService: PhotoService = live('photo') ? httpPhotoService : mockPhotoService;
 
 export * from './types/api';
 
 export type { DiscoverCard, DiscoverResult, FounderPublicProfile, InvestorService, InvestorSetup, JoinRequestRow } from './http/investor.http';
 export type { ExpertCard, ExpertFindResult, ExpertService, ExpertSession } from './http/expert.http';
+export type { PhotoService } from './http/photo.http';
 export type { CopilotActivity, CopilotAnswer, CopilotService, CopilotTask, TaskAction } from './http/copilot.http';

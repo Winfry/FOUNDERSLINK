@@ -37,7 +37,15 @@
           "imageWidth": 200
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FoundersLink uses your photos only when you choose a profile photo.",
+          "cameraPermission": "FoundersLink uses the camera only when you take a profile photo.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

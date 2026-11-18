@@ -11,7 +11,9 @@ import { connectionService, founderService, fundingService } from '../../../src/
 import { useAuthStore } from '../../../src/stores/authStore';
 import type { MatchBand } from '../../../src/types';
 import { fitVerdict, type FitGap } from '../../../src/lib/fit-verdict';
-import { colors, spacing } from '../../../src/theme/tokens';
+import { colors, radius, spacing } from '../../../src/theme/tokens';
+import { CoverPhoto, hasCover } from '../../../src/components/profile/CoverPhoto';
+import { photoUri } from '../../../src/lib/photo-url';
 
 type Reason = { signal?: string; fits: boolean; text: string };
 type TrackEntry = { label: string; source: string };
@@ -121,22 +123,37 @@ export default function InvestorMatchProfileScreen() {
     { value: typeof data.investingSince === 'number' ? String(data.investingSince) : '', label: 'Investing since' },
   ].filter((f) => f.value);
   const business = profileQ.data?.businessName || 'your business';
+  // Their photo fills the top of the page, behind their name. A face goes
+  // with a name: while their name is hidden, so is their photo.
+  const photo = anonymised ? undefined : photoUri(typeof data.photoUrl === 'string' ? data.photoUrl : null);
+  const cover = !anonymised && hasCover(name, photo);
+  const fit = <Fit label={verifiedInvestor ? `${fitLabel} · Verified` : fitLabel} filled={bandBars[band]} fix={fixFirst} />;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.hero}>
-        <View style={styles.flexOne}>
-          {role ? <Text style={styles.role}>{role}</Text> : null}
-          <Text style={styles.name} accessibilityRole="header">
-            {name}
-          </Text>
-          {anonymised ? <Text style={styles.sub}>Their name shows once you are verified.</Text> : null}
-          <View style={styles.fitGap}>
-            <Fit label={verifiedInvestor ? `${fitLabel} · Verified` : fitLabel} filled={bandBars[band]} fix={fixFirst} />
-          </View>
+      {cover ? (
+        <View style={styles.coverBleed}>
+          <CoverPhoto name={name} uri={photo}>
+            {role ? <Text style={styles.coverRole}>{role}</Text> : null}
+            <Text style={styles.coverName} accessibilityRole="header">
+              {name}
+            </Text>
+            <View style={styles.coverFit}>{fit}</View>
+          </CoverPhoto>
         </View>
-        <Avatar name={name} size={72} />
-      </View>
+      ) : (
+        <View style={styles.hero}>
+          <View style={styles.flexOne}>
+            {role ? <Text style={styles.role}>{role}</Text> : null}
+            <Text style={styles.name} accessibilityRole="header">
+              {name}
+            </Text>
+            {anonymised ? <Text style={styles.sub}>Their name and photo show once you are verified.</Text> : null}
+            <View style={styles.fitGap}>{fit}</View>
+          </View>
+          <Avatar name={name} size={72} />
+        </View>
+      )}
 
       {facts.length > 0 ? (
         <View style={styles.facts}>
@@ -285,6 +302,12 @@ const styles = StyleSheet.create({
   name: { fontSize: 30, fontWeight: '300', color: colors.primaryDark, marginTop: 4, letterSpacing: -0.6 },
   sub: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   fitGap: { marginTop: spacing[1] },
+
+  // The cover runs edge to edge, out of the page's own padding.
+  coverBleed: { marginHorizontal: -spacing[2], marginTop: -spacing[2], marginBottom: spacing[0.5] },
+  coverRole: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  coverName: { fontSize: 34, fontWeight: '300', color: colors.white, marginTop: 2, letterSpacing: -0.8 },
+  coverFit: { alignSelf: 'flex-start', marginTop: spacing[1], backgroundColor: colors.white, borderRadius: radius.full, paddingHorizontal: 12, paddingVertical: 6 },
 
   facts: { flexDirection: 'row', marginTop: spacing[2], paddingVertical: spacing[1.5], borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
   factCell: { flex: 1, paddingHorizontal: spacing[1] },

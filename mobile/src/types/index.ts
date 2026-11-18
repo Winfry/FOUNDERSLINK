@@ -122,6 +122,8 @@ export interface InvestorMatchCard {
   personUserId?: string;
   /** What they invest, short ("KES 1–5M"). */
   ticket?: string;
+  /** Their photo, when they added one and are named to her. */
+  photoUrl?: string;
 }
 
 export interface FundingMatches {

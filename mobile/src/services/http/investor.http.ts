@@ -1,6 +1,7 @@
 import type { MatchBand } from '../../types';
 import { del, get, post, put } from './client';
 import { syncSessionUser } from './session-sync';
+import { photoUri } from '../../lib/photo-url';
 
 /** A founder as an investor sees her in Discover. */
 export interface DiscoverCard {
@@ -11,6 +12,8 @@ export interface DiscoverCard {
   headline: string;
   businessName: string | null;
   founderName: string | null;
+  /** Her photo, only when she is named. */
+  photoUrl?: string;
   sector: string;
   stage: string | null;
   county: string;
@@ -50,6 +53,8 @@ export interface InvestorSetup {
 export interface FounderPublicProfile {
   id: string;
   founderName: string;
+  /** Her photo: it fills the top of her page. */
+  photoUrl?: string;
   businessName: string | null;
   sector: string | null;
   stage: string | null;
@@ -90,6 +95,7 @@ interface ApiFounder {
   headline?: string;
   user_id?: string;
   full_name?: string;
+  photo_url?: string | null;
   business_name?: string | null;
   sector: string;
   stage: string | null;
@@ -187,6 +193,7 @@ export const httpInvestorService: InvestorService = {
         headline: f.headline ?? `${words(f.sector)} startup, ${f.county}`,
         businessName: f.business_name ?? null,
         founderName: f.full_name ?? null,
+        photoUrl: f.anonymised ? undefined : photoUri(f.photo_url),
         sector: f.sector,
         stage: f.stage,
         county: f.county,
@@ -203,6 +210,7 @@ export const httpInvestorService: InvestorService = {
     const p = await get<{
       id: string;
       full_name: string;
+      photo_url?: string | null;
       connection: { id: string | null; status: string };
       founder: {
         business_name: string | null;
@@ -220,6 +228,7 @@ export const httpInvestorService: InvestorService = {
     return {
       id: p.id,
       founderName: p.full_name,
+      photoUrl: photoUri(p.photo_url),
       businessName: p.founder?.business_name ?? null,
       sector: p.founder?.sector ?? null,
       stage: p.founder?.stage ?? null,

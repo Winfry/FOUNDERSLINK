@@ -9,6 +9,7 @@ import { ScreenError, ScreenLoading } from '../../../src/components/layout/Scree
 import { kes, words } from '../../../src/components/matches/parts';
 import { investorService, referenceDataService } from '../../../src/services';
 import { colors, spacing, touchTargetMin } from '../../../src/theme/tokens';
+import { CoverPhoto, hasCover } from '../../../src/components/profile/CoverPhoto';
 
 export default function FounderProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -59,13 +60,23 @@ export default function FounderProfileScreen() {
     <View style={styles.screen}>
       <Header title="Founder" onBack={back} />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.top}>
-          <Avatar name={p.founderName} size={64} />
-          <View style={styles.flex}>
-            <Text style={styles.heading}>{p.businessName ?? p.founderName}</Text>
-            {p.businessName ? <Text style={styles.person}>Founded by {p.founderName}</Text> : null}
+        {/* Her photo fills the top of her page, with her business over it. */}
+        {hasCover(p.founderName, p.photoUrl) ? (
+          <View style={styles.coverBleed}>
+            <CoverPhoto name={p.founderName} uri={p.photoUrl}>
+              <Text style={styles.coverName}>{p.businessName ?? p.founderName}</Text>
+              {p.businessName ? <Text style={styles.coverPerson}>Founded by {p.founderName}</Text> : null}
+            </CoverPhoto>
           </View>
-        </View>
+        ) : (
+          <View style={styles.top}>
+            <Avatar name={p.founderName} size={64} />
+            <View style={styles.flex}>
+              <Text style={styles.heading}>{p.businessName ?? p.founderName}</Text>
+              {p.businessName ? <Text style={styles.person}>Founded by {p.founderName}</Text> : null}
+            </View>
+          </View>
+        )}
 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>Looking for</Text>
@@ -162,6 +173,9 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
   heading: { fontSize: 28, color: colors.primaryDark },
   person: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
+  coverBleed: { marginHorizontal: -spacing[2], marginTop: -spacing[2] },
+  coverName: { fontSize: 32, fontWeight: '300', color: colors.white, letterSpacing: -0.8 },
+  coverPerson: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
 
   hero: { marginTop: spacing[2], padding: 20, borderRadius: 18, backgroundColor: colors.primaryDark, gap: 4 },
   heroLabel: { fontSize: 12, color: colors.onDarkDim },

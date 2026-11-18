@@ -2,6 +2,10 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // The app's bundler turns an image into a number it can draw; here any
+  // image a module requires is a placeholder, so code that shows photos
+  // (the demo's portraits) can be tested.
+  plugins: [{ name: "images", enforce: "pre", load: (id: string) => (/\.(jpe?g|png)$/i.test(id) ? "export default 1;" : undefined) }],
   // React Native's bundler normally provides this global; expo modules read it.
   define: { __DEV__: "false" },
   resolve: {

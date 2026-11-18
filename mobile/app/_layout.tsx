@@ -35,7 +35,7 @@ function SessionGuard() {
     }
 
     // Each role has its own workspace. Two of them share an address
-    // ("/profile", "/notifications"), and a notification or a shared
+    // ("/notifications"), and a notification or a shared
     // screen can point at another role's, so anyone who lands on the
     // wrong side is sent to her own home. Verification is shared.
     const verify = area === 'founder' && segments[1] === 'verify';

@@ -38,7 +38,8 @@ export const WORKSPACES: Record<'founder' | 'investor' | 'expert', Workspace> = 
     name: 'Founder workspace',
     home: '/home',
     notifications: '/(founder)/(tabs)/notifications',
-    profile: '/(founder)/(tabs)/profile',
+    // Its own address: "/profile" is the investor's (see app/_layout.tsx).
+    profile: '/(founder)/(tabs)/founder-profile',
     items: [
       { label: 'Overview', href: '/home' },
       { label: 'Investors', href: '/matches', also: ['/founder/investor-match'], count: 'investors' },

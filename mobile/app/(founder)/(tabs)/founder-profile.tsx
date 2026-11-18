@@ -7,6 +7,7 @@ import { Text } from '../../../src/components/ui/Text';
 import { Avatar, Badge, Button, Card, ConfirmModal } from '../../../src/components/ui';
 import { PageTitle } from '../../../src/components/layout/PageTitle';
 import { MenuGroup, MenuRow } from '../../../src/components/profile/MenuRow';
+import { ProfilePhoto } from '../../../src/components/profile/ProfilePhoto';
 import { founderService } from '../../../src/services';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, radius, spacing } from '../../../src/theme/tokens';
@@ -94,6 +95,8 @@ function FounderProfileTab() {
           <Badge label={v.label} variant={v.variant} />
         </View>
       </Card>
+
+      <ProfilePhoto />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your business</Text>

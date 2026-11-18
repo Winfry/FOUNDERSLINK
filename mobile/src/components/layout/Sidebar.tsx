@@ -100,7 +100,7 @@ export function Sidebar({ fill = false }: { fill?: boolean } = {}) {
           onPress={() => go(ws.profile)}
           style={({ hovered }: HoverState) => [styles.me, hovered && styles.meHover]}
         >
-          <Avatar name={user.fullName} size={36} ring={false} />
+          <Avatar name={user.fullName} uri={user.avatarUrl} size={36} ring={false} />
           <View style={styles.flex}>
             <Text style={styles.meName} numberOfLines={1}>{user.fullName}</Text>
             <Text style={styles.meStatus} numberOfLines={1}>{STATUS[user.approvalStatus] ?? ''}</Text>

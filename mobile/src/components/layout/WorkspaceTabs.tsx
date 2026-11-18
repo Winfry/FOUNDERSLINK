@@ -47,6 +47,7 @@ function TopBar({ role }: { role: Role }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const name = useAuthStore((s) => s.user?.fullName ?? '');
+  const photo = useAuthStore((s) => s.user?.avatarUrl);
   const counts = useWorkspaceCounts(role);
   const notices = useQuery({ queryKey: ['notifications-badge'], queryFn: () => notificationService.list(), refetchInterval: 10000 });
   const unread = notices.data?.unreadCount ?? 0;
@@ -63,7 +64,7 @@ function TopBar({ role }: { role: Role }) {
         {unread > 0 ? <Pill label="New" count={String(unread)} onPress={() => router.navigate(ws.notifications as never)} /> : null}
         <Pill label="Messages" count={counts.messages} onPress={() => router.navigate('/conversations' as never)} />
         <Pressable onPress={() => router.navigate(ws.profile as never)} accessibilityRole="link" accessibilityLabel="Your profile">
-          <Avatar name={name || 'Me'} size={32} />
+          <Avatar name={name || 'Me'} uri={photo} size={32} />
         </Pressable>
       </View>
     </View>
@@ -119,7 +120,10 @@ export function WorkspaceTabs({ role, screens }: { role: Role; screens: TabScree
           name={s.name}
           options={{
             title: s.title,
-            ...(s.hidden ? { href: null } : {}),
+            // A page reached from "More" or the side menu, with no tab of its
+            // own: only its button is hidden. (Since SDK 58, `href: null` hides
+            // the page too and sends anyone who opens it back to the first tab.)
+            ...(s.hidden ? { tabBarButton: () => null, tabBarItemStyle: { display: 'none' as const } } : {}),
             tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} color={String(color)} icon={s.icon} />,
           }}
         />

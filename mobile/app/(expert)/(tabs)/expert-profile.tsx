@@ -8,6 +8,7 @@ import { Text } from '../../../src/components/ui/Text';
 import { Panel, Row, Tag } from '../../../src/components/overview/parts';
 import { useAuthStore } from '../../../src/stores/authStore';
 import { colors, spacing } from '../../../src/theme/tokens';
+import { ProfilePhoto } from '../../../src/components/profile/ProfilePhoto';
 
 /**
  * The expert's own page: where she stands with FoundersLink, what it
@@ -25,7 +26,7 @@ export default function ExpertProfile() {
   return (
     <ScrollView contentContainerStyle={styles.page}>
       <View style={styles.me}>
-        <Avatar name={user?.fullName ?? 'Expert'} size={72} />
+        <Avatar name={user?.fullName ?? 'Expert'} uri={user?.avatarUrl} size={72} />
         <View style={styles.flex}>
           <Text style={styles.name}>{user?.fullName}</Text>
           <Text style={styles.email}>{user?.email}</Text>
@@ -34,6 +35,8 @@ export default function ExpertProfile() {
           </View>
         </View>
       </View>
+
+      <ProfilePhoto />
 
       <Panel title="Your verification" sub={status.line}>
         {profession ? (

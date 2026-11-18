@@ -18,7 +18,7 @@ export default function FounderTabsLayout() {
         { name: 'copilot', title: 'Co-pilot', hidden: true },
         { name: 'chamas', title: 'Chamas', hidden: true },
         { name: 'connections', title: 'Network', hidden: true },
-        { name: 'profile', title: 'Profile', hidden: true },
+        { name: 'founder-profile', title: 'Profile', hidden: true },
         { name: 'notifications', title: 'Notifications', hidden: true },
       ]}
     />

@@ -199,7 +199,7 @@ function FounderCard({
   const body = (
     <>
       <View style={styles.person}>
-        <Avatar name={who ?? title} size={52} />
+        <Avatar name={who ?? title} uri={item.photoUrl} size={52} />
         <View style={styles.flexOne}>
           <Text style={styles.name}>{title}</Text>
           {who ? <Text style={styles.org}>{who}</Text> : null}

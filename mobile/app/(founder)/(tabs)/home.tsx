@@ -162,7 +162,7 @@ export default function FounderHome() {
       ) : (
         ready.slice(0, wide ? 3 : 2).map((m, i) => (
           <Pressable key={m.investorUserId} onPress={() => openInvestor(m)} style={[styles.person, i > 0 && styles.personLine]} accessibilityRole="link">
-            <Avatar name={nameOf(m)} size={48} />
+            <Avatar name={nameOf(m)} uri={m.photoUrl} size={48} />
             <View style={styles.flex}>
               <Text style={styles.personName}>{nameOf(m)}</Text>
               <Text style={styles.sub}>{orgOf(m)}</Text>

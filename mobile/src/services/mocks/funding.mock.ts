@@ -29,6 +29,8 @@ export const mockFundingService: FundingService = {
       investorUserId,
       connectUserId: card.personUserId ?? null,
       displayName: card.displayName,
+      // The demo's faces come from its portraits (src/lib/portraits.ts), by name.
+      photoUrl: card.photoUrl ?? null,
       organisationName: card.organisationName ?? null,
       title: facts?.title ?? null,
       anonymised: card.anonymised,

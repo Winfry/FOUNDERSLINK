@@ -1,3 +1,4 @@
+import { photoUri } from '../../lib/photo-url';
 import type { AuthService } from '../types/api';
 import type { AuthTokens, SessionUser } from '../../types';
 import { get, post, setToken } from './client';
@@ -16,6 +17,8 @@ interface Me {
   founder_profile: object | null;
   investor_profile: object | null;
   expert_profile: { profession?: string; licence_expires_at?: string | null; rate_card?: SessionUser['expertRateCard'] } | null;
+  /** Her photo's address, relative to the API, or null. */
+  photo_url?: string | null;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -50,6 +53,8 @@ export async function fetchSessionUser(): Promise<SessionUser> {
     expertProfession: me.expert_profile?.profession ?? null,
     expertLicenceExpiresAt: me.expert_profile?.licence_expires_at ?? null,
     expertRateCard: me.expert_profile?.rate_card ?? [],
+    // Her own photo, if she added one.
+    avatarUrl: photoUri(me.photo_url),
   };
 }
 
