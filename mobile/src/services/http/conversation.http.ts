@@ -20,6 +20,7 @@ interface ApiConversation {
   unread_count: number;
   last_message: ApiMessage | null;
   last_activity: string;
+  circle_id?: string | null;
 }
 
 function toMessage(m: ApiMessage): ChatMessage {
@@ -52,6 +53,7 @@ export const httpConversationService: ConversationService = {
       unreadCount: c.unread_count,
       lastMessagePreview: c.last_message?.body,
       updatedAt: c.last_activity,
+      circleId: c.circle_id ?? undefined,
     }));
   },
 

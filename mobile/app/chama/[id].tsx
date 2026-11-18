@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../../src/components/ui/Text';
@@ -7,7 +7,7 @@ import { Avatar, Button, Card, Input, useToast } from '../../src/components/ui';
 import { Tag, kes } from '../../src/components/overview/parts';
 import { ScreenError, ScreenLoading } from '../../src/components/layout/ScreenStates';
 import { ROLE_LABEL, TYPE_LABEL, ksh, shortDate } from '../../src/components/chama/parts';
-import { circleService } from '../../src/services';
+import { circleService, conversationService } from '../../src/services';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors, radius, spacing } from '../../src/theme/tokens';
 import type { ApiError } from '../../src/types';
@@ -18,6 +18,10 @@ export default function ChamaDetailScreen() {
   const toast = useToast();
   const myId = useAuthStore((s) => s.user?.id);
   const q = useQuery({ queryKey: ['chama', id], queryFn: () => circleService.get(String(id)) });
+  // The chama's group chat: every member is in it, and nobody else.
+  const router = useRouter();
+  const chatsQ = useQuery({ queryKey: ['conversations'], queryFn: () => conversationService.list() });
+  const chat = chatsQ.data?.find((x) => x.type === 'circle' && x.circleId === String(id));
 
   const [recording, setRecording] = useState(false);
   const [memberUserId, setMemberUserId] = useState('');
@@ -119,6 +123,27 @@ export default function ChamaDetailScreen() {
           </>
         ) : null}
       </Card>
+
+      {chat ? (
+        <Card style={styles.card}>
+          <View style={styles.chatHead}>
+            <Text style={styles.label}>Chama chat</Text>
+            {chat.unreadCount > 0 ? <Tag label={`${chat.unreadCount} new`} tone="new" /> : null}
+          </View>
+          {chat.lastMessagePreview ? (
+            <Text style={styles.body} numberOfLines={2}>
+              {chat.lastMessagePreview}
+            </Text>
+          ) : null}
+          <Text style={styles.small}>Only the chama's members can read and write here.</Text>
+          <Button
+            title="Open the chama chat"
+            variant={chat.unreadCount > 0 ? 'primary' : 'soft'}
+            onPress={() => router.push(`/conversations/${chat.id}` as never)}
+            style={styles.topGap}
+          />
+        </Card>
+      ) : null}
 
       {isMoney ? (
         <Card style={styles.card}>
@@ -301,6 +326,7 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: colors.background },
   content: { padding: spacing[2], paddingBottom: spacing[6], gap: spacing[1.5] },
   flex: { flex: 1, minWidth: 0 },
+  chatHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   card: { gap: 6 },
   name: { fontSize: 20, fontWeight: '500', color: colors.primaryDark },
   small: { fontSize: 13, color: colors.textMuted },

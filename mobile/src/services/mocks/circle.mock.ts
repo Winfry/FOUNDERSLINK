@@ -1,6 +1,9 @@
 import type { CircleService } from '../types/api';
 import type { CircleDetail } from '../../types';
 import { mockDelay } from './delay';
+import { openChamaChat } from './conversation.mock';
+import { getMemberById } from './mock-store';
+import { getMockSessionUserId } from './mock-session';
 
 const DISCLAIMER = 'FoundersLink records contributions. It never holds or moves your money.';
 
@@ -65,6 +68,8 @@ export const mockCircleService: CircleService = {
 
   async create(payload) {
     await mockDelay();
+    const uid = getMockSessionUserId();
+    const me = uid ? getMemberById(uid) : null;
     const c = {
       id: `circle-${Date.now()}`,
       name: payload.name,
@@ -73,13 +78,16 @@ export const mockCircleService: CircleService = {
       memberCount: 1,
       paybillNumber: null,
       unreadChatCount: 0,
-      members: [{ userId: 'u-amina', name: 'Amina Wanjiru', role: 'organiser' as const, joinedAt: new Date().toISOString() }],
+      // The person who starts it is its organiser.
+      members: [{ userId: me?.user.id ?? 'u-amina', name: me?.user.fullName ?? 'Amina Wanjiru', role: 'organiser' as const, joinedAt: new Date().toISOString() }],
       contributions: [],
       owes: [],
       goals: [],
       moneyDisclaimer: payload.type === 'money' ? DISCLAIMER : '',
     };
     circles.push(c);
+    // As on the backend, the chama gets its group chat when it is created.
+    openChamaChat(c.id, c.name, c.members[0]!.name);
     return c;
   },
 };

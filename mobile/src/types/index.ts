@@ -173,6 +173,8 @@ export interface ConversationSummary {
   unreadCount: number;
   lastMessagePreview?: string;
   updatedAt: string;
+  /** For a chama's group chat: the chama it belongs to. */
+  circleId?: string;
 }
 
 export interface ChatMessage {
