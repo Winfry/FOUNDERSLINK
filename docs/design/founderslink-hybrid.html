@@ -236,6 +236,12 @@
   .banks { margin-top: 12px; }
   .banks .bank { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: .9em; color: var(--text); text-decoration: none; }
   .banks .bank span { color: var(--purple); font-weight: 500; font-size: .9em; }
+  .termscard { background: var(--deep); color: #fff; border-color: transparent; }
+  .termscard .label { color: rgba(255,255,255,.65); }
+  .termscard .amt { font-size: 2em; font-weight: 300; letter-spacing: -0.02em; margin: 6px 0 10px; }
+  .termscard .kv { display: flex; gap: 22px; font-size: .86em; }
+  .termscard .kv span { display: block; color: rgba(255,255,255,.6); font-size: .82em; }
+  .termscard .fine { border-top: 1px solid rgba(255,255,255,.18); margin-top: 12px; padding-top: 10px; font-size: .8em; color: rgba(255,255,255,.8); }
   .moneyrule { background: var(--lav); border-radius: 14px; padding: 12px 14px; font-size: .86em; color: var(--text); margin-top: 12px; }
   .moneyrule b { display: block; font-weight: 500; color: var(--purple); margin-bottom: 2px; }
 
@@ -921,6 +927,25 @@
       <p class="p" style="font-size:.78em;margin:8px 0 0">${sw ? 'Zimepangwa kwa alfabeti. FoundersLink haishirikiani na wala haipendekezi benki yoyote.' : 'Listed alphabetically. FoundersLink does not partner with or recommend any bank.'}</p>
     </div>`;
   }
+  // The money in the deal: the terms in writing, and who has confirmed them.
+  // Terms are agreed only when every party confirms, so one tap leaves Amina
+  // waiting for Grace.
+  function termsCard(sw) {
+    return `<div class="card termscard"><div class="label">${sw ? 'Masharti · yameripotiwa na wahusika, si hati ya kisheria' : 'Terms · self-reported by the parties, not a legal document'}</div>
+      <div class="amt">KSh 1,000,000</div>
+      <div class="kv"><div><span>${sw ? 'Aina' : 'Instrument'}</span>${sw ? 'Hisa' : 'Equity'}</div><div><span>${sw ? 'Hisa' : 'Equity'}</span>${sw ? '12% ya kampuni' : '12% of the company'}</div><div><span>${sw ? 'Pia' : 'Also'}</span>${sw ? 'Kiti cha mwangalizi bodini' : 'Board observer seat'}</div></div>
+      <div class="fine">${sw ? 'Pesa huhama kati ya wahusika kupitia benki zao, kamwe si kupitia FoundersLink.' : 'The money moves between the parties through their banks, never through FoundersLink.'}</div></div>`;
+  }
+  function confirmCard(sw, me, other) {
+    const mine = S.termsConfirmed;
+    const row = (id, ok, you) => `<div class="member">${av(id, 36)}<span class="n">${FULL[id]}${you ? ` <span class="porg">${sw ? '(wewe)' : '(you)'}</span>` : ''}</span><span class="tag ${ok ? 'paid' : 'fix'}">${ok ? (sw ? 'Amethibitisha' : 'Confirmed') : (sw ? 'Anasubiriwa' : 'Waiting')}</span></div>`;
+    return `<div class="card"><div class="label" style="margin-bottom:4px">${sw ? 'Nani amethibitisha masharti' : 'Who has confirmed the terms'}</div>
+      ${row(me, mine, true)}${row(other, false, false)}
+      ${mine ? `<div class="moneyrule"><b>${sw ? 'Inasubiri' : 'Waiting'}</b>${sw ? `Umethibitisha masharti. Tunamsubiri ${FULL[other]} athibitishe.` : `You have confirmed the terms. Waiting for ${FULL[other]} to confirm.`}</div>`
+        : `<button class="btn primary" style="margin-top:12px" data-act="confirmterms">${sw ? 'Thibitisha masharti' : 'Confirm terms'}</button>
+           <p class="p" style="font-size:.78em;margin:8px 0 0">${sw ? 'Masharti yanakubaliwa tu kila upande ukithibitisha. Hakuna anayeweza kukubali peke yake.' : 'Terms are agreed only when every party confirms. Nobody can agree alone.'}</p>`}
+    </div>`;
+  }
   const moneyRule = (sw, en, swText) => `<div class="moneyrule"><b>${sw ? 'Pesa' : 'The money'}</b>${sw ? swText : en}</div>`;
 
   const QUESTIONS = [
@@ -1026,6 +1051,9 @@
       ['Six steps, one bar', 'Purple for done, gold for where it is now.'],
       ['Each step in words', 'Done, Now, Next.'],
       ['The money, bank to bank', 'Investor to founder through their banks. Due diligence asks for 6 months of bank statements.'],
+      ['The terms, in writing', 'KSh 1,000,000, equity, 12% of the company, a board observer seat. Self-reported by the parties, not a legal document.'],
+      ['Both must confirm', 'Tap "Confirm terms": Amina is Confirmed, Grace is Waiting. Terms are agreed only when every party confirms, and closing works the same way.'],
+      ['Each step says what happens to the money', 'From the amount being set, to bank-to-bank payment at closing, to the investor’s My investments.'],
     ] },
     more: { title: 'More: the whole side menu, on a phone', sub: 'The same list as the side menu on a computer, with its counts.', items: [
       ['Every place, named', 'The same items and counts as the side menu, in the same order.'],
@@ -1662,7 +1690,10 @@
   // Founder: her deal rooms, a tab of their own.
   function deals() {
     const sw = S.lang === 'sw';
-    const steps = sw ? ['Ombi', 'Uchunguzi wa kina', 'Masharti', 'Hati', 'Kutia sahihi', 'Imefungwa'] : ['Interest', 'Due diligence', 'Terms', 'Documents', 'Signing', 'Closed'];
+    const steps = sw ? ['Kuchunguza', 'Uchunguzi wa kina', 'Masharti yamekubaliwa', 'Hati na sheria', 'Imefungwa', 'Inaendelea'] : ['Exploring', 'Due diligence', 'Terms agreed', 'Documents & compliance', 'Closed', 'Active'];
+    const money = sw
+      ? ['Kiasi na hisa vimewekwa: KSh 1,000,000', 'Kila upande unashiriki hati zake', 'Pande zote mbili lazima zithibitishe', 'Makaratasi yanakamilishwa', 'Wote wanathibitisha; pesa huhama benki kwa benki', 'Inaonekana kwenye uwekezaji wa mwekezaji']
+      : ['Amount and equity set: KSh 1,000,000', 'Each side shares its papers', 'Both sides must confirm', 'The paperwork is finished', 'Everyone confirms; money moves bank to bank', "Shows in the investor's My investments"];
     const word = (i) => (i === 0 ? (sw ? 'Imekamilika' : 'Done') : i === 1 ? (sw ? 'Sasa' : 'Now') : (sw ? 'Bado' : 'Next'));
     const tone = (i) => (i === 0 ? 'paid"' : i === 1 ? 'new" style="background:var(--gold);color:var(--deep)"' : 'not"');
     return top(`<h1 class="title">${sw ? 'Vyumba vya mikataba' : 'Deal rooms'}</h1><div class="tsub">${sw ? 'Kila mkataba, hatua kwa hatua.' : 'Every deal, step by step.'}</div>`) + `<div class="body">
@@ -1672,11 +1703,13 @@
         <div class="person">${av('grace', 40)}<div style="flex:1"><div class="pname">${FULL.grace}</div><div class="porg">${steps[1]}</div></div></div>
         <button class="btn primary" style="margin-top:12px" data-act="noop">${sw ? 'Fungua chumba' : 'Open the deal room'}</button>
         ${moneyRule(sw, 'The money moves between you and the investor through your banks. FoundersLink records the deal and never holds the money.', 'Pesa huhama kati yako na mwekezaji kupitia benki zenu. FoundersLink hurekodi mkataba na haishikilii pesa kamwe.')}</div>
+      ${termsCard(sw)}
+      ${confirmCard(sw, 'amina', 'grace')}
       <div class="card"><div class="label">${sw ? 'Uchunguzi wa kina unaomba' : 'Due diligence asks for'}</div>
         <div class="member"><span class="n">KRA PIN certificate</span><span class="tag paid">${sw ? 'Imetumwa' : 'Shared'}</span></div>
         <div class="member"><span class="n">${sw ? 'Taarifa za benki za miezi 6' : '6 months of bank statements'}</span><span class="tag not">${sw ? 'Bado' : 'Not yet'}</span></div></div>
-      <div class="card"><p class="h" style="margin:0 0 4px">${sw ? 'Hatua sita' : 'Six steps'}</p>
-        ${steps.map((x, i) => `<div class="member"><span class="n">${x}</span><span class="tag ${tone(i)}>${word(i)}</span></div>`).join('')}</div>
+      <div class="card"><p class="h" style="margin:0 0 4px">${sw ? 'Hatua sita, na pesa' : 'Six steps, and the money'}</p>
+        ${steps.map((x, i) => `<div class="member"><span class="n">${x}<div class="porg" style="font-weight:400">${money[i]}</div></span><span class="tag ${tone(i)}>${word(i)}</span></div>`).join('')}</div>
       ${needsCard('founder')}
     </div>`;
   }
@@ -1983,6 +2016,7 @@
         render(); break;
       }
       case 'connect': S.requested.add(b.dataset.id); render(); break;
+      case 'confirmterms': S.termsConfirmed = true; render(); renderWeb(); break;
       case 'photo': {
         const sw = S.lang === 'sw';
         if (b.dataset.do === 'remove') { removedPhotos.add(b.dataset.id); toast(sw ? 'Picha imeondolewa. Herufi zako zinaonyeshwa.' : 'Your photo is removed. Your initials are shown instead.'); renderWeb(); break; }
@@ -2199,7 +2233,8 @@
           <div class="card"><div class="label">${dealSide === 'founder' ? 'Due diligence asks you for' : 'What Amina has shared'}</div>
             <div class="member"><span class="n">KRA PIN certificate</span><span class="tag paid">Shared</span></div>
             <div class="member"><span class="n">6 months of bank statements</span><span class="tag not">Not yet</span></div></div>
-        </div><div>${needsCard(dealSide)}</div></div>`
+          ${termsCard(false)}
+        </div><div>${confirmCard(false, dealSide === 'founder' ? 'amina' : 'grace', dealSide === 'founder' ? 'grace' : 'amina')}${needsCard(dealSide)}</div></div>`
       : W.page === 'eprofile' ? `<div class="wband"><h3>Wanjiku Kamau</h3><div class="wsub">Advocate of the High Court · LSK registered</div></div>
         <div class="wcols"><div>
           <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><p class="h" style="margin:0">Your verification</p><span class="tag paid">Verified</span></div>
@@ -2232,6 +2267,7 @@
       <main class="wmain">${main}</main>`;
   }
   document.getElementById('webApp').addEventListener('click', (e) => {
+    if (e.target.closest('[data-act="confirmterms"]')) { S.termsConfirmed = true; render(); renderWeb(); return; }
     const go = e.target.closest('[data-wgo]');
     const tab = e.target.closest('[data-wtab]');
     const act = e.target.closest('[data-wact]');
