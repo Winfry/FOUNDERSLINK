@@ -47,3 +47,19 @@ To host it, upload the folder as it is to any static host.
 - No statistics, member counts, money totals, testimonials or partner logos until they are real.
 - No bank names: money moves "through your own bank".
 - The examples in "What you get" are illustrations and say so on the page.
+
+## Photos
+
+In `assets/photos/`, shrunk to 1600 px wide with the camera data removed. All are free to use, including commercially, under their site's licence (no credit required; the footer credits the photographers anyway). The people in them are not FoundersLink members.
+
+| File | What | Source |
+|---|---|---|
+| founder-market.jpg | A woman at her stall, Nairobi | Pexels, Charles Lichinga: https://www.pexels.com/photo/african-woman-working-in-nairobi-market-stall-33569520/ |
+| founder-farm.jpg | A farmer with his cow, Homa Bay | Pexels, Japhet Kweba: https://www.pexels.com/photo/man-with-cow-in-kenyan-farm-field-33567124/ |
+| investor-meeting.jpg | Two professionals in a meeting | Pexels, Thirdman: https://www.pexels.com/photo/men-with-laptop-discussing-with-each-other-7993903/ |
+| expert-lawyer.jpg | An advocate at his desk | Pexels, Ekaterina Bolovtsova: https://www.pexels.com/photo/a-man-in-a-suit-writing-on-a-notebook-in-his-office-6077964/ |
+| scene-market.jpg | A roadside fruit stall, Nairobi | Pexels, Marie Frank: https://www.pexels.com/photo/vibrant-street-market-in-nairobi-kenya-33730494/ |
+| scene-skyline.jpg | Nairobi from above (cropped to leave out a branded tower) | Pexels, Ken Mwaura: https://www.pexels.com/photo/skyline-view-of-nairobi-cityscape-at-daytime-29069344/ |
+| hero-handshake.jpg | A handshake, Nairobi | Unsplash, Cytonn Photography: https://unsplash.com/photos/two-people-shaking-hands-n95VMLxqM2I |
+
+Replace any of them with FoundersLink's own photos (of people who agreed to be shown) by keeping the same file name.

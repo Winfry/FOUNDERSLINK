@@ -346,6 +346,45 @@
   .mark { width: 64px; height: 54px; background: #fff; border-radius: 16px; padding: 8px; margin-bottom: 18px; }
   .mark img { width: 100%; height: 100%; object-fit: contain; }
 
+  /* ---------- Real people: who it's for, and Kenya at work ---------- */
+  .people { padding: 72px 0 24px; }
+  .people-grid { display: grid; gap: 18px; }
+  .pcard { position: relative; display: block; border-radius: 24px; overflow: hidden; min-height: 380px; color: #fff; text-decoration: none; background: var(--deep); box-shadow: var(--shadow); isolation: isolate; transition: transform .35s var(--ease), box-shadow .35s; }
+  .pcard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); z-index: -2; }
+  .pcard::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(40,24,78,0) 35%, rgba(40,24,78,.55) 62%, rgba(40,24,78,.94) 100%); }
+  .pcard .in-card { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 22px 24px; }
+  .pcard .who { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 99px; padding: 5px 12px; backdrop-filter: blur(6px); }
+  .pcard .who i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+  .pcard h3 { margin: 12px 0 6px; font-size: 24px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; }
+  .pcard p { margin: 0; color: rgba(255,255,255,.82); font-size: 15px; }
+  .pcard .go { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 500; color: var(--gold); }
+  .pcard .go .arrow { transition: transform .25s var(--ease); }
+  .pcard:hover, .pcard:focus-visible { transform: translateY(-6px); box-shadow: var(--lift); }
+  .pcard:hover img, .pcard:focus-visible img { transform: scale(1.07); }
+  .pcard:hover .go .arrow { transform: translateX(4px); }
+  @media (min-width: 860px) { .people-grid { grid-template-columns: repeat(3, 1fr); } .pcard { min-height: 460px; } }
+
+  .strip { padding: 34px 0 10px; overflow: hidden; }
+  .strip h2 { font-size: 13px; font-weight: 500; color: var(--purple); letter-spacing: .02em; margin: 0 0 16px; display: inline-flex; align-items: center; gap: 8px; }
+  .strip-track { display: flex; gap: 14px; width: max-content; }
+  .js:not(.still) .strip-track { animation: drift 60s linear infinite; }
+  .strip:hover .strip-track, .strip:focus-within .strip-track { animation-play-state: paused; }
+  .strip figure { margin: 0; width: 300px; height: 210px; border-radius: 18px; overflow: hidden; position: relative; flex-shrink: 0; background: var(--lav); }
+  .strip figure img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+  .strip figure:hover img { transform: scale(1.06); }
+  .strip figcaption { position: absolute; left: 10px; bottom: 10px; font-size: 12px; font-weight: 500; color: #fff; background: rgba(40,24,78,.62); border-radius: 99px; padding: 4px 10px; backdrop-filter: blur(4px); }
+  @keyframes drift { to { transform: translateX(calc(-50% - 7px)); } }
+  .still .strip-track { flex-wrap: wrap; width: auto; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .still .strip-track [aria-hidden="true"] { display: none; }
+  @media (max-width: 600px) { .strip figure { width: 230px; height: 165px; } }
+
+  /* The handshake fades in behind the trust cards; the skyline sits behind the last call. */
+  .trust .trust-photo { position: absolute; inset: 0 0 0 auto; width: min(60%, 820px); background: url('assets/photos/hero-handshake.jpg') center / cover no-repeat; opacity: .22; z-index: 0; mask-image: linear-gradient(90deg, transparent, #000 45%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 45%); pointer-events: none; }
+  .trust > .wrap { position: relative; z-index: 1; }
+  .final-card .city { position: absolute; inset: 0; background: url('assets/photos/scene-skyline.jpg') center 30% / cover no-repeat; opacity: .28; z-index: -2; }
+  .final-card .city::after { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, rgba(40,24,78,.92) 0%, rgba(40,24,78,.55) 60%, rgba(86,52,165,.4) 100%); }
+  .photo-credits { font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+
   footer { border-top: 1px solid var(--line2); padding: 36px 0 44px; color: var(--muted); font-size: 14px; }
   .foot { display: grid; gap: 22px; }
   .foot img { height: 28px; width: auto; }
@@ -486,6 +525,51 @@
         <div class="fact lift reveal" style="--d:5"><div class="n"><small>KES</small>0</div><p>held by FoundersLink. Ever.</p></div>
       </div>
       <p class="facts-note">These describe how the app works. They are not member counts.</p>
+    </div>
+  </section>
+
+  <!-- Who it's for: real people at work. -->
+  <section class="people" aria-labelledby="people-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow"><span class="dot" aria-hidden="true"></span>Who it's for</span>
+        <h2 id="people-title">Real businesses. Real people. <span>Checked, every one.</span></h2>
+      </div>
+      <div class="people-grid">
+        <a class="pcard reveal" style="--d:0" href="#how" data-open-tab="how-t-f">
+          <img src="assets/photos/founder-farm.jpg" alt="A farmer with his cow on a farm in Homa Bay, Kenya" loading="lazy" width="1600" height="1067">
+          <div class="in-card"><span class="who"><i aria-hidden="true"></i>For founders</span><h3>Find investors who fit your business.</h3><p>Tell us about it in your own words. See who fits, and why.</p><span class="go">See how it works for founders <span class="arrow" aria-hidden="true"></span></span></div>
+        </a>
+        <a class="pcard reveal" style="--d:1" href="#how" data-open-tab="how-t-i">
+          <img src="assets/photos/investor-meeting.jpg" alt="Two professionals talking over laptops in a meeting room" loading="lazy" width="1600" height="1067">
+          <div class="in-card"><span class="who"><i aria-hidden="true"></i>For investors</span><h3>See only the businesses you fund.</h3><p>Every founder is checked, with the reasons they fit what you fund.</p><span class="go">See how it works for investors <span class="arrow" aria-hidden="true"></span></span></div>
+        </a>
+        <a class="pcard reveal" style="--d:2" href="#how" data-open-tab="how-t-e">
+          <img src="assets/photos/expert-lawyer.jpg" alt="An advocate in a suit writing at his desk, with scales of justice beside him" loading="lazy" width="1600" height="1067">
+          <div class="in-card"><span class="who"><i aria-hidden="true"></i>For experts</span><h3>Help founders when it matters.</h3><p>Advocates, accountants, valuers and more, each checked on their register.</p><span class="go">See how it works for experts <span class="arrow" aria-hidden="true"></span></span></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Kenya at work: a slow strip of photos. It pauses on hover, and stands still for anyone who asks for less motion. -->
+  <section class="strip" aria-labelledby="strip-title">
+    <div class="wrap"><h2 id="strip-title"><span class="dot" aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block"></span>Kenya, at work</h2></div>
+    <div class="strip-track">
+        <figure><img src="assets/photos/founder-market.jpg" alt="A smiling woman at her stall in Nairobi, preparing food to sell" loading="lazy" width="1600" height="1067"><figcaption>A stall in Nairobi</figcaption></figure>
+        <figure><img src="assets/photos/scene-skyline.jpg" alt="Nairobi seen from above" loading="lazy" width="1600" height="1067"><figcaption>Nairobi</figcaption></figure>
+        <figure><img src="assets/photos/founder-farm.jpg" alt="A farmer with his cow in Homa Bay" loading="lazy" width="1600" height="1067"><figcaption>A farm in Homa Bay</figcaption></figure>
+        <figure><img src="assets/photos/investor-meeting.jpg" alt="Two professionals in a meeting" loading="lazy" width="1600" height="1067"><figcaption>A first meeting</figcaption></figure>
+        <figure><img src="assets/photos/scene-market.jpg" alt="A roadside fruit stall with bananas, Nairobi" loading="lazy" width="1600" height="1067"><figcaption>A fruit stall</figcaption></figure>
+        <figure><img src="assets/photos/expert-lawyer.jpg" alt="An advocate at his desk" loading="lazy" width="1600" height="1067"><figcaption>An advocate at work</figcaption></figure>
+        <figure><img src="assets/photos/hero-handshake.jpg" alt="Two people shaking hands" loading="lazy" width="1600" height="1067"><figcaption>A deal, closed</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/founder-market.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>A stall in Nairobi</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/scene-skyline.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>Nairobi</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/founder-farm.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>A farm in Homa Bay</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/investor-meeting.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>A first meeting</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/scene-market.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>A fruit stall</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/expert-lawyer.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>An advocate at work</figcaption></figure>
+        <figure aria-hidden="true"><img src="assets/photos/hero-handshake.jpg" alt="" loading="lazy" width="1600" height="1067"><figcaption>A deal, closed</figcaption></figure>
     </div>
   </section>
 
@@ -773,6 +857,7 @@
 
   <!-- Trust -->
   <section class="sec trust" id="trust" aria-labelledby="trust-title">
+    <div class="trust-photo" aria-hidden="true"></div>
     <div class="wrap">
       <div class="sec-head reveal">
         <span class="eyebrow"><span class="dot" aria-hidden="true"></span>Trust</span>
@@ -919,6 +1004,7 @@
   <section class="final" aria-labelledby="final-title">
     <div class="wrap">
       <div class="final-card reveal">
+        <span class="city" aria-hidden="true"></span>
         <span class="blob a" aria-hidden="true"></span><span class="blob b" aria-hidden="true"></span><span class="blob c" aria-hidden="true"></span>
         <div>
           <div class="mark"><img src="assets/logo-mark.png" alt=""></div>
@@ -938,6 +1024,7 @@
   <div class="wrap foot">
     <img src="assets/logo.png" alt="FoundersLink" width="151" height="28">
     <p>Verified founders, investors and experts in Kenya. FoundersLink records deals; money moves through your own bank.</p>
+    <p class="photo-credits">Photos from Pexels (Charles Lichinga, Japhet Kweba, Thirdman, Ekaterina Bolovtsova, Marie Frank, Ken Mwaura) and Unsplash (Cytonn Photography). The people in them are not FoundersLink members.</p>
     <nav aria-label="Footer">
       <a href="#">Privacy</a>
       <a href="#">Terms</a>
@@ -952,6 +1039,14 @@
   var still = document.documentElement.classList.contains('still');
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* ---------- A "Who it's for" card opens its tab in How it works ---------- */
+  $$('[data-open-tab]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var tab = document.getElementById(card.getAttribute('data-open-tab'));
+      if (tab) tab.click();
+    });
+  });
 
   /* ---------- Sticky header and phone menu ---------- */
   var bar = $('#topbar'), menuBtn = $('.menu-btn'), menu = $('#menu');
