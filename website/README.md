@@ -37,8 +37,8 @@ To host it, upload the folder as it is to any static host.
 
 | Link | Goes to |
 |---|---|
-| Get started, Join as a founder / investor / expert | `https://app.founderslink.co.ke/auth/signup` |
-| Log in | `https://app.founderslink.co.ke/auth/login` |
+| Get started, Join as a founder / investor / expert | `https://sparkling-meerkat-7c652f.netlify.app/auth/signup` |
+| Log in | `https://sparkling-meerkat-7c652f.netlify.app/auth/login` |
 | How it works, Trust, Features | Sections on this page |
 | Privacy, Terms | `#` for now: replace with the real pages before launch |
 
@@ -64,11 +64,8 @@ In `assets/photos/`, shrunk to 1600 px wide with the camera data removed. All ar
 
 Replace any of them with FoundersLink's own photos (of people who agreed to be shown) by keeping the same file name.
 
-## Get started and Log in, on a laptop
+## Get started and Log in
 
-The buttons point at the live app (`https://app.founderslink.co.ke`). When the page is opened from a file or from `localhost`, a few lines at the top of the page's script point them at the demo app on this computer instead: `http://localhost:8081/auth/signup` and `/auth/login`. Start the demo first:
+The buttons open the FoundersLink app, installed as a PWA on Netlify (`https://sparkling-meerkat-7c652f.netlify.app`). It is the demo: demo accounts and data, no server, so it works the same from a laptop, a phone, or this page opened as a file. Anyone can try it with the demo accounts listed on its Log in screen.
 
-```powershell
-cd mobile
-$env:EXPO_NO_DOTENV='1'; $env:EXPO_PUBLIC_API_URL=''; npx expo start --web
-```
+To publish a new version of the app: `cd mobile`, `pnpm build:pwa`, then drag `mobile/dist` onto the project's Deploys page on Netlify. When FoundersLink has its own address, change the links in `index.html` to it.
