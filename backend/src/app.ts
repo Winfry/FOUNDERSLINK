@@ -24,10 +24,14 @@ import * as options from "./shared/constants.js";
 import { CATEGORIES, PROFESSIONS as EXPERT_PROFESSIONS, REGULATORS, TRUST } from "../../shared/professions/index.js";
 
 export const app = express();
+// Behind a host's proxy, req.ip is the member's own address, read from the
+// proxy's X-Forwarded-For (see TRUST_PROXY).
+if (env.TRUST_PROXY > 0) app.set("trust proxy", env.TRUST_PROXY);
 
-// One line per request while developing: what was asked, from where,
-// and how it ended. Never the body, so no password or token is logged.
-if (env.NODE_ENV === "development") {
+// One line per request while developing, or on a server while LOG_REQUESTS
+// is on (to check TRUST_PROXY): what was asked, from where, and how it
+// ended. Never the body, so no password or token is logged.
+if (env.NODE_ENV === "development" || env.LOG_REQUESTS) {
   app.use((req, res, next) => {
     const started = Date.now();
     res.on("finish", () => {

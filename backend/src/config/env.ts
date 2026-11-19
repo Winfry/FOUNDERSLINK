@@ -11,6 +11,17 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16),
   PORT: z.coerce.number().default(8000),
+  // How many proxies stand between the internet and this server (a host
+  // such as Render puts one in front). Without it every member looks like
+  // the proxy's address, and the sign-in pause for one address would
+  // pause everyone. 0 = none, for running on a laptop.
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  // Logs one line per request, with the visitor's address, outside
+  // development too. Turn on briefly to check TRUST_PROXY, then off.
+  LOG_REQUESTS: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   // Comma-separated. The defaults are the mobile app in a browser (Expo
   // web) and the admin dashboard (Next.js) on their usual local ports.
   CORS_ORIGIN: z.string().default("http://localhost:8081,http://localhost:3000"),

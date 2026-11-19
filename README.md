@@ -37,3 +37,5 @@ pnpm build:pwa https://<your backend address> # the live app, once the backend i
 ```
 
 The app is written to `mobile/dist/`. Upload that folder to any static host with HTTPS, such as Cloudflare Pages, Netlify or Vercel; each gives a free address (for example `founderslink.pages.dev`), so no domain is needed. The build stops if it still points at a local Wi-Fi address. The service worker saves only the app itself, never members' data, and is not used on localhost, so development always sees the latest code.
+
+To run FoundersLink for real people (backend on Render, database on Neon, the live app on Netlify), follow [docs/GO_LIVE.md](docs/GO_LIVE.md).

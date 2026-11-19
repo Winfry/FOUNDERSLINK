@@ -20,6 +20,14 @@ import bcrypt from "bcrypt";
 import { submitApplication } from "../src/modules/vetting/vetting.service.js";
 import { prisma } from "../src/shared/db.js";
 
+// The demo accounts share one known password, and one of them is staff.
+// On a live server they would be a way in for anyone, so they are only
+// made when demo data is asked for.
+if (process.env.NODE_ENV === "production" && process.env.LOAD_DEMO_DATA !== "true") {
+  console.error("Not creating demo accounts on a production server (set LOAD_DEMO_DATA=true only for a demo server).");
+  process.exit(1);
+}
+
 const [password] = process.argv.slice(2);
 if (!password || password.length < 8) {
   console.error("Usage: npm run db:demo -- <password of 8+ characters>");

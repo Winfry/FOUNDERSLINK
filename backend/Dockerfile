@@ -16,9 +16,17 @@ COPY data/seed /app/data/seed
 RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npx prisma generate
 
 EXPOSE 8000
-# Apply migrations, load the demo funders and compliance items, create the
-# demo story's users, then start. Loading again on a restart is safe.
+# Apply migrations and load the compliance checklist, then start. Loading
+# again on a restart is safe.
+# LOAD_DEMO_DATA=false (a live server): no made-up funders and no demo
+# accounts, whose shared password would let anyone in.
+# Otherwise (docker compose, a demo server): the demo funders and the demo
+# story's users too.
 CMD npm run db:migrate \
- && npm run db:seed -- data/demo-compliance-items.json ../data/seed/investors.json \
- && (npm run db:demo -- "$DEMO_PASSWORD" || echo "Demo users already exist") \
+ && if [ "$LOAD_DEMO_DATA" = "false" ]; then \
+      npm run db:seed -- data/demo-compliance-items.json data/no-funders.json; \
+    else \
+      npm run db:seed -- data/demo-compliance-items.json ../data/seed/investors.json \
+      && (npm run db:demo -- "$DEMO_PASSWORD" || echo "Demo users already exist"); \
+    fi \
  && npm start
